@@ -26,6 +26,14 @@ const SORTS = {
     label: "Most participants",
     measures: "breadth of engagement — distinct souls who posted",
   },
+  tippers: {
+    label: "Most unique tippers",
+    measures: "breadth of real appreciation — ten 1-Gratium tippers outrank one 50-Gratium whale",
+  },
+  sourced: {
+    label: "Most sourced",
+    measures: "evidence density — sources are visible, so inspectable",
+  },
 } as const;
 
 type SortKey = keyof typeof SORTS;
@@ -47,7 +55,14 @@ export default async function PillarPage({
       discussions: {
         include: {
           question: true,
-          posts: { select: { authorHandle: true, createdAt: true } },
+          posts: {
+            select: {
+              authorHandle: true,
+              createdAt: true,
+              tips: { select: { tipperProfileId: true } },
+              sources: { select: { id: true } },
+            },
+          },
         },
       },
     },
@@ -85,6 +100,8 @@ export default async function PillarPage({
       discussion: d,
       lastActivity: lastPost ?? d.createdAt,
       participants: new Set(d.posts.map((p) => p.authorHandle)).size,
+      uniqueTippers: new Set(d.posts.flatMap((p) => p.tips.map((t) => t.tipperProfileId))).size,
+      sourcedPosts: d.posts.filter((p) => p.sources.length > 0).length,
       posts: d.posts.length,
       canonPosition: d.question?.position ?? null,
       lens: d.question?.lens as Lens | undefined,
@@ -94,6 +111,8 @@ export default async function PillarPage({
   rows.sort((a, b) => {
     if (sort === "newest") return b.discussion.createdAt.getTime() - a.discussion.createdAt.getTime();
     if (sort === "participants") return b.participants - a.participants;
+    if (sort === "tippers") return b.uniqueTippers - a.uniqueTippers;
+    if (sort === "sourced") return b.sourcedPosts - a.sourcedPosts;
     return b.lastActivity.getTime() - a.lastActivity.getTime();
   });
 
@@ -121,7 +140,7 @@ export default async function PillarPage({
         ))}
         <div className="sort-note">
           Sorted by: {SORTS[sort].label} — {SORTS[sort].measures}. No hidden
-          formula; more sorts arrive with their inputs.
+          formula, ever.
         </div>
       </div>
 

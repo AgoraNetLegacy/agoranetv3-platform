@@ -7,8 +7,15 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { createPost, editPost, createPollDiscussion } from "@/lib/discussions";
+import {
+  createPost,
+  editPost,
+  createPollDiscussion,
+  upgradePostPermanence,
+} from "@/lib/discussions";
 import { createPoll, castVote } from "@/lib/polls";
+import { tip, grant, grantAlreadyGiven } from "@/lib/economy";
+import { getRail } from "@/lib/rails";
 import { fileFlag } from "@/lib/flags";
 import {
   verifyHumanity,
@@ -47,6 +54,7 @@ export async function submitPost(formData: FormData) {
   const discussionId = String(formData.get("discussionId") ?? "");
   const parentId = String(formData.get("parentId") ?? "") || null;
   const body = String(formData.get("body") ?? "");
+  const sourceUrl = String(formData.get("sourceUrl") ?? "").trim();
   const face = await requireFace();
 
   const result = await createPost(db, {
@@ -54,9 +62,59 @@ export async function submitPost(formData: FormData) {
     profileId: face.id,
     body,
     parentId,
+    humanMade: formData.get("humanMade") === "on",
+    source: sourceUrl
+      ? {
+          url: sourceUrl,
+          kind: String(formData.get("sourceKind") ?? "other"),
+          vouch: formData.get("sourceVouch") === "vouched" ? "vouched" : "unverified",
+        }
+      : undefined,
   });
   revalidatePath(`/d/${discussionId}`);
   backTo(`/d/${discussionId}`, result.ok ? undefined : result.reason);
+}
+
+export async function submitTip(formData: FormData) {
+  const postId = String(formData.get("postId") ?? "");
+  const discussionId = String(formData.get("discussionId") ?? "");
+  const amount = Number(formData.get("amount") ?? 0);
+  const face = await requireFace();
+
+  const result = await tip(db, { postId, tipperProfileId: face.id, amount });
+  revalidatePath(`/d/${discussionId}`);
+  backTo(`/d/${discussionId}`, result.ok ? "Tip sent — appreciation that costs something means something." : result.reason);
+}
+
+export async function submitPermanenceUpgrade(formData: FormData) {
+  const postId = String(formData.get("postId") ?? "");
+  const discussionId = String(formData.get("discussionId") ?? "");
+  const face = await requireFace();
+
+  const result = await upgradePostPermanence(db, { postId, profileId: face.id });
+  revalidatePath(`/d/${discussionId}`);
+  backTo(
+    `/d/${discussionId}`,
+    result.ok
+      ? "Your words are now permanent record — hash-committed to the ledger."
+      : result.reason
+  );
+}
+
+export async function completeOrientation(formData: FormData) {
+  const returnTo = String(formData.get("returnTo") ?? "");
+  const face = await requireFace();
+  if (!(await grantAlreadyGiven(db, face.id, "grant.orientation"))) {
+    await db.$transaction(async (tx) => {
+      await grant(tx, {
+        profileId: face.id,
+        currency: "PC",
+        amount: await getRail(tx, "grant.orientation.pc"),
+        kind: "grant.orientation",
+      });
+    });
+  }
+  redirect(`/verify/seed${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`);
 }
 
 export async function submitEdit(formData: FormData) {

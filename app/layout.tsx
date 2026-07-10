@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import "./globals.css";
+import { db } from "@/lib/db";
+import { balanceOf } from "@/lib/economy";
 import { activeFace, sessionFaces } from "@/lib/webSession";
 import { returnToHub, switchToFace, signOutSession } from "./actions";
 
@@ -28,11 +30,18 @@ async function FaceBar() {
   }
   const others = faces.filter((f) => f.id !== face.id);
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
+  const [pc, g] = await Promise.all([
+    balanceOf(db, face.id, "PC"),
+    balanceOf(db, face.id, "G"),
+  ]);
   return (
     <div className="face-bar">
       <span className={`face-chip ${chipClass}`}>
         {face.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"} ·{" "}
         {face.displayName} @{face.handle}
+      </span>
+      <span className="lore" title="This face's own balances — your two faces' funds never touch.">
+        {pc.toFixed(2)} PC · {g.toFixed(2)} G
       </span>
       <Link href="/profile">profile</Link>
       {others.length > 0 && (

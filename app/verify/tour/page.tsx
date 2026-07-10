@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { completeOrientation } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +48,12 @@ export default async function TourPage({
           what that means.
         </li>
       </ul>
-      <Link href={`/verify/seed${query}`}>Continue to the values seed →</Link>
+      <form action={completeOrientation}>
+        <input type="hidden" name="returnTo" value={returnTo ?? ""} />
+        <button type="submit" className="linklike">
+          Continue to the values seed →
+        </button>
+      </form>
     </div>
   );
 }

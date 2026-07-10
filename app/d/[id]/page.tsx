@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { getRail } from "@/lib/rails";
 import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
-import { submitPost, submitEdit, submitFlag } from "@/app/actions";
+import { submitPost, submitEdit, submitFlag, submitTip, submitPermanenceUpgrade } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,11 @@ function loadPosts(discussionId: string) {
   return db.post.findMany({
     where: { discussionId },
     orderBy: { createdAt: "asc" },
-    include: { revisions: { orderBy: { editedAt: "asc" } } },
+    include: {
+      revisions: { orderBy: { editedAt: "asc" } },
+      tips: true,
+      sources: { include: { source: true } },
+    },
   });
 }
 
@@ -55,7 +59,29 @@ function Composer({
         required
         placeholder={permanent ? "Speak deliberately — this space is permanent." : "Add your voice."}
       />
-      <button type="submit">{label}</button>
+      <div style={{ fontSize: "0.8rem", margin: "0.3rem 0" }}>
+        <label>
+          <input type="checkbox" name="humanMade" /> Human-made — my
+          reputation on it (falsely marking AI work is rule R2.3)
+        </label>
+        <details>
+          <summary>Attach a source</summary>
+          <input type="text" name="sourceUrl" placeholder="https://…" style={{ width: "60%" }} />{" "}
+          <select name="sourceKind" defaultValue="other">
+            <option value="study">Study</option>
+            <option value="news">News article</option>
+            <option value="primary">Primary document</option>
+            <option value="book">Book</option>
+            <option value="experience">Personal experience</option>
+            <option value="other">Other</option>
+          </select>{" "}
+          <select name="sourceVouch" defaultValue="unverified">
+            <option value="vouched">I vouch for this</option>
+            <option value="unverified">Sharing unverified</option>
+          </select>
+        </details>
+      </div>
+      <button type="submit">{label} · 1 PC</button>
     </form>
   );
 }
@@ -126,9 +152,34 @@ function PostNode({
           <span className="badge locked">🔒 Locked into the record</span>
         ) : (
           <span>grace window open until {post.editableUntil.toLocaleTimeString()}</span>
+        )}{" "}
+        {post.humanMade && (
+          <span className="badge permanent">Human-made — reputation staked</span>
+        )}{" "}
+        {post.permanentUpgraded && (
+          <span className="badge permanent">Permanent — creator-designated</span>
         )}
       </div>
       <div className="body">{post.body}</div>
+      {post.sources.length > 0 && (
+        <div className="byline">
+          {post.sources.map((s) => (
+            <div key={s.id}>
+              📎 <a href={s.source.url} rel="noreferrer nofollow">{s.source.url}</a>{" "}
+              ({s.kind}) —{" "}
+              {s.vouch === "vouched"
+                ? `vouched by @${s.sharerHandle}`
+                : "shared unverified"}
+            </div>
+          ))}
+        </div>
+      )}
+      {post.tips.length > 0 && (
+        <div className="byline">
+          ✨ {post.tips.reduce((sum, t) => sum + t.amount, 0).toFixed(2)} G from{" "}
+          {new Set(post.tips.map((t) => t.tipperProfileId)).size} unique tipper(s)
+        </div>
+      )}
 
       {post.revisions.length > 0 && (
         <details>
@@ -164,6 +215,31 @@ function PostNode({
                 <input type="hidden" name="postId" value={post.id} />
                 <textarea name="body" defaultValue={post.body} required />
                 <button type="submit">Save repair</button>
+              </form>
+            </details>
+          )}
+          {!own && (
+            <details>
+              <summary>Tip</summary>
+              <form action={submitTip} className="inline">
+                <input type="hidden" name="postId" value={post.id} />
+                <input type="hidden" name="discussionId" value={discussionId} />
+                <input type="number" name="amount" min={0.25} step={0.25} defaultValue={1} style={{ width: "4.5rem" }} /> G{" "}
+                <button type="submit">Send tip (5% to treasury)</button>
+              </form>
+            </details>
+          )}
+          {own && !permanent && !post.permanentUpgraded && (
+            <details>
+              <summary>Make this post permanent</summary>
+              <form action={submitPermanenceUpgrade} className="inline">
+                <input type="hidden" name="postId" value={post.id} />
+                <input type="hidden" name="discussionId" value={discussionId} />
+                <span className="interim-note">
+                  15 G. Caveat: the surrounding thread may be deleted later,
+                  leaving your permanent post standing amid tombstones.{" "}
+                </span>
+                <button type="submit">Pay 15 G — permanent record</button>
               </form>
             </details>
           )}
