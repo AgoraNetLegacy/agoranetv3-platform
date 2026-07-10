@@ -16,6 +16,7 @@ import type { PrismaClient } from "@prisma/client";
 import { clearGate } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
+import { hasPostingConsents } from "./consent";
 
 export function contentHash(body: string): string {
   return createHash("sha256").update(body).digest("hex");
@@ -54,6 +55,17 @@ export async function createPost(
     where: { id: input.profileId },
   });
   if (!profile) return { ok: false, reason: "No such profile." };
+  if (profile.status !== "active") {
+    return { ok: false, reason: "This face has not activated yet." };
+  }
+  // Consent before the first post, always (ONBOARDING Stage 4 — the
+  // blocking acks are not legal wallpaper; they gate the pen).
+  if (!(await hasPostingConsents(db, profile.id))) {
+    return {
+      ok: false,
+      reason: "The permanence and Constitution acknowledgments come first.",
+    };
+  }
 
   // Every post is its own action instance: the scope is unique per post,
   // so the nullifier proves humanity for THIS act (DUAL_IDENTITY §3.2 —
