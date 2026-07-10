@@ -63,7 +63,9 @@ describe("db:verify", () => {
     expect(seeded.status).toBe(0);
 
     // A soul exists…
-    sql(`INSERT INTO Human (id, createdAt) VALUES ('humansecret123', ${Date.now()});`);
+    sql(
+      `INSERT INTO Human (id, credentialHash, verifiedAt, createdAt) VALUES ('humansecret123', 'nothashedforreal', ${Date.now()}, ${Date.now()});`
+    );
     // …and someone writes their INTERNAL id into a properly-chained event.
     // The chain math is satisfied; only the identity-leak guard can catch it.
     const leak = run("scripts/leak-for-test.ts");

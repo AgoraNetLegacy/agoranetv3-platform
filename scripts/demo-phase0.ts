@@ -31,25 +31,19 @@ async function main() {
 
   const db = new PrismaClient({ datasources: { db: { url: DEMO_DB_URL } } });
   const { clearGate } = await import("../lib/gate");
+  const { makeOnboardedSoul } = await import("../tests/helpers/souls");
 
   banner("2. One human, two faces — pseudonyms only");
-  const human = await db.human.create({
-    data: {
-      profiles: {
-        create: [
-          { face: "TRUE_SELF", pseudonym: "bright-heron-42" },
-          { face: "ALIAS", pseudonym: "quiet-cedar-17" },
-        ],
-      },
-    },
-    include: { profiles: true },
+  const soul = await makeOnboardedSoul(db, {
+    trueSelf: "bright-heron-42",
+    alias: "quiet-cedar-17",
   });
-  const trueSelf = human.profiles.find((p) => p.face === "TRUE_SELF")!;
-  const alias = human.profiles.find((p) => p.face === "ALIAS")!;
+  const trueSelf = { id: soul.trueSelfId, pseudonym: "bright-heron-42" };
+  const alias = { id: soul.aliasId, pseudonym: "quiet-cedar-17" };
   console.log(`True Self pseudonym: ${trueSelf.pseudonym}`);
   console.log(`Alias pseudonym:     ${alias.pseudonym}`);
-  console.log("(Their internal ids exist only in Phase A operator space — the");
-  console.log(" ledger below never contains them; db:verify enforces that.)");
+  console.log("(Since Phase 2, the Alias row carries no humanId at all — the");
+  console.log(" ledger below never names an internal id; db:verify enforces both.)");
 
   banner("3. Gated actions — pending → proof → cleared");
 
@@ -68,9 +62,10 @@ async function main() {
 
   console.log("\n— per-human scope (held in reserve; registration uses it by definition)");
   await act("True Self clears a per-human demo scope", trueSelf.id, "demo:once-per-human", "per-human");
-  await act("Alias attempts the same per-human scope", alias.id, "demo:once-per-human", "per-human");
-  console.log("   ^ DUPLICATE: one act per human across both faces — enforced");
-  console.log("     without any public record linking them");
+  await act("Alias attempts a per-human scope", alias.id, "demo:once-per-human", "per-human");
+  console.log("   ^ INVALID: since Phase 2 an Alias carries no humanId, so");
+  console.log("     per-human scopes are structurally closed to it — the");
+  console.log("     one-per-human registrations happen at the ceremony itself");
 
   banner("4. The Civic Ledger (hash-chained, append-only)");
   const events = await db.ledgerEvent.findMany({ orderBy: { seq: "asc" } });

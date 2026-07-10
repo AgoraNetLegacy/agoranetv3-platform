@@ -46,20 +46,14 @@ async function main() {
   const db = new PrismaClient({ datasources: { db: { url: DEMO_DB_URL } } });
   const { createPost, editPost } = await import("../lib/discussions");
   const { fileFlag } = await import("../lib/flags");
+  const { makeOnboardedSoul } = await import("../tests/helpers/souls");
 
-  const human = await db.human.create({
-    data: {
-      profiles: {
-        create: [
-          { face: "TRUE_SELF", pseudonym: "bright-heron-42" },
-          { face: "ALIAS", pseudonym: "quiet-cedar-17" },
-        ],
-      },
-    },
-    include: { profiles: true },
+  const soul = await makeOnboardedSoul(db, {
+    trueSelf: "bright-heron-42",
+    alias: "quiet-cedar-17",
   });
-  const author = human.profiles.find((p) => p.face === "TRUE_SELF")!;
-  const flagger = human.profiles.find((p) => p.face === "ALIAS")!;
+  const author = { id: soul.trueSelfId, pseudonym: "bright-heron-42" };
+  const flagger = { id: soul.aliasId, pseudonym: "quiet-cedar-17" };
   console.log(`Souls: ${author.pseudonym} (True Self), ${flagger.pseudonym} (Alias)`);
 
   banner("2. Posting in a permanent space (canonical question 43)");

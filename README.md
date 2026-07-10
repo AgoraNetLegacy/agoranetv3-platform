@@ -31,12 +31,35 @@ npm test                   # unit + integration tests
 npm run demo:phase0        # Phase 0: gate-cleared events landing on the ledger, pseudonymously
 npm run demo:tamper        # Phase 0: the invariant check failing loudly, twice
 npm run demo:phase1        # Phase 1: post → badge → ledger → grace edit → LOCK → tamper caught → flag queued
+npm run demo:phase2        # Phase 2: both ceremonies → parking rule → THE LINKAGE AUDIT → 11 checks
 ```
 
 All demos run against a self-contained `prisma/demo.db`; nothing touches
-your dev database. The interactive version: `npm run dev`, pick a dev
-face (interim until Phase 2 onboarding), post in a canonical thread, and
-watch `/ledger`.
+your dev database. The interactive version: `npm run dev`, then `/verify`
+— the real onboarding: gate intro, interim issuer, True Self ceremony,
+blocking consents, values seed, and back to what you came to do. Hatch
+an Alias at `/alias` with your credential.
+
+## What exists (Phase 2)
+
+- **Onboarding** (`/verify`, `lib/identity.ts`) — read-free/verify-to-act;
+  the interim issuer hands over a credential (shown once, hash stored);
+  True Self registration through the gate's per-human nullifier;
+  permanence + Constitution acknowledgments (blocking, enforced at the
+  first post); the seven-question values seed (skippable,
+  matchmaking-only).
+- **The Alias ceremony** (`/alias`) — decoupled from any session, no
+  public trace at registration, randomized cohort-batched activation,
+  coarse join period, the §3.6 disclosures blocking at hatch. **An Alias
+  row stores no humanId** — one-per-human is the registration nullifier,
+  not a stored link; `db:verify` fails loudly if a linked Alias ever
+  appears.
+- **The parking rule** (`lib/parking.ts`) — hard per-pillar session lock,
+  blocked entry names the holding face, deliberate face-switch with a
+  cooldown rail, persistent per-face profile indicator (violet ◆ True
+  Self / teal ◇ Alias).
+- **Phase A disclosures verbatim** (`lib/disclosures.ts`) — every
+  load-bearing disclosure mapped to its named moment in the flow.
 
 ## What exists (Phase 1)
 

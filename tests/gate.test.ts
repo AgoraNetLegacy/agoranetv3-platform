@@ -5,31 +5,37 @@ const { url } = createTestDb("gate");
 process.env.DATABASE_URL = url;
 process.env.GATE_OPERATOR_SECRET = "test-secret-for-gate-tests-only";
 
+import { spawnSync } from "child_process";
 import { PrismaClient } from "@prisma/client";
 import { clearGate, submitProof } from "../lib/gate";
 import { verifyChain, findForbiddenId } from "../lib/ledger";
+import { registerAlias } from "../lib/identity";
+import { makeOnboardedSoul } from "./helpers/souls";
+import { REPO_ROOT } from "./helpers/testDb";
 
 const db = new PrismaClient({ datasources: { db: { url } } });
 
+let credential: string;
 let humanId: string;
 let trueSelfId: string;
 let aliasId: string;
 
 beforeAll(async () => {
-  const human = await db.human.create({
-    data: {
-      profiles: {
-        create: [
-          { face: "TRUE_SELF", pseudonym: "bright-heron-42" },
-          { face: "ALIAS", pseudonym: "quiet-cedar-17" },
-        ],
-      },
-    },
-    include: { profiles: true },
+  const seeded = spawnSync("npx", ["tsx", "prisma/seed.ts"], {
+    cwd: REPO_ROOT,
+    env: { ...process.env, DATABASE_URL: url },
+    encoding: "utf8",
   });
-  humanId = human.id;
-  trueSelfId = human.profiles.find((p) => p.face === "TRUE_SELF")!.id;
-  aliasId = human.profiles.find((p) => p.face === "ALIAS")!.id;
+  if (seeded.status !== 0) throw new Error(`seed failed: ${seeded.stderr}`);
+
+  const soul = await makeOnboardedSoul(db, {
+    trueSelf: "bright-heron-42",
+    alias: "quiet-cedar-17",
+  });
+  credential = soul.credential;
+  humanId = soul.humanId;
+  trueSelfId = soul.trueSelfId;
+  aliasId = soul.aliasId;
 });
 
 afterAll(async () => {
@@ -78,23 +84,45 @@ describe("the gate: pending → proof → cleared", () => {
     expect(result.outcome).toBe("CLEARED");
   });
 
-  it("per-human scope: the second face is a DUPLICATE — one act per human, enforced blind", async () => {
-    const first = await clearGate(db, {
+  it("per-human scope: available to the True Self (the reserved dial)", async () => {
+    const result = await clearGate(db, {
       profileId: trueSelfId,
-      scope: "registration:demo",
+      scope: "reserved:per-human-demo",
       scopeKind: "per-human",
     });
-    expect(first.outcome).toBe("CLEARED");
+    expect(result.outcome).toBe("CLEARED");
+  });
 
-    const before = await db.ledgerEvent.count();
-    const second = await clearGate(db, {
+  it("per-human scope: structurally impossible for an Alias (it carries no humanId)", async () => {
+    const result = await clearGate(db, {
       profileId: aliasId,
-      scope: "registration:demo",
+      scope: "reserved:per-human-demo",
       scopeKind: "per-human",
     });
-    expect(second.outcome).toBe("DUPLICATE");
-    // The rejection is private: nothing public links the two faces.
+    expect(result.outcome).toBe("INVALID");
+  });
+
+  it("one Alias per human — a second hatch is refused blind, with no public trace", async () => {
+    const before = await db.ledgerEvent.count();
+    const second = await registerAlias(db, {
+      credential,
+      handle: "second-alias-attempt",
+      disclosuresAccepted: true,
+    });
+    expect(second.ok).toBe(false);
+    if (second.ok) return;
+    expect(second.reason).toContain("already holds an Alias");
     expect(await db.ledgerEvent.count()).toBe(before);
+    expect(
+      await db.profile.findUnique({ where: { pseudonym: "second-alias-attempt" } })
+    ).toBeNull();
+  });
+
+  it("the Alias row carries no humanId — no database row links the two faces", async () => {
+    const alias = await db.profile.findUniqueOrThrow({ where: { id: aliasId } });
+    expect(alias.humanId).toBeNull();
+    const trueSelf = await db.profile.findUniqueOrThrow({ where: { id: trueSelfId } });
+    expect(trueSelf.humanId).toBe(humanId);
   });
 
   it("returns INVALID for an unknown request", async () => {

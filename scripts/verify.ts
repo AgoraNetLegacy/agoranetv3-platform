@@ -19,6 +19,16 @@
 //    last ledger commitment — a locked record cannot be silently edited.
 // 7. Flag privacy: no flag-related event type on the public ledger, and
 //    no flag's nullifier appears anywhere in it (triangle of blindness).
+// Phase 2:
+// 8. Structural unlinkability: no Alias row carries a humanId; at most
+//    one True Self per human.
+// 9. Registration evidence: nullifier spends match profile counts;
+//    active faces have their registration/activation events; PENDING
+//    aliases appear NOWHERE in the public ledger.
+// 10. Session hygiene: expired sessions/locks purged (short retention —
+//     this check sweeps, then asserts).
+// 11. Consent-before-posting: every post author holds the two blocking
+//     acknowledgments.
 
 import { createHash } from "crypto";
 import { PrismaClient } from "@prisma/client";
@@ -252,6 +262,132 @@ async function main() {
     console.log(`✓ Flag privacy (${flags.length} flag(s) queued, none visible on the ledger)`);
   } else {
     failures += flagProblems;
+  }
+
+  // --- 8. Structural unlinkability: no database row links a soul's two
+  //        faces. Aliases carry no humanId, period.
+  const allProfiles = await db.profile.findMany({
+    select: { id: true, face: true, humanId: true, status: true, pseudonym: true },
+  });
+  let linkProblems = 0;
+  for (const p of allProfiles) {
+    if (p.face === "ALIAS" && p.humanId !== null) {
+      linkProblems++;
+      console.error(`✗ LINKAGE: Alias ${p.id} carries a humanId`);
+    }
+    if (p.face === "TRUE_SELF" && p.humanId === null) {
+      linkProblems++;
+      console.error(`✗ ORPHAN: True Self ${p.id} has no human root (recovery would be impossible)`);
+    }
+  }
+  const byHuman = new Map<string, number>();
+  for (const p of allProfiles) {
+    if (p.humanId) byHuman.set(p.humanId, (byHuman.get(p.humanId) ?? 0) + 1);
+  }
+  for (const [humanId, count] of Array.from(byHuman.entries())) {
+    if (count > 1) {
+      linkProblems++;
+      console.error(`✗ LINKAGE: human ${humanId} has ${count} linked profiles`);
+    }
+  }
+  if (linkProblems === 0) {
+    console.log(`✓ Structural unlinkability (${allProfiles.length} profile(s); no row links two faces)`);
+  } else {
+    failures += linkProblems;
+  }
+
+  // --- 9. Registration evidence + pending invisibility.
+  const trueSelves = allProfiles.filter((p) => p.face === "TRUE_SELF");
+  const aliases = allProfiles.filter((p) => p.face === "ALIAS");
+  const tsSpends = await db.nullifierSpend.count({ where: { scope: "true-self-registration" } });
+  const aliasSpends = await db.nullifierSpend.count({ where: { scope: "alias-registration" } });
+  let regProblems = 0;
+  if (tsSpends !== trueSelves.length) {
+    regProblems++;
+    console.error(`✗ REGISTRATION: ${trueSelves.length} True Selves but ${tsSpends} registration spend(s)`);
+  }
+  if (aliasSpends !== aliases.length) {
+    regProblems++;
+    console.error(`✗ REGISTRATION: ${aliases.length} Aliases but ${aliasSpends} registration spend(s)`);
+  }
+  const registeredPseudonyms = new Set<string>();
+  const activatedPseudonyms = new Set<string>();
+  for (const ev of events) {
+    try {
+      const p = JSON.parse(ev.payload);
+      if (ev.eventType === "trueself.registered" && typeof p?.pseudonym === "string") {
+        registeredPseudonyms.add(p.pseudonym);
+      }
+      if (ev.eventType === "alias.activated" && typeof p?.pseudonym === "string") {
+        activatedPseudonyms.add(p.pseudonym);
+      }
+    } catch {
+      /* covered by chain check */
+    }
+  }
+  for (const p of trueSelves) {
+    if (!registeredPseudonyms.has(p.pseudonym)) {
+      regProblems++;
+      console.error(`✗ OFF-LEDGER REGISTRATION: True Self ${p.pseudonym} has no trueself.registered event`);
+    }
+  }
+  for (const p of aliases) {
+    if (p.status === "active" && !activatedPseudonyms.has(p.pseudonym)) {
+      regProblems++;
+      console.error(`✗ OFF-LEDGER ACTIVATION: active Alias ${p.pseudonym} has no alias.activated event`);
+    }
+    if (p.status === "pending") {
+      // A pending Alias must be invisible: its pseudonym appears nowhere.
+      for (const ev of events) {
+        if (`${ev.actorId ?? ""} ${ev.payload}`.includes(p.pseudonym)) {
+          regProblems++;
+          console.error(`✗ PENDING ALIAS VISIBLE: ${p.pseudonym} appears on the ledger at seq ${ev.seq}`);
+          break;
+        }
+      }
+    }
+  }
+  if (regProblems === 0) {
+    console.log(`✓ Registration evidence (${trueSelves.length} True Self(s), ${aliases.length} Alias(es); pending faces invisible)`);
+  } else {
+    failures += regProblems;
+  }
+
+  // --- 10. Session hygiene: short retention is a promise — sweep expired
+  //         ephemera, then assert none remain.
+  await db.soulSession.deleteMany({ where: { expiresAt: { lte: new Date() } } });
+  const lingering = await db.soulSession.count({ where: { expiresAt: { lte: new Date() } } });
+  if (lingering === 0) {
+    const liveSessions = await db.soulSession.count();
+    console.log(`✓ Session hygiene (${liveSessions} live session(s); expired records purged)`);
+  } else {
+    failures += lingering;
+    console.error(`✗ SESSION RETENTION: ${lingering} expired session(s) linger`);
+  }
+
+  // --- 11. Consent before posting: every author acknowledged permanence
+  //         and the Constitution before their words landed.
+  const authors = await db.post.findMany({
+    select: { authorProfileId: true },
+    distinct: ["authorProfileId"],
+  });
+  let consentProblems = 0;
+  for (const a of authors) {
+    const acks = await db.consentAck.count({
+      where: {
+        profileId: a.authorProfileId,
+        kind: { in: ["permanence", "constitution"] },
+      },
+    });
+    if (acks !== 2) {
+      consentProblems++;
+      console.error(`✗ CONSENT: author ${a.authorProfileId} posted without the blocking acknowledgments`);
+    }
+  }
+  if (consentProblems === 0) {
+    console.log(`✓ Consent before posting (${authors.length} author(s), all acknowledged)`);
+  } else {
+    failures += consentProblems;
   }
 
   if (failures > 0) {

@@ -9,6 +9,7 @@ process.env.GATE_OPERATOR_SECRET = "test-secret-for-discussion-tests";
 import { PrismaClient } from "@prisma/client";
 import { createPost, editPost, contentHash } from "../lib/discussions";
 import { fileFlag } from "../lib/flags";
+import { makeOnboardedSoul } from "./helpers/souls";
 
 const db = new PrismaClient({ datasources: { db: { url } } });
 
@@ -24,19 +25,12 @@ beforeAll(async () => {
   });
   if (seeded.status !== 0) throw new Error(`seed failed: ${seeded.stderr}`);
 
-  const human = await db.human.create({
-    data: {
-      profiles: {
-        create: [
-          { face: "TRUE_SELF", pseudonym: "steady-otter-7" },
-          { face: "ALIAS", pseudonym: "amber-fox-31" },
-        ],
-      },
-    },
-    include: { profiles: true },
+  const soul = await makeOnboardedSoul(db, {
+    trueSelf: "steady-otter-7",
+    alias: "amber-fox-31",
   });
-  trueSelfId = human.profiles.find((p) => p.face === "TRUE_SELF")!.id;
-  aliasId = human.profiles.find((p) => p.face === "ALIAS")!.id;
+  trueSelfId = soul.trueSelfId;
+  aliasId = soul.aliasId;
 
   const discussion = await db.discussion.findFirstOrThrow({
     where: { permanence: "permanent-canonical" },
