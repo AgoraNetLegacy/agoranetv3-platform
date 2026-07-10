@@ -34,6 +34,12 @@ under it.**
    until Phase 9's legal gate.
 6. **Honest disclosures ship with their features** (Phase A
    operator-trust language, permanence badges, correlation warnings).
+7. **When a phase checkpoint passes owner review, update the phase
+   pointers before starting the next phase:** the "Current Phase"
+   section at the bottom of this file AND the CURRENT PHASE block in
+   `/Users/shawn/Desktop/Agoranetv3/BUILD_KICKOFF_PROMPT.md` (+ regen
+   its PDF). Every new session must land on the true current phase —
+   a stale pointer is a build hazard.
 
 ## Vocabulary & Conventions
 
