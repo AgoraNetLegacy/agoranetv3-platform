@@ -65,3 +65,20 @@ export async function makeOnboardedSoul(
     aliasAccessKey: alias.accessKey,
   };
 }
+
+/** Test-only faucet: an accounted issuance entry, so conservation holds. */
+export async function topUpForTests(
+  db: PrismaClient,
+  profileId: string,
+  amounts: { pc?: number; g?: number }
+) {
+  const { grant } = await import("../../lib/economy");
+  await db.$transaction(async (tx) => {
+    if (amounts.pc) {
+      await grant(tx, { profileId, currency: "PC", amount: amounts.pc, kind: "grant.test" });
+    }
+    if (amounts.g) {
+      await grant(tx, { profileId, currency: "G", amount: amounts.g, kind: "grant.test" });
+    }
+  });
+}

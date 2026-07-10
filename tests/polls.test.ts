@@ -14,7 +14,7 @@ import {
   visibleTally,
   candleCommitmentFor,
 } from "../lib/polls";
-import { makeOnboardedSoul } from "./helpers/souls";
+import { makeOnboardedSoul, topUpForTests } from "./helpers/souls";
 
 const db = new PrismaClient({ datasources: { db: { url } } });
 
@@ -44,6 +44,9 @@ beforeAll(async () => {
   trueSelfId = soul.trueSelfId;
   aliasId = soul.aliasId;
   pillarId = (await db.pillar.findFirstOrThrow()).id;
+  // Poll creation costs 10 PC each; this suite makes several.
+  await topUpForTests(db, trueSelfId, { pc: 100 });
+  await topUpForTests(db, aliasId, { pc: 20 });
 });
 
 afterAll(async () => {

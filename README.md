@@ -33,6 +33,7 @@ npm run demo:tamper        # Phase 0: the invariant check failing loudly, twice
 npm run demo:phase1        # Phase 1: post → badge → ledger → grace edit → LOCK → tamper caught → flag queued
 npm run demo:phase2        # Phase 2: both ceremonies → parking rule → THE LINKAGE AUDIT → 11 checks
 npm run demo:phase3        # Phase 3: governance poll end to end — seal, candle, sniper discarded, tamper caught
+npm run demo:phase4        # Phase 4: grants → fees → tip → paid permanence → treasury fills → conservation
 ```
 
 All demos run against a self-contained `prisma/demo.db`; nothing touches
@@ -40,6 +41,25 @@ your dev database. The interactive version: `npm run dev`, then `/verify`
 — the real onboarding: gate intro, interim issuer, True Self ceremony,
 blocking consents, values seed, and back to what you came to do. Hatch
 an Alias at `/alias` with your credential.
+
+## What exists (Phase 4)
+
+- **The internal economy** (`lib/economy.ts`) — per-profile PollCoin and
+  Gratium balances (a soul's two faces never bridge), the treasury,
+  and a double-entry money ledger: every balance re-derives from its
+  entries, and `db:verify` fails loudly on any conservation break.
+- **Every ratified fee, wired** — replies 1 PC, votes 0.25 PC (ordinary
+  = governance, per law), polls and Discussions 10 PC, paid permanence
+  15 G, flag deposits 5 PC (never blocking at zero balance). The
+  **Welcome Grant** funds the journey: 25+25 at verification, +10 at
+  the values seed, +5 at orientation, +5 G at first action; a new
+  Alias hatches with 10+10 — born funded, not traceable-by-poverty.
+- **Tips replace likes** — Gratium, 5% treasury cut; totals +
+  unique-tipper breadth public, tipper identities never displayed. The
+  sort menu gains **Most unique tippers** and **Most sourced**.
+- **Attestation rails** — the "Human-made" mark, typed source tags
+  resolving to shared source objects, vouched/unverified sharing by
+  name. **`/treasury`** is the raw inspection window.
 
 ## What exists (Phase 3)
 

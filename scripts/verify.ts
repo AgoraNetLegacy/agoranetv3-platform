@@ -209,7 +209,12 @@ async function main() {
   //        ledger, and every LOCKED post's body matches its last recorded
   //        content hash. A locked record cannot be silently edited.
   const permanentPosts = await db.post.findMany({
-    where: { discussion: { permanence: { startsWith: "permanent" } } },
+    where: {
+      OR: [
+        { discussion: { permanence: { startsWith: "permanent" } } },
+        { permanentUpgraded: true }, // paid own-post permanence (Phase 4)
+      ],
+    },
     select: { id: true, body: true, editableUntil: true },
   });
   const lastHashByPost = new Map<string, string>();
@@ -558,6 +563,83 @@ async function main() {
     console.log(`✓ Poll integrity (${polls.length} poll(s), ${closedCount} closed; seals held, candles verify, tallies re-derive)`);
   } else {
     failures += pollProblems;
+  }
+
+  // --- 13. Economy conservation: every balance is exactly the sum of
+  //         its entries; the treasury is exactly what flowed in minus
+  //         out; nothing is negative; tips split to the gratium; vote
+  //         fees never name their poll (who-voted privacy).
+  const economyEntries = await db.economyEntry.findMany();
+  const allBalances = await db.balance.findMany();
+  const treasuryBalances = await db.treasuryBalance.findMany();
+  let econProblems = 0;
+
+  const derived = new Map<string, number>(); // profileId|currency
+  const derivedTreasury = new Map<string, number>();
+  for (const e of economyEntries) {
+    if (e.fromProfileId) {
+      const k = `${e.fromProfileId}|${e.currency}`;
+      derived.set(k, (derived.get(k) ?? 0) - e.amount);
+    }
+    if (e.toProfileId) {
+      const k = `${e.toProfileId}|${e.currency}`;
+      derived.set(k, (derived.get(k) ?? 0) + e.amount);
+    }
+    if (e.fromTreasury) {
+      derivedTreasury.set(e.currency, (derivedTreasury.get(e.currency) ?? 0) - e.amount);
+    }
+    if (e.toTreasury) {
+      derivedTreasury.set(e.currency, (derivedTreasury.get(e.currency) ?? 0) + e.amount);
+    }
+  }
+  const close = (a: number, b: number) => Math.abs(a - b) < 0.000001;
+  for (const b of allBalances) {
+    const expected = derived.get(`${b.profileId}|${b.currency}`) ?? 0;
+    if (!close(b.amount, expected)) {
+      econProblems++;
+      console.error(`✗ CONSERVATION BROKEN: balance ${b.profileId}/${b.currency} is ${b.amount}, entries say ${expected}`);
+    }
+    if (b.amount < -0.000001) {
+      econProblems++;
+      console.error(`✗ NEGATIVE BALANCE: ${b.profileId}/${b.currency}`);
+    }
+    derived.delete(`${b.profileId}|${b.currency}`);
+  }
+  for (const [key, expected] of Array.from(derived.entries())) {
+    if (!close(expected, 0)) {
+      econProblems++;
+      console.error(`✗ CONSERVATION BROKEN: entries reference missing balance row ${key} (${expected})`);
+    }
+  }
+  for (const t of treasuryBalances) {
+    const expected = derivedTreasury.get(t.currency) ?? 0;
+    if (!close(t.amount, expected)) {
+      econProblems++;
+      console.error(`✗ CONSERVATION BROKEN: treasury ${t.currency} is ${t.amount}, entries say ${expected}`);
+    }
+  }
+
+  // Tips: gross recorded on Tip rows must equal net + cut entries.
+  const tipsGross = (await db.tip.findMany()).reduce((s, t) => s + t.amount, 0);
+  const tipNet = economyEntries.filter((e) => e.kind === "tip").reduce((s, e) => s + e.amount, 0);
+  const tipCut = economyEntries.filter((e) => e.kind === "tip.cut").reduce((s, e) => s + e.amount, 0);
+  if (!close(tipsGross, tipNet + tipCut)) {
+    econProblems++;
+    console.error(`✗ TIP SPLIT BROKEN: gross ${tipsGross} ≠ net ${tipNet} + cut ${tipCut}`);
+  }
+
+  // Vote-fee privacy: a fee entry naming the poll would be a who-voted
+  // record in operator space beyond what the design allows.
+  const leakyVoteFees = economyEntries.filter((e) => e.kind === "fee.vote" && e.refId);
+  if (leakyVoteFees.length > 0) {
+    econProblems++;
+    console.error(`✗ VOTE PRIVACY: ${leakyVoteFees.length} vote-fee entrie(s) name their poll`);
+  }
+
+  if (econProblems === 0) {
+    console.log(`✓ Economy conservation (${allBalances.length} balance(s), ${economyEntries.length} entrie(s); tips split exactly; vote fees blind)`);
+  } else {
+    failures += econProblems;
   }
 
   if (failures > 0) {
