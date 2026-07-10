@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { LENS_INFO, type Lens } from "@/lib/canon";
+import { checkParking, BlockedPanel } from "@/app/parkingGate";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,19 @@ export default async function PillarPage({
     },
   });
   if (!pillar) notFound();
+
+  const parking = await checkParking(pillar.id);
+  if (parking.state === "blocked") {
+    return (
+      <BlockedPanel
+        pillarName={pillar.name}
+        pillarId={pillar.id}
+        pillarSlug={pillar.slug}
+        heldByPseudonym={parking.heldByPseudonym}
+        heldByFace={parking.heldByFace}
+      />
+    );
+  }
 
   const rows = pillar.discussions.map((d) => {
     const lastPost = d.posts.reduce<Date | null>(

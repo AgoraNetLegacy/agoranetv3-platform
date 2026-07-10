@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getRail } from "@/lib/rails";
-import { activeProfile } from "@/lib/devSession";
+import { activeFace } from "@/lib/webSession";
+import { checkParking, BlockedPanel } from "@/app/parkingGate";
 import { submitPost, submitEdit, submitFlag } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
@@ -181,10 +182,25 @@ export default async function DiscussionPage({
   });
   if (!discussion) notFound();
 
+  // A Discussion is inside its pillar — the parking rule applies here
+  // exactly as on the dashboard (DASHBOARD §3.2).
+  const parking = await checkParking(discussion.pillarId);
+  if (parking.state === "blocked") {
+    return (
+      <BlockedPanel
+        pillarName={discussion.pillar.name}
+        pillarId={discussion.pillarId}
+        pillarSlug={discussion.pillar.slug}
+        heldByPseudonym={parking.heldByPseudonym}
+        heldByFace={parking.heldByFace}
+      />
+    );
+  }
+
   const [posts, rules, viewer, graceMinutes] = await Promise.all([
     loadPosts(discussion.id),
     db.rule.findMany({ orderBy: { id: "asc" } }),
-    activeProfile(),
+    activeFace(),
     getRail(db, "discussion.graceWindowMinutes"),
   ]);
 
@@ -243,9 +259,11 @@ export default async function DiscussionPage({
         />
       ) : (
         <p className="interim-note">
-          Reading is free for the world. To act, select a dev face above —
-          interim scaffolding until Phase 2 delivers the real onboarding
-          ceremonies.
+          Reading is free for the world — this button is where the gate
+          begins.{" "}
+          <Link href={`/verify?returnTo=${encodeURIComponent(`/d/${discussion.id}`)}`}>
+            Verify once to add your voice →
+          </Link>
         </p>
       )}
     </>

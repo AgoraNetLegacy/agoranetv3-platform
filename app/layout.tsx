@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import "./globals.css";
-import { db } from "@/lib/db";
-import { activeProfile } from "@/lib/devSession";
-import { selectDevFace, createDevSouls } from "./actions";
+import { activeFace, sessionFaces } from "@/lib/webSession";
+import { returnToHub, switchToFace, signOutSession } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -13,29 +12,48 @@ export const metadata: Metadata = {
   description: "A purpose-built civic commons.",
 };
 
-async function DevFaceBar() {
-  const [current, profiles] = await Promise.all([
-    activeProfile(),
-    db.profile.findMany({ orderBy: { createdAt: "asc" } }),
-  ]);
+// The persistent profile indicator (DASHBOARD §3.4): always visible,
+// visually distinct per face, switching is deliberate — never a silent
+// toggle. Readers see their reading state plainly.
+async function FaceBar() {
+  const [face, faces] = await Promise.all([activeFace(), sessionFaces()]);
+  if (!face) {
+    return (
+      <div className="face-bar">
+        <span className="face-chip reader">Reading as guest</span>
+        <Link href="/login">sign in</Link>
+        <Link href="/verify">verify to act</Link>
+      </div>
+    );
+  }
+  const others = faces.filter((f) => f.id !== face.id);
+  const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
   return (
-    <div className="dev-face">
-      <span className="interim-note">
-        dev session — onboarding arrives in Phase 2
+    <div className="face-bar">
+      <span className={`face-chip ${chipClass}`}>
+        {face.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"} · {face.pseudonym}
       </span>
-      <form action={selectDevFace} className="inline">
-        <select name="profileId" defaultValue={current?.id ?? ""}>
-          <option value="">(read only)</option>
-          {profiles.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.pseudonym} · {p.face === "TRUE_SELF" ? "True Self" : "Alias"}
-            </option>
-          ))}
-        </select>
-        <button type="submit">act as</button>
-      </form>
-      <form action={createDevSouls} className="inline">
-        <button type="submit">+ dev soul</button>
+      {others.length > 0 && (
+        <details className="switch-control">
+          <summary>switch face</summary>
+          <div className="switch-panel">
+            <p>
+              Switching is deliberate: it ends this face's pillar sessions
+              and starts the switch cooldown.
+            </p>
+            {others.map((p) => (
+              <form key={p.id} action={switchToFace}>
+                <input type="hidden" name="profileId" value={p.id} />
+                <button type="submit">
+                  Switch to {p.pseudonym} ({p.face === "TRUE_SELF" ? "True Self" : "Alias"})
+                </button>
+              </form>
+            ))}
+          </div>
+        </details>
+      )}
+      <form action={signOutSession} className="inline">
+        <button type="submit">sign out</button>
       </form>
     </div>
   );
@@ -46,12 +64,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <header className="site">
-          <Link className="brand" href="/">
-            🏛️ AgoraNet
-          </Link>
-          <Link href="/">Pillars</Link>
+          <form action={returnToHub} className="inline">
+            <button type="submit" className="linklike brand">
+              🏛️ AgoraNet
+            </button>
+          </form>
+          <form action={returnToHub} className="inline">
+            <button type="submit" className="linklike">
+              Hub
+            </button>
+          </form>
           <Link href="/ledger">Ledger</Link>
-          <DevFaceBar />
+          <FaceBar />
         </header>
         <main>{children}</main>
       </body>

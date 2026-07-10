@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { activateDueAliases } from "@/lib/identity";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
+export default async function Hub() {
+  // Opportunistic cohort release — due Aliases activate on hub traffic.
+  await activateDueAliases(db);
+
   const pillars = await db.pillar.findMany({
     orderBy: { position: "asc" },
     include: { _count: { select: { discussions: true } } },
@@ -14,7 +18,8 @@ export default async function Home() {
       <h1>The Seven Pillars</h1>
       <p>
         Six pillars diagnose; The Agora equips. Every pillar carries seven
-        canonical questions — read freely; verify to act.
+        canonical questions — read freely; verify to act. Entering a pillar
+        parks your active face there (one face per pillar at a time).
       </p>
       <ul className="pillar-grid">
         {pillars.map((p) => (

@@ -1,0 +1,70 @@
+// Web plumbing for SoulSessions: one cookie names the browser's session
+// row; the session knows which faces are signed in and which is active.
+// Secrets (credential, access keys) are handed to the soul through
+// one-time httpOnly cookies rendered exactly once — never query strings,
+// which leak into history and logs (DUAL_IDENTITY §7.1 vector 4).
+
+import { cookies } from "next/headers";
+import { db } from "./db";
+import { createSession, getSession } from "./parking";
+
+const SESSION_COOKIE = "agoranet-session";
+const ONE_TIME_COOKIE = "agoranet-once";
+
+export async function ensureSessionId(): Promise<string> {
+  const jar = await cookies();
+  const existing = jar.get(SESSION_COOKIE)?.value;
+  if (existing) {
+    const session = await getSession(db, existing);
+    if (session) return session.id;
+  }
+  const id = await createSession(db);
+  jar.set(SESSION_COOKIE, id, { httpOnly: true, sameSite: "lax" });
+  return id;
+}
+
+export async function currentSession() {
+  const jar = await cookies();
+  const id = jar.get(SESSION_COOKIE)?.value;
+  if (!id) return null;
+  return getSession(db, id);
+}
+
+/** The active face in this browser session, or null (reader). */
+export async function activeFace() {
+  const session = await currentSession();
+  if (!session?.activeProfileId) return null;
+  const isSignedIn = session.faces.some(
+    (f) => f.profileId === session.activeProfileId
+  );
+  if (!isSignedIn) return null;
+  return db.profile.findUnique({ where: { id: session.activeProfileId } });
+}
+
+/** Every face signed into this browser session (for the switch control). */
+export async function sessionFaces() {
+  const session = await currentSession();
+  if (!session) return [];
+  return db.profile.findMany({
+    where: { id: { in: session.faces.map((f) => f.profileId) } },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+/** Stash a secret for one short-lived display (call from an action). */
+export async function setOneTimeSecret(value: string): Promise<void> {
+  const jar = await cookies();
+  jar.set(ONE_TIME_COOKIE, value, { httpOnly: true, sameSite: "lax", maxAge: 300 });
+}
+
+/** Read the pending secret (safe in a server component render). */
+export async function peekOneTimeSecret(): Promise<string | null> {
+  const jar = await cookies();
+  return jar.get(ONE_TIME_COOKIE)?.value ?? null;
+}
+
+/** Destroy the pending secret (call from the "I saved it" action). */
+export async function clearOneTimeSecret(): Promise<void> {
+  const jar = await cookies();
+  jar.delete(ONE_TIME_COOKIE);
+}
