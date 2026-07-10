@@ -15,6 +15,8 @@
 
 import type { PrismaClient } from "@prisma/client";
 import { clearGate } from "./gate";
+import { chargeToTreasury } from "./economy";
+import { getRail } from "./rails";
 
 export type FlagResult =
   | { ok: true; flagId: string }
@@ -48,14 +50,31 @@ export async function fileFlag(
     return { ok: false, reason: `Gate: ${gate.outcome}` };
   }
 
-  const flag = await db.flag.create({
-    data: {
-      postId: post.id,
-      ruleId: rule.id,
-      note: input.note?.trim() || null,
-      reporterProfileId: input.profileId,
-      nullifier: gate.nullifier,
-    },
+  const flag = await db.$transaction(async (tx) => {
+    // The refundable deposit — but flagging is NEVER blocked by an
+    // empty balance (DISCUSSIONS §7): a zero-balance soul flags without
+    // a deposit; pattern penalties fall back to rate-limiting, not debt.
+    const depositAmount = await getRail(tx, "moderation.flagDeposit");
+    const { balanceOf } = await import("./economy");
+    if ((await balanceOf(tx, input.profileId, "PC")) >= depositAmount) {
+      const deposit = await chargeToTreasury(tx, {
+        profileId: input.profileId,
+        currency: "PC",
+        amount: depositAmount,
+        kind: "deposit.flag",
+        refType: "flag",
+      });
+      if (!deposit.ok) throw new Error(deposit.reason);
+    }
+    return tx.flag.create({
+      data: {
+        postId: post.id,
+        ruleId: rule.id,
+        note: input.note?.trim() || null,
+        reporterProfileId: input.profileId,
+        nullifier: gate.nullifier!,
+      },
+    });
   });
 
   return { ok: true, flagId: flag.id };

@@ -24,6 +24,9 @@ import { clearGate } from "./gate";
 import { appendEvent, canonicalJson } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
+import { chargeToTreasury, maybeFirstActionGrant } from "./economy";
+
+class InsufficientFunds extends Error {}
 
 export type PollType = "single" | "multi" | "consensus";
 export type PollMode = "public" | "pseudonymous";
@@ -120,7 +123,18 @@ export async function createPoll(
   });
   if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
 
+  try {
   const poll = await db.$transaction(async (tx) => {
+    const fee = await chargeToTreasury(tx, {
+      profileId: profile.id,
+      currency: "PC",
+      amount: await getRail(tx, "poll.creationFee"),
+      kind: "fee.poll",
+      refType: "poll",
+    });
+    if (!fee.ok) throw new InsufficientFunds(fee.reason);
+    await maybeFirstActionGrant(tx, profile.id);
+
     const created = await tx.poll.create({
       data: {
         pillarId: pillar.id,
@@ -164,6 +178,10 @@ export async function createPoll(
   });
 
   return { ok: true, pollId: poll.id };
+  } catch (err) {
+    if (err instanceof InsufficientFunds) return { ok: false, reason: err.message };
+    throw err;
+  }
 }
 
 export async function castVote(
@@ -193,6 +211,19 @@ export async function castVote(
     return { ok: false, reason: "No active face." };
   }
 
+  // The vote micro-fee — checked BEFORE the gate so an underfunded
+  // attempt never spends the one-per-poll nullifier. (Identical fee for
+  // everyone, ordinary and governance alike; a fee to cast is not
+  // weight.)
+  const voteFee = await getRail(db, "poll.voteFee");
+  const { balanceOf } = await import("./economy");
+  if ((await balanceOf(db, profile.id, "PC")) < voteFee) {
+    return {
+      ok: false,
+      reason: "Insufficient PollCoin for the vote micro-fee — the earnable path covers committed souls.",
+    };
+  }
+
   // One vote per profile: the per-poll scope makes a second attempt a
   // DUPLICATE — refused privately (visible only to the soul). PRIVATE
   // recording: sealed means sealed; the ledger learns nothing mid-poll.
@@ -209,17 +240,31 @@ export async function castVote(
     return { ok: false, reason: `Gate: ${gate.outcome}` };
   }
 
-  await db.ballot.create({
-    data: {
-      pollId: poll.id,
-      nullifier: gate.nullifier,
-      // Public mode attaches the face by design; pseudonymous mode is
-      // nullifier-keyed only — no profile, ever (DUAL_IDENTITY §4.3).
-      voterProfileId: poll.mode === "public" ? profile.id : null,
-      voterHandle: poll.mode === "public" ? profile.handle : null,
-      voterDisplayName: poll.mode === "public" ? profile.displayName : null,
-      choices: { create: optionIds.map((optionId) => ({ optionId })) },
-    },
+  await db.$transaction(async (tx) => {
+    const fee = await chargeToTreasury(tx, {
+      profileId: profile.id,
+      currency: "PC",
+      amount: voteFee,
+      kind: "fee.vote",
+      // Deliberately no refId while polls can be open: a fee entry
+      // naming (voter, poll) would be a who-voted record. The treasury
+      // sees the amount; the poll reference is omitted for votes.
+      refType: "poll-vote",
+    });
+    if (!fee.ok) throw new Error(fee.reason);
+    await maybeFirstActionGrant(tx, profile.id);
+    await tx.ballot.create({
+      data: {
+        pollId: poll.id,
+        nullifier: gate.nullifier!,
+        // Public mode attaches the face by design; pseudonymous mode is
+        // nullifier-keyed only — no profile, ever (DUAL_IDENTITY §4.3).
+        voterProfileId: poll.mode === "public" ? profile.id : null,
+        voterHandle: poll.mode === "public" ? profile.handle : null,
+        voterDisplayName: poll.mode === "public" ? profile.displayName : null,
+        choices: { create: optionIds.map((optionId) => ({ optionId })) },
+      },
+    });
   });
 
   return { ok: true };

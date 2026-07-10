@@ -21,6 +21,7 @@ import { clearRegistration } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 import { normalizeHandle, handleTaken } from "./handles";
+import { grant } from "./economy";
 
 function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
@@ -108,6 +109,20 @@ export async function registerTrueSelf(
         actorId: handle,
         eventType: "trueself.registered",
         payload: { handle, displayName, nullifier: registration.nullifier },
+      });
+      // The Welcome Grant (ECONOMIC §3): one per verified human — safe
+      // here and nowhere else, because registration is per-human.
+      await grant(tx, {
+        profileId: created.id,
+        currency: "PC",
+        amount: await getRail(tx, "grant.verification.pc"),
+        kind: "grant.welcome",
+      });
+      await grant(tx, {
+        profileId: created.id,
+        currency: "G",
+        amount: await getRail(tx, "grant.verification.g"),
+        kind: "grant.welcome",
       });
       return created;
     });
@@ -203,6 +218,21 @@ export async function registerAlias(
           kind: "alias-disclosures",
           version: "phase-a-v1",
         },
+      });
+      // The hatching grant: a new Alias isn't born traceable-by-poverty
+      // (ONBOARDING §5.5). Grants are issuance entries, not transfers —
+      // nothing connects this to any other balance.
+      await grant(tx, {
+        profileId: created.id,
+        currency: "PC",
+        amount: await getRail(tx, "grant.hatch.pc"),
+        kind: "grant.hatch",
+      });
+      await grant(tx, {
+        profileId: created.id,
+        currency: "G",
+        amount: await getRail(tx, "grant.hatch.g"),
+        kind: "grant.hatch",
       });
       // NO ledger event here, by design.
     });

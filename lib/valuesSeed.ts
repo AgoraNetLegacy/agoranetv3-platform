@@ -6,6 +6,8 @@
 // default) — never rendered publicly.
 
 import type { PrismaClient } from "@prisma/client";
+import { grant, grantAlreadyGiven } from "./economy";
+import { getRail } from "./rails";
 
 /** The seven OUSIA questions: canon positions 1, 8, 15, 22, 29, 36, 43. */
 export async function seedQuestions(db: PrismaClient) {
@@ -38,6 +40,21 @@ export async function saveSeedAnswer(
     create: { profileId: input.profileId, questionId: input.questionId, body },
     update: { body },
   });
+
+  // Welcome Grant milestone: all seven answered (ECONOMIC §3) — once.
+  const answered = await db.valuesAnswer.count({
+    where: { profileId: input.profileId },
+  });
+  if (answered >= 7 && !(await grantAlreadyGiven(db, input.profileId, "grant.seed"))) {
+    await db.$transaction(async (tx) => {
+      await grant(tx, {
+        profileId: input.profileId,
+        currency: "PC",
+        amount: await getRail(tx, "grant.valuesSeed.pc"),
+        kind: "grant.seed",
+      });
+    });
+  }
   return { ok: true };
 }
 
