@@ -1,17 +1,22 @@
-// Seed the canon: 7 pillars × 7 lenses = 49 questions, each seeding written
-// to the Civic Ledger. Idempotent: refuses to double-seed rather than
-// duplicating canon (the ledger is append-only; there are no re-runs).
+// Seed the platform's data-as-law: the canon (7 pillars × 7 lenses = 49
+// questions), the 49 canonical Discussions (permanent spaces — the civic
+// spine), the rails (every number as data), and the rulebook. Every
+// seeding is written to the Civic Ledger. Idempotent per section:
+// refuses to double-seed rather than duplicating (the ledger is
+// append-only; there are no re-runs).
 
 import { PrismaClient } from "@prisma/client";
 import { PILLARS, LENSES } from "../lib/canon";
+import { RAIL_DEFAULTS } from "../lib/rails";
+import { RULEBOOK } from "../lib/rulebook";
 import { appendEvent, GENESIS_HASH } from "../lib/ledger";
 
 const db = new PrismaClient();
 
-async function main() {
+async function seedCanon() {
   const existing = await db.pillar.count();
   if (existing > 0) {
-    console.log(`Canon already seeded (${existing} pillars) — nothing to do.`);
+    console.log(`Canon already seeded (${existing} pillars) — skipping.`);
     return;
   }
 
@@ -69,6 +74,95 @@ async function main() {
   }
 
   console.log(`Seeded ${PILLARS.length} pillars, ${position} questions — every seeding on the ledger.`);
+}
+
+// The 49 canonical Discussions — platform-created permanent spaces,
+// 1:1 with the canon questions ("Canonical question threads: Permanent —
+// ratified (owner, 2026-07-07) … they're the civic spine", DISCUSSIONS §8).
+async function seedCanonicalDiscussions() {
+  const existing = await db.discussion.count();
+  if (existing > 0) {
+    console.log(`Discussions already seeded (${existing}) — skipping.`);
+    return;
+  }
+  const questions = await db.question.findMany({
+    orderBy: { position: "asc" },
+    include: { pillar: true },
+  });
+  for (const q of questions) {
+    const discussion = await db.discussion.create({
+      data: {
+        title: q.text,
+        pillarId: q.pillarId,
+        questionId: q.id,
+        permanence: "permanent-canonical",
+      },
+    });
+    await appendEvent(db, {
+      actorType: "system",
+      eventType: "discussion.seeded",
+      payload: {
+        discussionRef: discussion.id,
+        pillar: q.pillar.slug,
+        canonPosition: q.position,
+        permanence: "permanent-canonical",
+      },
+    });
+  }
+  console.log(`Seeded ${questions.length} canonical Discussions (permanent spaces).`);
+}
+
+// Rails: every number as data (ECONOMIC_STARTING_DEFAULTS testing
+// defaults; bounds [¼×, 4×] unless specified).
+async function seedRails() {
+  const existing = await db.rail.count();
+  if (existing > 0) {
+    console.log(`Rails already seeded (${existing}) — skipping.`);
+    return;
+  }
+  for (const rail of RAIL_DEFAULTS) {
+    await db.rail.create({
+      data: {
+        key: rail.key,
+        value: rail.value,
+        unit: rail.unit,
+        boundMin: rail.boundMin ?? rail.value / 4,
+        boundMax: rail.boundMax ?? rail.value * 4,
+        description: rail.description,
+      },
+    });
+    await appendEvent(db, {
+      actorType: "system",
+      eventType: "rail.seeded",
+      payload: { key: rail.key, value: rail.value, unit: rail.unit },
+    });
+  }
+  console.log(`Seeded ${RAIL_DEFAULTS.length} rails.`);
+}
+
+// The rulebook: complete v1 legislation as data.
+async function seedRulebook() {
+  const existing = await db.rule.count();
+  if (existing > 0) {
+    console.log(`Rulebook already seeded (${existing} rules) — skipping.`);
+    return;
+  }
+  for (const rule of RULEBOOK) {
+    await db.rule.create({ data: rule });
+    await appendEvent(db, {
+      actorType: "system",
+      eventType: "rule.seeded",
+      payload: { rule: rule.id, tier: rule.tier, title: rule.title },
+    });
+  }
+  console.log(`Seeded ${RULEBOOK.length} rulebook rules.`);
+}
+
+async function main() {
+  await seedCanon();
+  await seedCanonicalDiscussions();
+  await seedRails();
+  await seedRulebook();
 }
 
 main()

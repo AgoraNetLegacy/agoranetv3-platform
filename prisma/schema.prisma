@@ -43,15 +43,21 @@ model Profile {
 // ------------------------------------------------------------------
 
 model GateRequest {
-  id         String    @id @default(cuid())
-  profileId  String
-  profile    Profile   @relation(fields: [profileId], references: [id])
-  scope      String // e.g. "poll:{id}:face" — namespaces the nullifier
-  scopeKind  String // "per-profile" | "per-human" (§4.2 — both from day one)
-  status     String // "PENDING" | "CLEARED" | "DUPLICATE" | "INVALID"
-  nullifier  String? // set when the proof is checked; HMAC output, never a raw id
-  createdAt  DateTime  @default(now())
-  resolvedAt DateTime?
+  id              String    @id @default(cuid())
+  profileId       String
+  profile         Profile   @relation(fields: [profileId], references: [id])
+  scope           String // e.g. "poll:{id}:face" — namespaces the nullifier
+  scopeKind       String // "per-profile" | "per-human" (§4.2 — both from day one)
+  // "pseudonymous": clearance lands on the public ledger (the default —
+  // civic actions are public record). "private": no public event at all;
+  // for actions whose existence must not be observable (flags — the
+  // triangle of blindness, MODERATION §3.2: the public sees only
+  // outcomes). The gate still enforces humanity + one-per-scope.
+  ledgerRecording String    @default("pseudonymous") // "pseudonymous" | "private"
+  status          String // "PENDING" | "CLEARED" | "DUPLICATE" | "INVALID"
+  nullifier       String? // set when the proof is checked; HMAC output, never a raw id
+  createdAt       DateTime  @default(now())
+  resolvedAt      DateTime?
 }
 
 // One nullifier may clear a given scope exactly once. The composite key
@@ -89,8 +95,8 @@ model LedgerEvent {
 // ------------------------------------------------------------------
 
 model Pillar {
-  id            String     @id @default(cuid())
-  slug          String     @unique
+  id            String       @id @default(cuid())
+  slug          String       @unique
   name          String
   classicalName String
   loreName      String
@@ -98,18 +104,124 @@ model Pillar {
   colorPrimary  String
   colorLight    String
   colorDark     String
-  isMeta        Boolean    @default(false)
-  position      Int        @unique // 1..7
+  isMeta        Boolean      @default(false)
+  position      Int          @unique // 1..7
   questions     Question[]
+  discussions   Discussion[]
 }
 
 model Question {
-  id       String @id @default(cuid())
-  pillarId String
-  pillar   Pillar @relation(fields: [pillarId], references: [id])
-  lens     String // OUSIA | AITIA | MODUS | PERSONA | VELA | KYOKAI | TAO
-  position Int    @unique // 1..49, one sequence across the whole matrix
-  text     String
+  id         String      @id @default(cuid())
+  pillarId   String
+  pillar     Pillar      @relation(fields: [pillarId], references: [id])
+  lens       String // OUSIA | AITIA | MODUS | PERSONA | VELA | KYOKAI | TAO
+  position   Int         @unique // 1..49, one sequence across the whole matrix
+  text       String
+  discussion Discussion?
 
   @@unique([pillarId, lens])
+}
+
+// ------------------------------------------------------------------
+// Rails — every number is data, never a literal (build law; values from
+// Economics/ECONOMIC_STARTING_DEFAULTS.md, testing defaults in u).
+// Poll-adjustable within bounds when governance arrives (Phase 3+);
+// unless a spec says otherwise, bounds are [¼×, 4×] of the default.
+// ------------------------------------------------------------------
+
+model Rail {
+  key         String @id // e.g. "discussion.replyFee"
+  value       Float
+  unit        String // "uPC" | "uG" | "minutes" | ...
+  boundMin    Float
+  boundMax    Float
+  description String
+}
+
+// ------------------------------------------------------------------
+// The rulebook as data (CONTENT_MODERATION_RULEBOOK.md, complete v1).
+// Flags cite a rule; rulings (Phase 5) cite a rule. Amendments are
+// governance events later — for now the seed is the legislation.
+// ------------------------------------------------------------------
+
+model Rule {
+  id      String @id // "R1.1" … "R3.8"
+  tier    Int // 1 routine | 2 serious | 3 severe
+  title   String
+  summary String
+  flags   Flag[]
+}
+
+// ------------------------------------------------------------------
+// Discussions (DISCUSSIONS_SPEC.md; Phase 1 scope = the 49 canonical
+// threads). Permanence is a property of the SPACE, fixed at creation,
+// always visible (§8).
+// ------------------------------------------------------------------
+
+model Discussion {
+  id         String    @id @default(cuid())
+  title      String
+  pillarId   String
+  pillar     Pillar    @relation(fields: [pillarId], references: [id])
+  // Canonical threads map 1:1 onto canon questions (the civic spine).
+  questionId String?   @unique
+  question   Question? @relation(fields: [questionId], references: [id])
+  // "permanent-canonical" (platform-created, ratified permanent).
+  // Later: "permanent-creator" (paid, creation-only, immutable) and
+  // "deletable" (ordinary soul-created spaces) — Phase 4+.
+  permanence String
+  createdAt  DateTime  @default(now())
+  posts      Post[]
+}
+
+model Post {
+  id           String         @id @default(cuid())
+  discussionId String
+  discussion   Discussion     @relation(fields: [discussionId], references: [id])
+  parentId     String?
+  parent       Post?          @relation("Thread", fields: [parentId], references: [id])
+  replies      Post[]         @relation("Thread")
+  // The author's internal profile id stays in Phase A operator space;
+  // everything public (pages, ledger) speaks the pseudonym snapshot.
+  authorProfileId String
+  authorPseudonym String
+  body         String
+  status       String         @default("visible") // hidden/blur states arrive Phase 5
+  createdAt    DateTime       @default(now())
+  // Grace window (rail: discussion.graceWindowMinutes): edits allowed
+  // with visible history until this moment, then the record locks.
+  editableUntil DateTime
+  revisions    PostRevision[]
+  flagsOn      Flag[]
+}
+
+// Visible edit history within the grace window (§8: "typo repair with
+// visible edit history, then locked into the record").
+model PostRevision {
+  id       String   @id @default(cuid())
+  postId   String
+  post     Post     @relation(fields: [postId], references: [id])
+  body     String // the body as it was BEFORE the edit
+  editedAt DateTime @default(now())
+}
+
+// ------------------------------------------------------------------
+// Flag capture — queue only in Phase 1; adjudication arrives Phase 5.
+// A flag's existence is never public (triangle of blindness). The
+// reporter's profile id is Phase A operator space (deposit refunds
+// need it later); moderators never see it — Phase 5 case files are
+// built nullifier-keyed.
+// ------------------------------------------------------------------
+
+model Flag {
+  id                String   @id @default(cuid())
+  postId            String
+  post              Post     @relation(fields: [postId], references: [id])
+  ruleId            String // which rule is alleged (the case category)
+  rule              Rule     @relation(fields: [ruleId], references: [id])
+  note              String?
+  reporterProfileId String
+  nullifier         String // gate nullifier — keys the flag for Phase 5 handling
+  status            String   @default("queued")
+  createdAt         DateTime @default(now())
 }

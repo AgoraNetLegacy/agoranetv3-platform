@@ -28,6 +28,17 @@ export const PHASE_A_DISCLOSURE =
 
 export type GateOutcome = "CLEARED" | "DUPLICATE" | "INVALID";
 
+/**
+ * How a clearance is recorded publicly. "pseudonymous" (default): civic
+ * actions are public record — pseudonym + nullifier + timestamp on the
+ * ledger. "private": the gate still enforces humanity + one-per-scope,
+ * but NO public event exists — for actions whose existence must not be
+ * observable (flags: MODERATION §3.2's triangle of blindness — the
+ * public sees only outcomes; same reasoning as §4.3's nullifier-keyed
+ * sealed ballots).
+ */
+export type LedgerRecording = "pseudonymous" | "private";
+
 export interface GateResult {
   outcome: GateOutcome;
   requestId: string;
@@ -38,13 +49,19 @@ export interface GateResult {
 /** Step 1: the action is marked PENDING and a proof is requested. */
 export async function requestGate(
   db: PrismaClient,
-  input: { profileId: string; scope: string; scopeKind: ScopeKind }
+  input: {
+    profileId: string;
+    scope: string;
+    scopeKind: ScopeKind;
+    ledgerRecording?: LedgerRecording;
+  }
 ) {
   return db.gateRequest.create({
     data: {
       profileId: input.profileId,
       scope: input.scope,
       scopeKind: input.scopeKind,
+      ledgerRecording: input.ledgerRecording ?? "pseudonymous",
       status: "PENDING",
     },
   });
@@ -94,17 +111,19 @@ export async function submitProof(
         where: { id: requestId },
         data: { status: "CLEARED", nullifier, resolvedAt: new Date() },
       });
-      await appendEvent(tx, {
-        actorType: "soul",
-        actorId: request.profile.pseudonym,
-        eventType: "gate.cleared",
-        payload: {
-          scope: request.scope,
-          scopeKind,
-          nullifier,
-          pseudonym: request.profile.pseudonym,
-        },
-      });
+      if (request.ledgerRecording === "pseudonymous") {
+        await appendEvent(tx, {
+          actorType: "soul",
+          actorId: request.profile.pseudonym,
+          eventType: "gate.cleared",
+          payload: {
+            scope: request.scope,
+            scopeKind,
+            nullifier,
+            pseudonym: request.profile.pseudonym,
+          },
+        });
+      }
       return { outcome: "CLEARED" as const, requestId, nullifier };
     });
   } catch (err) {
@@ -125,7 +144,12 @@ export async function submitProof(
 /** The full flow in one call — what feature code will actually use. */
 export async function clearGate(
   db: PrismaClient,
-  input: { profileId: string; scope: string; scopeKind: ScopeKind }
+  input: {
+    profileId: string;
+    scope: string;
+    scopeKind: ScopeKind;
+    ledgerRecording?: LedgerRecording;
+  }
 ): Promise<GateResult> {
   const request = await requestGate(db, input);
   return submitProof(db, request.id);
