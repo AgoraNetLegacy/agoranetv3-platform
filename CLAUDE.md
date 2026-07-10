@@ -57,18 +57,20 @@ under it.**
 
 ## Current Phase
 
-**Phase 3 — Polls & Governance Rooms** (see BUILD_ORDER.md and
-`Polls/POLLS_SPEC.md`; Phases 0–2 + the 2026-07-10 naming amendment
-passed owner review 2026-07-10): the Poll primitive — single/multi/
-consensus, Public and Pseudonymous modes, sealed-by-default tallies,
-creator live-tally option on ordinary polls, one vote per profile via
-scoped nullifiers; Governance rooms per pillar (permanent spaces)
-with always-sealed governance polls + candle close; Circle-restricted
-visibility support (consumed in Phase 6); post-close results as
-timestamped permanent records; consensus-fail → prompted Discussion.
-The vote micro-fee amendments land here with their host feature
-(designated + railed; debits wire at Phase 4).
+**Phase 4 — The Internal Economy** (see BUILD_ORDER.md and
+`tokenomics/TOKENOMICS_SPEC.md` + `Economics/
+ECONOMIC_STARTING_DEFAULTS.md`; Phases 0–3 passed owner review
+2026-07-10): per-profile internal balances (PollCoin AND Gratium),
+the treasury account, every ratified fee wired — creation fees,
+reply/vote micro-fees, governance micro-fee, paid permanence — plus
+the Welcome Grant (deferred from Phase 2); tipping (unique-tipper
+ranking activates in the sort menu); attestation rails (human-made
+marks, vouched/unverified sharing, track-record counts); source tags
++ shared source objects (AI summaries may trail as their own
+mini-review). Legal gate check: internal-only currencies need
+review-lite; confirm the non-withdrawable Gratium posture with
+counsel before launch marketing mentions tokens.
 
-**Phase 3 checkpoint (owner review):** the owner runs a governance
-poll end to end — sealed tally, candle close revealed with results,
-record on the ledger.
+**Phase 4 checkpoint (owner review):** the owner tips, pays for
+permanence, and watches the treasury fill on a raw inspection page
+(dashboard comes later).
