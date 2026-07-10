@@ -20,21 +20,112 @@ generator client {
 // ------------------------------------------------------------------
 
 model Human {
-  id        String    @id @default(cuid())
-  createdAt DateTime  @default(now())
-  profiles  Profile[]
+  id             String    @id @default(cuid())
+  // Interim issuer (Phase A): the soul holds the credential secret (their
+  // "wallet"); the platform stores only its hash. Real issuer at Phase 9.
+  credentialHash String    @unique
+  verifiedAt     DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  profiles       Profile[]
 }
 
 model Profile {
   id           String        @id @default(cuid())
-  humanId      String
-  human        Human         @relation(fields: [humanId], references: [id])
+  // NULL for every Alias — deliberately. One-Alias-per-human is enforced
+  // by the alias-registration nullifier spend, never by a stored link;
+  // no database row connects a soul's two faces (DUAL_IDENTITY §1.2).
+  // The True Self keeps its Human link: recovery routes through the
+  // human, and that link never bridges to the Alias.
+  humanId      String?
+  human        Human?        @relation(fields: [humanId], references: [id])
   face         String // "TRUE_SELF" | "ALIAS"
   pseudonym    String        @unique // the only name the public ledger may speak
+  // Per-face login secret, held soul-side, hash stored. Each face signs
+  // in with its own key — login never routes through the Human.
+  accessKeyHash String       @unique
+  // Aliases are born PENDING and activate at a randomized, cohort-batched
+  // moment (ONBOARDING §3.3–3.4); True Selves are born active.
+  status       String        @default("active") // "active" | "pending"
+  activateAt   DateTime?
+  // Coarse join period only — never a precise timestamp (§3.5).
+  joinedPeriod String
   createdAt    DateTime      @default(now())
   gateRequests GateRequest[]
+  valuesAnswers ValuesAnswer[]
+  consentAcks  ConsentAck[]
 
-  @@unique([humanId, face]) // one True Self and one Alias per human
+  @@unique([humanId, face])
+}
+
+// The values seed (ONBOARDING Stage 5): per-profile answers to the seven
+// OUSIA questions. Matchmaking-only — the ratified conservative default;
+// never rendered publicly (private → public later is a choice, the
+// reverse is a breach).
+model ValuesAnswer {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id])
+  questionId String
+  body       String
+  createdAt  DateTime @default(now())
+
+  @@unique([profileId, questionId])
+}
+
+// Blocking acknowledgments, recorded (ONBOARDING §4): permanence and
+// Constitution before the first post; the §3.6 alias disclosures at hatch.
+model ConsentAck {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id])
+  kind      String // "permanence" | "constitution" | "alias-disclosures"
+  version   String
+  ackedAt   DateTime @default(now())
+
+  @@unique([profileId, kind])
+}
+
+// ------------------------------------------------------------------
+// Sessions & the parking rule (SEVEN_PILLAR_DASHBOARD_SPEC §3).
+//
+// A SoulSession is one browser/device context. It is the ONLY place a
+// soul's two faces ever co-occur — which is what lets the backend
+// enforce the per-pillar lock without any durable identity link. These
+// rows are ephemeral by design: short retention, purged on expiry
+// (DUAL_IDENTITY §7.2 — minimal, segregated, short-retention).
+// ------------------------------------------------------------------
+
+model SoulSession {
+  id              String        @id @default(cuid())
+  createdAt       DateTime      @default(now())
+  expiresAt       DateTime
+  lastSeenAt      DateTime      @default(now())
+  // The face currently selected in this session — explicit and visible,
+  // never an ambient default (DASHBOARD §3.3.1).
+  activeProfileId String?
+  lastSwitchAt    DateTime? // face-switch cooldown anchor
+  faces           SessionFace[]
+  locks           PillarLock[]
+}
+
+model SessionFace {
+  sessionId String
+  session   SoulSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  profileId String
+  addedAt   DateTime    @default(now())
+
+  @@id([sessionId, profileId])
+}
+
+// The parking lots: one face per pillar per session, backend-enforced.
+model PillarLock {
+  sessionId    String
+  session      SoulSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  pillarId     String
+  profileId    String
+  lastActiveAt DateTime    @default(now())
+
+  @@id([sessionId, pillarId])
 }
 
 // ------------------------------------------------------------------

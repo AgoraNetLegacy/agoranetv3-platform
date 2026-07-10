@@ -13,7 +13,7 @@ import type { DbOrTx } from "./db";
 export interface RailDefault {
   key: string;
   value: number;
-  unit: "uPC" | "uG" | "minutes";
+  unit: "uPC" | "uG" | "minutes" | "hours";
   boundMin?: number; // defaults to ¼× value
   boundMax?: number; // defaults to 4× value
   description: string;
@@ -40,6 +40,53 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     unit: "uPC",
     description:
       "Refundable flag deposit (participation-cost rule). Refunded on upheld and good-faith declined; forfeited on bad-faith/pattern rulings. Wires up with Phase 4 balances; flagging is never blocked by an empty balance.",
+  },
+  // --- Identity & session rails (Phase 2). The activation window bounds
+  // follow ONBOARDING §3.3's indicative 24–72h; cohort cadence follows
+  // its daily example. Cooldown and timeout are build-time defaults for
+  // open items deferred to this phase (OPEN_ITEMS Track 5 #35/#36) —
+  // flagged to the owner at the Phase 2 checkpoint.
+  {
+    key: "identity.aliasActivationMinHours",
+    value: 24,
+    unit: "hours",
+    description:
+      "Earliest a newly hatched Alias may activate (randomized within the window — ONBOARDING §3.3).",
+  },
+  {
+    key: "identity.aliasActivationMaxHours",
+    value: 72,
+    unit: "hours",
+    description:
+      "Latest a newly hatched Alias may activate (ONBOARDING §3.3).",
+  },
+  {
+    key: "identity.aliasCohortCadenceHours",
+    value: 24,
+    unit: "hours",
+    description:
+      "Alias activations release in cohorts on this cadence — a new Alias always appears alongside others (ONBOARDING §3.4).",
+  },
+  {
+    key: "identity.faceSwitchCooldownMinutes",
+    value: 5,
+    unit: "minutes",
+    description:
+      "Modest cooldown after a face switch (DUAL_IDENTITY §7.2 timing mitigation; length was open item DUAL_ID OQ5 — build-time default, owner-adjustable).",
+  },
+  {
+    key: "identity.pillarSessionTimeoutMinutes",
+    value: 30,
+    unit: "minutes",
+    description:
+      "A pillar parking lock expires after this inactivity (DASHBOARD §3.3.5 left the duration to build time).",
+  },
+  {
+    key: "identity.sessionLifetimeHours",
+    value: 24,
+    unit: "hours",
+    description:
+      "SoulSession lifetime — session records are short-retention by design (DUAL_IDENTITY §7.2) and purged on expiry.",
   },
 ];
 

@@ -96,8 +96,18 @@ export async function submitProof(
   }
 
   const scopeKind = request.scopeKind as ScopeKind;
+  // An Alias carries no humanId (deliberately — lib/identity.ts), so it
+  // cannot act in per-human scopes. Per the ratified scope table those
+  // are registration-only anyway; anything else per-human is reserved.
   const subjectId =
     scopeKind === "per-human" ? request.profile.humanId : request.profileId;
+  if (!subjectId) {
+    await db.gateRequest.update({
+      where: { id: requestId },
+      data: { status: "INVALID", resolvedAt: new Date() },
+    });
+    return { outcome: "INVALID", requestId };
+  }
   const nullifier = nullifierFor(request.scope, scopeKind, subjectId);
 
   try {
@@ -153,4 +163,42 @@ export async function clearGate(
 ): Promise<GateResult> {
   const request = await requestGate(db, input);
   return submitProof(db, request.id);
+}
+
+export type RegistrationOutcome = "CLEARED" | "DUPLICATE";
+
+/**
+ * The gate's own bootstrap (DUAL_IDENTITY §3.2 steps 2–3): registration
+ * ceremonies prove "this human has not registered in this scope before."
+ * Always per-human by definition — this IS the one-True-Self /
+ * one-Alias enforcement. No profile exists yet, so there is no
+ * GateRequest row; the nullifier spend is the enforcement record, and
+ * the ceremony (lib/identity.ts) decides what, if anything, reaches the
+ * public ledger — a True Self registration is public immediately; an
+ * Alias leaves no public trace until its cohort activates (ONBOARDING
+ * §3.3–3.4: registration time must never be observable).
+ *
+ * The humanId is used transiently to derive the nullifier and is not
+ * stored by this function. Runs inside the caller's transaction so the
+ * spend and the profile creation commit atomically.
+ */
+export async function clearRegistration(
+  tx: { nullifierSpend: PrismaClient["nullifierSpend"] },
+  input: { humanId: string; scope: "true-self-registration" | "alias-registration" }
+): Promise<{ outcome: RegistrationOutcome; nullifier: string }> {
+  const nullifier = nullifierFor(input.scope, "per-human", input.humanId);
+  try {
+    await tx.nullifierSpend.create({
+      data: { scope: input.scope, nullifier },
+    });
+    return { outcome: "CLEARED", nullifier };
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return { outcome: "DUPLICATE", nullifier };
+    }
+    throw err;
+  }
 }
