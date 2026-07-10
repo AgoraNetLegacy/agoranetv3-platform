@@ -57,18 +57,18 @@ under it.**
 
 ## Current Phase
 
-**Phase 2 — Dual Identity Complete (Phase A trust model)** (see
-BUILD_ORDER.md, `Onboarding/ONBOARDING_SPEC.md`,
-`Dual identity/DUAL_IDENTITY_MODULE.md`; Phases 0–1 passed owner
-review 2026-07-10): onboarding — read-free/verify-to-act, True Self
-ceremony (mock/interim issuer), consent architecture (permanence +
-Constitution acknowledgment slots), values seed (7 questions);
-Alias-on-demand ceremony with all timing mitigations (interim
-equivalent of the wallet-side request path, randomized activation,
-cohort batching, coarse join metadata); the parking rule (hard
-per-pillar session lock, profile indicator, face-switch flow);
-Phase A disclosures verbatim.
+**Phase 3 — Polls & Governance Rooms** (see BUILD_ORDER.md and
+`Polls/POLLS_SPEC.md`; Phases 0–2 + the 2026-07-10 naming amendment
+passed owner review 2026-07-10): the Poll primitive — single/multi/
+consensus, Public and Pseudonymous modes, sealed-by-default tallies,
+creator live-tally option on ordinary polls, one vote per profile via
+scoped nullifiers; Governance rooms per pillar (permanent spaces)
+with always-sealed governance polls + candle close; Circle-restricted
+visibility support (consumed in Phase 6); post-close results as
+timestamped permanent records; consensus-fail → prompted Discussion.
+The vote micro-fee amendments land here with their host feature
+(designated + railed; debits wire at Phase 4).
 
-**Phase 2 checkpoint (owner review):** the owner runs both faces
-through onboarding, verifies the lock, and confirms nothing in the
-database or logs links the two.
+**Phase 3 checkpoint (owner review):** the owner runs a governance
+poll end to end — sealed tally, candle close revealed with results,
+record on the ledger.
