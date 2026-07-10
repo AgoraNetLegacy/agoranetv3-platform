@@ -36,8 +36,12 @@ export default async function AliasPage({
           <input type="password" name="credential" required autoComplete="off" />
         </label>
         <label>
-          Alias handle
-          <input type="text" name="handle" required maxLength={40} />
+          Alias display name (no relation to your True Self's)
+          <input type="text" name="displayName" required maxLength={60} />
+        </label>
+        <label>
+          Alias @handle (unique, eternal — and unlike your True Self's)
+          <input type="text" name="handle" required maxLength={30} />
         </label>
         <label>
           <input type="checkbox" name="disclosuresAccepted" required /> I have

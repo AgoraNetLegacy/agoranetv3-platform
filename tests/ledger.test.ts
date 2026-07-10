@@ -75,7 +75,7 @@ describe("findForbiddenId", () => {
   it("passes a clean pseudonym-only event", () => {
     const event = {
       actorId: "bright-heron-42",
-      payload: canonicalJson({ pseudonym: "bright-heron-42", nullifier: "ab12" }),
+      payload: canonicalJson({ handle: "bright-heron-42", nullifier: "ab12" }),
     };
     expect(findForbiddenId(event, ["clx123internal", "clx456other"])).toBeNull();
   });

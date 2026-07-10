@@ -59,7 +59,7 @@ describe("the gate: pending → proof → cleared", () => {
     expect(event).not.toBeNull();
     expect(event!.actorId).toBe("bright-heron-42");
     const payload = JSON.parse(event!.payload);
-    expect(payload.pseudonym).toBe("bright-heron-42");
+    expect(payload.handle).toBe("bright-heron-42");
     expect(payload.nullifier).toBe(result.nullifier);
   });
 
@@ -107,6 +107,7 @@ describe("the gate: pending → proof → cleared", () => {
     const second = await registerAlias(db, {
       credential,
       handle: "second-alias-attempt",
+      displayName: "second-alias-attempt",
       disclosuresAccepted: true,
     });
     expect(second.ok).toBe(false);
@@ -114,7 +115,7 @@ describe("the gate: pending → proof → cleared", () => {
     expect(second.reason).toContain("already holds an Alias");
     expect(await db.ledgerEvent.count()).toBe(before);
     expect(
-      await db.profile.findUnique({ where: { pseudonym: "second-alias-attempt" } })
+      await db.profile.findUnique({ where: { handle: "second-alias-attempt" } })
     ).toBeNull();
   });
 

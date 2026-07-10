@@ -60,7 +60,7 @@ describe("posting in a permanent space", () => {
     const payload = JSON.parse(event!.payload);
     expect(payload.postRef).toBe(result.postId);
     expect(payload.contentHash).toBe(contentHash("First words in the permanent record."));
-    expect(payload.pseudonym).toBe("steady-otter-7");
+    expect(payload.handle).toBe("steady-otter-7");
     expect(event!.payload).not.toContain(trueSelfId);
   });
 

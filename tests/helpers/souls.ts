@@ -14,13 +14,19 @@ import { recordAck } from "../../lib/consent";
 
 export async function makeOnboardedSoul(
   db: PrismaClient,
-  names: { trueSelf: string; alias: string }
+  names: {
+    trueSelf: string;
+    alias: string;
+    trueSelfDisplayName?: string;
+    aliasDisplayName?: string;
+  }
 ) {
   const { credential } = await verifyHumanity(db);
 
   const trueSelf = await registerTrueSelf(db, {
     credential,
     handle: names.trueSelf,
+    displayName: names.trueSelfDisplayName ?? names.trueSelf,
   });
   if (!trueSelf.ok) throw new Error(trueSelf.reason);
   await recordAck(db, { profileId: trueSelf.profileId, kind: "permanence" });
@@ -29,13 +35,14 @@ export async function makeOnboardedSoul(
   const alias = await registerAlias(db, {
     credential,
     handle: names.alias,
+    displayName: names.aliasDisplayName ?? names.alias,
     disclosuresAccepted: true,
   });
   if (!alias.ok) throw new Error(alias.reason);
 
   // Time-travel the activation and release the cohort.
   const aliasProfile = await db.profile.findUniqueOrThrow({
-    where: { pseudonym: names.alias },
+    where: { handle: names.alias },
   });
   await db.profile.update({
     where: { id: aliasProfile.id },

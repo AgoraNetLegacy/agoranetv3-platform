@@ -42,7 +42,7 @@ async function main() {
   const { credential } = await identity.verifyHumanity(db);
   console.log(`Issuer hands over a credential (soul-held): ${credential.slice(0, 12)}… (platform keeps only a hash)`);
 
-  const ts = await identity.registerTrueSelf(db, { credential, handle: "bright-heron-42" });
+  const ts = await identity.registerTrueSelf(db, { credential, handle: "bright-heron-42", displayName: "bright-heron-42" });
   if (!ts.ok) throw new Error(ts.reason);
   console.log(`True Self registered through the gate: bright-heron-42`);
   const regEvent = await db.ledgerEvent.findFirst({
@@ -64,18 +64,18 @@ async function main() {
   banner("2. The Alias hatch — no trace, no timing arrow");
   const eventsBefore = await db.ledgerEvent.count();
   const hatch = await identity.registerAlias(db, {
-    credential, handle: "quiet-cedar-17", disclosuresAccepted: true,
+    credential, handle: "quiet-cedar-17", displayName: "quiet-cedar-17", disclosuresAccepted: true,
   });
   if (!hatch.ok) throw new Error(hatch.reason);
   const eventsAfter = await db.ledgerEvent.count();
-  const aliasRow = await db.profile.findUniqueOrThrow({ where: { pseudonym: "quiet-cedar-17" } });
+  const aliasRow = await db.profile.findUniqueOrThrow({ where: { handle: "quiet-cedar-17" } });
   console.log(`Hatched. Ledger events before: ${eventsBefore}, after: ${eventsAfter} — the public learns NOTHING.`);
   console.log(`Status: ${aliasRow.status}; activation: randomized, cohort-snapped → ${aliasRow.activateAt!.toISOString()}`);
   console.log(`Soul is told only: "${hatch.activationHint}". Profile will show join period "${aliasRow.joinedPeriod}".`);
   console.log(`Alias row humanId: ${JSON.stringify(aliasRow.humanId)} ← no stored link, ever.`);
 
   const second = await identity.registerAlias(db, {
-    credential, handle: "third-face-99", disclosuresAccepted: true,
+    credential, handle: "third-face-99", displayName: "third-face-99", disclosuresAccepted: true,
   });
   console.log(`A second hatch attempt: ${second.ok ? "UNEXPECTED!" : `refused — "${!second.ok && second.reason}" (blind, no public trace)`}`);
 
@@ -101,7 +101,7 @@ async function main() {
   const e1 = await parking.enterPillar(db, { sessionId, profileId: ts.profileId, pillarId: pillars[0].id });
   console.log(`True Self enters ${pillars[0].name}: ${e1.allowed ? "parked ✓" : "blocked?!"}`);
   const e2 = await parking.enterPillar(db, { sessionId, profileId: aliasRow.id, pillarId: pillars[0].id });
-  console.log(`Alias tries ${pillars[0].name}: ${e2.allowed ? "UNEXPECTED" : `BLOCKED — held by ${!e2.allowed && e2.heldByPseudonym} (${!e2.allowed && e2.heldByFace})`}`);
+  console.log(`Alias tries ${pillars[0].name}: ${e2.allowed ? "UNEXPECTED" : `BLOCKED — held by ${!e2.allowed && e2.heldByHandle} (${!e2.allowed && e2.heldByFace})`}`);
   const e3 = await parking.enterPillar(db, { sessionId, profileId: aliasRow.id, pillarId: pillars[1].id });
   console.log(`Alias enters ${pillars[1].name} instead: ${e3.allowed ? "parked ✓ (different lot)" : "blocked?!"}`);
   await parking.releaseLock(db, { sessionId, pillarId: pillars[0].id });

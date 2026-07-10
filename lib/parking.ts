@@ -57,7 +57,7 @@ export async function addFace(
 
 export type ParkingResult =
   | { allowed: true }
-  | { allowed: false; heldByPseudonym: string; heldByFace: string };
+  | { allowed: false; heldByHandle: string; heldByFace: string };
 
 /**
  * The hard lock (§3.3): a face entering a pillar takes the lot; the
@@ -85,7 +85,7 @@ export async function enterPillar(
     const holder = await db.profile.findUnique({ where: { id: lock.profileId } });
     return {
       allowed: false,
-      heldByPseudonym: holder?.pseudonym ?? "your other face",
+      heldByHandle: holder?.handle ?? "your other face",
       heldByFace: holder?.face === "TRUE_SELF" ? "True Self" : "Alias",
     };
   }

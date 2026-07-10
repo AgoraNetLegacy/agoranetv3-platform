@@ -124,13 +124,13 @@ export async function submitProof(
       if (request.ledgerRecording === "pseudonymous") {
         await appendEvent(tx, {
           actorType: "soul",
-          actorId: request.profile.pseudonym,
+          actorId: request.profile.handle,
           eventType: "gate.cleared",
           payload: {
             scope: request.scope,
             scopeKind,
             nullifier,
-            pseudonym: request.profile.pseudonym,
+            handle: request.profile.handle,
           },
         });
       }

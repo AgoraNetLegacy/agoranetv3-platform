@@ -44,7 +44,7 @@ export default async function PillarPage({
       discussions: {
         include: {
           question: true,
-          posts: { select: { authorPseudonym: true, createdAt: true } },
+          posts: { select: { authorHandle: true, createdAt: true } },
         },
       },
     },
@@ -58,7 +58,7 @@ export default async function PillarPage({
         pillarName={pillar.name}
         pillarId={pillar.id}
         pillarSlug={pillar.slug}
-        heldByPseudonym={parking.heldByPseudonym}
+        heldByHandle={parking.heldByHandle}
         heldByFace={parking.heldByFace}
       />
     );
@@ -72,7 +72,7 @@ export default async function PillarPage({
     return {
       discussion: d,
       lastActivity: lastPost ?? d.createdAt,
-      participants: new Set(d.posts.map((p) => p.authorPseudonym)).size,
+      participants: new Set(d.posts.map((p) => p.authorHandle)).size,
       posts: d.posts.length,
       canonPosition: d.question?.position ?? null,
       lens: d.question?.lens as Lens | undefined,

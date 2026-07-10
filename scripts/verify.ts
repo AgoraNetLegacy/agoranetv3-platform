@@ -267,7 +267,7 @@ async function main() {
   // --- 8. Structural unlinkability: no database row links a soul's two
   //        faces. Aliases carry no humanId, period.
   const allProfiles = await db.profile.findMany({
-    select: { id: true, face: true, humanId: true, status: true, pseudonym: true },
+    select: { id: true, face: true, humanId: true, status: true, handle: true },
   });
   let linkProblems = 0;
   for (const p of allProfiles) {
@@ -310,38 +310,38 @@ async function main() {
     regProblems++;
     console.error(`✗ REGISTRATION: ${aliases.length} Aliases but ${aliasSpends} registration spend(s)`);
   }
-  const registeredPseudonyms = new Set<string>();
-  const activatedPseudonyms = new Set<string>();
+  const registeredHandles = new Set<string>();
+  const activatedHandles = new Set<string>();
   for (const ev of events) {
     try {
       const p = JSON.parse(ev.payload);
-      if (ev.eventType === "trueself.registered" && typeof p?.pseudonym === "string") {
-        registeredPseudonyms.add(p.pseudonym);
+      if (ev.eventType === "trueself.registered" && typeof p?.handle === "string") {
+        registeredHandles.add(p.handle);
       }
-      if (ev.eventType === "alias.activated" && typeof p?.pseudonym === "string") {
-        activatedPseudonyms.add(p.pseudonym);
+      if (ev.eventType === "alias.activated" && typeof p?.handle === "string") {
+        activatedHandles.add(p.handle);
       }
     } catch {
       /* covered by chain check */
     }
   }
   for (const p of trueSelves) {
-    if (!registeredPseudonyms.has(p.pseudonym)) {
+    if (!registeredHandles.has(p.handle)) {
       regProblems++;
-      console.error(`✗ OFF-LEDGER REGISTRATION: True Self ${p.pseudonym} has no trueself.registered event`);
+      console.error(`✗ OFF-LEDGER REGISTRATION: True Self ${p.handle} has no trueself.registered event`);
     }
   }
   for (const p of aliases) {
-    if (p.status === "active" && !activatedPseudonyms.has(p.pseudonym)) {
+    if (p.status === "active" && !activatedHandles.has(p.handle)) {
       regProblems++;
-      console.error(`✗ OFF-LEDGER ACTIVATION: active Alias ${p.pseudonym} has no alias.activated event`);
+      console.error(`✗ OFF-LEDGER ACTIVATION: active Alias ${p.handle} has no alias.activated event`);
     }
     if (p.status === "pending") {
       // A pending Alias must be invisible: its pseudonym appears nowhere.
       for (const ev of events) {
-        if (`${ev.actorId ?? ""} ${ev.payload}`.includes(p.pseudonym)) {
+        if (`${ev.actorId ?? ""} ${ev.payload}`.includes(p.handle)) {
           regProblems++;
-          console.error(`✗ PENDING ALIAS VISIBLE: ${p.pseudonym} appears on the ledger at seq ${ev.seq}`);
+          console.error(`✗ PENDING ALIAS VISIBLE: ${p.handle} appears on the ledger at seq ${ev.seq}`);
           break;
         }
       }
@@ -351,6 +351,23 @@ async function main() {
     console.log(`✓ Registration evidence (${trueSelves.length} True Self(s), ${aliases.length} Alias(es); pending faces invisible)`);
   } else {
     failures += regProblems;
+  }
+
+  // --- 9b. Handle namespace integrity (naming ruling 2026-07-10): no
+  //         live handle may collide with a tombstone — never recycled.
+  const tombstones = await db.handleTombstone.findMany({ select: { handle: true } });
+  const tombstoneSet = new Set(tombstones.map((t) => t.handle));
+  let handleProblems = 0;
+  for (const p of allProfiles) {
+    if (tombstoneSet.has(p.handle)) {
+      handleProblems++;
+      console.error(`✗ HANDLE RECYCLED: live @${p.handle} collides with a tombstone`);
+    }
+  }
+  if (handleProblems === 0) {
+    console.log(`✓ Handle namespace (${allProfiles.length} live, ${tombstones.length} tombstoned, none recycled)`);
+  } else {
+    failures += handleProblems;
   }
 
   // --- 10. Session hygiene: short retention is a promise — sweep expired

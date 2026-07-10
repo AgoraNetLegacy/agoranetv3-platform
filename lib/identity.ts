@@ -20,6 +20,7 @@ import type { PrismaClient } from "@prisma/client";
 import { clearRegistration } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
+import { normalizeHandle, handleTaken } from "./handles";
 
 function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
@@ -57,21 +58,29 @@ async function humanFromCredential(db: PrismaClient, credential: string) {
 
 /**
  * Stage 3 — True Self creation. One per human, enforced blind by the
- * true-self-registration nullifier. The ledger records the registration
- * pseudonym-only, immediately — the True Self has no timing sensitivity.
+ * true-self-registration nullifier. Two-layer naming (Stage 3.4): the
+ * @handle is the eternal attribution key, claimed against the flat
+ * global taken-list; the display name is free-form. The ledger records
+ * the registration immediately — handle + display name frozen in the
+ * permanent record, no internal identifiers.
  */
 export async function registerTrueSelf(
   db: PrismaClient,
-  input: { credential: string; handle: string }
-): Promise<CeremonyResult<{ profileId: string; accessKey: string }>> {
-  const handle = input.handle.trim();
-  if (!handle) return { ok: false, reason: "Choose a handle." };
+  input: { credential: string; handle: string; displayName: string }
+): Promise<CeremonyResult<{ profileId: string; accessKey: string; handle: string }>> {
+  const handle = normalizeHandle(input.handle);
+  if (!handle) {
+    return { ok: false, reason: "Handles are 3–30 characters: letters, digits, _ or -." };
+  }
+  const displayName = input.displayName.trim();
+  if (!displayName) return { ok: false, reason: "Choose a display name." };
 
   const human = await humanFromCredential(db, input.credential);
   if (!human) return { ok: false, reason: "Credential not recognized." };
 
-  const taken = await db.profile.findUnique({ where: { pseudonym: handle } });
-  if (taken) return { ok: false, reason: "That handle is taken." };
+  if (await handleTaken(db, handle)) {
+    return { ok: false, reason: `@${handle} is taken (handles are never recycled).` };
+  }
 
   const accessKey = newSecret();
   try {
@@ -87,7 +96,8 @@ export async function registerTrueSelf(
         data: {
           humanId: human.id,
           face: "TRUE_SELF",
-          pseudonym: handle,
+          handle,
+          displayName,
           accessKeyHash: sha256(accessKey),
           status: "active",
           joinedPeriod: monthOf(new Date()),
@@ -97,11 +107,11 @@ export async function registerTrueSelf(
         actorType: "soul",
         actorId: handle,
         eventType: "trueself.registered",
-        payload: { pseudonym: handle, nullifier: registration.nullifier },
+        payload: { handle, displayName, nullifier: registration.nullifier },
       });
       return created;
     });
-    return { ok: true, profileId: profile.id, accessKey };
+    return { ok: true, profileId: profile.id, accessKey, handle };
   } catch (err) {
     if (err instanceof DuplicateRegistration) {
       // Visible only to the soul (DUAL_IDENTITY §3.2).
@@ -127,10 +137,19 @@ class DuplicateRegistration extends Error {}
  */
 export async function registerAlias(
   db: PrismaClient,
-  input: { credential: string; handle: string; disclosuresAccepted: boolean }
+  input: {
+    credential: string;
+    handle: string;
+    displayName: string;
+    disclosuresAccepted: boolean;
+  }
 ): Promise<CeremonyResult<{ accessKey: string; activationHint: string }>> {
-  const handle = input.handle.trim();
-  if (!handle) return { ok: false, reason: "Choose a handle." };
+  const handle = normalizeHandle(input.handle);
+  if (!handle) {
+    return { ok: false, reason: "Handles are 3–30 characters: letters, digits, _ or -." };
+  }
+  const displayName = input.displayName.trim();
+  if (!displayName) return { ok: false, reason: "Choose a display name." };
   if (!input.disclosuresAccepted) {
     return { ok: false, reason: "The Alias disclosures must be acknowledged." };
   }
@@ -138,8 +157,9 @@ export async function registerAlias(
   const human = await humanFromCredential(db, input.credential);
   if (!human) return { ok: false, reason: "Credential not recognized." };
 
-  const taken = await db.profile.findUnique({ where: { pseudonym: handle } });
-  if (taken) return { ok: false, reason: "That handle is taken." };
+  if (await handleTaken(db, handle)) {
+    return { ok: false, reason: `@${handle} is taken (handles are never recycled).` };
+  }
 
   const [minHours, maxHours, cadenceHours] = await Promise.all([
     getRail(db, "identity.aliasActivationMinHours"),
@@ -169,7 +189,8 @@ export async function registerAlias(
         data: {
           // humanId deliberately absent — see the module header.
           face: "ALIAS",
-          pseudonym: handle,
+          handle,
+          displayName,
           accessKeyHash: sha256(accessKey),
           status: "pending",
           activateAt,
@@ -221,13 +242,48 @@ export async function activateDueAliases(db: PrismaClient): Promise<number> {
         actorType: "system",
         eventType: "alias.activated",
         payload: {
-          pseudonym: profile.pseudonym,
+          handle: profile.handle,
+          displayName: profile.displayName,
           cohort: profile.activateAt!.toISOString(),
         },
       });
     });
   }
   return due.length;
+}
+
+/**
+ * Display-name change: free-form and allowed anytime, behind a rate rail
+ * (free renaming is a mid-dispute impersonation vector — naming ruling
+ * 2026-07-10). Permanent-class content keeps the name frozen at
+ * composition; only live surfaces update.
+ */
+export async function changeDisplayName(
+  db: PrismaClient,
+  input: { profileId: string; displayName: string }
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const displayName = input.displayName.trim();
+  if (!displayName) return { ok: false, reason: "Choose a display name." };
+
+  const profile = await db.profile.findUnique({ where: { id: input.profileId } });
+  if (!profile) return { ok: false, reason: "No such profile." };
+
+  const cooldownDays = await getRail(db, "identity.displayNameCooldownDays");
+  if (
+    profile.displayNameChangedAt &&
+    Date.now() - profile.displayNameChangedAt.getTime() < cooldownDays * 86_400_000
+  ) {
+    return {
+      ok: false,
+      reason: `Display names change at most once every ${cooldownDays} day(s) — a rail.`,
+    };
+  }
+
+  await db.profile.update({
+    where: { id: profile.id },
+    data: { displayName, displayNameChangedAt: new Date() },
+  });
+  return { ok: true };
 }
 
 /** Per-face login: each face has its own key; login never touches the Human. */

@@ -38,10 +38,10 @@ async function main() {
     trueSelf: "bright-heron-42",
     alias: "quiet-cedar-17",
   });
-  const trueSelf = { id: soul.trueSelfId, pseudonym: "bright-heron-42" };
-  const alias = { id: soul.aliasId, pseudonym: "quiet-cedar-17" };
-  console.log(`True Self pseudonym: ${trueSelf.pseudonym}`);
-  console.log(`Alias pseudonym:     ${alias.pseudonym}`);
+  const trueSelf = { id: soul.trueSelfId, handle: "bright-heron-42" };
+  const alias = { id: soul.aliasId, handle: "quiet-cedar-17" };
+  console.log(`True Self handle: ${trueSelf.handle}`);
+  console.log(`Alias handle:     ${alias.handle}`);
   console.log("(Since Phase 2, the Alias row carries no humanId at all — the");
   console.log(" ledger below never names an internal id; db:verify enforces both.)");
 

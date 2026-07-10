@@ -39,7 +39,14 @@ model Profile {
   humanId      String?
   human        Human?        @relation(fields: [humanId], references: [id])
   face         String // "TRUE_SELF" | "ALIAS"
-  pseudonym    String        @unique // the only name the public ledger may speak
+  // Two-layer naming (owner-ratified 2026-07-10, ONBOARDING Stage 3.4):
+  // the @handle is the attribution key — unique across one flat global
+  // taken-list (all profiles, both faces, PLUS HandleTombstone), never
+  // recycled. Stored lowercase. The display name is free-form: duplicates
+  // allowed, real names welcome, changeable behind a rate rail.
+  handle       String        @unique
+  displayName  String
+  displayNameChangedAt DateTime?
   // Per-face login secret, held soul-side, hash stored. Each face signs
   // in with its own key — login never routes through the Human.
   accessKeyHash String       @unique
@@ -55,6 +62,17 @@ model Profile {
   consentAcks  ConsentAck[]
 
   @@unique([humanId, face])
+}
+
+// Handles are never recycled: revocation (hatching), deletion, or
+// abandonment tombstones the handle permanently — the permanent record's
+// attribution never silently changes owners. The taken-list = live
+// handles ∪ tombstones, and records only THAT a string is claimed —
+// zero ownership/linkage information.
+model HandleTombstone {
+  handle        String   @id // lowercase
+  reason        String // "hatched" | "deleted" | "abandoned"
+  tombstonedAt  DateTime @default(now())
 }
 
 // The values seed (ONBOARDING Stage 5): per-profile answers to the seven
@@ -273,9 +291,13 @@ model Post {
   parent       Post?          @relation("Thread", fields: [parentId], references: [id])
   replies      Post[]         @relation("Thread")
   // The author's internal profile id stays in Phase A operator space;
-  // everything public (pages, ledger) speaks the pseudonym snapshot.
+  // everything public (pages, ledger) speaks the @handle — the eternal
+  // attribution key. Permanent-class content freezes the display name
+  // as it was at composition (naming ruling 2026-07-10); live surfaces
+  // show the current one.
   authorProfileId String
-  authorPseudonym String
+  authorHandle    String
+  authorDisplayName String
   body         String
   status       String         @default("visible") // hidden/blur states arrive Phase 5
   createdAt    DateTime       @default(now())

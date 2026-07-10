@@ -100,8 +100,10 @@ function PostNode({
   return (
     <div className="post" id={post.id}>
       <div className="byline">
-        <span className="pseudonym">{post.authorPseudonym}</span> ·{" "}
-        {post.createdAt.toLocaleString()} ·{" "}
+        {/* Permanent record: display name frozen at composition + the
+            eternal @handle (naming ruling 2026-07-10). */}
+        <span className="pseudonym">{post.authorDisplayName}</span>{" "}
+        <span>@{post.authorHandle}</span> · {post.createdAt.toLocaleString()} ·{" "}
         {locked ? (
           <span className="badge locked">🔒 Locked into the record</span>
         ) : (
@@ -191,7 +193,7 @@ export default async function DiscussionPage({
         pillarName={discussion.pillar.name}
         pillarId={discussion.pillarId}
         pillarSlug={discussion.pillar.slug}
-        heldByPseudonym={parking.heldByPseudonym}
+        heldByHandle={parking.heldByHandle}
         heldByFace={parking.heldByFace}
       />
     );
@@ -255,7 +257,7 @@ export default async function DiscussionPage({
         <Composer
           discussionId={discussion.id}
           graceMinutes={graceMinutes}
-          label={`Post as ${viewer.pseudonym}`}
+          label={`Post as ${viewer.displayName} @${viewer.handle}`}
         />
       ) : (
         <p className="interim-note">

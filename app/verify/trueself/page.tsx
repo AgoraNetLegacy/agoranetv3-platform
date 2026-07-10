@@ -16,9 +16,10 @@ export default async function TrueSelfPage({
       <p>
         One per human — enforced blind by the registration nullifier: a
         second attempt fails without the platform ever learning who was
-        refused. Your handle is chosen, not legal: singular, durable, and
-        accountable. You may use your real name if you wish; nothing
-        verifies or requires it.
+        refused. Naming has two layers: a <strong>display name</strong>{" "}
+        (free-form — real names welcome, duplicates allowed, changeable)
+        and a unique <strong>@handle</strong> — the attribution key on
+        every record you ever sign, never recycled, never transferred.
       </p>
       {m && <div className="notice">{m}</div>}
       <form action={createTrueSelf}>
@@ -28,8 +29,12 @@ export default async function TrueSelfPage({
           <input type="password" name="credential" required autoComplete="off" />
         </label>
         <label>
-          Handle
-          <input type="text" name="handle" required maxLength={40} />
+          Display name
+          <input type="text" name="displayName" required maxLength={60} />
+        </label>
+        <label>
+          @handle (3–30 characters: letters, digits, _ or -)
+          <input type="text" name="handle" required maxLength={30} />
         </label>
         <button type="submit">Register through the gate</button>
       </form>

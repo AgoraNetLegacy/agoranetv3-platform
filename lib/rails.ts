@@ -13,7 +13,7 @@ import type { DbOrTx } from "./db";
 export interface RailDefault {
   key: string;
   value: number;
-  unit: "uPC" | "uG" | "minutes" | "hours";
+  unit: "uPC" | "uG" | "minutes" | "hours" | "days";
   boundMin?: number; // defaults to ¼× value
   boundMax?: number; // defaults to 4× value
   description: string;
@@ -87,6 +87,13 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     unit: "hours",
     description:
       "SoulSession lifetime — session records are short-retention by design (DUAL_IDENTITY §7.2) and purged on expiry.",
+  },
+  {
+    key: "identity.displayNameCooldownDays",
+    value: 7,
+    unit: "days",
+    description:
+      "Minimum days between display-name changes (naming ruling 2026-07-10: rate-limited — free renaming is a mid-dispute impersonation vector). Build-time default, owner-adjustable.",
   },
 ];
 

@@ -89,7 +89,11 @@ export async function createPost(
         discussionId: discussion.id,
         parentId: input.parentId ?? null,
         authorProfileId: profile.id,
-        authorPseudonym: profile.pseudonym,
+        authorHandle: profile.handle,
+        // Frozen at composition (naming ruling 2026-07-10): the permanent
+        // record never retroactively rewrites; live surfaces may show the
+        // current display name, the record keeps this one.
+        authorDisplayName: profile.displayName,
         body,
         editableUntil,
       },
@@ -97,13 +101,14 @@ export async function createPost(
     if (discussion.permanence.startsWith("permanent")) {
       await appendEvent(tx, {
         actorType: "soul",
-        actorId: profile.pseudonym,
+        actorId: profile.handle,
         eventType: "post.recorded",
         payload: {
           discussionRef: discussion.id,
           postRef: created.id,
           contentHash: contentHash(body),
-          pseudonym: profile.pseudonym,
+          handle: profile.handle,
+          displayName: profile.displayName,
           nullifier: gate.nullifier,
         },
       });
@@ -148,13 +153,13 @@ export async function editPost(
     if (post.discussion.permanence.startsWith("permanent")) {
       await appendEvent(tx, {
         actorType: "soul",
-        actorId: post.authorPseudonym,
+        actorId: post.authorHandle,
         eventType: "post.amended",
         payload: {
           discussionRef: post.discussionId,
           postRef: post.id,
           contentHash: contentHash(body),
-          pseudonym: post.authorPseudonym,
+          handle: post.authorHandle,
         },
       });
     }

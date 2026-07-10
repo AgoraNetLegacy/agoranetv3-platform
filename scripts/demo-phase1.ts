@@ -52,9 +52,9 @@ async function main() {
     trueSelf: "bright-heron-42",
     alias: "quiet-cedar-17",
   });
-  const author = { id: soul.trueSelfId, pseudonym: "bright-heron-42" };
-  const flagger = { id: soul.aliasId, pseudonym: "quiet-cedar-17" };
-  console.log(`Souls: ${author.pseudonym} (True Self), ${flagger.pseudonym} (Alias)`);
+  const author = { id: soul.trueSelfId, handle: "bright-heron-42" };
+  const flagger = { id: soul.aliasId, handle: "quiet-cedar-17" };
+  console.log(`Souls: ${author.handle} (True Self), ${flagger.handle} (Alias)`);
 
   banner("2. Posting in a permanent space (canonical question 43)");
   const discussion = await db.discussion.findFirstOrThrow({

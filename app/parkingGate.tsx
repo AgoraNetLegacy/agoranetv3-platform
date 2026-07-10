@@ -13,7 +13,7 @@ import { releasePillar } from "./actions";
 export type ParkingOutcome =
   | { state: "reader" }
   | { state: "parked"; profileId: string }
-  | { state: "blocked"; heldByPseudonym: string; heldByFace: string };
+  | { state: "blocked"; heldByHandle: string; heldByFace: string };
 
 export async function checkParking(pillarId: string): Promise<ParkingOutcome> {
   const [face, session] = await Promise.all([activeFace(), currentSession()]);
@@ -26,7 +26,7 @@ export async function checkParking(pillarId: string): Promise<ParkingOutcome> {
   if (result.allowed) return { state: "parked", profileId: face.id };
   return {
     state: "blocked",
-    heldByPseudonym: result.heldByPseudonym,
+    heldByHandle: result.heldByHandle,
     heldByFace: result.heldByFace,
   };
 }
@@ -35,20 +35,20 @@ export function BlockedPanel({
   pillarName,
   pillarId,
   pillarSlug,
-  heldByPseudonym,
+  heldByHandle,
   heldByFace,
 }: {
   pillarName: string;
   pillarId: string;
   pillarSlug: string;
-  heldByPseudonym: string;
+  heldByHandle: string;
   heldByFace: string;
 }) {
   return (
     <div className="blocked-panel">
       <h2>🅿️ This pillar is parked by your other face</h2>
       <p>
-        Your {heldByFace} (<strong>{heldByPseudonym}</strong>) currently
+        Your {heldByFace} (<strong>{heldByHandle}</strong>) currently
         holds the {pillarName} lot. One face per pillar at a time — this is
         the parking rule protecting you, not an error.
       </p>
@@ -57,7 +57,7 @@ export function BlockedPanel({
         <input type="hidden" name="pillarId" value={pillarId} />
         <input type="hidden" name="pillarSlug" value={pillarSlug} />
         <button type="submit">
-          End {heldByPseudonym}'s session in {pillarName}
+          End {heldByHandle}'s session in {pillarName}
         </button>
       </form>
     </div>

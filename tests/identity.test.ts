@@ -45,7 +45,7 @@ afterAll(async () => {
 describe("the True Self ceremony", () => {
   it("registers once per human, pseudonym-only on the ledger", async () => {
     const { credential } = await verifyHumanity(db);
-    const first = await registerTrueSelf(db, { credential, handle: "first-light-9" });
+    const first = await registerTrueSelf(db, { credential, handle: "first-light-9", displayName: "first-light-9" });
     expect(first.ok).toBe(true);
 
     const event = await db.ledgerEvent.findFirst({
@@ -53,10 +53,10 @@ describe("the True Self ceremony", () => {
       orderBy: { seq: "desc" },
     });
     expect(event).not.toBeNull();
-    expect(JSON.parse(event!.payload).pseudonym).toBe("first-light-9");
+    expect(JSON.parse(event!.payload).handle).toBe("first-light-9");
     if (first.ok) expect(event!.payload).not.toContain(first.profileId);
 
-    const second = await registerTrueSelf(db, { credential, handle: "second-face-1" });
+    const second = await registerTrueSelf(db, { credential, handle: "second-face-1", displayName: "second-face-1" });
     expect(second.ok).toBe(false);
     if (!second.ok) expect(second.reason).toContain("already holds a True Self");
   });
@@ -65,8 +65,43 @@ describe("the True Self ceremony", () => {
     const result = await registerTrueSelf(db, {
       credential: "not-a-real-credential",
       handle: "ghost-7",
+      displayName: "ghost-7",
     });
     expect(result.ok).toBe(false);
+  });
+
+  it("enforces the flat global taken-list: duplicate handles refused, duplicate display names welcome", async () => {
+    const v = await verifyHumanity(db);
+    // Same handle, different human → refused (case-insensitively).
+    const dupe = await registerTrueSelf(db, {
+      credential: v.credential,
+      handle: "First-Light-9",
+      displayName: "Someone Else",
+    });
+    expect(dupe.ok).toBe(false);
+    if (!dupe.ok) expect(dupe.reason).toContain("taken");
+
+    // Same DISPLAY NAME, different handle → fine: a thousand souls may
+    // share one display name.
+    const sameName = await registerTrueSelf(db, {
+      credential: v.credential,
+      handle: "different-handle-1",
+      displayName: "first-light-9",
+    });
+    expect(sameName.ok).toBe(true);
+  });
+
+  it("never recycles a tombstoned handle", async () => {
+    const { tombstoneHandle } = await import("../lib/handles");
+    await tombstoneHandle(db, { handle: "retired-forever", reason: "hatched" });
+    const v = await verifyHumanity(db);
+    const result = await registerTrueSelf(db, {
+      credential: v.credential,
+      handle: "retired-forever",
+      displayName: "Grave Robber",
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain("never recycled");
   });
 });
 
@@ -76,7 +111,7 @@ describe("the Alias ceremony — timing mitigations", () => {
   beforeAll(async () => {
     const v = await verifyHumanity(db);
     credential = v.credential;
-    const ts = await registerTrueSelf(db, { credential, handle: "day-face-4" });
+    const ts = await registerTrueSelf(db, { credential, handle: "day-face-4", displayName: "day-face-4" });
     if (!ts.ok) throw new Error(ts.reason);
   });
 
@@ -85,6 +120,7 @@ describe("the Alias ceremony — timing mitigations", () => {
     const result = await registerAlias(db, {
       credential,
       handle: "night-face-8",
+      displayName: "night-face-8",
       disclosuresAccepted: true,
     });
     expect(result.ok).toBe(true);
@@ -95,7 +131,7 @@ describe("the Alias ceremony — timing mitigations", () => {
     expect(await db.ledgerEvent.count()).toBe(eventsBefore);
 
     const alias = await db.profile.findUniqueOrThrow({
-      where: { pseudonym: "night-face-8" },
+      where: { handle: "night-face-8" },
     });
     expect(alias.status).toBe("pending");
     expect(alias.humanId).toBeNull();
@@ -119,6 +155,7 @@ describe("the Alias ceremony — timing mitigations", () => {
     const result = await registerAlias(db, {
       credential: v.credential,
       handle: "hasty-hatch-2",
+      displayName: "hasty-hatch-2",
       disclosuresAccepted: false,
     });
     expect(result.ok).toBe(false);
@@ -126,17 +163,18 @@ describe("the Alias ceremony — timing mitigations", () => {
 
   it("a pending Alias cannot sign in; an activated one can — and activation is a cohort event", async () => {
     const alias = await db.profile.findUniqueOrThrow({
-      where: { pseudonym: "night-face-8" },
+      where: { handle: "night-face-8" },
     });
     // Pending: access key exists but sign-in is refused. (We can't know
     // the key here — assert via status path in profileForAccessKey using
     // a fresh hatch below instead.)
     const v = await verifyHumanity(db);
-    const ts = await registerTrueSelf(db, { credential: v.credential, handle: "keyed-ts-3" });
+    const ts = await registerTrueSelf(db, { credential: v.credential, handle: "keyed-ts-3", displayName: "keyed-ts-3" });
     expect(ts.ok).toBe(true);
     const hatched = await registerAlias(db, {
       credential: v.credential,
       handle: "keyed-alias-3",
+      displayName: "keyed-alias-3",
       disclosuresAccepted: true,
     });
     expect(hatched.ok).toBe(true);
@@ -169,7 +207,7 @@ describe("the Alias ceremony — timing mitigations", () => {
 describe("consent before posting", () => {
   it("refuses a post from a face without the blocking acknowledgments", async () => {
     const v = await verifyHumanity(db);
-    const ts = await registerTrueSelf(db, { credential: v.credential, handle: "unconsented-5" });
+    const ts = await registerTrueSelf(db, { credential: v.credential, handle: "unconsented-5", displayName: "unconsented-5" });
     expect(ts.ok).toBe(true);
     if (!ts.ok) return;
 
@@ -203,17 +241,18 @@ describe("the parking rule", () => {
 
   beforeAll(async () => {
     const v = await verifyHumanity(db);
-    const ts = await registerTrueSelf(db, { credential: v.credential, handle: "parked-ts-6" });
+    const ts = await registerTrueSelf(db, { credential: v.credential, handle: "parked-ts-6", displayName: "parked-ts-6" });
     if (!ts.ok) throw new Error(ts.reason);
     tsId = ts.profileId;
     const hatched = await registerAlias(db, {
       credential: v.credential,
       handle: "parked-alias-6",
+      displayName: "parked-alias-6",
       disclosuresAccepted: true,
     });
     if (!hatched.ok) throw new Error(hatched.reason);
     const alias = await db.profile.findUniqueOrThrow({
-      where: { pseudonym: "parked-alias-6" },
+      where: { handle: "parked-alias-6" },
     });
     await db.profile.update({
       where: { id: alias.id },
@@ -238,7 +277,7 @@ describe("the parking rule", () => {
     const enterAlias = await enterPillar(db, { sessionId, profileId: aliasId, pillarId: pillarA });
     expect(enterAlias.allowed).toBe(false);
     if (enterAlias.allowed) return;
-    expect(enterAlias.heldByPseudonym).toBe("parked-ts-6");
+    expect(enterAlias.heldByHandle).toBe("parked-ts-6");
     expect(enterAlias.heldByFace).toBe("True Self");
   });
 

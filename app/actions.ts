@@ -15,6 +15,7 @@ import {
   registerAlias,
   profileForAccessKey,
   activateDueAliases,
+  changeDisplayName,
 } from "@/lib/identity";
 import { addFace, switchFace, releaseLocks, releaseLock } from "@/lib/parking";
 import { recordAck } from "@/lib/consent";
@@ -98,10 +99,11 @@ export async function acknowledgeSecretSaved(formData: FormData) {
 export async function createTrueSelf(formData: FormData) {
   const credential = String(formData.get("credential") ?? "");
   const handle = String(formData.get("handle") ?? "");
+  const displayName = String(formData.get("displayName") ?? "");
   const returnTo = String(formData.get("returnTo") ?? "");
   const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
 
-  const result = await registerTrueSelf(db, { credential, handle });
+  const result = await registerTrueSelf(db, { credential, handle, displayName });
   if (!result.ok) backTo(`/verify/trueself${query}`, result.reason);
 
   // Sign the new face in and make it active.
@@ -139,13 +141,27 @@ export async function submitSeedAnswer(formData: FormData) {
 export async function hatchAlias(formData: FormData) {
   const credential = String(formData.get("credential") ?? "");
   const handle = String(formData.get("handle") ?? "");
+  const displayName = String(formData.get("displayName") ?? "");
   const disclosuresAccepted = formData.get("disclosuresAccepted") === "on";
 
-  const result = await registerAlias(db, { credential, handle, disclosuresAccepted });
+  const result = await registerAlias(db, {
+    credential,
+    handle,
+    displayName,
+    disclosuresAccepted,
+  });
   if (!result.ok) backTo("/alias", result.reason);
 
   await setOneTimeSecret(result.accessKey);
   redirect("/alias/key");
+}
+
+export async function updateDisplayName(formData: FormData) {
+  const displayName = String(formData.get("displayName") ?? "");
+  const face = await requireFace();
+  const result = await changeDisplayName(db, { profileId: face.id, displayName });
+  revalidatePath("/", "layout");
+  backTo("/profile", result.ok ? "Display name updated (live surfaces only — permanent records keep the name they were written under)." : result.reason);
 }
 
 // ------------------------------------------------------------------ session

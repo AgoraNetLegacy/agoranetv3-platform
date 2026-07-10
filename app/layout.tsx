@@ -31,8 +31,10 @@ async function FaceBar() {
   return (
     <div className="face-bar">
       <span className={`face-chip ${chipClass}`}>
-        {face.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"} · {face.pseudonym}
+        {face.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"} ·{" "}
+        {face.displayName} @{face.handle}
       </span>
+      <Link href="/profile">profile</Link>
       {others.length > 0 && (
         <details className="switch-control">
           <summary>switch face</summary>
@@ -45,7 +47,7 @@ async function FaceBar() {
               <form key={p.id} action={switchToFace}>
                 <input type="hidden" name="profileId" value={p.id} />
                 <button type="submit">
-                  Switch to {p.pseudonym} ({p.face === "TRUE_SELF" ? "True Self" : "Alias"})
+                  Switch to {p.displayName} @{p.handle} ({p.face === "TRUE_SELF" ? "True Self" : "Alias"})
                 </button>
               </form>
             ))}
