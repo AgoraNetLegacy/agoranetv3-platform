@@ -13,7 +13,7 @@ import type { DbOrTx } from "./db";
 export interface RailDefault {
   key: string;
   value: number;
-  unit: "uPC" | "uG" | "minutes" | "hours" | "days";
+  unit: "uPC" | "uG" | "minutes" | "hours" | "days" | "percent";
   boundMin?: number; // defaults to ¼× value
   boundMax?: number; // defaults to 4× value
   description: string;
@@ -94,6 +94,36 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     unit: "days",
     description:
       "Minimum days between display-name changes (naming ruling 2026-07-10: rate-limited — free renaming is a mid-dispute impersonation vector). Build-time default, owner-adjustable.",
+  },
+  {
+    key: "discussion.creationFee",
+    value: 10,
+    unit: "uPC",
+    description:
+      "Discussion creation fee — ten replies' worth of commitment (ECONOMIC_STARTING_DEFAULTS §1). Host feature (soul-created context Discussions) arrived Phase 3; wires at Phase 4.",
+  },
+  // --- Poll rails (Phase 3). Fees designated per the participation-cost
+  // rule; debits wire at Phase 4 with internal balances.
+  {
+    key: "poll.creationFee",
+    value: 10,
+    unit: "uPC",
+    description:
+      "Poll creation fee — same altitude as a Discussion (ECONOMIC_STARTING_DEFAULTS §1). Anti-spam cost, never vote weight. Wires at Phase 4.",
+  },
+  {
+    key: "poll.voteFee",
+    value: 0.25,
+    unit: "uPC",
+    description:
+      "Vote micro-fee — ordinary AND governance, identical per law: voting must never feel expensive, and a fee to cast is not weight. Wires at Phase 4.",
+  },
+  {
+    key: "poll.candleWindowPercent",
+    value: 20,
+    unit: "percent",
+    description:
+      "The candle's final stretch, as a percent of poll duration: the true close is drawn randomly inside this window (POLLS §8 anti-sniping). Stretch length was left to build time — default flagged to owner.",
   },
 ];
 

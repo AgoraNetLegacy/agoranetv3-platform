@@ -22,6 +22,73 @@ export function contentHash(body: string): string {
   return createHash("sha256").update(body).digest("hex");
 }
 
+/**
+ * Soul-created Discussions arrive in Phase 3 as poll-context spaces
+ * (POLLS §4.4: attach at creation or later, by any soul; consensus-fail
+ * offers one — prompted, never automatic). A context Discussion for a
+ * governance poll lives in the Governance room and is therefore
+ * permanent; ordinary context spaces are author-deletable (deletion
+ * mechanics arrive with their phase). Creation fee: designated
+ * (rail discussion.creationFee. wires at Phase 4).
+ */
+export async function createPollDiscussion(
+  db: PrismaClient,
+  input: { pollId: string; profileId: string }
+): Promise<PostResult> {
+  const poll = await db.poll.findUnique({
+    where: { id: input.pollId },
+    include: { pillar: true },
+  });
+  if (!poll) return { ok: false, reason: "No such poll." };
+
+  const profile = await db.profile.findUnique({ where: { id: input.profileId } });
+  if (!profile || profile.status !== "active") {
+    return { ok: false, reason: "No active face." };
+  }
+  if (!(await hasPostingConsents(db, profile.id))) {
+    return {
+      ok: false,
+      reason: "The permanence and Constitution acknowledgments come first.",
+    };
+  }
+
+  const gate = await clearGate(db, {
+    profileId: profile.id,
+    scope: `discussion-create:${randomUUID()}`,
+    scopeKind: "per-profile",
+  });
+  if (gate.outcome !== "CLEARED") {
+    return { ok: false, reason: `Gate: ${gate.outcome}` };
+  }
+
+  const permanence = poll.isGovernance ? "permanent-governance" : "deletable";
+  const discussion = await db.$transaction(async (tx) => {
+    const created = await tx.discussion.create({
+      data: {
+        title: `Discussion: ${poll.title}`,
+        pillarId: poll.pillarId,
+        pollId: poll.id,
+        permanence,
+      },
+    });
+    await appendEvent(tx, {
+      actorType: "soul",
+      actorId: profile.handle,
+      eventType: "discussion.created",
+      payload: {
+        discussionRef: created.id,
+        pollRef: poll.id,
+        pillar: poll.pillar.slug,
+        permanence,
+        handle: profile.handle,
+      },
+    });
+    return created;
+  });
+
+  return { ok: true, postId: discussion.id };
+}
+
 export type PostResult =
   | { ok: true; postId: string }
   | { ok: false; reason: string };

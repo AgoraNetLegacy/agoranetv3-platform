@@ -217,6 +217,7 @@ model Pillar {
   position      Int          @unique // 1..7
   questions     Question[]
   discussions   Discussion[]
+  polls         Poll[]
 }
 
 model Question {
@@ -275,12 +276,105 @@ model Discussion {
   // Canonical threads map 1:1 onto canon questions (the civic spine).
   questionId String?   @unique
   question   Question? @relation(fields: [questionId], references: [id])
-  // "permanent-canonical" (platform-created, ratified permanent).
-  // Later: "permanent-creator" (paid, creation-only, immutable) and
-  // "deletable" (ordinary soul-created spaces) — Phase 4+.
+  // Poll-context Discussions (POLLS §4.4): attached at creation or by
+  // any soul later; consensus-fail offers one (prompted, never automatic).
+  pollId     String?
+  poll       Poll?     @relation(fields: [pollId], references: [id])
+  // "permanent-canonical" (platform-created, ratified permanent);
+  // "permanent-governance" (lives in a pillar's Governance room —
+  // everything in that room is permanent record, DISCUSSIONS §8);
+  // "deletable" (soul-created context spaces). Paid permanence: Phase 4.
   permanence String
   createdAt  DateTime  @default(now())
   posts      Post[]
+}
+
+// ------------------------------------------------------------------
+// Polls (POLLS_SPEC.md, fully ratified) — one profile, one vote, no
+// weight mechanics of any kind. Sealed-until-close is the platform
+// default; governance polls are always sealed and close by candle.
+// ------------------------------------------------------------------
+
+model Poll {
+  id               String       @id @default(cuid())
+  pillarId         String
+  pillar           Pillar       @relation(fields: [pillarId], references: [id])
+  creatorProfileId String // Phase A operator space — never public
+  creatorHandle    String // the attribution key, frozen at creation
+  title            String
+  description      String?
+  type             String // "single" | "multi" | "consensus"
+  consensusThreshold Float? // consensus polls: 0.5–1.0, creator-set
+  // Vote-visibility mode, stated plainly BEFORE a soul votes (§2):
+  // "public" (choice visibly attached, on this poll's page only — no
+  // cross-poll dossier is ever compiled) | "pseudonymous" (ballots
+  // keyed by nullifier only; aggregate results, never who chose what).
+  mode             String
+  isGovernance     Boolean      @default(false)
+  // Ordinary polls only: creator may show a live tally. Governance
+  // polls are always sealed — no option (§4.7).
+  liveTally        Boolean      @default(false)
+  // Circle-restricted visibility (consumed in Phase 6).
+  visibilityScope  String       @default("public") // "public" | "circle"
+  circleRef        String?
+  createdAt        DateTime     @default(now())
+  nominalCloseAt   DateTime
+  // The candle (governance): the TRUE close is drawn randomly within
+  // the final stretch, committed publicly as sha256(trueCloseAt|salt)
+  // in poll.created, revealed with the results. Ordinary polls:
+  // trueCloseAt = nominalCloseAt. Hidden fields are Phase A operator
+  // space; the commitment makes the reveal verifiable by anyone.
+  trueCloseAt      DateTime
+  candleSalt       String?
+  candleCommitment String?
+  status           String       @default("open") // "open" | "closed"
+  closedAt         DateTime?
+  outcome          String? // "completed" | "passed" | "no-consensus"
+  options          PollOption[]
+  ballots          Ballot[]
+  discussions      Discussion[]
+}
+
+model PollOption {
+  id       String   @id @default(cuid())
+  pollId   String
+  poll     Poll     @relation(fields: [pollId], references: [id])
+  label    String
+  position Int
+  // Set once, at close, from counted ballots — never maintained live.
+  tally    Int?
+  choices  BallotChoice[]
+
+  @@unique([pollId, position])
+}
+
+// One ballot per profile per poll, enforced by the gate's nullifier —
+// which is also the ballot's key. In PSEUDONYMOUS mode no profile is
+// attached, ever (DUAL_IDENTITY §4.3: keyed by nullifier only). In
+// PUBLIC mode the voter's handle is attached by design and published
+// post-close. `counted` is decided at close by the candle.
+model Ballot {
+  id          String         @id @default(cuid())
+  pollId      String
+  poll        Poll           @relation(fields: [pollId], references: [id])
+  nullifier   String
+  voterProfileId String? // public mode only — Phase A operator space
+  voterHandle    String? // public mode only — published post-close
+  voterDisplayName String? // public mode only — frozen at cast
+  castAt      DateTime       @default(now())
+  counted     Boolean?
+  choices     BallotChoice[]
+
+  @@unique([pollId, nullifier])
+}
+
+model BallotChoice {
+  ballotId String
+  ballot   Ballot     @relation(fields: [ballotId], references: [id])
+  optionId String
+  option   PollOption @relation(fields: [optionId], references: [id])
+
+  @@id([ballotId, optionId])
 }
 
 model Post {
