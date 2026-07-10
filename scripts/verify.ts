@@ -29,6 +29,15 @@
 //     this check sweeps, then asserts).
 // 11. Consent-before-posting: every post author holds the two blocking
 //     acknowledgments.
+// Phase 3:
+// 12. Poll integrity: sealed-until-close (open polls leak nothing to
+//     the ledger beyond poll.created); every closed poll's tallies
+//     recompute from counted ballots and match the poll.closed event;
+//     candle reveals verify against their pre-vote commitments; only
+//     ballots cast before the true close count; pseudonymous ballots
+//     carry no profile and their ballotsHash re-derives; public
+//     ballots match their post-close vote.recorded events; one ballot
+//     per nullifier per poll.
 
 import { createHash } from "crypto";
 import { PrismaClient } from "@prisma/client";
@@ -405,6 +414,150 @@ async function main() {
     console.log(`✓ Consent before posting (${authors.length} author(s), all acknowledged)`);
   } else {
     failures += consentProblems;
+  }
+
+  // --- 12. Poll integrity.
+  const { candleCommitmentFor, ballotsHashFor } = await import("../lib/polls");
+  const polls = await db.poll.findMany({
+    include: {
+      options: { orderBy: { position: "asc" } },
+      ballots: { include: { choices: true } },
+    },
+  });
+  const closedEventByPoll = new Map<string, { seq: number; payload: Record<string, unknown> }>();
+  const voteEventsByPoll = new Map<string, Array<{ seq: number; payload: Record<string, unknown> }>>();
+  for (const ev of events) {
+    try {
+      const p = JSON.parse(ev.payload);
+      if (ev.eventType === "poll.closed" && typeof p?.pollRef === "string") {
+        closedEventByPoll.set(p.pollRef, { seq: ev.seq, payload: p });
+      }
+      if (ev.eventType === "vote.recorded" && typeof p?.pollRef === "string") {
+        const list = voteEventsByPoll.get(p.pollRef) ?? [];
+        list.push({ seq: ev.seq, payload: p });
+        voteEventsByPoll.set(p.pollRef, list);
+      }
+    } catch {
+      /* chain check covers bytes */
+    }
+  }
+
+  let pollProblems = 0;
+  for (const poll of polls) {
+    const positionByOptionId = new Map(poll.options.map((o) => [o.id, o.position]));
+
+    // One ballot per nullifier per poll (DB-unique; re-check independently).
+    const nulls = new Set(poll.ballots.map((b) => b.nullifier));
+    if (nulls.size !== poll.ballots.length) {
+      pollProblems++;
+      console.error(`✗ DOUBLE VOTE: poll ${poll.id} has duplicate nullifiers`);
+    }
+
+    // Pseudonymous ballots carry no profile, ever.
+    if (poll.mode === "pseudonymous") {
+      for (const b of poll.ballots) {
+        if (b.voterProfileId || b.voterHandle) {
+          pollProblems++;
+          console.error(`✗ BALLOT DEANONYMIZED: pseudonymous poll ${poll.id} has a profile-attached ballot`);
+          break;
+        }
+      }
+    }
+
+    if (poll.status === "open") {
+      // Sealed until close: nothing about this poll on the ledger but
+      // its creation.
+      if (closedEventByPoll.has(poll.id) || voteEventsByPoll.has(poll.id)) {
+        pollProblems++;
+        console.error(`✗ SEAL BROKEN: open poll ${poll.id} has close/vote events on the ledger`);
+      }
+      continue;
+    }
+
+    const closed = closedEventByPoll.get(poll.id);
+    if (!closed) {
+      pollProblems++;
+      console.error(`✗ OFF-LEDGER CLOSE: poll ${poll.id} closed without a poll.closed event`);
+      continue;
+    }
+
+    // The candle: commitment made before votes must match the reveal.
+    if (poll.candleCommitment) {
+      const recomputed = candleCommitmentFor(poll.trueCloseAt, poll.candleSalt ?? "");
+      if (recomputed !== poll.candleCommitment) {
+        pollProblems++;
+        console.error(`✗ CANDLE BROKEN: poll ${poll.id} reveal does not match its commitment`);
+      }
+    }
+
+    // Only ballots cast before the true close count.
+    for (const b of poll.ballots) {
+      const shouldCount = b.castAt <= poll.trueCloseAt;
+      if (b.counted !== shouldCount) {
+        pollProblems++;
+        console.error(`✗ CANDLE VIOLATED: ballot in poll ${poll.id} counted-flag disagrees with the true close`);
+        break;
+      }
+    }
+
+    // Recompute tallies from counted ballots; they must match both the
+    // stored option tallies and the poll.closed event.
+    const recomputedTallies: Record<string, number> = {};
+    for (const o of poll.options) recomputedTallies[String(o.position)] = 0;
+    for (const b of poll.ballots.filter((b) => b.counted)) {
+      for (const c of b.choices) {
+        const pos = String(positionByOptionId.get(c.optionId));
+        recomputedTallies[pos] = (recomputedTallies[pos] ?? 0) + 1;
+      }
+    }
+    const eventTallies = closed.payload.tallies as Record<string, number>;
+    for (const o of poll.options) {
+      const pos = String(o.position);
+      if ((o.tally ?? 0) !== recomputedTallies[pos] || (eventTallies?.[pos] ?? 0) !== recomputedTallies[pos]) {
+        pollProblems++;
+        console.error(`✗ TALLY ALTERED: poll ${poll.id} option ${pos} disagrees with the counted ballots`);
+      }
+    }
+
+    // Pseudonymous tamper-evidence: the ballotsHash must re-derive.
+    const recomputedHash = ballotsHashFor(
+      poll.ballots.map((b) => ({
+        nullifier: b.nullifier,
+        counted: b.counted ?? false,
+        optionPositions: b.choices.map((c) => positionByOptionId.get(c.optionId) ?? -1),
+      }))
+    );
+    if (closed.payload.ballotsHash !== recomputedHash) {
+      pollProblems++;
+      console.error(`✗ BALLOTS ALTERED: poll ${poll.id} ballotsHash no longer re-derives`);
+    }
+
+    // Public mode: counted ballots and post-close vote.recorded events
+    // must correspond one-to-one, and none may precede the close.
+    if (poll.mode === "public") {
+      const voteEvents = voteEventsByPoll.get(poll.id) ?? [];
+      const countedCount = poll.ballots.filter((b) => b.counted).length;
+      if (voteEvents.length !== countedCount) {
+        pollProblems++;
+        console.error(`✗ PUBLIC RECORD MISMATCH: poll ${poll.id} has ${countedCount} counted ballots but ${voteEvents.length} vote.recorded events`);
+      }
+      for (const ev of voteEvents) {
+        if (ev.seq < closed.seq) {
+          pollProblems++;
+          console.error(`✗ SEAL BROKEN: poll ${poll.id} has a vote.recorded event before its close`);
+          break;
+        }
+      }
+    } else if ((voteEventsByPoll.get(poll.id) ?? []).length > 0) {
+      pollProblems++;
+      console.error(`✗ BALLOT DEANONYMIZED: pseudonymous poll ${poll.id} has vote.recorded events`);
+    }
+  }
+  if (pollProblems === 0) {
+    const closedCount = polls.filter((p) => p.status === "closed").length;
+    console.log(`✓ Poll integrity (${polls.length} poll(s), ${closedCount} closed; seals held, candles verify, tallies re-derive)`);
+  } else {
+    failures += pollProblems;
   }
 
   if (failures > 0) {

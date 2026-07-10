@@ -32,6 +32,7 @@ npm run demo:phase0        # Phase 0: gate-cleared events landing on the ledger,
 npm run demo:tamper        # Phase 0: the invariant check failing loudly, twice
 npm run demo:phase1        # Phase 1: post → badge → ledger → grace edit → LOCK → tamper caught → flag queued
 npm run demo:phase2        # Phase 2: both ceremonies → parking rule → THE LINKAGE AUDIT → 11 checks
+npm run demo:phase3        # Phase 3: governance poll end to end — seal, candle, sniper discarded, tamper caught
 ```
 
 All demos run against a self-contained `prisma/demo.db`; nothing touches
@@ -39,6 +40,25 @@ your dev database. The interactive version: `npm run dev`, then `/verify`
 — the real onboarding: gate intro, interim issuer, True Self ceremony,
 blocking consents, values seed, and back to what you came to do. Hatch
 an Alias at `/alias` with your credential.
+
+## What exists (Phase 3)
+
+- **The Poll primitive** (`lib/polls.ts`) — single/multi/consensus,
+  Public and Pseudonymous modes (stated plainly before a soul votes),
+  one vote per profile via the gate's per-poll nullifier, sealed-until-
+  close by default (creator live-tally option on ordinary polls only).
+  Pseudonymous ballots are nullifier-keyed — no profile attached, ever.
+- **Governance rooms** (`/pillars/[slug]/governance`) — one permanent
+  room per pillar; governance polls are always sealed and close by
+  candle: the true end is drawn randomly inside the final stretch,
+  committed as a hash on the ledger before any vote exists, revealed
+  verifiably with the results. Late ballots exist in the record,
+  uncounted.
+- **Records** — poll.created / poll.closed / vote.recorded (public
+  mode, post-close only) on the hash-chained ledger, with recomputable
+  tallies and a ballots hash; `db:verify` re-derives everything and
+  fails loudly on any alteration. Consensus-fail offers (never forces)
+  a Discussion; results export as JSON.
 
 ## What exists (Phase 2)
 
