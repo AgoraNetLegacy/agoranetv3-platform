@@ -57,13 +57,15 @@ under it.**
 
 ## Current Phase
 
-**Phase 0 — Foundation** (see BUILD_ORDER.md): repo, CI, test
-discipline; SQLite + Prisma baseline; the append-only hash-chained
-civic ledger with the pseudonym-only invariant check; the gate
-interface (pending → proof → cleared) with the Phase A
-operator-trusted HMAC nullifier and scoped-nullifier support
-(per-profile and per-human) from day one; the canon seed.
+**Phase 1 — Discussions Core** (see BUILD_ORDER.md and
+`Discussion/DISCUSSIONS_SPEC.md`; Phase 0 passed owner review
+2026-07-10): threaded Discussions on the 49 canonical questions —
+read-only to the world, gate-cleared participation, permanence
+classes + composer badges from the first post, grace-window editing;
+labeled sort menu (no algorithm is the feature); flag capture (queue
+only); minimal pillar pages. The reply micro-fee amendments land
+here with their host feature.
 
-**Phase 0 checkpoint (owner review):** the ledger records
-gate-cleared events pseudonymously, and the invariant check fails
-loudly when violated.
+**Phase 1 checkpoint (owner review):** the owner posts in a permanent
+space, sees the badge, the ledger entry, and the locked record after
+the grace window.
