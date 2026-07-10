@@ -1,14 +1,36 @@
-export default function Home() {
+import Link from "next/link";
+import { db } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const pillars = await db.pillar.findMany({
+    orderBy: { position: "asc" },
+    include: { _count: { select: { discussions: true } } },
+  });
+
   return (
-    <main style={{ fontFamily: "system-ui", padding: "4rem 2rem", maxWidth: 640, margin: "0 auto" }}>
-      <h1>AgoraNet</h1>
+    <>
+      <h1>The Seven Pillars</h1>
       <p>
-        Phase 0 — Foundation. The civic ledger, the gate, and the canon are
-        being laid before the first product surface exists.
+        Six pillars diagnose; The Agora equips. Every pillar carries seven
+        canonical questions — read freely; verify to act.
       </p>
-      <p>
-        <em>The six pillars diagnose. The Agora equips. The community inherits.</em>
-      </p>
-    </main>
+      <ul className="pillar-grid">
+        {pillars.map((p) => (
+          <li key={p.id}>
+            <Link href={`/pillars/${p.slug}`}>
+              {p.icon} <strong>{p.name}</strong>
+            </Link>
+            <div className="lore">
+              {p.classicalName} — {p.loreName}
+            </div>
+            <div className="lore">
+              {p._count.discussions} canonical Discussion{p._count.discussions === 1 ? "" : "s"}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
