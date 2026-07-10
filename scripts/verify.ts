@@ -2,16 +2,25 @@
 // on every push. v2's proven pattern, reimplemented on the v3 schema
 // (declared reuse, DUAL_IDENTITY_MODULE.md §1.2 invariant 3 / §9).
 //
-// Phase 0 checks — the list grows with each phase, never shrinks:
+// The check list grows with each phase, never shrinks.
+// Phase 0:
 // 1. Civic Ledger hash chain verifies from GENESIS.
 // 2. Canon integrity: 7 pillars, 49 questions, full lens coverage,
 //    positions 1–49 complete.
 // 3. Identity-leak guard: no Human id, no Profile db id anywhere in the
 //    ledger — pseudonyms only.
-// 4. Gate integrity: every cleared request is on the ledger (nothing
-//    clears off-ledger), one clearance per (scope, nullifier), and
-//    duplicate rejections stay private (no public event).
+// 4. Gate integrity: every PSEUDONYMOUS cleared request is on the ledger
+//    (nothing clears off-ledger), one clearance per (scope, nullifier),
+//    duplicate rejections private, PRIVATE clearances have no event.
+// Phase 1:
+// 5. Canonical Discussions: 49 permanent spaces, 1:1 with the canon.
+// 6. Permanent-record integrity: every permanent-space post has a
+//    post.recorded event; every LOCKED post's body re-hashes to its
+//    last ledger commitment — a locked record cannot be silently edited.
+// 7. Flag privacy: no flag-related event type on the public ledger, and
+//    no flag's nullifier appears anywhere in it (triangle of blindness).
 
+import { createHash } from "crypto";
 import { PrismaClient } from "@prisma/client";
 import { verifyChain, findForbiddenId } from "../lib/ledger";
 import { PILLARS, LENSES } from "../lib/canon";
@@ -99,7 +108,7 @@ async function main() {
   }
   const clearedRequests = await db.gateRequest.findMany({
     where: { status: "CLEARED" },
-    select: { id: true, scope: true, nullifier: true },
+    select: { id: true, scope: true, nullifier: true, ledgerRecording: true },
   });
   const spends = await db.nullifierSpend.findMany();
   const spendKeys = new Set(spends.map((s) => `${s.scope}|${s.nullifier}`));
@@ -115,7 +124,13 @@ async function main() {
       gateProblems++;
       console.error(`✗ OFF-LEDGER CLEARANCE: request ${req.id} has no NullifierSpend`);
     }
-    if (!eventKeys.has(key)) {
+    if (req.ledgerRecording === "private") {
+      // Private clearances must leave NO public trace.
+      if (eventKeys.has(key)) {
+        gateProblems++;
+        console.error(`✗ PRIVACY BREACH: private clearance ${req.id} has a public ledger event`);
+      }
+    } else if (!eventKeys.has(key)) {
       gateProblems++;
       console.error(`✗ OFF-LEDGER CLEARANCE: request ${req.id} has no gate.cleared ledger event`);
     }
@@ -145,9 +160,98 @@ async function main() {
   }
 
   if (gateProblems === 0) {
-    console.log(`✓ Gate integrity (${clearedRequests.length} clearance(s), all on-ledger, none doubled, rejections private)`);
+    console.log(`✓ Gate integrity (${clearedRequests.length} clearance(s), recording discipline holds, none doubled, rejections private)`);
   } else {
     failures += gateProblems;
+  }
+
+  // --- 5. Canonical Discussions: 49 permanent spaces, 1:1 with the canon.
+  const discussions = await db.discussion.findMany({
+    where: { questionId: { not: null } },
+    select: { id: true, permanence: true, questionId: true },
+  });
+  const canonicalProblems: string[] = [];
+  if (discussions.length !== 49) {
+    canonicalProblems.push(`expected 49 canonical Discussions, found ${discussions.length}`);
+  }
+  for (const d of discussions) {
+    if (d.permanence !== "permanent-canonical") {
+      canonicalProblems.push(`Discussion ${d.id} is canonical but marked "${d.permanence}"`);
+    }
+  }
+  if (canonicalProblems.length === 0) {
+    console.log("✓ 49 canonical Discussions, all permanent");
+  } else {
+    failures += canonicalProblems.length;
+    for (const p of canonicalProblems) console.error(`✗ CANONICAL SPACES: ${p}`);
+  }
+
+  // --- 6. Permanent-record integrity: every permanent-space post is on the
+  //        ledger, and every LOCKED post's body matches its last recorded
+  //        content hash. A locked record cannot be silently edited.
+  const permanentPosts = await db.post.findMany({
+    where: { discussion: { permanence: { startsWith: "permanent" } } },
+    select: { id: true, body: true, editableUntil: true },
+  });
+  const lastHashByPost = new Map<string, string>();
+  for (const ev of events) {
+    if (ev.eventType !== "post.recorded" && ev.eventType !== "post.amended") continue;
+    try {
+      const p = JSON.parse(ev.payload);
+      if (typeof p?.postRef === "string" && typeof p?.contentHash === "string") {
+        lastHashByPost.set(p.postRef, p.contentHash); // seq order ⇒ last write wins
+      }
+    } catch {
+      /* chain verification covers payload bytes */
+    }
+  }
+  const now = new Date();
+  let recordProblems = 0;
+  let lockedCount = 0;
+  for (const post of permanentPosts) {
+    const recorded = lastHashByPost.get(post.id);
+    if (!recorded) {
+      recordProblems++;
+      console.error(`✗ OFF-LEDGER POST: permanent-space post ${post.id} has no post.recorded event`);
+      continue;
+    }
+    if (post.editableUntil <= now) {
+      lockedCount++;
+      const actual = createHash("sha256").update(post.body).digest("hex");
+      if (actual !== recorded) {
+        recordProblems++;
+        console.error(`✗ LOCKED RECORD ALTERED: post ${post.id} body no longer matches its ledger commitment`);
+      }
+    }
+  }
+  if (recordProblems === 0) {
+    console.log(`✓ Permanent records intact (${permanentPosts.length} post(s), ${lockedCount} locked, all match the ledger)`);
+  } else {
+    failures += recordProblems;
+  }
+
+  // --- 7. Flag privacy: the public must never learn a flag exists. No
+  //        flag event types; no flag nullifier anywhere on the ledger.
+  const flags = await db.flag.findMany({ select: { id: true, nullifier: true } });
+  let flagProblems = 0;
+  const flagEvents = events.filter((ev) => ev.eventType.startsWith("flag"));
+  if (flagEvents.length > 0) {
+    flagProblems++;
+    console.error(`✗ FLAG PRIVACY: ${flagEvents.length} flag event(s) on the public ledger`);
+  }
+  const flagNullifiers = new Set(flags.map((f) => f.nullifier));
+  for (const ev of events) {
+    const hit = findForbiddenId(ev, flagNullifiers);
+    if (hit) {
+      flagProblems++;
+      console.error(`✗ FLAG PRIVACY: flag nullifier found on the ledger at seq ${ev.seq}`);
+      break;
+    }
+  }
+  if (flagProblems === 0) {
+    console.log(`✓ Flag privacy (${flags.length} flag(s) queued, none visible on the ledger)`);
+  } else {
+    failures += flagProblems;
   }
 
   if (failures > 0) {
