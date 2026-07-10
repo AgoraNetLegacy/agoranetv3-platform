@@ -13,6 +13,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:verify": "tsx scripts/verify.ts",
     "demo:phase0": "tsx scripts/demo-phase0.ts",
+    "demo:phase1": "tsx scripts/demo-phase1.ts",
     "demo:tamper": "tsx scripts/demo-tamper.ts",
     "test": "vitest run",
     "check": "npm run db:generate && npm test && tsc --noEmit && npm run build"

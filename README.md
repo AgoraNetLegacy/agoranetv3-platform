@@ -25,15 +25,36 @@ npm run db:verify          # the invariant check — run after any session
 npm test                   # unit + integration tests
 ```
 
-## Phase 0 checkpoint (owner review)
+## Checkpoint demos (owner review)
 
 ```bash
-npm run demo:phase0        # gate-cleared events landing on the ledger, pseudonymously
-npm run demo:tamper        # the invariant check failing loudly, twice
+npm run demo:phase0        # Phase 0: gate-cleared events landing on the ledger, pseudonymously
+npm run demo:tamper        # Phase 0: the invariant check failing loudly, twice
+npm run demo:phase1        # Phase 1: post → badge → ledger → grace edit → LOCK → tamper caught → flag queued
 ```
 
-Both demos run against a self-contained `prisma/demo.db`; nothing touches
-your dev database.
+All demos run against a self-contained `prisma/demo.db`; nothing touches
+your dev database. The interactive version: `npm run dev`, pick a dev
+face (interim until Phase 2 onboarding), post in a canonical thread, and
+watch `/ledger`.
+
+## What exists (Phase 1)
+
+- **Discussions core** (`lib/discussions.ts`, `app/`) — the 49 canonical
+  questions as permanent threaded spaces: read-only to the world,
+  gate-cleared participation, the permanence badge at the door and in
+  the composer, grace-window editing with visible history, and the lock.
+  Locked records are hash-committed to the ledger; `db:verify` catches
+  any silent alteration.
+- **Labeled sort menu** (`app/pillars/[slug]`) — every sort names what
+  it measures; no hidden formula. The menu grows as its inputs arrive
+  (unique tippers and sourced posts activate with Phase 4).
+- **Flag capture** (`lib/flags.ts`) — flags cite the rulebook (22 rules
+  seeded as data), clear the gate in private recording mode (a flag's
+  existence is never public — triangle of blindness), and queue for
+  Phase 5's adjudicators.
+- **Rails** (`lib/rails.ts`) — every number as data with governance
+  bounds; fee rails seeded, debits wire up with Phase 4's balances.
 
 ## What exists (Phase 0)
 
