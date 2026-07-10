@@ -7,7 +7,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { createPost, editPost } from "@/lib/discussions";
+import { createPost, editPost, createPollDiscussion } from "@/lib/discussions";
+import { createPoll, castVote } from "@/lib/polls";
 import { fileFlag } from "@/lib/flags";
 import {
   verifyHumanity,
@@ -78,6 +79,53 @@ export async function submitFlag(formData: FormData) {
 
   const result = await fileFlag(db, { postId, profileId: face.id, ruleId, note });
   backTo(`/d/${discussionId}`, result.ok ? "Flag received." : result.reason);
+}
+
+// ------------------------------------------------------------------ polls
+
+export async function submitPoll(formData: FormData) {
+  const face = await requireFace();
+  const pillarId = String(formData.get("pillarId") ?? "");
+  const isGovernance = formData.get("isGovernance") === "1";
+  const type = String(formData.get("type") ?? "single") as "single" | "multi" | "consensus";
+  const thresholdRaw = Number(formData.get("thresholdPercent") ?? "");
+
+  const result = await createPoll(db, {
+    profileId: face.id,
+    pillarId,
+    title: String(formData.get("title") ?? ""),
+    description: String(formData.get("description") ?? ""),
+    type,
+    mode: String(formData.get("mode") ?? "pseudonymous") as "public" | "pseudonymous",
+    options: String(formData.get("options") ?? "").split("\n"),
+    durationHours: Number(formData.get("durationHours") ?? 0),
+    consensusThreshold: type === "consensus" ? thresholdRaw / 100 : undefined,
+    isGovernance,
+    liveTally: formData.get("liveTally") === "on",
+  });
+  if (!result.ok) {
+    const back = String(formData.get("backTo") ?? "/");
+    backTo(back, result.reason);
+  }
+  redirect(`/polls/${result.pollId}`);
+}
+
+export async function submitVote(formData: FormData) {
+  const face = await requireFace();
+  const pollId = String(formData.get("pollId") ?? "");
+  const optionIds = formData.getAll("optionIds").map(String).filter(Boolean);
+
+  const result = await castVote(db, { pollId, profileId: face.id, optionIds });
+  revalidatePath(`/polls/${pollId}`);
+  backTo(`/polls/${pollId}`, result.ok ? "Your vote is in — one voice, counted once." : result.reason);
+}
+
+export async function startPollDiscussion(formData: FormData) {
+  const face = await requireFace();
+  const pollId = String(formData.get("pollId") ?? "");
+  const result = await createPollDiscussion(db, { pollId, profileId: face.id });
+  if (!result.ok) backTo(`/polls/${pollId}`, result.reason);
+  redirect(`/d/${result.postId}`);
 }
 
 // ------------------------------------------------------------- onboarding

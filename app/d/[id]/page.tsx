@@ -23,22 +23,38 @@ function Composer({
   parentId,
   graceMinutes,
   label,
+  permanent,
 }: {
   discussionId: string;
   parentId?: string;
   graceMinutes: number;
   label: string;
+  permanent: boolean;
 }) {
   return (
     <form action={submitPost} className="composer">
       <span className="composer-badge">
-        🏛 Permanent record — a {graceMinutes}-minute grace window for typo
-        repair with visible edit history, then your words lock into the
-        record.
+        {permanent ? (
+          <>
+            🏛 Permanent record — a {graceMinutes}-minute grace window for
+            typo repair with visible edit history, then your words lock
+            into the record.
+          </>
+        ) : (
+          <>
+            Author-deletable space — the creator may remove it later
+            (tombstones preserve reply context). Same {graceMinutes}-minute
+            grace window for edits.
+          </>
+        )}
       </span>
       <input type="hidden" name="discussionId" value={discussionId} />
       {parentId ? <input type="hidden" name="parentId" value={parentId} /> : null}
-      <textarea name="body" required placeholder="Speak deliberately — this space is permanent." />
+      <textarea
+        name="body"
+        required
+        placeholder={permanent ? "Speak deliberately — this space is permanent." : "Add your voice."}
+      />
       <button type="submit">{label}</button>
     </form>
   );
@@ -84,6 +100,7 @@ function PostNode({
   graceMinutes,
   rules,
   now,
+  permanent,
 }: {
   post: PostWithRevisions;
   childrenByParent: Map<string | null, PostWithRevisions[]>;
@@ -92,6 +109,7 @@ function PostNode({
   graceMinutes: number;
   rules: { id: string; tier: number; title: string }[];
   now: Date;
+  permanent: boolean;
 }) {
   const locked = post.editableUntil <= now;
   const own = viewerProfileId === post.authorProfileId;
@@ -135,6 +153,7 @@ function PostNode({
               parentId={post.id}
               graceMinutes={graceMinutes}
               label="Post reply"
+              permanent={permanent}
             />
           </details>
           {own && !locked && (
@@ -162,6 +181,7 @@ function PostNode({
           graceMinutes={graceMinutes}
           rules={rules}
           now={now}
+          permanent={permanent}
         />
       ))}
     </div>
@@ -213,6 +233,7 @@ export default async function DiscussionPage({
     childrenByParent.get(key)!.push(post);
   }
   const now = new Date();
+  const permanent = discussion.permanence.startsWith("permanent");
 
   return (
     <>
@@ -229,12 +250,20 @@ export default async function DiscussionPage({
         </p>
       )}
 
-      <div className="door-banner">
-        🏛 <strong>You are standing in a permanent space.</strong> Everything
-        posted here becomes permanent record — a {graceMinutes}-minute grace
-        window allows typo repair with visible edit history, then each post
-        locks. Reading is free; participation clears the humanity gate.
-      </div>
+      {permanent ? (
+        <div className="door-banner">
+          🏛 <strong>You are standing in a permanent space.</strong> Everything
+          posted here becomes permanent record — a {graceMinutes}-minute grace
+          window allows typo repair with visible edit history, then each post
+          locks. Reading is free; participation clears the humanity gate.
+        </div>
+      ) : (
+        <div className="notice">
+          Author-deletable space: the creator may remove it later, leaving a
+          tombstone so replies keep context. Reading is free; participation
+          clears the humanity gate.
+        </div>
+      )}
 
       {m && <div className="notice">{m}</div>}
 
@@ -248,6 +277,7 @@ export default async function DiscussionPage({
           graceMinutes={graceMinutes}
           rules={rules}
           now={now}
+          permanent={permanent}
         />
       ))}
       {posts.length === 0 && <p>No souls have spoken here yet.</p>}
@@ -258,6 +288,7 @@ export default async function DiscussionPage({
           discussionId={discussion.id}
           graceMinutes={graceMinutes}
           label={`Post as ${viewer.displayName} @${viewer.handle}`}
+          permanent={permanent}
         />
       ) : (
         <p className="interim-note">

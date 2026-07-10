@@ -2,7 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { LENS_INFO, type Lens } from "@/lib/canon";
+import { closeDuePolls } from "@/lib/polls";
+import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
+import { PollForm } from "@/app/polls/PollForm";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +67,15 @@ export default async function PillarPage({
     );
   }
 
+  await closeDuePolls(db);
+  const [polls, viewer] = await Promise.all([
+    db.poll.findMany({
+      where: { pillarId: pillar.id, isGovernance: false },
+      orderBy: { createdAt: "desc" },
+    }),
+    activeFace(),
+  ]);
+
   const rows = pillar.discussions.map((d) => {
     const lastPost = d.posts.reduce<Date | null>(
       (latest, p) => (!latest || p.createdAt > latest ? p.createdAt : latest),
@@ -117,7 +129,11 @@ export default async function PillarPage({
         {rows.map(({ discussion, participants, posts, canonPosition, lens }) => (
           <li key={discussion.id}>
             <Link href={`/d/${discussion.id}`}>{discussion.title}</Link>{" "}
-            <span className="badge permanent">Permanent record</span>
+            {discussion.permanence.startsWith("permanent") ? (
+              <span className="badge permanent">Permanent record</span>
+            ) : (
+              <span className="badge locked">Author-deletable</span>
+            )}
             <div className="meta">
               {canonPosition !== null && lens
                 ? `Canonical question ${canonPosition} · ${lens} (${LENS_INFO[lens].label}) · `
@@ -128,6 +144,43 @@ export default async function PillarPage({
           </li>
         ))}
       </ul>
+
+      <h3>
+        🏛 <Link href={`/pillars/${pillar.slug}/governance`}>Governance room</Link>
+      </h3>
+      <p className="lore">
+        The permanent room: this pillar's governance polls and records.
+      </p>
+
+      <h3>Polls</h3>
+      <ul className="discussions">
+        {polls.map((p) => (
+          <li key={p.id}>
+            <Link href={`/polls/${p.id}`}>{p.title}</Link>{" "}
+            {p.status === "open" ? (
+              <span className="badge permanent">
+                {p.liveTally ? "Live tally" : "Sealed until close"}
+              </span>
+            ) : (
+              <span className="badge locked">Closed</span>
+            )}
+            <div className="meta">
+              {p.mode === "public" ? "Public vote" : "Pseudonymous vote"}
+            </div>
+          </li>
+        ))}
+        {polls.length === 0 && <li className="lore">No ordinary polls yet.</li>}
+      </ul>
+      {viewer && (
+        <details>
+          <summary>Open an ordinary poll in {pillar.name}</summary>
+          <PollForm
+            pillarId={pillar.id}
+            isGovernance={false}
+            backTo={`/pillars/${pillar.slug}`}
+          />
+        </details>
+      )}
     </>
   );
 }
