@@ -1,0 +1,35 @@
+{
+  "name": "agoranetv3-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AgoraNet v3 — a purpose-built civic commons. Phase 0: foundation.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run db:generate && next build",
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:verify": "tsx scripts/verify.ts",
+    "demo:phase0": "tsx scripts/demo-phase0.ts",
+    "demo:tamper": "tsx scripts/demo-tamper.ts",
+    "test": "vitest run",
+    "check": "npm run db:generate && npm test && tsc --noEmit && npm run build"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0",
+    "next": "15.5.19",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "prisma": "5.22.0",
+    "tsx": "4.22.4",
+    "typescript": "5.7.2",
+    "vitest": "4.1.8"
+  }
+}

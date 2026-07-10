@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "file:./ci.db"
+      GATE_OPERATOR_SECRET: "ci-only-secret-not-used-anywhere-real"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx vitest run
+      - run: npx tsc --noEmit
+      - name: Seed a fresh database and run the invariant check
+        run: |
+          npx prisma db push --skip-generate
+          npx tsx prisma/seed.ts
+          npx tsx scripts/verify.ts
+      - run: npm run build

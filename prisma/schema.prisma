@@ -1,0 +1,115 @@
+// AgoraNet v3 — Phase 0 schema. SQLite only, by build law (BUILD_ORDER
+// Rule 3): the Postgres track and parity checking arrive at Phase 8.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ------------------------------------------------------------------
+// Identity (Phase A trust model — DUAL_IDENTITY_MODULE.md §10)
+//
+// In Phase A the platform holds the human↔profile mapping. That link is
+// operator-trusted and honestly disclosed (lib/gate.ts carries the
+// disclosure). These rows are INTERNAL: their ids are forbidden from the
+// public ledger — db:verify scans every event for them and fails loudly.
+// ------------------------------------------------------------------
+
+model Human {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  profiles  Profile[]
+}
+
+model Profile {
+  id           String        @id @default(cuid())
+  humanId      String
+  human        Human         @relation(fields: [humanId], references: [id])
+  face         String // "TRUE_SELF" | "ALIAS"
+  pseudonym    String        @unique // the only name the public ledger may speak
+  createdAt    DateTime      @default(now())
+  gateRequests GateRequest[]
+
+  @@unique([humanId, face]) // one True Self and one Alias per human
+}
+
+// ------------------------------------------------------------------
+// The gate (DUAL_IDENTITY_MODULE.md §3.3): pending → proof → cleared.
+// Application code never branches on identity — only on clearance.
+// ------------------------------------------------------------------
+
+model GateRequest {
+  id         String    @id @default(cuid())
+  profileId  String
+  profile    Profile   @relation(fields: [profileId], references: [id])
+  scope      String // e.g. "poll:{id}:face" — namespaces the nullifier
+  scopeKind  String // "per-profile" | "per-human" (§4.2 — both from day one)
+  status     String // "PENDING" | "CLEARED" | "DUPLICATE" | "INVALID"
+  nullifier  String? // set when the proof is checked; HMAC output, never a raw id
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+}
+
+// One nullifier may clear a given scope exactly once. The composite key
+// IS the one-per-scope enforcement; verify.ts re-checks it independently.
+model NullifierSpend {
+  scope     String
+  nullifier String
+  createdAt DateTime @default(now())
+
+  @@id([scope, nullifier])
+}
+
+// ------------------------------------------------------------------
+// The Civic Ledger — append-only, hash-chained (v2 pattern, reimplemented).
+// Nothing edits or deletes rows; corrections are new amendment events.
+// Speaks only in pseudonyms and nullifiers — never an internal id.
+// ------------------------------------------------------------------
+
+model LedgerEvent {
+  seq        Int       @id @default(autoincrement())
+  prevHash   String    @unique // entryHash of the previous event ("GENESIS" for seq 1)
+  entryHash  String    @unique // sha256(prevHash | eventType | canonical payload)
+  actorType  String // "system" | "soul" | "founder" | "moderator"
+  actorId    String? // a pseudonym or null — never a Human/Profile db id
+  eventType  String // e.g. "genesis", "pillar.seeded", "gate.cleared"
+  payload    String // canonical JSON string
+  createdAt  DateTime  @default(now())
+  anchoredAt DateTime? // Phase 9: when batched to Arweave/Midnight
+  anchorRef  String? // Phase 9: tx hash / Arweave id
+}
+
+// ------------------------------------------------------------------
+// The canon: 7 pillars × 7 lenses = 49 questions (SEVEN_PILLARS.md,
+// carried forward from v2 as-is). Seeded from lib/canon.ts.
+// ------------------------------------------------------------------
+
+model Pillar {
+  id            String     @id @default(cuid())
+  slug          String     @unique
+  name          String
+  classicalName String
+  loreName      String
+  icon          String
+  colorPrimary  String
+  colorLight    String
+  colorDark     String
+  isMeta        Boolean    @default(false)
+  position      Int        @unique // 1..7
+  questions     Question[]
+}
+
+model Question {
+  id       String @id @default(cuid())
+  pillarId String
+  pillar   Pillar @relation(fields: [pillarId], references: [id])
+  lens     String // OUSIA | AITIA | MODUS | PERSONA | VELA | KYOKAI | TAO
+  position Int    @unique // 1..49, one sequence across the whole matrix
+  text     String
+
+  @@unique([pillarId, lens])
+}
