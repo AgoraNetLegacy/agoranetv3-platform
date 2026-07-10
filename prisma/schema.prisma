@@ -75,6 +75,88 @@ model HandleTombstone {
   tombstonedAt  DateTime @default(now())
 }
 
+// ------------------------------------------------------------------
+// The internal economy (TOKENOMICS_SPEC.md; amounts from
+// ECONOMIC_STARTING_DEFAULTS.md as rails). Both currencies live as
+// per-profile internal balances — fast, free, and no funding trail
+// between a soul's two faces (each face's balances are its own). The
+// chain appears only at Phase 9's explicit boundaries. Money never
+// buys outcome weight; fees gate the doing, never the result.
+// ------------------------------------------------------------------
+
+model Balance {
+  profileId String
+  currency  String // "PC" | "G"
+  amount    Float  @default(0)
+
+  @@id([profileId, currency])
+}
+
+model TreasuryBalance {
+  currency String @id // "PC" | "G"
+  amount   Float  @default(0)
+}
+
+// The money ledger — internal double-entry record of every flow
+// (Phase A operator space; the public sees the treasury through the
+// raw inspection page now and daily snapshots at Phase 7). Every entry
+// moves value between exactly two of: a profile, the treasury, or
+// issuance (grants mint from "issuance" — the internal era's faucet,
+// accounted honestly).
+model EconomyEntry {
+  id            String   @id @default(cuid())
+  kind          String // "fee.reply" | "fee.vote" | "fee.poll" | "fee.discussion" | "fee.permanence" | "deposit.flag" | "grant.welcome" | "grant.seed" | "grant.orientation" | "grant.first-action" | "grant.hatch" | "grant.test" | "tip" | "tip.cut"
+  currency      String // "PC" | "G"
+  amount        Float
+  fromProfileId String? // null = treasury or issuance
+  fromTreasury  Boolean  @default(false)
+  toProfileId   String?
+  toTreasury    Boolean  @default(false)
+  refType       String? // "post" | "poll" | "discussion" | "flag"
+  refId         String?
+  createdAt     DateTime @default(now())
+}
+
+// Tips replace likes (DISCUSSIONS §6): costly, scarce, meaningful.
+// Totals and unique-tipper breadth are public; individual tipper
+// identities are not displayed (a tip trail is a behavioral
+// fingerprint). The treasury takes a micro-cut rail.
+model Tip {
+  id              String   @id @default(cuid())
+  postId          String
+  post            Post     @relation(fields: [postId], references: [id])
+  tipperProfileId String // operator space — never displayed
+  amount          Float // gross, in G
+  createdAt       DateTime @default(now())
+}
+
+// One source, one object (DISCUSSIONS §4): the same citation anywhere
+// resolves to one shared object.
+model SourceObject {
+  id        String       @id @default(cuid())
+  url       String       @unique // normalized
+  createdAt DateTime     @default(now())
+  usages    PostSource[]
+}
+
+// A typed source tag on a post, with the sharer's vouch choice (§10.2):
+// "vouched" (reputation-staked) or "unverified" (labeled, stake-free —
+// legitimate by design).
+model PostSource {
+  id            String       @id @default(cuid())
+  postId        String
+  post          Post         @relation(fields: [postId], references: [id])
+  sourceId      String
+  source        SourceObject @relation(fields: [sourceId], references: [id])
+  kind          String // "study" | "news" | "primary" | "book" | "experience" | "other"
+  vouch         String // "vouched" | "unverified"
+  sharerProfileId String // operator space
+  sharerHandle  String // public — vouches are by name (§10.2)
+  createdAt     DateTime     @default(now())
+
+  @@unique([postId, sourceId])
+}
+
 // The values seed (ONBOARDING Stage 5): per-profile answers to the seven
 // OUSIA questions. Matchmaking-only — the ratified conservative default;
 // never rendered publicly (private → public later is a choice, the
@@ -281,9 +363,9 @@ model Discussion {
   pollId     String?
   poll       Poll?     @relation(fields: [pollId], references: [id])
   // "permanent-canonical" (platform-created, ratified permanent);
-  // "permanent-governance" (lives in a pillar's Governance room —
-  // everything in that room is permanent record, DISCUSSIONS §8);
-  // "deletable" (soul-created context spaces). Paid permanence: Phase 4.
+  // "permanent-governance" (lives in a pillar's Governance room);
+  // "permanent-creator" (paid at creation only, immutable — labeled
+  // distinctly, DISCUSSIONS §8); "deletable" (soul-created spaces).
   permanence String
   createdAt  DateTime  @default(now())
   posts      Post[]
@@ -394,12 +476,23 @@ model Post {
   authorDisplayName String
   body         String
   status       String         @default("visible") // hidden/blur states arrive Phase 5
+  // Content attestation (DISCUSSIONS §10.1): an optional, reputation-
+  // staked "Human-made" mark. Three states platform-wide: machine-
+  // labeled (in-house AI, later), unlabeled (no penalty, no
+  // assumption), human-attested.
+  humanMade    Boolean        @default(false)
+  // Paid own-post permanence inside a deletable space (DISCUSSIONS §8):
+  // hash-committed to the ledger at purchase; the surrounding thread
+  // may still be deleted around it.
+  permanentUpgraded Boolean   @default(false)
   createdAt    DateTime       @default(now())
   // Grace window (rail: discussion.graceWindowMinutes): edits allowed
   // with visible history until this moment, then the record locks.
   editableUntil DateTime
   revisions    PostRevision[]
   flagsOn      Flag[]
+  tips         Tip[]
+  sources      PostSource[]
 }
 
 // Visible edit history within the grace window (§8: "typo repair with

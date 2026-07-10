@@ -125,6 +125,65 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     description:
       "The candle's final stretch, as a percent of poll duration: the true close is drawn randomly inside this window (POLLS §8 anti-sniping). Stretch length was left to build time — default flagged to owner.",
   },
+  // --- Economy rails (Phase 4 — ECONOMIC_STARTING_DEFAULTS, the
+  // ratified v0 test schedule; everything expires at the Phase 9
+  // real-money re-review).
+  {
+    key: "economy.tipCutPercent",
+    value: 5,
+    unit: "percent",
+    description:
+      "Treasury micro-cut on tips (owner-ratified 5%) — nearly all appreciation reaches the soul.",
+  },
+  {
+    key: "economy.permanenceUpgradeFee",
+    value: 15,
+    unit: "uG",
+    description:
+      "Paid-permanence upgrade (Discussion at creation, or own post) — cost-plus over real archival cost; margin to treasury (DISCUSSIONS §8, ARWEAVE §4).",
+  },
+  {
+    key: "grant.verification.pc",
+    value: 25,
+    unit: "uPC",
+    description: "Welcome Grant at humanity verification — PollCoin half (one per human, cryptographically).",
+  },
+  {
+    key: "grant.verification.g",
+    value: 25,
+    unit: "uG",
+    description: "Welcome Grant at humanity verification — Gratium half.",
+  },
+  {
+    key: "grant.valuesSeed.pc",
+    value: 10,
+    unit: "uPC",
+    description: "Welcome Grant milestone: values seed completed (all 7 answers).",
+  },
+  {
+    key: "grant.orientation.pc",
+    value: 5,
+    unit: "uPC",
+    description: "Welcome Grant milestone: orientation completed.",
+  },
+  {
+    key: "grant.firstAction.g",
+    value: 5,
+    unit: "uG",
+    description: "Welcome Grant milestone: first action completed (Stage 6 — finish what you came to do).",
+  },
+  {
+    key: "grant.hatch.pc",
+    value: 10,
+    unit: "uPC",
+    description: "Hatching grant to a new Alias — PollCoin half (so an Alias isn't born traceable-by-poverty).",
+  },
+  {
+    key: "grant.hatch.g",
+    value: 10,
+    unit: "uG",
+    description: "Hatching grant to a new Alias — Gratium half.",
+  },
 ];
 
 /** Read one rail's current value. Throws if the rail was never seeded —
