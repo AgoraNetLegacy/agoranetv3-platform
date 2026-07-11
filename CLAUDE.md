@@ -63,20 +63,30 @@ under it.**
 
 ## Current Phase
 
-**Phase 6.5 — Fellow Souls & Direct Messages (the social layer)** (see
-BUILD_ORDER.md and `Fellow Souls and DMs/FELLOW_SOULS_AND_DM_SPEC.md`;
-Phases 0–6 checkpointed per CHECKPOINTS.md — read it first). Souls
-find each other, launch scope: mutual-consent bonds, initiator-pays
-requests (2u rail), private graphs — no lists, no counts, no
-suggestions, ever — per-persona separation throughout. Encrypted DMs
-with recipient-side reporting feeding the Phase 5 moderation path
-(that ordering is why 6.5 follows 5); requests-vs-direct arrival
-split; blocking; DM notification tiers on the Phase 5 module.
-**Encryption stack selection (spec §9.1) resolves at this phase's
-start** — OPEN_ITEMS Track 5 #29.
+**Phase 7 — Light Score & The Dashboards** (see BUILD_ORDER.md;
+Phases 0–6.5 checkpointed per CHECKPOINTS.md — read it first, plus
+DECISIONS_PENDING.md and DERIVED_DEFAULTS.md). Standing becomes
+visible; the platform gets its face:
+- **Light Score v3** (`Light Score/LIGHT_SCORE_EXTENSION_SPEC.md`):
+  the v2 engine (declared reuse — `lib/score.ts` weights) + the three
+  new inputs already RECORDED as LightScoreAdjustment rows (attested
+  Circle actions from Phase 6, accepted repairs when Pictures exist,
+  moderation service from Phase 5) + the deductions; anti-sum guard
+  (never global, never averaged, never ranked); the explainable
+  score-change log ("attested action in Circle X").
+- **The hub + full pillar dashboards**
+  (`7 Pillars/SEVEN_PILLAR_DASHBOARD_SPEC.md`): naming scheme, Why
+  banners, domain cards (domains become DATA — the Phase 6 flag on
+  domain-level Circle tags resolves here), Picture-as-object with
+  repair status, stat rows, Governance room doors.
+- **Public transparency dashboards:** moderation stats + treasury
+  daily snapshots with ledger drill-down
+  (`Treasury Dashboard/TREASURY_DASHBOARD_SPEC.md`).
+- **Feed & Search** (`Feed and Search/FEED_AND_SEARCH_SPEC.md`):
+  chosen sources (fellow souls is one, off by default) + the open
+  lens with a published formula, "you're caught up," per-persona
+  feeds; the nine-entity search index, visibility-scoped.
 
-**Phase 6.5 checkpoint:** a stranger request goes out from one
-profile (fee paid), is accepted by another soul, encrypted DMs flow
-both ways, a message is reported, and the report lands in the
-moderation queue — with nothing anywhere revealing either soul's
-graph.
+**Phase 7 checkpoint:** hub → pillar → domain → Discussion → your own
+standing; treasury inspected publicly; feed sources tuned; a Circle
+found by searching its city.

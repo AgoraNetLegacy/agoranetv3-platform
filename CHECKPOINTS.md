@@ -174,4 +174,69 @@ the whole story on `/ledger`. Judge: does the action layer make the
 mission literal — is this where "we talked about it" becomes "here's
 proof we did it"?
 
-## Phase 6.5 — Fellow Souls & Direct Messages ⏳ NOT STARTED
+## Phase 6.5 — Fellow Souls & Direct Messages ✅ SELF-VERIFIED (2026-07-11)
+
+**Shipped:** the social layer, spec-complete against
+`Fellow Souls and DMs/FELLOW_SOULS_AND_DM_SPEC.md` — mutual-consent
+bonds between profiles, any face combination (the platform neither
+knows nor asks whether two bonded profiles share a human) ·
+initiator-pays requests (2u rail; accept/ignore/decline free; declines
+SILENT; 30d cooldown + 30d expiry rails, swept) · **private graphs,
+structurally** (§4): your list renders for you alone, no counts, no
+third-party relationships, NO suggestion engine ever — and NOTHING
+social touches the public ledger: every social gate clearance runs in
+private recording, every fee entry is blinded (no counterparty
+reference in the economy table) · encrypted DMs (X25519 → HKDF →
+AES-256-GCM per message, thread-bound AAD; ciphertext-only at rest;
+Phase A operator-escrowed keys DISCLOSED VERBATIM in the thread UI,
+wallet-side cutover published for Phase 9 — the §9.1 stack resolution
+is DECISIONS_PENDING #8) · strangers arrive as requests (initiator
+speaks once, then waits; reply opens, decline closes, both free) —
+fellow souls land direct · per-thread mute, quiet one-way per-persona
+blocks (never notified; neutral refusals), delete-for-me (their copy
+is theirs) · recipient-side excerpt reporting through the UNCHANGED
+Phase 5 path: Flag/ModCase gained a DM-excerpt evidence pointer (post
+XOR excerpt, verified), the case file shows the revealed words and the
+accused's standing — never a handle; consequences are personal (strikes
++ LS in the meta pillar — flagged interim), no content actions inside
+private threads, appeals unwind identically, the restorative option
+appends the correction in-thread, and NO ledger event ever names a DM
+case's accused · notifications per §5.3: fellow-soul DMs
+time-sensitive, requests quiet, aggregated per thread, content never
+rides a notification.
+
+**Evidence:** 127 tests across 11 files (18 new in
+`tests/fellowSouls.test.ts`, triple-run for flake); `db:verify` grew to
+24 checks — social privacy (no social event types, no social row id
+anywhere in the ledger, private clearances, blinded fees, notification
+bodies scanned against decrypted plaintexts) and social
+integrity/encryption (bonds normalized + consent-backed, every message
+authenticates and decrypts under the re-derived thread key, expiry
+sweep, evidence-pointer exactness) — both demonstrated FAILING LOUDLY
+under test (plaintext smuggled into the ciphertext column; a bond
+inserted with no accepted request behind it). `demo:phase6.5` walks the
+checkpoint end to end. Live browser walkthrough (screenshots in session
+record): request sent through the UI (fee visibly charged), quiet
+request accepted (bond count visible only to its owner), thread opened
+direct between fellow souls with the escrow disclosure banner, messages
+both ways, recipient revealed one message and filed the report — case
+open in the queue with deposit held and rule cited, and a final scan
+showing zero social trace on the public ledger.
+
+**Derived rules set this phase (flagged):** releasing a bond
+(consent is ongoing — either side may withdraw, quietly) · DM-conduct
+strikes land in the meta pillar (moderation is pillar-scoped; DMs have
+none) · §3's Circle/Chamber invites await those surfaces' invite
+mechanics (Circles are open-join in v1; Chambers arrive at 7.5) ·
+fellow-souls feed source and search scope land with their Phase 7
+hosts.
+
+**If you choose to look (15 min):** sign in → souls → send a request
+(watch the fee and the recipient's quiet inbox) → accept as the other
+face's owner → open a conversation (read the escrow disclosure — that
+honesty is the design) → exchange a few words → report one message and
+run `npm run db:verify`. Judge: does "good people find each other"
+feel mechanical now — and does the graph feel like nobody's business
+but yours?
+
+## Phase 7 — Light Score & The Dashboards ⏳ NOT STARTED

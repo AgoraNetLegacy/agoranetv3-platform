@@ -76,7 +76,21 @@ never live here — they interrupt directly.
    story. Recipient-side excerpt reporting works cleanly under escrow.
    **Re-review mandatory at Phase 9** alongside the gate cutover.
 
-9. **Build-time rail defaults set by Claude, owner-adjustable:**
+9. **Phase 6.5 derived rules (non-blocking, 2026-07-11):**
+   - **Releasing a bond:** the spec makes the bond mutual CONSENT and
+     never mentions ending one; built as: either side may withdraw,
+     quietly (no notification — the blocking discipline applied).
+     Confirm the feel.
+   - **DM-conduct strikes land in the meta pillar.** Moderation is
+     pillar-scoped by ratified design; DMs have no pillar. A violation
+     in a private thread is read as conduct against the commons itself.
+     Alternative would be a per-human "conduct" bucket — which the
+     no-universal-score invariant forbids. Interim until reviewed.
+   - **§3's Circle/Chamber invites** await invite mechanics on those
+     surfaces (Circles are open-join in v1; Chambers arrive 7.5).
+     Fellow-souls feed source + search scope land with Phase 7 hosts.
+
+10. **Build-time rail defaults set by Claude, owner-adjustable:**
    face-switch cooldown 5 min · pillar session timeout 30 min · alias
    activation 24–72h/daily cohorts (spec-indicative) · candle window
    20% of poll duration · display-name cooldown 7 days · handle charset
