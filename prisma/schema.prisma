@@ -304,6 +304,7 @@ model Pillar {
   discussions   Discussion[]
   polls         Poll[]
   circles       Circle[]
+  domains       Domain[]
 }
 
 model Question {
@@ -316,6 +317,85 @@ model Question {
   discussion Discussion?
 
   @@unique([pillarId, lens])
+}
+
+// ------------------------------------------------------------------
+// Domains — the second ring (Phase 7; SEVEN_PILLAR_DASHBOARD_SPEC §5.3
+// + the canon reconciliation, owner-ratified 2026-07-07: each pillar's
+// 8 domain Opening Questions become permanent platform threads, with the
+// breakdown content as the reference material behind each card).
+// Content is seeded verbatim from lib/domainContent.generated.ts;
+// wording changes are ledger-evented amendments, per canon law.
+// ------------------------------------------------------------------
+
+model Domain {
+  id                        String  @id @default(cuid())
+  pillarId                  String
+  pillar                    Pillar  @relation(fields: [pillarId], references: [id])
+  position                  Int // 1..8 within the pillar
+  title                     String
+  subtitle                  String?
+  openingQuestion           String
+  // "ratified" | "derived-draft" (the 16 Compassion/Hope drafts,
+  // flagged in DECISIONS_PENDING pending owner ratification).
+  openingQuestionProvenance String
+  reality                   String
+  impactPoint               String
+  forwardMarker             String
+  stoicPrinciple            String
+  stoicLens                 String
+  openForRepair             String // JSON string[] — the repair questions
+  inService                 String? // Agora only: the built answer
+  extras                    String // JSON {label, body}[] — rare additional bullets
+
+  discussion Discussion?
+  revisions  PictureRevision[]
+  repairs    PictureRepair[]
+  circles    Circle[]
+
+  @@unique([pillarId, position])
+}
+
+// The Picture as a living content object (DASHBOARD §6.5 — new for v3):
+// versioned, with a public dated history. Version 1 is the corpus
+// Picture verbatim; every later version traces to exactly one accepted
+// repair. Append-only in practice: revisions are never edited or
+// deleted (db:verify holds this).
+model PictureRevision {
+  id        String        @id @default(cuid())
+  domainId  String
+  domain    Domain        @relation(fields: [domainId], references: [id])
+  version   Int // 1..n
+  body      String
+  repairId  String?       @unique // null only for the seeded v1
+  repair    PictureRepair? @relation(fields: [repairId], references: [id])
+  createdAt DateTime      @default(now())
+
+  @@unique([domainId, version])
+}
+
+// A formal Repair (§6.5): any verified soul may challenge the Picture.
+// Acceptance is decided the way the platform decides everything — a
+// governance poll (DASHBOARD §6.3: Polls are the resolution mechanism
+// this spec assumes), system-opened in the pillar's Governance room,
+// consensus-typed at the platform bar. Submission is free (reading the
+// fee lattice strictly: repairs are not priced); accepted repairs credit
+// Light Score (LIGHT_SCORE §2), rejected ones cost nothing — honest
+// misses stay safe (§5.2).
+model PictureRepair {
+  id                String    @id @default(cuid())
+  domainId          String
+  domain            Domain    @relation(fields: [domainId], references: [id])
+  authorProfileId   String // Phase A operator space
+  authorHandle      String // public — repairs are civic contributions
+  authorDisplayName String // frozen at submission (naming ruling)
+  challenge         String // what the current Picture gets wrong
+  proposedText      String // the full replacement Picture text
+  status            String    @default("open") // "open" | "accepted" | "declined"
+  pollId            String?   @unique // the governance poll deciding it
+  createdAt         DateTime  @default(now())
+  resolvedAt        DateTime?
+  revision          PictureRevision?
 }
 
 // ------------------------------------------------------------------
@@ -368,6 +448,9 @@ model Discussion {
   // Canonical threads map 1:1 onto canon questions (the civic spine).
   questionId String?   @unique
   question   Question? @relation(fields: [questionId], references: [id])
+  // Domain threads map 1:1 onto domains (the second ring, Phase 7).
+  domainId   String?   @unique
+  domain     Domain?   @relation(fields: [domainId], references: [id])
   // Poll-context Discussions (POLLS §4.4): attached at creation or by
   // any soul later; consensus-fail offers one (prompted, never automatic).
   pollId     String?
@@ -717,6 +800,12 @@ model Circle {
   // free text inside the Circle may name venues for coordination.
   pillarId String?
   pillar   Pillar? @relation(fields: [pillarId], references: [id])
+  // Optional domain-level tag within the pillar (CIRCLES §2.1 "optionally
+  // a specific domain within it") — the Phase 6 flag resolves here, now
+  // that domains are data. Always a domain OF the tagged pillar
+  // (enforced in code).
+  domainId String?
+  domain   Domain? @relation(fields: [domainId], references: [id])
   placeTag String?
   problem  String?
   // The founder role is deliberately thin (§3.3): edits purpose and
@@ -950,4 +1039,67 @@ model Block {
   createdAt        DateTime @default(now())
 
   @@unique([blockerProfileId, blockedProfileId])
+}
+
+// ------------------------------------------------------------------
+// Feed & Search (Phase 7 — Feed and Search/FEED_AND_SEARCH_SPEC.md).
+//
+// The law of this surface: chosen, not inferred; per-persona,
+// absolutely. All feed state and all search history are PER-PROFILE,
+// stored separately, never aggregated per-human, never public, and
+// never inputs to any ranking (§4.2, §6). None of it ever reaches the
+// public ledger — these are reading-surface preferences, not civic
+// actions.
+// ------------------------------------------------------------------
+
+// One explicit subscription (§2.1). Kinds: "pillar" | "domain" |
+// "discussion" | "circle" | "poll" | "fellow-souls" (refId null — the
+// Phase 6.5 source, OFF by default: absence of the row means off).
+// Discussion follows also arise implicitly from participation
+// (join = follow, DISCUSSIONS §3) — computed at read time, not stored.
+model FeedSource {
+  id        String   @id @default(cuid())
+  profileId String
+  kind      String
+  refId     String? // pillar/domain/discussion/circle/poll id
+  createdAt DateTime @default(now())
+
+  @@unique([profileId, kind, refId])
+}
+
+// Per-profile feed settings: the open lens and the balanced-diet default
+// (§2.2, §3 — the default expresses the platform's values; the soul can
+// turn both off). caughtUpAt is the read position behind "you're caught
+// up" — a designed moment, not a failure state.
+model FeedSettings {
+  profileId    String    @id
+  openLens     Boolean   @default(true)
+  balancedDiet Boolean   @default(true)
+  caughtUpAt   DateTime?
+}
+
+// Search history (§4.2): stored per profile, visible to the soul,
+// deletable, never used to rank anything.
+model SearchQuery {
+  id        String   @id @default(cuid())
+  profileId String
+  query     String
+  createdAt DateTime @default(now())
+}
+
+// ------------------------------------------------------------------
+// Treasury daily snapshots (Phase 7 — TREASURY_DASHBOARD_SPEC §6.2,
+// owner-ratified: daily cadence over live updates). Each snapshot is
+// timestamped; the schedule is published on the page. The snapshot is a
+// VIEW over the books — db:verify re-derives it and fails loudly on
+// drift (§3: never a separate bookkeeping system).
+// ------------------------------------------------------------------
+
+model TreasurySnapshot {
+  id       String   @id @default(cuid())
+  day      String   @unique // UTC "YYYY-MM-DD"
+  takenAt  DateTime @default(now())
+  balances String // JSON { PC, G }
+  inflows  String // JSON { category: { PC, G } } — running totals at snapshot
+  outflows String // JSON { category: { PC, G } } — running totals at snapshot
 }

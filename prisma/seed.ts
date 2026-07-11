@@ -9,6 +9,7 @@ import { PrismaClient } from "@prisma/client";
 import { PILLARS, LENSES } from "../lib/canon";
 import { RAIL_DEFAULTS } from "../lib/rails";
 import { RULEBOOK } from "../lib/rulebook";
+import { DOMAIN_CONTENT } from "../lib/domainContent.generated";
 import { appendEvent, GENESIS_HASH } from "../lib/ledger";
 
 const db = new PrismaClient();
@@ -164,11 +165,90 @@ async function seedRulebook() {
   console.log(`Seeded ${RULEBOOK.length} rulebook rules.`);
 }
 
+// The domain layer (Phase 7 — the canon reconciliation's second ring):
+// 56 domains, each with its Picture as revision 1 of a living content
+// object (DASHBOARD §6.5) and its Opening-Question thread as a permanent
+// platform Discussion. Every seeding on the ledger; the 16 derived-draft
+// questions carry their provenance into the event (the flag is public).
+async function seedDomains() {
+  const existing = await db.domain.count();
+  if (existing > 0) {
+    console.log(`Domains already seeded (${existing}) — skipping.`);
+    return;
+  }
+  let domains = 0;
+  for (const pillarContent of DOMAIN_CONTENT) {
+    const pillar = await db.pillar.findUniqueOrThrow({
+      where: { slug: pillarContent.pillarSlug },
+    });
+    for (const d of pillarContent.domains) {
+      const domain = await db.domain.create({
+        data: {
+          pillarId: pillar.id,
+          position: d.position,
+          title: d.title,
+          subtitle: d.subtitle,
+          openingQuestion: d.openingQuestion,
+          openingQuestionProvenance: d.openingQuestionProvenance,
+          reality: d.reality,
+          impactPoint: d.impactPoint,
+          forwardMarker: d.forwardMarker,
+          stoicPrinciple: d.stoicPrinciple,
+          stoicLens: d.stoicLens,
+          openForRepair: JSON.stringify(d.openForRepair),
+          inService: d.inService,
+          extras: JSON.stringify(d.extras),
+        },
+      });
+      // The Picture, version 1 — the corpus text, verbatim.
+      await db.pictureRevision.create({
+        data: { domainId: domain.id, version: 1, body: d.picture },
+      });
+      // The domain's permanent thread (second ring).
+      const discussion = await db.discussion.create({
+        data: {
+          title: d.openingQuestion,
+          pillarId: pillar.id,
+          domainId: domain.id,
+          permanence: "permanent-canonical",
+        },
+      });
+      await appendEvent(db, {
+        actorType: "system",
+        eventType: "domain.seeded",
+        payload: {
+          domainRef: domain.id,
+          discussionRef: discussion.id,
+          pillar: pillar.slug,
+          position: d.position,
+          title: d.title,
+          openingQuestion: d.openingQuestion,
+          openingQuestionProvenance: d.openingQuestionProvenance,
+          pictureVersion: 1,
+          permanence: "permanent-canonical",
+        },
+      });
+      domains += 1;
+    }
+  }
+  // Reserve the platform's own name in the taken-list: system-opened
+  // polls (repair acceptance) speak as "system", and that attribution
+  // must never be claimable by a soul (anti-impersonation; build-time
+  // rule, flagged in DECISIONS_PENDING).
+  await db.handleTombstone.upsert({
+    where: { handle: "system" },
+    create: { handle: "system", reason: "abandoned" },
+    update: {},
+  });
+  console.log(`Seeded ${domains} domains, their Pictures (v1), and their permanent threads.`);
+}
+
 async function main() {
   await seedCanon();
   await seedCanonicalDiscussions();
   await seedRails();
   await seedRulebook();
+  await seedDomains();
 }
 
 main()

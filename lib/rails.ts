@@ -362,6 +362,114 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     description:
       "Per-message micro-fee, sender pays — near-invisible to humans; spam still compounds to real cost (ECONOMIC §1).",
   },
+  // --- Light Score rails (Phase 7 — LIGHT_SCORE_EXTENSION_SPEC; the v2
+  // engine's weights carried as rails per build law. Relative weights of
+  // the four input types remain a Track 3 → post-data item; these are the
+  // v2 anchors + DERIVED_DEFAULTS derivations.)
+  {
+    key: "lightScore.answerPoints",
+    value: 5,
+    unit: "points",
+    description:
+      "Points per top-level answer in a Discussion — the v2 engine's substantive-answer weight (declared reuse, lib/score.ts).",
+  },
+  {
+    key: "lightScore.debatePostPoints",
+    value: 1,
+    unit: "points",
+    description:
+      "Points per threaded debate reply — the v2 engine's debate weight (declared reuse).",
+  },
+  {
+    key: "lightScore.participationCapPerDiscussion",
+    value: 10,
+    unit: "points",
+    description:
+      "Ceiling on participation points earned in ONE discussion — insight over volume; raw volume can't be farmed (v2 invariant, unchanged).",
+  },
+  {
+    key: "lightScore.repairAcceptedCredit",
+    value: 5,
+    unit: "points",
+    description:
+      "Credit to a repair's author when accepted into the Picture's revision history, in the domain's pillar — derived: the substantive-answer weight (an accepted repair is at least a substantive answer). Accepted repairs only; rejected patterns earn nothing and cost nothing (LIGHT_SCORE §2/§5.2).",
+  },
+  {
+    key: "lightScore.moderationCaseCredit",
+    value: 1,
+    unit: "points",
+    description:
+      "Credit per case RESOLVED, in the case's pillar, quality-gated (overridden rulings accrue nothing) — derived: the anchor unit; per-case credit is deliberately small (LIGHT_SCORE §2/§5.3).",
+  },
+  {
+    key: "lightScore.moderationDailyCapPoints",
+    value: 10,
+    unit: "points",
+    description:
+      "Daily cap on moderation-service Light Score credit — derived: the participation cap; grinding flattens (LIGHT_SCORE §5.3).",
+  },
+  // --- Picture repair rails (Phase 7 — DASHBOARD §6.5; acceptance rides
+  // the platform's ratified decision mechanism, a governance poll in the
+  // pillar's room — DASHBOARD §6.3).
+  {
+    key: "repair.consensusPercent",
+    value: 60,
+    unit: "percent",
+    boundMin: 50,
+    boundMax: 100,
+    description:
+      "Consensus bar for accepting a Picture repair — the platform's consensus example (60%), never below simple majority. Build-time derived, flagged.",
+  },
+  {
+    key: "repair.pollDurationHours",
+    value: 72,
+    unit: "hours",
+    description:
+      "Duration of the system-opened governance poll deciding a repair — the platform's default deliberation window. Build-time derived, flagged.",
+  },
+  // --- Feed rails (Phase 7 — FEED_AND_SEARCH §2.2). The lens inputs are
+  // ratified (unique contributors weighted highest, tips, sourced posts,
+  // recency decay — never views, never dwell); exact WEIGHTS are the
+  // spec's §9.1 open item, deferred to real usage data (OPEN_ITEMS Track
+  // 6 #46), so these ship as derived rails, flagged: contributor weight 3
+  // = the v2 engine's insightful-vote weight (quality's multiplier);
+  // tips and sourced at the anchor unit; half-life 72h = the platform's
+  // default deliberation window.
+  {
+    key: "feed.lensContributorWeight",
+    value: 3,
+    unit: "points",
+    description:
+      "Open-lens weight per unique contributor — weighted highest, per the ratified formula skeleton.",
+  },
+  {
+    key: "feed.lensTipWeight",
+    value: 1,
+    unit: "points",
+    description: "Open-lens weight per unique tipper (breadth, never amounts).",
+  },
+  {
+    key: "feed.lensSourcedWeight",
+    value: 1,
+    unit: "points",
+    description: "Open-lens weight per sourced post.",
+  },
+  {
+    key: "feed.lensHalfLifeHours",
+    value: 72,
+    unit: "hours",
+    description:
+      "Open-lens recency decay half-life — activity's weight halves every this many hours.",
+  },
+  // --- Treasury dashboard (Phase 7 — TREASURY_DASHBOARD §6.2,
+  // owner-ratified: daily snapshots; the cadence is itself a rail).
+  {
+    key: "treasury.snapshotCadenceHours",
+    value: 24,
+    unit: "hours",
+    description:
+      "Transparency-dashboard snapshot cadence (owner-ratified daily, 2026-07-08). The underlying ledger stays live; only rendered aggregates are periodic.",
+  },
 ];
 
 /** Read one rail's current value. Throws if the rail was never seeded —
