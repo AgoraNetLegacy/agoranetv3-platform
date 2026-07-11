@@ -28,12 +28,14 @@ function Composer({
   graceMinutes,
   label,
   permanent,
+  feeLabel = "1 PC",
 }: {
   discussionId: string;
   parentId?: string;
   graceMinutes: number;
   label: string;
   permanent: boolean;
+  feeLabel?: string;
 }) {
   return (
     <form action={submitPost} className="composer">
@@ -81,7 +83,7 @@ function Composer({
           </select>
         </details>
       </div>
-      <button type="submit">{label} · 1 PC</button>
+      <button type="submit">{label} · {feeLabel}</button>
     </form>
   );
 }
@@ -167,6 +169,7 @@ function PostNode({
   rules,
   now,
   permanent,
+  feeLabel,
 }: {
   post: PostWithRevisions;
   childrenByParent: Map<string | null, PostWithRevisions[]>;
@@ -176,6 +179,7 @@ function PostNode({
   rules: { id: string; tier: number; title: string }[];
   now: Date;
   permanent: boolean;
+  feeLabel?: string;
 }) {
   const locked = post.editableUntil <= now;
   const own = viewerProfileId === post.authorProfileId;
@@ -268,6 +272,7 @@ function PostNode({
               graceMinutes={graceMinutes}
               label="Post reply"
               permanent={permanent}
+              feeLabel={feeLabel}
             />
           </details>
           {own && !locked && (
@@ -321,6 +326,7 @@ function PostNode({
           rules={rules}
           now={now}
           permanent={permanent}
+          feeLabel={feeLabel}
         />
       ))}
     </div>
@@ -339,7 +345,7 @@ export default async function DiscussionPage({
 
   const discussion = await db.discussion.findUnique({
     where: { id },
-    include: { pillar: true, question: true, circle: true },
+    include: { pillar: true, question: true, circle: true, chamber: true },
   });
   if (!discussion) notFound();
 
@@ -367,6 +373,28 @@ export default async function DiscussionPage({
       );
     }
     roomWrite = access.write;
+  } else if (discussion.chamber) {
+    // The workshop (POLLINATOR §4.3): a chamber-scoped Discussion is
+    // enter-to-see — READING included; that enclosure is the point.
+    // Exempt from the parking rule like the members' room (a chamber is
+    // not a pillar surface; it homes in the meta pillar only because a
+    // Discussion needs a pillar row).
+    const { workshopAccess } = await import("@/lib/chambers");
+    const viewerFace = await activeFace();
+    if (!(await workshopAccess(db, discussion.chamber.id, viewerFace?.id ?? null))) {
+      return (
+        <>
+          <h1>The workshop</h1>
+          <div className="notice">
+            You enter a chamber to see what&apos;s inside — the workshop
+            belongs to the souls working the idea.{" "}
+            <Link href={`/pollinator/${discussion.chamber.id}`}>
+              Read the chamber&apos;s storefront →
+            </Link>
+          </div>
+        </>
+      );
+    }
   } else {
     // A Discussion is inside its pillar — the parking rule applies here
     // exactly as on the dashboard (DASHBOARD §3.2).
@@ -400,6 +428,9 @@ export default async function DiscussionPage({
   const now = new Date();
   const permanent = discussion.permanence.startsWith("permanent");
   const interactive = viewer && (!discussion.circle || roomWrite);
+  // The dual-token signature at micro scale (POLLINATOR §3): workshop
+  // posts price in both currencies; the composer says so up front.
+  const feeLabel = discussion.chamber ? "1 PC + 1 G" : "1 PC";
 
   return (
     <>
@@ -407,6 +438,10 @@ export default async function DiscussionPage({
         {discussion.circle ? (
           <Link href={`/circles/${discussion.circle.id}`}>
             ← ⭕ {discussion.circle.name}
+          </Link>
+        ) : discussion.chamber ? (
+          <Link href={`/pollinator/${discussion.chamber.id}/workshop`}>
+            ← 🐝 {discussion.chamber.title} (workshop)
           </Link>
         ) : (
           <Link href={`/pillars/${discussion.pillar.slug}`}>
@@ -429,6 +464,14 @@ export default async function DiscussionPage({
           Circle&apos;s action log is.{" "}
           {discussion.circle.status === "closed" &&
             "This Circle is closed: the room is read-only, kept for its former members."}
+        </div>
+      ) : discussion.chamber ? (
+        <div className="notice">
+          🐝 <strong>The workshop.</strong> Enter-to-see and deletable-class
+          — half-formed thinking gets worked out here without the open
+          internet watching the drafts. Standard moderation applies as
+          everywhere. Posting charges both tokens (the Pollinator&apos;s
+          dual-token signature).
         </div>
       ) : permanent ? (
         <div className="door-banner">
@@ -458,6 +501,7 @@ export default async function DiscussionPage({
           rules={rules}
           now={now}
           permanent={permanent}
+          feeLabel={feeLabel}
         />
       ))}
       {posts.length === 0 && <p>No souls have spoken here yet.</p>}
@@ -470,9 +514,10 @@ export default async function DiscussionPage({
             graceMinutes={graceMinutes}
             label={`Post as ${viewer.displayName} @${viewer.handle}`}
             permanent={permanent}
+            feeLabel={feeLabel}
           />
         </>
-      ) : discussion.circle ? null : (
+      ) : discussion.circle || discussion.chamber ? null : (
         <>
           <h3>Add your voice</h3>
           <p className="interim-note">

@@ -20,13 +20,17 @@ export default async function FeedSourcesPage({
   if (!face) redirect("/login");
 
   const settings = await ensureFeedDefaults(db, face.id);
-  const [pillars, sources, myCircles, followedPolls, followedDomains, bondCount] =
+  const [pillars, sources, myCircles, myChambers, followedPolls, followedDomains, bondCount] =
     await Promise.all([
       db.pillar.findMany({ orderBy: { position: "asc" } }),
       db.feedSource.findMany({ where: { profileId: face.id } }),
       db.circleMember.findMany({
         where: { profileId: face.id, leftAt: null },
         include: { circle: { select: { id: true, name: true } } },
+      }),
+      db.chamberMember.findMany({
+        where: { profileId: face.id },
+        include: { chamber: { select: { id: true, title: true } } },
       }),
       db.feedSource.findMany({ where: { profileId: face.id, kind: "poll" } }),
       db.feedSource.findMany({ where: { profileId: face.id, kind: "domain" } }),
@@ -40,6 +44,9 @@ export default async function FeedSourcesPage({
   );
   const followedCircleIds = new Set(
     sources.filter((s) => s.kind === "circle").map((s) => s.refId)
+  );
+  const followedChamberIds = new Set(
+    sources.filter((s) => s.kind === "chamber").map((s) => s.refId)
   );
   const fellowSoulsOn = sources.some((s) => s.kind === "fellow-souls");
   const polls = await db.poll.findMany({
@@ -92,6 +99,23 @@ export default async function FeedSourcesPage({
                 defaultChecked={followedCircleIds.has(mc.circle.id)}
               />{" "}
               ⭕ {mc.circle.name} <span className="lore">(members&rsquo;-room activity)</span>
+            </label>
+          ))
+        )}
+
+        <h3>Chambers you&rsquo;ve entered</h3>
+        {myChambers.length === 0 ? (
+          <p className="lore">You&rsquo;ve entered no chambers with this face.</p>
+        ) : (
+          myChambers.map((mc) => (
+            <label key={mc.chamber.id} style={{ display: "block" }}>
+              <input
+                type="checkbox"
+                name="chamber"
+                value={mc.chamber.id}
+                defaultChecked={followedChamberIds.has(mc.chamber.id)}
+              />{" "}
+              🐝 {mc.chamber.title} <span className="lore">(workshop activity)</span>
             </label>
           ))
         )}

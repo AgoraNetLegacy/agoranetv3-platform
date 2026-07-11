@@ -25,6 +25,12 @@ import {
   attestAction,
 } from "@/lib/circles";
 import {
+  createChamber,
+  enterChamber,
+  editScaffold,
+  inviteToChamber,
+} from "@/lib/chambers";
+import {
   sendFellowSoulRequest,
   respondToRequest,
   releaseBond,
@@ -240,6 +246,70 @@ export async function submitCircle(formData: FormData) {
   redirect(`/circles/${result.circleId}`);
 }
 
+// -------------------------------------------------------------- chambers
+
+export async function submitChamber(formData: FormData) {
+  const face = await requireFace();
+  const result = await createChamber(db, {
+    profileId: face.id,
+    title: String(formData.get("title") ?? ""),
+    subject: String(formData.get("subject") ?? ""),
+    pitch: String(formData.get("pitch") ?? ""),
+    whyCare: String(formData.get("whyCare") ?? ""),
+    isPublic: formData.get("visibility") !== "private",
+    scaffold: {
+      solving: String(formData.get("solving") ?? ""),
+      needToKnow: String(formData.get("needToKnow") ?? ""),
+      success: String(formData.get("success") ?? ""),
+    },
+  });
+  if (!result.ok) backTo("/pollinator", result.reason);
+  redirect(`/pollinator/${result.chamberId}`);
+}
+
+export async function submitEnterChamber(formData: FormData) {
+  const chamberId = String(formData.get("chamberId") ?? "");
+  const face = await requireFace();
+  const result = await enterChamber(db, { chamberId, profileId: face.id });
+  revalidatePath(`/pollinator/${chamberId}`);
+  if (!result.ok) backTo(`/pollinator/${chamberId}`, result.reason);
+  redirect(`/pollinator/${chamberId}/workshop`);
+}
+
+export async function submitScaffoldEdit(formData: FormData) {
+  const chamberId = String(formData.get("chamberId") ?? "");
+  const face = await requireFace();
+  const result = await editScaffold(db, {
+    chamberId,
+    profileId: face.id,
+    solving: String(formData.get("solving") ?? ""),
+    needToKnow: String(formData.get("needToKnow") ?? ""),
+    success: String(formData.get("success") ?? ""),
+  });
+  revalidatePath(`/pollinator/${chamberId}/workshop`);
+  backTo(
+    `/pollinator/${chamberId}/workshop`,
+    result.ok ? "Scaffold sharpened — the prior version stays in the history." : result.reason
+  );
+}
+
+export async function submitChamberInvite(formData: FormData) {
+  const chamberId = String(formData.get("chamberId") ?? "");
+  const face = await requireFace();
+  const result = await inviteToChamber(db, {
+    chamberId,
+    profileId: face.id,
+    inviteeHandle: String(formData.get("handle") ?? ""),
+  });
+  revalidatePath(`/pollinator/${chamberId}/workshop`);
+  backTo(
+    `/pollinator/${chamberId}/workshop`,
+    result.ok
+      ? "Invited — they'll find it waiting on their Pollinator page."
+      : result.reason
+  );
+}
+
 // ------------------------------------------------------------------ feed
 
 export async function markCaughtUp() {
@@ -257,6 +327,7 @@ export async function saveFeedSources(formData: FormData) {
   const face = await requireFace();
   const pillarIds = formData.getAll("pillar").map(String);
   const circleIds = formData.getAll("circle").map(String);
+  const chamberIds = formData.getAll("chamber").map(String);
   const domainIds = formData.getAll("domain").map(String);
   const pollIds = formData.getAll("poll").map(String);
   const fellowSouls = formData.get("fellowSouls") === "on";
@@ -271,6 +342,7 @@ export async function saveFeedSources(formData: FormData) {
         OR: [
           { kind: "pillar" },
           { kind: "circle" },
+          { kind: "chamber" },
           { kind: "fellow-souls" },
           { kind: "domain", refId: { notIn: domainIds } },
           { kind: "poll", refId: { notIn: pollIds } },
@@ -288,6 +360,15 @@ export async function saveFeedSources(formData: FormData) {
       });
       if (member) {
         await tx.feedSource.create({ data: { profileId: face.id, kind: "circle", refId } });
+      }
+    }
+    for (const refId of chamberIds) {
+      // Entered souls only — a workshop feeds no one who isn't inside.
+      const member = await tx.chamberMember.findUnique({
+        where: { chamberId_profileId: { chamberId: refId, profileId: face.id } },
+      });
+      if (member) {
+        await tx.feedSource.create({ data: { profileId: face.id, kind: "chamber", refId } });
       }
     }
     if (fellowSouls) {

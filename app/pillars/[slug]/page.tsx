@@ -61,7 +61,7 @@ export default async function PillarPage({
       discussions: {
         // Members' rooms are Circle-scoped and never surface on pillar
         // pages; domain threads get their own cards below.
-        where: { circleId: null, domainId: null },
+        where: { circleId: null, chamberId: null, domainId: null },
         include: {
           question: true,
           posts: {

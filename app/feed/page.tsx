@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
-import { buildFeed, openLens } from "@/lib/feed";
+import { buildFeed, openLens, chamberStorefrontCards } from "@/lib/feed";
 import { markCaughtUp } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +19,7 @@ export default async function FeedPage({
   const face = await activeFace();
 
   const lens = await openLens(db);
+  const storefronts = await chamberStorefrontCards(db);
 
   if (!face) {
     return (
@@ -30,6 +31,7 @@ export default async function FeedPage({
           lens everyone sees: same formula, same results, for everyone.
         </p>
         <LensSection lens={lens} />
+        <PollinatorStrip storefronts={storefronts} />
       </>
     );
   }
@@ -97,6 +99,36 @@ export default async function FeedPage({
       )}
 
       <LensSection lens={lens} />
+      <PollinatorStrip storefronts={storefronts} />
+    </>
+  );
+}
+
+// Chamber storefront cards (FEED §2.3 — arriving with their Phase 7.5
+// host): discovery of new/active PUBLIC chambers. The ordering rule is
+// legible and stated; only the public storefront rides the card.
+function PollinatorStrip({
+  storefronts,
+}: {
+  storefronts: Awaited<ReturnType<typeof chamberStorefrontCards>>;
+}) {
+  if (storefronts.length === 0) return null;
+  return (
+    <>
+      <h3>New in the Pollinator</h3>
+      <ul className="discussions">
+        {storefronts.map((c) => (
+          <li key={c.chamberId}>
+            <Link href={`/pollinator/${c.chamberId}`}>🐝 {c.title}</Link>{" "}
+            <span className="badge permanent">Public chamber</span>
+            <div className="meta">
+              {c.subject.length > 100 ? `${c.subject.slice(0, 100)}…` : c.subject} · by @
+              {c.creatorHandle} · {c.members} soul{c.members === 1 ? "" : "s"} inside
+            </div>
+            <div className="why-line">{c.whyLine}</div>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

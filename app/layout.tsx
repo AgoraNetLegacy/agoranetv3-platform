@@ -92,6 +92,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <Link href="/feed">Feed</Link>
           <Link href="/search">Search</Link>
           <Link href="/circles">Circles</Link>
+          <Link href="/pollinator">Pollinator</Link>
           <Link href="/ledger">Ledger</Link>
           <Link href="/transparency">Transparency</Link>
           <FaceBar />
