@@ -25,6 +25,7 @@ import { appendEvent, canonicalJson } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
 import { chargeToTreasury, maybeFirstActionGrant } from "./economy";
+import { accrueForAction } from "./accrual";
 
 class InsufficientFunds extends Error {}
 
@@ -134,6 +135,7 @@ export async function createPoll(
     });
     if (!fee.ok) throw new InsufficientFunds(fee.reason);
     await maybeFirstActionGrant(tx, profile.id);
+    await accrueForAction(tx, profile.id);
 
     const created = await tx.poll.create({
       data: {
@@ -253,6 +255,7 @@ export async function castVote(
     });
     if (!fee.ok) throw new Error(fee.reason);
     await maybeFirstActionGrant(tx, profile.id);
+    await accrueForAction(tx, profile.id);
     await tx.ballot.create({
       data: {
         pollId: poll.id,

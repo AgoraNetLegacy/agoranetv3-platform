@@ -636,8 +636,27 @@ async function main() {
     console.error(`✗ VOTE PRIVACY: ${leakyVoteFees.length} vote-fee entrie(s) name their poll`);
   }
 
+  // Accrual ceilings (TOKENOMICS §4's load-bearing guardrail): no
+  // profile may accrue past the daily rail in any UTC day.
+  const dailyCeilingRail = await db.rail.findUnique({ where: { key: "accrual.dailyCeilingPc" } });
+  if (dailyCeilingRail) {
+    const perDay = new Map<string, number>();
+    for (const e of economyEntries) {
+      if (e.kind !== "accrual" && e.kind !== "accrual.streak") continue;
+      const day = Math.floor(e.createdAt.getTime() / 86_400_000);
+      const key = `${e.toProfileId}|${day}`;
+      perDay.set(key, (perDay.get(key) ?? 0) + e.amount);
+    }
+    for (const [key, total] of Array.from(perDay.entries())) {
+      if (total > dailyCeilingRail.value + 0.000001) {
+        econProblems++;
+        console.error(`✗ ACCRUAL CEILING BROKEN: ${key} accrued ${total}u in one day`);
+      }
+    }
+  }
+
   if (econProblems === 0) {
-    console.log(`✓ Economy conservation (${allBalances.length} balance(s), ${economyEntries.length} entrie(s); tips split exactly; vote fees blind)`);
+    console.log(`✓ Economy conservation (${allBalances.length} balance(s), ${economyEntries.length} entrie(s); tips split exactly; vote fees blind; accrual capped)`);
   } else {
     failures += econProblems;
   }

@@ -67,7 +67,7 @@ async function main() {
     body: "A reply that cost one PollCoin — skin in the game.",
   });
   if (!post1.ok) throw new Error(post1.reason);
-  console.log("Reply posted: −1 PC (and the first-action milestone paid +5 G).");
+  console.log("Reply posted: −1 PC fee, +1 PC participation accrual (net-free for a genuine soul), +5 G first-action milestone.");
 
   const pillar = await db.pillar.findFirstOrThrow();
   const poll = await polls.createPoll(db, {

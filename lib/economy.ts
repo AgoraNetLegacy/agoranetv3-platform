@@ -192,6 +192,9 @@ export async function tip(
           amount: input.amount,
         },
       });
+      // Giving is positive participation (TOKENOMICS §4) — it accrues.
+      const { accrueForAction } = await import("./accrual");
+      await accrueForAction(tx, input.tipperProfileId);
       return { ok: true as const };
     });
   } catch (err) {

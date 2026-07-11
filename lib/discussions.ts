@@ -18,6 +18,7 @@ import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
 import { chargeToTreasury, maybeFirstActionGrant } from "./economy";
+import { accrueForAction } from "./accrual";
 
 export function contentHash(body: string): string {
   return createHash("sha256").update(body).digest("hex");
@@ -96,6 +97,7 @@ export async function createPollDiscussion(
         if (!upgrade.ok) throw new InsufficientFunds(upgrade.reason);
       }
       await maybeFirstActionGrant(tx, profile.id);
+    await accrueForAction(tx, profile.id);
 
       const created = await tx.discussion.create({
         data: {
@@ -270,6 +272,7 @@ export async function createPost(
     });
     if (!fee.ok) throw new InsufficientFunds(fee.reason);
     await maybeFirstActionGrant(tx, profile.id);
+    await accrueForAction(tx, profile.id);
 
     const created = await tx.post.create({
       data: {

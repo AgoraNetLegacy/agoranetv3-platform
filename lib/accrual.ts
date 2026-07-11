@@ -1,0 +1,101 @@
+// Participation Accrual (TOKENOMICS §4; ECONOMIC_STARTING_DEFAULTS §4).
+// Scheduled into Phase 4 by owner-delegated decision (2026-07-10,
+// BUILD_ORDER scheduling addendum).
+//
+// PollCoin accrues through positive participation — the guarantee that a
+// committed human without money can always earn a voice. Per-profile,
+// never per-human (the standing linkage rule: each face earns its own).
+//
+// THE FORMULA IS PRIVATE by ratified design: souls see their balance
+// grow, never the meter. The constants below are the v0 private weights
+// — deliberately NOT rails, deliberately never rendered anywhere.
+// What IS public: the input categories (participation, streaks) and the
+// ceilings, which are rails. The ceilings are the load-bearing guardrail
+// — capped, this is a civic allowance earned by presence, not an
+// engagement treadmill. Sentinel anti-farming joins when Sentinel
+// exists; until then the ceilings do exactly what the spec says they do.
+
+import type { Tx } from "./db";
+import { getRail } from "./rails";
+import { grant } from "./economy";
+
+// v0 private weights (never published, never rendered).
+const BASE_PER_QUALIFYING_ACTION = 1; // uPC
+
+const DAY_MS = 86_400_000;
+
+function utcDayStart(date: Date): Date {
+  return new Date(Math.floor(date.getTime() / DAY_MS) * DAY_MS);
+}
+
+async function accruedSince(
+  tx: Tx,
+  profileId: string,
+  since: Date,
+  kinds: string[]
+): Promise<number> {
+  const entries = await tx.economyEntry.findMany({
+    where: { toProfileId: profileId, kind: { in: kinds }, createdAt: { gte: since } },
+    select: { amount: true },
+  });
+  return entries.reduce((sum, e) => sum + e.amount, 0);
+}
+
+/**
+ * Accrue for one qualifying participation action. Call inside the
+ * action's transaction, after its fee — so a reply is net-positive for
+ * a genuine soul until the day's ceiling saturates, which is the point.
+ */
+export async function accrueForAction(tx: Tx, profileId: string): Promise<void> {
+  const now = new Date();
+  const dayStart = utcDayStart(now);
+  const weekStart = new Date(dayStart.getTime() - 6 * DAY_MS); // rolling 7 days
+
+  const [dailyCeiling, weeklyCeiling, streakBonus, streakWeeklyCap] =
+    await Promise.all([
+      getRail(tx, "accrual.dailyCeilingPc"),
+      getRail(tx, "accrual.weeklyCeilingPc"),
+      getRail(tx, "accrual.streakBonusPc"),
+      getRail(tx, "accrual.streakWeeklyCapPc"),
+    ]);
+
+  const accrualKinds = ["accrual", "accrual.streak"];
+  const todayTotal = await accruedSince(tx, profileId, dayStart, accrualKinds);
+  const weekTotal = await accruedSince(tx, profileId, weekStart, accrualKinds);
+
+  // Streak: paid once, on the first qualifying action of a day whose
+  // previous UTC day also accrued (consecutive presence).
+  if (todayTotal === 0) {
+    const yesterdayStart = new Date(dayStart.getTime() - DAY_MS);
+    const yesterday = await tx.economyEntry.findFirst({
+      where: {
+        toProfileId: profileId,
+        kind: { in: accrualKinds },
+        createdAt: { gte: yesterdayStart, lt: dayStart },
+      },
+    });
+    if (yesterday) {
+      const streakThisWeek = await accruedSince(tx, profileId, weekStart, ["accrual.streak"]);
+      const bonus = Math.min(
+        streakBonus,
+        streakWeeklyCap - streakThisWeek,
+        dailyCeiling - todayTotal,
+        weeklyCeiling - weekTotal
+      );
+      if (bonus > 0) {
+        await grant(tx, { profileId, currency: "PC", amount: bonus, kind: "accrual.streak" });
+      }
+    }
+  }
+
+  const afterStreakToday = await accruedSince(tx, profileId, dayStart, accrualKinds);
+  const afterStreakWeek = await accruedSince(tx, profileId, weekStart, accrualKinds);
+  const base = Math.min(
+    BASE_PER_QUALIFYING_ACTION,
+    dailyCeiling - afterStreakToday,
+    weeklyCeiling - afterStreakWeek
+  );
+  if (base > 0) {
+    await grant(tx, { profileId, currency: "PC", amount: base, kind: "accrual" });
+  }
+}

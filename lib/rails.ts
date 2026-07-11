@@ -184,6 +184,38 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     unit: "uG",
     description: "Hatching grant to a new Alias — Gratium half.",
   },
+  // --- Participation Accrual (TOKENOMICS §4; scheduled into Phase 4 by
+  // owner-delegated decision 2026-07-10). The ceilings are the
+  // load-bearing guardrail: capped, presence-based earning converges on
+  // a civic allowance — never an engagement treadmill.
+  {
+    key: "accrual.dailyCeilingPc",
+    value: 10,
+    unit: "uPC",
+    description:
+      "Hard daily accrual ceiling — idle-farming saturates fast; an active soul earns a Discussion's cost in one good day.",
+  },
+  {
+    key: "accrual.weeklyCeilingPc",
+    value: 50,
+    unit: "uPC",
+    description:
+      "Weekly accrual ceiling (< 7× daily — sustained grinding flattens).",
+  },
+  {
+    key: "accrual.streakBonusPc",
+    value: 1,
+    unit: "uPC",
+    description:
+      "Consecutive-active-day bonus, paid on the first qualifying action of the day.",
+  },
+  {
+    key: "accrual.streakWeeklyCapPc",
+    value: 5,
+    unit: "uPC",
+    description:
+      "Streak bonuses flatten at +5u/week — habit acknowledged, obsession not cultivated.",
+  },
 ];
 
 /** Read one rail's current value. Throws if the rail was never seeded —

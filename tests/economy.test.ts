@@ -68,7 +68,7 @@ describe("the Welcome Grant", () => {
 });
 
 describe("fees flow to the treasury", () => {
-  it("charges the reply fee and pays the first-action bonus", async () => {
+  it("charges the reply fee, pays the first-action bonus, and accrues", async () => {
     const before = await balanceOf(db, trueSelfId, "PC");
     const gBefore = await balanceOf(db, trueSelfId, "G");
     const result = await createPost(db, {
@@ -77,7 +77,9 @@ describe("fees flow to the treasury", () => {
       body: "A costly word.",
     });
     expect(result.ok).toBe(true);
-    expect(await balanceOf(db, trueSelfId, "PC")).toBe(before - 1);
+    // −1 reply fee, +1 participation accrual: a genuine soul's reply is
+    // net-free until the daily ceiling saturates — the ratified intent.
+    expect(await balanceOf(db, trueSelfId, "PC")).toBe(before - 1 + 1);
     // First fee-bearing action → +5 G (True Self journey milestone).
     expect(await balanceOf(db, trueSelfId, "G")).toBe(gBefore + 5);
     const treasury = await db.treasuryBalance.findUnique({ where: { currency: "PC" } });
@@ -128,9 +130,63 @@ describe("fees flow to the treasury", () => {
     const before = await balanceOf(db, aliasId, "PC");
     const vote = await castVote(db, { pollId: poll.pollId, profileId: aliasId, optionIds: [option.id] });
     expect(vote.ok).toBe(true);
-    expect(await balanceOf(db, aliasId, "PC")).toBe(before - 0.25);
+    // −0.25 fee, +1 accrual (the alias's first qualifying action today).
+    expect(await balanceOf(db, aliasId, "PC")).toBe(before - 0.25 + 1);
     const feeEntry = await db.economyEntry.findFirstOrThrow({ where: { kind: "fee.vote" } });
     expect(feeEntry.refId).toBeNull();
+  });
+
+  describe("participation accrual", () => {
+    it("accrues per qualifying action and saturates at the daily ceiling", async () => {
+      const v = await import("../lib/identity").then((m) => m.verifyHumanity(db));
+      const soul = await import("../lib/identity").then((m) =>
+        m.registerTrueSelf(db, { credential: v.credential, handle: "accruer-1", displayName: "Accruer" })
+      );
+      if (!soul.ok) throw new Error(soul.reason);
+      const { recordAck } = await import("../lib/consent");
+      await recordAck(db, { profileId: soul.profileId, kind: "permanence" });
+      await recordAck(db, { profileId: soul.profileId, kind: "constitution" });
+      await topUpForTests(db, soul.profileId, { pc: 100 });
+
+      // 12 replies: each −1 fee +1 accrual until the 10u/day ceiling,
+      // then fees keep collecting but accrual stops.
+      for (let i = 0; i < 12; i++) {
+        const r = await createPost(db, {
+          discussionId,
+          profileId: soul.profileId,
+          body: `Accruing word ${i}.`,
+        });
+        expect(r.ok).toBe(true);
+      }
+      const accrued = await db.economyEntry.findMany({
+        where: { toProfileId: soul.profileId, kind: { in: ["accrual", "accrual.streak"] } },
+      });
+      expect(accrued.reduce((s, e) => s + e.amount, 0)).toBe(10);
+    });
+
+    it("pays the streak bonus on the first action of a consecutive day", async () => {
+      const soul = await db.profile.findUniqueOrThrow({ where: { handle: "accruer-1" } });
+      // Simulate yesterday's presence by backdating today's accrual
+      // entries one day (the day rolls over; the streak logic sees them
+      // as yesterday's).
+      await db.economyEntry.updateMany({
+        where: { toProfileId: soul.id, kind: { in: ["accrual", "accrual.streak"] } },
+        data: { createdAt: new Date(Date.now() - 86_400_000) },
+      });
+      const before = await balanceOf(db, soul.id, "PC");
+      const r = await createPost(db, {
+        discussionId,
+        profileId: soul.id,
+        body: "Back the next day.",
+      });
+      expect(r.ok).toBe(true);
+      // −1 fee, +1 base accrual, +1 streak bonus.
+      expect(await balanceOf(db, soul.id, "PC")).toBe(before - 1 + 1 + 1);
+      const streak = await db.economyEntry.count({
+        where: { toProfileId: soul.id, kind: "accrual.streak" },
+      });
+      expect(streak).toBe(1);
+    });
   });
 });
 
