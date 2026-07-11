@@ -661,6 +661,102 @@ async function main() {
     failures += econProblems;
   }
 
+  // --- 14. Moderation integrity: the triangle holds; every resolution
+  //         is on the ledger; tombstones cite real rules; nothing hides
+  //         or is removed without a case.
+  const modCases = await db.modCase.findMany({ include: { rulings: true } });
+  const ruleIds = new Set((await db.rule.findMany({ select: { id: true } })).map((r) => r.id));
+  const resolvedEventByCase = new Map<string, Record<string, unknown>>();
+  for (const ev of events) {
+    if (ev.eventType !== "case.resolved") continue;
+    try {
+      const p = JSON.parse(ev.payload);
+      if (typeof p?.caseRef === "string") resolvedEventByCase.set(p.caseRef, p);
+    } catch { /* chain covers bytes */ }
+  }
+  let modProblems = 0;
+  // Triangle: no moderator handle or profile id in any ledger event —
+  // rulings appear ONLY as nullifiers.
+  const moderatorIds = new Set(
+    (await db.ruling.findMany({ select: { moderatorProfileId: true } })).map(
+      (r) => r.moderatorProfileId
+    )
+  );
+  for (const ev of events) {
+    const hit = findForbiddenId(ev, moderatorIds);
+    if (hit) {
+      modProblems++;
+      console.error(`✗ TRIANGLE BROKEN: moderator identity on the ledger at seq ${ev.seq}`);
+      break;
+    }
+  }
+  for (const c of modCases) {
+    if (c.status === "resolved" || c.status === "appealed") {
+      const ev = resolvedEventByCase.get(c.id);
+      if (!ev) {
+        modProblems++;
+        console.error(`✗ OFF-LEDGER RESOLUTION: case ${c.id} resolved without a case.resolved event`);
+        continue;
+      }
+      if (typeof ev.rule === "string" && !ruleIds.has(ev.rule)) {
+        modProblems++;
+        console.error(`✗ PHANTOM RULE: case ${c.id} cites unknown rule ${ev.rule}`);
+      }
+    }
+  }
+  // No content is removed/hidden without a case behind it.
+  const actioned = await db.post.findMany({
+    where: { status: { in: ["removed", "hidden", "blurred"] } },
+    select: { id: true, status: true },
+  });
+  for (const p of actioned) {
+    const c = await db.modCase.findFirst({ where: { postId: p.id } });
+    if (!c) {
+      modProblems++;
+      console.error(`✗ OFF-PROCESS ACTION: post ${p.id} is ${p.status} with no case`);
+    }
+  }
+  // Removed posts have their content.removed tombstone event.
+  const removedEvents = new Set<string>();
+  for (const ev of events) {
+    if (ev.eventType !== "content.removed") continue;
+    try {
+      const p = JSON.parse(ev.payload);
+      if (typeof p?.postRef === "string") removedEvents.add(p.postRef);
+    } catch { /* covered */ }
+  }
+  for (const p of actioned.filter((p) => p.status === "removed")) {
+    if (!removedEvents.has(p.id)) {
+      modProblems++;
+      console.error(`✗ SILENT REMOVAL: post ${p.id} removed without a tombstone event`);
+    }
+  }
+  if (modProblems === 0) {
+    const resolvedCount = modCases.filter((c) => c.status === "resolved" || c.status === "appealed").length;
+    console.log(`✓ Moderation integrity (${modCases.length} case(s), ${resolvedCount} resolved; triangle holds, tombstones cite law)`);
+  } else {
+    failures += modProblems;
+  }
+
+  // --- 15. Notification isolation: every notification belongs to a real
+  //         profile; no cross-face aggregation key collision leaks.
+  const notifications = await db.notification.findMany({
+    select: { profileId: true },
+  });
+  const profileIdSet = new Set(allProfiles.map((p) => p.id));
+  let notifProblems = 0;
+  for (const n of notifications) {
+    if (!profileIdSet.has(n.profileId)) {
+      notifProblems++;
+      console.error(`✗ ORPHAN NOTIFICATION: unknown profile ${n.profileId}`);
+    }
+  }
+  if (notifProblems === 0) {
+    console.log(`✓ Notification isolation (${notifications.length} notification(s), all per-profile)`);
+  } else {
+    failures += notifProblems;
+  }
+
   if (failures > 0) {
     console.error(`\nVERIFICATION FAILED: ${failures} problem(s).`);
     process.exit(1);

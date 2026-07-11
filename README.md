@@ -34,6 +34,7 @@ npm run demo:phase1        # Phase 1: post → badge → ledger → grace edit �
 npm run demo:phase2        # Phase 2: both ceremonies → parking rule → THE LINKAGE AUDIT → 11 checks
 npm run demo:phase3        # Phase 3: governance poll end to end — seal, candle, sniper discarded, tamper caught
 npm run demo:phase4        # Phase 4: grants → fees → tip → paid permanence → treasury fills → conservation
+npm run demo:phase5        # Phase 5: a flag travels the whole road — blur → ruling → tombstone → appeal → tribunal
 ```
 
 All demos run against a self-contained `prisma/demo.db`; nothing touches
@@ -41,6 +42,26 @@ your dev database. The interactive version: `npm run dev`, then `/verify`
 — the real onboarding: gate intro, interim issuer, True Self ceremony,
 blocking consents, values seed, and back to what you came to do. Hatch
 an Alias at `/alias` with your credential.
+
+## What exists (Phase 5)
+
+- **Moderation Live** (`lib/moderation.ts`, `/moderation`) — sortition
+  badges (12h offers, 48h terms, cooldowns, pool scaling 5–200), the
+  minimal case file behind the triangle of blindness, cite-a-rule
+  fact-finding with auto-applied consequences (strike ladder, Gratium
+  penalties, pillar-scoped Light Score deductions on a shared 6-month
+  redemption clock), blur-don't-erase with the R3.1/R3.3 full-hide
+  lane, heavy-tier 3-ruling majorities for permanent-space removals,
+  new-moderator supervision + the self-visible Moderation Rating,
+  deposit refund/forfeit, one appeal with fresh eyes, the restorative
+  option, the interim Tribunal (badge-completers, treasury stipends),
+  and Sentinel v1 (brigade bundling — machines point, humans rule).
+  Every resolution is on the ledger, nullifier-keyed; tombstones cite
+  the rule, forever.
+- **Notifications** (`lib/notifications.ts`, `/inbox`) — two tiers,
+  per-persona inboxes, aggregation instead of storms, the quietest
+  functional defaults. No streaks, no nags, ever. In-app is the launch
+  channel; push is the ratified fast-follow.
 
 ## What exists (Phase 4)
 

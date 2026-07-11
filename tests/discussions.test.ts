@@ -186,7 +186,7 @@ describe("flag capture (queue only, private)", () => {
     expect(await db.ledgerEvent.count()).toBe(before);
 
     const flag = await db.flag.findFirstOrThrow({ where: { postId: post.id } });
-    expect(flag.status).toBe("queued");
+    expect(flag.status).toBe("in-case"); // Phase 5: the flag met its adjudicators
     expect(flag.ruleId).toBe("R1.1");
     expect(flag.nullifier).toMatch(/^[a-f0-9]{64}$/);
   });

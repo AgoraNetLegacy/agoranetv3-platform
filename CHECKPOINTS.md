@@ -64,4 +64,45 @@ balances → post (fee −1, accrual +1: net-free while genuine) → tip a
 post (breadth shown, no names) → `/treasury` (aggregates only). Judge:
 is this the economy of assent you ratified?
 
-## Phase 5 — Moderation Live ⏳ IN PROGRESS (started 2026-07-11)
+## Phase 5 — Moderation Live (+ Notifications) ✅ SELF-VERIFIED (2026-07-11)
+
+**Shipped:** the full judicial branch — badge lifecycle (sortition
+offers, equip/pass, 48h hard cutoff, 7d cooldown, pool scaling),
+minimal case files (triangle of blindness — verified no-leak in tests
+AND live UI), cite-a-rule rulings, auto-applied strike ladder (Gratium
+penalty clamped at zero, pillar-scoped LS deductions recorded for the
+Phase 7 engine, rate-limit at 2, read-only + Tribunal review at 3),
+blur-don't-erase + expedited full-hide (R3.1/R3.3 only), heavy-tier
+3-ruling majorities, supervision with taper + Moderation Rating v0
+(public inputs, secret weights, self-visible only), per-case-resolved
+treasury rewards × rating multiplier (≤2×), deposit refund on upheld
+AND good-faith declined / forfeit on bad-faith, one appeal to fresh
+eyes (original rulers excluded) or the Tribunal, consequence reversal
++ deposit refund on successful appeal, the restorative option
+(correction appended + hash-committed, strike reduced), interim
+Tribunal from badge-completers (30d staggered, treasury stipends,
+majority-of-seats), Sentinel v1 brigade bundling. Notifications: two
+tiers, per-persona, aggregated; badge offers / rulings-to-both-parties
+(anonymity-respecting) / poll-closing time-sensitive; tips + poll
+results quiet.
+
+**Evidence:** 79 tests across 9 files; db:verify grew to 20 checks
+(moderation integrity: no moderator identity anywhere on the ledger,
+every resolution on-ledger, tombstones cite real rules, no content
+actioned without a case — off-process removal fails loudly, under
+test); `demo:phase5` walks the checkpoint end to end; workbench +
+inbox verified live in the browser (case file leaked no handles).
+
+**Interim rules set at build time (flagged):** supervision cold-start
+(when no qualified second moderator exists anywhere, rulings take
+effect directly — mirrors BUILD_ORDER's interim-tribunal rule); strike
+penalty amounts (2/5 uG) and LS deductions (5/10 × tier) are
+build-time rails; Sentinel brigade threshold 5 flags/24h.
+
+**If you choose to look (15 min):** get flagged content ruled — post
+with one face, flag with another, `/moderation` with a third (or run
+`npm run demo:phase5`), watch the blur, the ruling, the tombstone
+citing the rule, and both inboxes learning their outcomes without
+learning any names.
+
+## Phase 6 — Circles ⏳ NOT STARTED
