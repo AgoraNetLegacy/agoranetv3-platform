@@ -55,6 +55,14 @@ export function ballotsHashFor(
   return createHash("sha256").update(canonical).digest("hex");
 }
 
+/** Circle-restricted polls commit their question to the public ledger by
+ *  hash (disclosure stays in the members' room); verify.ts re-derives. */
+export function circlePollContentHash(title: string, options: string[]): string {
+  return createHash("sha256")
+    .update(canonicalJson({ title, options }))
+    .digest("hex");
+}
+
 export type PollResult<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
 
 export async function createPoll(
@@ -71,6 +79,12 @@ export async function createPoll(
     consensusThreshold?: number;
     isGovernance?: boolean;
     liveTally?: boolean;
+    /** Circle-restricted visibility (POLLS §4.5, consumed by CIRCLES §7):
+     *  scoped to the Circle's membership. `action` makes it a binding
+     *  stewardship poll, executed at close if it passes. Never
+     *  governance; scope is per-profile like every vote (the sharp
+     *  rule holds by construction). */
+    circle?: { circleId: string; action?: string };
   }
 ): Promise<PollResult<{ pollId: string }>> {
   const title = input.title.trim();
@@ -96,6 +110,36 @@ export async function createPoll(
   }
   const pillar = await db.pillar.findUnique({ where: { id: input.pillarId } });
   if (!pillar) return { ok: false, reason: "No such pillar." };
+
+  // Circle-restricted polls: members only, never governance, and a
+  // binding stewardship action must clear its minimum consensus bar.
+  let circleAction: string | null = null;
+  if (input.circle) {
+    if (input.isGovernance) {
+      return { ok: false, reason: "Circle polls are never governance polls — different rooms, different law." };
+    }
+    const { activeMembership, validateCircleAction } = await import("./circles");
+    const circle = await db.circle.findUnique({ where: { id: input.circle.circleId } });
+    if (!circle) return { ok: false, reason: "No such Circle." };
+    if (circle.status === "closed") return { ok: false, reason: "This Circle is closed." };
+    if (!(await activeMembership(db, circle.id, profile.id))) {
+      return { ok: false, reason: "Members only — Circle decisions belong to the Circle." };
+    }
+    if (input.circle.action) {
+      const check = await validateCircleAction(db, circle, input.circle.action);
+      if (!check.ok) return { ok: false, reason: check.reason };
+      if (input.type !== "consensus") {
+        return { ok: false, reason: "Binding stewardship decisions are consensus polls (CIRCLES §7)." };
+      }
+      if ((input.consensusThreshold ?? 0) < check.minThreshold) {
+        return {
+          ok: false,
+          reason: `This decision's bar is ${Math.round(check.minThreshold * 100)}% — never lower (platform bounds).`,
+        };
+      }
+      circleAction = input.circle.action;
+    }
+  }
 
   const isGovernance = input.isGovernance ?? false;
   // Governance polls are always sealed — no live-tally option, ever.
@@ -149,6 +193,9 @@ export async function createPoll(
         mode: input.mode,
         isGovernance,
         liveTally,
+        visibilityScope: input.circle ? "circle" : "public",
+        circleRef: input.circle?.circleId ?? null,
+        circleAction,
         nominalCloseAt,
         trueCloseAt,
         candleSalt,
@@ -158,24 +205,73 @@ export async function createPoll(
         },
       },
     });
-    await appendEvent(tx, {
-      actorType: "soul",
-      actorId: profile.handle,
-      eventType: "poll.created",
-      payload: {
-        pollRef: created.id,
-        pillar: pillar.slug,
-        title,
-        type: input.type,
-        mode: input.mode,
-        governance: isGovernance,
-        options,
-        nominalCloseAt: nominalCloseAt.toISOString(),
-        // The candle promise, made in public before a single vote exists.
-        candleCommitment: candleCommitment ?? undefined,
-        handle: profile.handle,
-      },
-    });
+    if (input.circle) {
+      // Members'-room content stays in the members' room: the public
+      // event hash-commits the question (tamper-evidence without
+      // disclosure — the post.recorded precedent), and the tallies at
+      // close are numbers by position, option text never leaving the
+      // room. The enclosed-space rule, applied to the ledger.
+      await appendEvent(tx, {
+        actorType: "soul",
+        actorId: profile.handle,
+        eventType: "poll.created",
+        payload: {
+          pollRef: created.id,
+          circle: input.circle.circleId,
+          contentHash: circlePollContentHash(title, options),
+          type: input.type,
+          mode: input.mode,
+          governance: false,
+          binding: circleAction !== null || undefined,
+          nominalCloseAt: nominalCloseAt.toISOString(),
+          handle: profile.handle,
+        },
+      });
+      const circleRow = await tx.circle.findUniqueOrThrow({
+        where: { id: input.circle.circleId },
+      });
+      await tx.circle.update({
+        where: { id: circleRow.id },
+        data: { lastActivityAt: new Date() },
+      });
+      // Quiet, aggregated, space-name-and-event-type-only (NOTIFICATIONS §6).
+      const { notify } = await import("./notifications");
+      const members = await tx.circleMember.findMany({
+        where: { circleId: circleRow.id, leftAt: null, profileId: { not: profile.id } },
+        select: { profileId: true },
+      });
+      for (const m of members) {
+        await notify(tx, {
+          profileId: m.profileId,
+          tier: "quiet",
+          category: "circle-activity",
+          title: `Circle activity — ${circleRow.name}`,
+          body: "An internal poll opened. Details are in the Circle.",
+          refType: "circle",
+          refId: circleRow.id,
+          aggregationKey: `circle-activity:${circleRow.id}`,
+        });
+      }
+    } else {
+      await appendEvent(tx, {
+        actorType: "soul",
+        actorId: profile.handle,
+        eventType: "poll.created",
+        payload: {
+          pollRef: created.id,
+          pillar: pillar.slug,
+          title,
+          type: input.type,
+          mode: input.mode,
+          governance: isGovernance,
+          options,
+          nominalCloseAt: nominalCloseAt.toISOString(),
+          // The candle promise, made in public before a single vote exists.
+          candleCommitment: candleCommitment ?? undefined,
+          handle: profile.handle,
+        },
+      });
+    }
     return created;
   });
 
@@ -211,6 +307,15 @@ export async function castVote(
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
     return { ok: false, reason: "No active face." };
+  }
+
+  // Circle-restricted visibility (§4.5): the ballot box sits inside the
+  // members' room. Scope stays per-profile — the CIRCLES §7 sharp rule.
+  if (poll.visibilityScope === "circle" && poll.circleRef) {
+    const { activeMembership } = await import("./circles");
+    if (!(await activeMembership(db, poll.circleRef, profile.id))) {
+      return { ok: false, reason: "This poll is restricted to its Circle's members." };
+    }
   }
 
   // The vote micro-fee — checked BEFORE the gate so an underfunded
@@ -381,6 +486,18 @@ export async function closeDuePolls(db: PrismaClient): Promise<number> {
           ballotsHash,
         },
       });
+
+      // A binding Circle stewardship decision executes itself at close —
+      // if consensus passed AND "Adopt" (position 1) is the leading
+      // option (a poll can "pass" on Decline; that adopts nothing).
+      if (poll.circleAction && outcome === "passed") {
+        const adoptTally = tallies["1"] ?? 0;
+        const top = Math.max(0, ...Object.values(tallies));
+        if (adoptTally === top && adoptTally > 0) {
+          const { executeCircleAction } = await import("./circles");
+          await executeCircleAction(tx, poll);
+        }
+      }
 
       // Results published → the voters' quiet inboxes.
       const { notifyPollResults } = await import("./notifications");

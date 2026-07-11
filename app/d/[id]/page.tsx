@@ -339,23 +339,49 @@ export default async function DiscussionPage({
 
   const discussion = await db.discussion.findUnique({
     where: { id },
-    include: { pillar: true, question: true },
+    include: { pillar: true, question: true, circle: true },
   });
   if (!discussion) notFound();
 
-  // A Discussion is inside its pillar — the parking rule applies here
-  // exactly as on the dashboard (DASHBOARD §3.2).
-  const parking = await checkParking(discussion.pillarId);
-  if (parking.state === "blocked") {
-    return (
-      <BlockedPanel
-        pillarName={discussion.pillar.name}
-        pillarId={discussion.pillarId}
-        pillarSlug={discussion.pillar.slug}
-        heldByHandle={parking.heldByHandle}
-        heldByFace={parking.heldByFace}
-      />
-    );
+  // The members' room (CIRCLES §2.2): a Circle-scoped Discussion is
+  // members-only — reading included — and exempt from the parking rule
+  // (a Circle is not a pillar surface; both of a soul's faces may be
+  // members, §7). Everything else keeps the pillar parking check.
+  let roomWrite = true;
+  if (discussion.circle) {
+    const { roomAccess } = await import("@/lib/circles");
+    const viewerFace = await activeFace();
+    const access = await roomAccess(db, discussion.circle, viewerFace?.id ?? null);
+    if (!access.read) {
+      return (
+        <>
+          <h1>Members&apos; room</h1>
+          <div className="notice">
+            The working conversation belongs to the Circle&apos;s members
+            (its purpose and action log are public).{" "}
+            <Link href={`/circles/${discussion.circle.id}`}>
+              Visit the Circle&apos;s public page →
+            </Link>
+          </div>
+        </>
+      );
+    }
+    roomWrite = access.write;
+  } else {
+    // A Discussion is inside its pillar — the parking rule applies here
+    // exactly as on the dashboard (DASHBOARD §3.2).
+    const parking = await checkParking(discussion.pillarId);
+    if (parking.state === "blocked") {
+      return (
+        <BlockedPanel
+          pillarName={discussion.pillar.name}
+          pillarId={discussion.pillarId}
+          pillarSlug={discussion.pillar.slug}
+          heldByHandle={parking.heldByHandle}
+          heldByFace={parking.heldByFace}
+        />
+      );
+    }
   }
 
   const [posts, rules, viewer, graceMinutes] = await Promise.all([
@@ -373,13 +399,20 @@ export default async function DiscussionPage({
   }
   const now = new Date();
   const permanent = discussion.permanence.startsWith("permanent");
+  const interactive = viewer && (!discussion.circle || roomWrite);
 
   return (
     <>
       <p>
-        <Link href={`/pillars/${discussion.pillar.slug}`}>
-          ← {discussion.pillar.icon} {discussion.pillar.name}
-        </Link>
+        {discussion.circle ? (
+          <Link href={`/circles/${discussion.circle.id}`}>
+            ← ⭕ {discussion.circle.name}
+          </Link>
+        ) : (
+          <Link href={`/pillars/${discussion.pillar.slug}`}>
+            ← {discussion.pillar.icon} {discussion.pillar.name}
+          </Link>
+        )}
       </p>
       <h1>{discussion.title}</h1>
       {discussion.question && (
@@ -389,7 +422,15 @@ export default async function DiscussionPage({
         </p>
       )}
 
-      {permanent ? (
+      {discussion.circle ? (
+        <div className="notice">
+          🚪 <strong>The members&apos; room.</strong> Working conversation,
+          members-only, deletable — this is NOT the permanent record; the
+          Circle&apos;s action log is.{" "}
+          {discussion.circle.status === "closed" &&
+            "This Circle is closed: the room is read-only, kept for its former members."}
+        </div>
+      ) : permanent ? (
         <div className="door-banner">
           🏛 <strong>You are standing in a permanent space.</strong> Everything
           posted here becomes permanent record — a {graceMinutes}-minute grace
@@ -412,7 +453,7 @@ export default async function DiscussionPage({
           post={post}
           childrenByParent={childrenByParent}
           discussionId={discussion.id}
-          viewerProfileId={viewer?.id ?? null}
+          viewerProfileId={interactive ? viewer.id : null}
           graceMinutes={graceMinutes}
           rules={rules}
           now={now}
@@ -421,22 +462,27 @@ export default async function DiscussionPage({
       ))}
       {posts.length === 0 && <p>No souls have spoken here yet.</p>}
 
-      <h3>Add your voice</h3>
-      {viewer ? (
-        <Composer
-          discussionId={discussion.id}
-          graceMinutes={graceMinutes}
-          label={`Post as ${viewer.displayName} @${viewer.handle}`}
-          permanent={permanent}
-        />
-      ) : (
-        <p className="interim-note">
-          Reading is free for the world — this button is where the gate
-          begins.{" "}
-          <Link href={`/verify?returnTo=${encodeURIComponent(`/d/${discussion.id}`)}`}>
-            Verify once to add your voice →
-          </Link>
-        </p>
+      {interactive ? (
+        <>
+          <h3>Add your voice</h3>
+          <Composer
+            discussionId={discussion.id}
+            graceMinutes={graceMinutes}
+            label={`Post as ${viewer.displayName} @${viewer.handle}`}
+            permanent={permanent}
+          />
+        </>
+      ) : discussion.circle ? null : (
+        <>
+          <h3>Add your voice</h3>
+          <p className="interim-note">
+            Reading is free for the world — this button is where the gate
+            begins.{" "}
+            <Link href={`/verify?returnTo=${encodeURIComponent(`/d/${discussion.id}`)}`}>
+              Verify once to add your voice →
+            </Link>
+          </p>
+        </>
       )}
     </>
   );

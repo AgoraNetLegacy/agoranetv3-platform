@@ -53,6 +53,9 @@ export default async function PillarPage({
     where: { slug },
     include: {
       discussions: {
+        // Members' rooms are Circle-scoped and never surface on pillar
+        // pages — the pillar surfaces the Circle itself, below.
+        where: { circleId: null },
         include: {
           question: true,
           posts: {
@@ -83,13 +86,32 @@ export default async function PillarPage({
   }
 
   await closeDuePolls(db);
-  const [polls, viewer] = await Promise.all([
+  const [polls, viewer, circles] = await Promise.all([
     db.poll.findMany({
-      where: { pillarId: pillar.id, isGovernance: false },
+      // Circle-restricted polls belong to their members' rooms.
+      where: { pillarId: pillar.id, isGovernance: false, visibilityScope: "public" },
       orderBy: { createdAt: "desc" },
     }),
     activeFace(),
+    db.circle.findMany({
+      where: { pillarId: pillar.id },
+      include: { members: { where: { leftAt: null }, select: { profileId: true } } },
+    }),
   ]);
+
+  // Circles surfaced by recency of ATTESTED action — active hands rank
+  // above old claims (CIRCLES §6.3); the stat counts the viewer's own
+  // memberships in this pillar (§4).
+  const { lastAttestedAt } = await import("@/lib/circles");
+  const attestedRecency = await lastAttestedAt(db, circles.map((c) => c.id));
+  const rankedCircles = [...circles].sort(
+    (a, b) =>
+      (attestedRecency.get(b.id)?.getTime() ?? b.createdAt.getTime()) -
+      (attestedRecency.get(a.id)?.getTime() ?? a.createdAt.getTime())
+  );
+  const viewerCircleCount = viewer
+    ? circles.filter((c) => c.members.some((m) => m.profileId === viewer.id)).length
+    : 0;
 
   const rows = pillar.discussions.map((d) => {
     const lastPost = d.posts.reduce<Date | null>(
@@ -162,6 +184,32 @@ export default async function PillarPage({
             </div>
           </li>
         ))}
+      </ul>
+
+      <h3>⭕ Circles working in {pillar.name}</h3>
+      <p className="lore">
+        Deliberation becomes provable action — ordered by most recent
+        attested action, so active hands rank above old claims.
+        {viewer ? ` You belong to ${viewerCircleCount} Circle${viewerCircleCount === 1 ? "" : "s"} here.` : ""}{" "}
+        <Link href="/circles">Browse all Circles →</Link>
+      </p>
+      <ul className="discussions">
+        {rankedCircles.map((c) => (
+          <li key={c.id}>
+            <Link href={`/circles/${c.id}`}>{c.name}</Link>{" "}
+            {c.status === "closed" && <span className="badge locked">Closed</span>}
+            <div className="meta">
+              {c.members.length} member{c.members.length === 1 ? "" : "s"}
+              {attestedRecency.get(c.id)
+                ? ` · last attested action ${attestedRecency.get(c.id)!.toLocaleDateString()}`
+                : " · no attested actions yet"}
+              {c.placeTag ? ` · ${c.placeTag}` : ""}
+            </div>
+          </li>
+        ))}
+        {rankedCircles.length === 0 && (
+          <li className="lore">No Circles tagged to this pillar yet.</li>
+        )}
       </ul>
 
       <h3>

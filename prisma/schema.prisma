@@ -303,6 +303,7 @@ model Pillar {
   questions     Question[]
   discussions   Discussion[]
   polls         Poll[]
+  circles       Circle[]
 }
 
 model Question {
@@ -358,6 +359,12 @@ model Discussion {
   title      String
   pillarId   String
   pillar     Pillar    @relation(fields: [pillarId], references: [id])
+  // Circle-scoped Discussion (Phase 6 — the members' room, CIRCLES §2.2):
+  // the Discussion primitive, reused. Members-only, deletable class —
+  // the working conversation is NOT the permanent record (§2.3), so no
+  // ledger commits and no permanence upgrades inside it.
+  circleId   String?
+  circle     Circle?   @relation(fields: [circleId], references: [id])
   // Canonical threads map 1:1 onto canon questions (the civic spine).
   questionId String?   @unique
   question   Question? @relation(fields: [questionId], references: [id])
@@ -399,9 +406,16 @@ model Poll {
   // Ordinary polls only: creator may show a live tally. Governance
   // polls are always sealed — no option (§4.7).
   liveTally        Boolean      @default(false)
-  // Circle-restricted visibility (consumed in Phase 6).
+  // Circle-restricted visibility (consumed in Phase 6): scoped to the
+  // Circle's membership; ALWAYS per-profile (the §7 sharp rule — the
+  // vote scope is per-profile everywhere, so nothing changes here).
   visibilityScope  String       @default("public") // "public" | "circle"
   circleRef        String?
+  // A binding stewardship decision (CIRCLES §7): executed at close when
+  // the poll passes with "Adopt" leading. "remove-member:{handle}" |
+  // "close-circle" | "appoint-founder:{handle}" |
+  // "set-attestation-threshold:{n}". Null for ordinary polls.
+  circleAction     String?
   createdAt        DateTime     @default(now())
   nominalCloseAt   DateTime
   // The candle (governance): the TRUE close is drawn randomly within
@@ -620,14 +634,19 @@ model Strike {
 }
 
 // Recorded now, consumed by Phase 7's Light Score engine. Pillar-scoped
-// (never global — the no-universal-score invariant), decaying on the
-// strike clock.
+// (never global — the no-universal-score invariant). Deductions decay on
+// the strike clock; Circle-action credits (Phase 6) carry no decay here —
+// credit decay policy belongs to the Phase 7 engine (LIGHT_SCORE §OQ4).
+// refType/refId name the cause for the explainable score-change log
+// ("attested action in Circle X" — LIGHT_SCORE §6).
 model LightScoreAdjustment {
   id        String   @id @default(cuid())
   profileId String
   pillarId  String
-  amount    Float // negative for deductions
+  amount    Float // negative for deductions, positive for credits
   caseId    String?
+  refType   String? // "circle-action" | "circle-attest"
+  refId     String? // the ActionEntry id; its circle gives the named cause
   createdAt DateTime @default(now())
   decaysAt  DateTime?
 }
@@ -649,7 +668,7 @@ model Notification {
   id             String    @id @default(cuid())
   profileId      String // per-profile, never per-human
   tier           String // "time-sensitive" | "quiet"
-  category       String // "badge-offer" | "ruling" | "poll-closing" | "tip" | "poll-results"
+  category       String // "badge-offer" | "ruling" | "poll-closing" | "tip" | "poll-results" | "circle-activity"
   title          String
   body           String
   refType        String?
@@ -662,4 +681,150 @@ model Notification {
   updatedAt      DateTime  @default(now())
 
   @@unique([profileId, aggregationKey])
+}
+
+// ------------------------------------------------------------------
+// Circles (Phase 6 — Circles/CIRCLES_SPEC.md): the action layer.
+// Purpose and action are radically public; deliberation is the members'
+// room. Membership is per-profile, never per-human (§1.1) — the platform
+// neither knows nor asks whether a human's other face is present, and
+// both faces of one human MAY share a Circle (§7 accepts this cost).
+// Almost everything reuses: the room is a Circle-scoped Discussion,
+// internal votes are Circle-restricted Polls. The one genuinely new
+// mechanism is the action log (§6).
+// ------------------------------------------------------------------
+
+model Circle {
+  id       String  @id @default(cuid())
+  name     String
+  // The purpose statement — public, versioned (§2.3): edits keep
+  // history; a Circle can't quietly rewrite what it claimed to be.
+  purpose  String
+  // Focus tags (§2.1): at least one of pillar / place / problem,
+  // enforced in code. Place tags stay city/region granularity — the
+  // machine-harvestable index is never finer (§OQ7, owner-amended);
+  // free text inside the Circle may name venues for coordination.
+  pillarId String?
+  pillar   Pillar? @relation(fields: [pillarId], references: [id])
+  placeTag String?
+  problem  String?
+  // The founder role is deliberately thin (§3.3): edits purpose and
+  // tags, nothing else. Succession/replacement is an internal Poll.
+  founderProfileId String // Phase A operator space — never public
+  founderHandle    String // the attribution key, public
+  // Rails, not rules (§1.6): per-Circle dials, adjustable by internal
+  // Poll within platform-set bounds (the circle.* rails).
+  attestationThreshold Int   @default(2)
+  removalBarPercent    Float @default(60)
+  // "inactive" is a DERIVED label (quiet past the circle.inactivityDays
+  // rail — auto-applied, auto-lifted when activity returns), never
+  // stored. Closed is by internal Poll only; all states preserve the
+  // public page and action log forever (§8).
+  status         String   @default("active") // "active" | "closed"
+  lastActivityAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  members          CircleMember[]
+  purposeRevisions CirclePurposeRevision[]
+  actions          ActionEntry[]
+  offers           ResourceOffer[]
+  discussions      Discussion[]
+}
+
+// Prior versions of the public claim, kept on every founder edit (§2.3).
+model CirclePurposeRevision {
+  id         String   @id @default(cuid())
+  circleId   String
+  circle     Circle   @relation(fields: [circleId], references: [id])
+  purpose    String
+  pillarSlug String?
+  placeTag   String?
+  problem    String?
+  editedAt   DateTime @default(now())
+}
+
+// Membership history — join/leave are public record (§2.3), so departed
+// members keep a row (leftAt set) rather than vanishing. Active
+// membership = leftAt null; one active row per (circle, profile),
+// enforced in code inside the join transaction (rejoining is allowed —
+// each join is its own gate-cleared action).
+model CircleMember {
+  id        String    @id @default(cuid())
+  circleId  String
+  circle    Circle    @relation(fields: [circleId], references: [id])
+  profileId String // operator space
+  handle    String // public — the membership list speaks in pseudonyms
+  joinedAt  DateTime  @default(now())
+  leftAt    DateTime?
+}
+
+// The action log (§6) — the heart of the feature. Entries are permanent
+// public record: no edit, no delete, ever; a mistake is corrected by a
+// later entry that references it (correctionOfId), exactly like a
+// ledger, because it is one. attestedAt latches when attestations reach
+// the Circle's threshold — the state that counts for Light Score and
+// pillar surfacing.
+model ActionEntry {
+  id                String        @id @default(cuid())
+  circleId          String
+  circle            Circle        @relation(fields: [circleId], references: [id])
+  authorProfileId   String // operator space
+  authorHandle      String
+  authorDisplayName String // frozen at composition (naming ruling)
+  body              String // what was done
+  didAt             String? // when — coarse, the author's words
+  place             String? // where — coarse; never someone else's location
+  correctionOfId    String?
+  correctionOf      ActionEntry?  @relation("Correction", fields: [correctionOfId], references: [id])
+  corrections       ActionEntry[] @relation("Correction")
+  attestedAt        DateTime?
+  createdAt         DateTime      @default(now())
+  attestations      Attestation[]
+  pledges           ActionEntryPledge[]
+}
+
+// A co-signature: N verified humans publicly staking their pseudonymous
+// reputations on this claim at time T, permanently (§6.2). One per
+// member per entry — the gate's per-entry scope enforces it, this
+// unique re-checks it.
+model Attestation {
+  id                String      @id @default(cuid())
+  entryId           String
+  entry             ActionEntry @relation(fields: [entryId], references: [id])
+  attestorProfileId String // operator space
+  attestorHandle    String // public — attestors are visible by design
+  createdAt         DateTime    @default(now())
+
+  @@unique([entryId, attestorProfileId])
+}
+
+// The resource board (§5): members-only listings — skills, tools, time,
+// pledges. Living statements, editable and retractable; money never
+// transits the platform (§1.4). An offer becomes part of the permanent
+// record only when a logged action references it (ActionEntryPledge
+// snapshots it at that moment).
+model ResourceOffer {
+  id              String   @id @default(cuid())
+  circleId        String
+  circle          Circle   @relation(fields: [circleId], references: [id])
+  memberProfileId String // operator space
+  memberHandle    String // members-only surface
+  kind            String // "skill" | "tool" | "time" | "pledge"
+  body            String
+  status          String   @default("active") // "active" | "retracted"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
+  pledgedTo       ActionEntryPledge[]
+}
+
+// What an action drew on (§5, §6.1): the offer as it read when the
+// entry was logged — offers stay editable, the record does not.
+model ActionEntryPledge {
+  entryId String
+  entry   ActionEntry   @relation(fields: [entryId], references: [id])
+  offerId String
+  offer   ResourceOffer @relation(fields: [offerId], references: [id])
+  kind    String // snapshot
+  body    String // snapshot
+  @@id([entryId, offerId])
 }

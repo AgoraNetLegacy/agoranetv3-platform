@@ -115,12 +115,14 @@ async function seedCanonicalDiscussions() {
 // Rails: every number as data (ECONOMIC_STARTING_DEFAULTS testing
 // defaults; bounds [¼×, 4×] unless specified).
 async function seedRails() {
-  const existing = await db.rail.count();
-  if (existing > 0) {
-    console.log(`Rails already seeded (${existing}) — skipping.`);
-    return;
-  }
+  // Per-key idempotent: the rail list grows with each phase, and an
+  // existing database must receive the new phase's rails without
+  // touching values already in force (they're poll-adjustable data).
+  let seeded = 0;
   for (const rail of RAIL_DEFAULTS) {
+    const existing = await db.rail.findUnique({ where: { key: rail.key } });
+    if (existing) continue;
+    seeded++;
     await db.rail.create({
       data: {
         key: rail.key,
@@ -137,7 +139,11 @@ async function seedRails() {
       payload: { key: rail.key, value: rail.value, unit: rail.unit },
     });
   }
-  console.log(`Seeded ${RAIL_DEFAULTS.length} rails.`);
+  console.log(
+    seeded > 0
+      ? `Seeded ${seeded} new rail(s) (${RAIL_DEFAULTS.length} total defined).`
+      : `Rails already seeded (${RAIL_DEFAULTS.length}) — nothing new.`
+  );
 }
 
 // The rulebook: complete v1 legislation as data.

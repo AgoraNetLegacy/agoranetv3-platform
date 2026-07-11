@@ -38,6 +38,22 @@
 //     carry no profile and their ballotsHash re-derives; public
 //     ballots match their post-close vote.recorded events; one ballot
 //     per nullifier per poll.
+// Phase 6:
+// 16. Circle integrity: every Circle paid its formation fee and is on
+//     the ledger; exactly one members' room; membership rows and
+//     join/leave/removal events correspond; one active membership per
+//     (circle, profile); action-log entries re-hash to their
+//     action.logged commitments (no silent edits — there is no edit);
+//     every attestation is on the ledger, by a member, never the
+//     author, never doubled; attested state implies the platform floor
+//     of co-signers; corrections stay in their circle.
+// 17. Members'-room privacy + circle-poll discipline: no circle-room
+//     post ever hash-commits to the public ledger (the room is not the
+//     permanent record); circle-restricted polls are never governance,
+//     their poll.created events carry a re-derivable contentHash and
+//     never the question text; every circle-poll voter was a member;
+//     Circle Light Score credits reference real attested entries and
+//     respect the per-circle daily cap.
 
 import { createHash } from "crypto";
 import { PrismaClient } from "@prisma/client";
@@ -755,6 +771,300 @@ async function main() {
     console.log(`✓ Notification isolation (${notifications.length} notification(s), all per-profile)`);
   } else {
     failures += notifProblems;
+  }
+
+  // --- 16. Circle integrity (the action layer's whole promise).
+  const { actionEntryHash } = await import("../lib/circles");
+  const circles = await db.circle.findMany({
+    include: {
+      members: true,
+      discussions: true,
+      actions: { include: { attestations: true, pledges: true } },
+    },
+  });
+  let circleProblems = 0;
+
+  // Index the circle-related ledger events once.
+  const formedEvents = new Set<string>();
+  const joinEvents = new Map<string, number>(); // circleRef|handle → count
+  const leftEvents = new Map<string, number>();
+  const loggedHashByEntry = new Map<string, string>();
+  const attestEvents = new Set<string>(); // entryRef|handle
+  for (const ev of events) {
+    try {
+      const p = JSON.parse(ev.payload);
+      if (ev.eventType === "circle.formed" && typeof p?.circleRef === "string") {
+        formedEvents.add(p.circleRef);
+      }
+      if (ev.eventType === "circle.joined" && typeof p?.circleRef === "string") {
+        const k = `${p.circleRef}|${p.handle}`;
+        joinEvents.set(k, (joinEvents.get(k) ?? 0) + 1);
+      }
+      if (
+        (ev.eventType === "circle.left" || ev.eventType === "circle.member-removed") &&
+        typeof p?.circleRef === "string"
+      ) {
+        const k = `${p.circleRef}|${p.handle}`;
+        leftEvents.set(k, (leftEvents.get(k) ?? 0) + 1);
+      }
+      if (ev.eventType === "action.logged" && typeof p?.entryRef === "string") {
+        loggedHashByEntry.set(p.entryRef, p.contentHash);
+      }
+      if (ev.eventType === "action.attested" && typeof p?.entryRef === "string") {
+        attestEvents.add(`${p.entryRef}|${p.handle}`);
+      }
+    } catch {
+      /* chain check covers bytes */
+    }
+  }
+
+  const attestationRail = await db.rail.findUnique({
+    where: { key: "circle.attestationThreshold" },
+  });
+  const circleFees = economyEntries.filter((e) => e.kind === "fee.circle");
+
+  for (const circle of circles) {
+    if (!formedEvents.has(circle.id)) {
+      circleProblems++;
+      console.error(`✗ OFF-LEDGER CIRCLE: ${circle.id} has no circle.formed event`);
+    }
+    const rooms = circle.discussions.filter((d) => d.circleId === circle.id);
+    if (rooms.length !== 1) {
+      circleProblems++;
+      console.error(`✗ ROOM COUNT: circle ${circle.id} has ${rooms.length} members' rooms`);
+    }
+    if (
+      attestationRail &&
+      (circle.attestationThreshold < attestationRail.boundMin ||
+        circle.attestationThreshold > attestationRail.boundMax)
+    ) {
+      circleProblems++;
+      console.error(`✗ RAIL BREACH: circle ${circle.id} threshold ${circle.attestationThreshold} outside bounds`);
+    }
+
+    // Membership rows ↔ public events; one active row per profile.
+    const activeByProfile = new Map<string, number>();
+    const rowsByHandle = new Map<string, { joins: number; leaves: number }>();
+    for (const m of circle.members) {
+      const r = rowsByHandle.get(m.handle) ?? { joins: 0, leaves: 0 };
+      r.joins++;
+      if (m.leftAt) r.leaves++;
+      rowsByHandle.set(m.handle, r);
+      if (!m.leftAt) {
+        activeByProfile.set(m.profileId, (activeByProfile.get(m.profileId) ?? 0) + 1);
+      }
+    }
+    for (const [profileId, n] of Array.from(activeByProfile.entries())) {
+      if (n > 1) {
+        circleProblems++;
+        console.error(`✗ DOUBLE MEMBERSHIP: circle ${circle.id} profile ${profileId} has ${n} active rows`);
+      }
+    }
+    for (const [handle, r] of Array.from(rowsByHandle.entries())) {
+      if ((joinEvents.get(`${circle.id}|${handle}`) ?? 0) !== r.joins) {
+        circleProblems++;
+        console.error(`✗ OFF-LEDGER JOIN: circle ${circle.id} @${handle} rows=${r.joins} events=${joinEvents.get(`${circle.id}|${handle}`) ?? 0}`);
+      }
+      if ((leftEvents.get(`${circle.id}|${handle}`) ?? 0) !== r.leaves) {
+        circleProblems++;
+        console.error(`✗ OFF-LEDGER LEAVE: circle ${circle.id} @${handle} departures unrecorded`);
+      }
+    }
+
+    // The action log: permanent means re-derivable, forever.
+    const memberHandles = new Set(circle.members.map((m) => m.handle));
+    for (const entry of circle.actions) {
+      const recorded = loggedHashByEntry.get(entry.id);
+      const actual = actionEntryHash({
+        body: entry.body,
+        didAt: entry.didAt,
+        place: entry.place,
+        correctionOfId: entry.correctionOfId,
+        pledges: entry.pledges.map((p) => ({ kind: p.kind, body: p.body })),
+      });
+      if (!recorded) {
+        circleProblems++;
+        console.error(`✗ OFF-LEDGER ACTION: entry ${entry.id} has no action.logged event`);
+      } else if (recorded !== actual) {
+        circleProblems++;
+        console.error(`✗ ACTION LOG ALTERED: entry ${entry.id} no longer matches its ledger commitment`);
+      }
+      if (entry.attestedAt && entry.attestations.length < 2) {
+        circleProblems++;
+        console.error(`✗ ATTESTED BELOW FLOOR: entry ${entry.id} attested with ${entry.attestations.length} co-signer(s)`);
+      }
+      const seenAttestors = new Set<string>();
+      for (const a of entry.attestations) {
+        if (a.attestorProfileId === entry.authorProfileId) {
+          circleProblems++;
+          console.error(`✗ SELF-ATTESTATION: entry ${entry.id}`);
+        }
+        if (seenAttestors.has(a.attestorProfileId)) {
+          circleProblems++;
+          console.error(`✗ DOUBLE ATTESTATION: entry ${entry.id}`);
+        }
+        seenAttestors.add(a.attestorProfileId);
+        if (!memberHandles.has(a.attestorHandle)) {
+          circleProblems++;
+          console.error(`✗ NON-MEMBER ATTESTOR: entry ${entry.id} @${a.attestorHandle}`);
+        }
+        if (!attestEvents.has(`${entry.id}|${a.attestorHandle}`)) {
+          circleProblems++;
+          console.error(`✗ OFF-LEDGER ATTESTATION: entry ${entry.id} @${a.attestorHandle}`);
+        }
+      }
+      if (entry.correctionOfId) {
+        const target = await db.actionEntry.findUnique({ where: { id: entry.correctionOfId } });
+        if (!target || target.circleId !== circle.id) {
+          circleProblems++;
+          console.error(`✗ CROSS-CIRCLE CORRECTION: entry ${entry.id}`);
+        }
+      }
+    }
+  }
+  // Formation is never free: at least one fee.circle entry per circle.
+  if (circleFees.length < circles.length) {
+    circleProblems++;
+    console.error(`✗ FREE CIRCLE: ${circles.length} circle(s) but ${circleFees.length} formation fee(s)`);
+  }
+  if (circleProblems === 0) {
+    const attestedCount = circles.flatMap((c) => c.actions).filter((a) => a.attestedAt).length;
+    console.log(`✓ Circle integrity (${circles.length} circle(s), ${circles.flatMap((c) => c.actions).length} log entrie(s), ${attestedCount} attested; log re-derives, membership on-ledger)`);
+  } else {
+    failures += circleProblems;
+  }
+
+  // --- 17. Members'-room privacy + circle-poll discipline + LS guardrails.
+  const { circlePollContentHash } = await import("../lib/polls");
+  let roomProblems = 0;
+
+  // No circle-room post ever reaches the public ledger, in any form.
+  const roomPosts = await db.post.findMany({
+    where: { discussion: { circleId: { not: null } } },
+    select: { id: true, permanentUpgraded: true },
+  });
+  const committedPostRefs = new Set(lastHashByPost.keys());
+  for (const p of roomPosts) {
+    if (committedPostRefs.has(p.id)) {
+      roomProblems++;
+      console.error(`✗ ROOM LEAK: members'-room post ${p.id} is hash-committed on the public ledger`);
+    }
+    if (p.permanentUpgraded) {
+      roomProblems++;
+      console.error(`✗ ROOM PERMANENCE: members'-room post ${p.id} was permanence-upgraded`);
+    }
+  }
+  // Resource-offer ids never appear on the ledger (offers surface only
+  // as snapshots inside action.logged payloads).
+  const offerIds = new Set(
+    (await db.resourceOffer.findMany({ select: { id: true } })).map((o) => o.id)
+  );
+  for (const ev of events) {
+    const hit = findForbiddenId(ev, offerIds);
+    if (hit) {
+      roomProblems++;
+      console.error(`✗ BOARD LEAK: resource offer id on the ledger at seq ${ev.seq}`);
+      break;
+    }
+  }
+
+  // Circle-restricted polls: never governance; created-event discipline.
+  const createdEventByPoll = new Map<string, Record<string, unknown>>();
+  for (const ev of events) {
+    if (ev.eventType !== "poll.created") continue;
+    try {
+      const p = JSON.parse(ev.payload);
+      if (typeof p?.pollRef === "string") createdEventByPoll.set(p.pollRef, p);
+    } catch { /* covered */ }
+  }
+  const circlePolls = await db.poll.findMany({
+    where: { visibilityScope: "circle" },
+    include: { options: { orderBy: { position: "asc" } } },
+  });
+  const memberEverByCircle = new Map<string, Set<string>>();
+  for (const c of circles) {
+    memberEverByCircle.set(c.id, new Set(c.members.map((m) => m.profileId)));
+  }
+  for (const poll of circlePolls) {
+    if (poll.isGovernance) {
+      roomProblems++;
+      console.error(`✗ SCOPE BREACH: circle poll ${poll.id} is marked governance`);
+    }
+    if (!poll.circleRef) {
+      roomProblems++;
+      console.error(`✗ ORPHAN CIRCLE POLL: ${poll.id} has circle scope but no circle`);
+      continue;
+    }
+    const created = createdEventByPoll.get(poll.id);
+    if (!created) {
+      roomProblems++;
+      console.error(`✗ OFF-LEDGER POLL: circle poll ${poll.id} has no poll.created event`);
+    } else {
+      if ("title" in created || "options" in created) {
+        roomProblems++;
+        console.error(`✗ ROOM LEAK: circle poll ${poll.id} question text on the public ledger`);
+      }
+      const expected = circlePollContentHash(
+        poll.title,
+        poll.options.map((o) => o.label)
+      );
+      if (created.contentHash !== expected) {
+        roomProblems++;
+        console.error(`✗ POLL COMMITMENT BROKEN: circle poll ${poll.id} contentHash does not re-derive`);
+      }
+    }
+    // Every voter was a member of the circle (operator-space check).
+    const voters = await db.gateRequest.findMany({
+      where: { scope: `poll:${poll.id}`, status: "CLEARED" },
+      select: { profileId: true },
+    });
+    const everMembers = memberEverByCircle.get(poll.circleRef) ?? new Set();
+    for (const v of voters) {
+      if (!everMembers.has(v.profileId)) {
+        roomProblems++;
+        console.error(`✗ NON-MEMBER BALLOT: circle poll ${poll.id} has a vote from outside the membership`);
+      }
+    }
+  }
+
+  // Light Score guardrails: credits name real attested entries; the
+  // per-circle daily cap holds.
+  const circleCredits = await db.lightScoreAdjustment.findMany({
+    where: { refType: { in: ["circle-action", "circle-attest"] } },
+  });
+  const entryById = new Map(
+    circles.flatMap((c) => c.actions).map((a) => [a.id, a])
+  );
+  const capRail = await db.rail.findUnique({ where: { key: "circle.lsDailyCapPoints" } });
+  const perProfileCircleDay = new Map<string, number>();
+  for (const credit of circleCredits) {
+    const entry = credit.refId ? entryById.get(credit.refId) : undefined;
+    if (!entry || !entry.attestedAt) {
+      roomProblems++;
+      console.error(`✗ PHANTOM CREDIT: LS adjustment ${credit.id} references no attested entry`);
+      continue;
+    }
+    if (credit.amount <= 0) {
+      roomProblems++;
+      console.error(`✗ CREDIT SIGN: circle LS adjustment ${credit.id} is not positive`);
+    }
+    const day = Math.floor(credit.createdAt.getTime() / 86_400_000);
+    const key = `${credit.profileId}|${entry.circleId}|${day}`;
+    perProfileCircleDay.set(key, (perProfileCircleDay.get(key) ?? 0) + credit.amount);
+  }
+  if (capRail) {
+    for (const [key, total] of Array.from(perProfileCircleDay.entries())) {
+      if (total > capRail.value + 0.000001) {
+        roomProblems++;
+        console.error(`✗ LS DAILY CAP BROKEN: ${key} credited ${total} points in one day`);
+      }
+    }
+  }
+
+  if (roomProblems === 0) {
+    console.log(`✓ Members'-room privacy & circle-poll discipline (${roomPosts.length} room post(s) unleaked, ${circlePolls.length} circle poll(s) hash-committed, ${circleCredits.length} LS credit(s) capped)`);
+  } else {
+    failures += roomProblems;
   }
 
   if (failures > 0) {

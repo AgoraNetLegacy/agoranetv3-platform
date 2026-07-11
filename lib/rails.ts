@@ -26,6 +26,7 @@ export interface RailDefault {
     | "points"
     | "seats"
     | "flags"
+    | "members"
     | "x";
   boundMin?: number; // defaults to ¼× value
   boundMax?: number; // defaults to 4× value
@@ -260,6 +261,70 @@ export const RAIL_DEFAULTS: RailDefault[] = [
   { key: "sentinel.brigadeWindowHours", value: 24, unit: "hours", description: "Sentinel v1 brigade detection window (build-time default)." },
   { key: "notifications.digestCadenceHours", value: 24, unit: "hours", description: "Quiet-inbox digest cadence (spec default: daily)." },
   { key: "notifications.pollClosingSoonHours", value: 6, unit: "hours", description: "How close to a poll's nominal end the closing-soon notification fires (build-time default)." },
+  // --- Circle rails (Phase 6 — CIRCLES_SPEC.md; "rails, not rules" is
+  // the spec's own Principle 6). Per-Circle dials (attestation
+  // threshold, removal bar) take their default AND bounds from here;
+  // Circles adjust them by internal Poll within the bounds.
+  {
+    key: "circle.creationFee",
+    value: 25,
+    unit: "uPC",
+    description:
+      "Circle creation fee — the action layer carries the most real-world weight (ECONOMIC_STARTING_DEFAULTS §1). Anti-spam precedent from Polls, same reasoning (CIRCLES §3.1).",
+  },
+  {
+    key: "circle.attestationThreshold",
+    value: 2,
+    unit: "members",
+    boundMin: 2,
+    boundMax: 8,
+    description:
+      "Default attestation threshold — owner-resolved as a rail (CIRCLES OQ1): shipped default 2, per-Circle adjustable within these bounds; floor 2 so \"attested\" always means more than one voice.",
+  },
+  {
+    key: "circle.removalBarPercent",
+    value: 60,
+    unit: "percent",
+    boundMin: 50,
+    boundMax: 100,
+    description:
+      "Default member-removal consensus bar — owner-resolved as a rail (CIRCLES OQ2): consensus-type Poll, per-Circle adjustable, never below simple majority. Default 60% = the platform's consensus example.",
+  },
+  {
+    key: "circle.smallCommunityMembers",
+    value: 25,
+    unit: "members",
+    description:
+      "Below this many members a Circle is \"small\" for the Alias warning (CIRCLES §5 / OQ6, build-time derived: 25 is the lattice's serious-stake magnitude — Circle fee, appeal deposit, verification grant). Place-tagged Circles always warn.",
+  },
+  {
+    key: "circle.inactivityDays",
+    value: 90,
+    unit: "days",
+    description:
+      "Quiet period before the honest auto-label \"inactive\" (CIRCLES §8 / OQ4 — build-time default, the spec's own first suggestion; = 3 tribunal terms). Still joinable — a new member may be what revives it.",
+  },
+  {
+    key: "circle.lsAuthorCredit",
+    value: 5,
+    unit: "points",
+    description:
+      "Light Score credit to the AUTHOR when an entry becomes attested, per pillar the Circle is tagged to — derived: the v2 engine's substantive-answer weight (DERIVED_DEFAULTS anchor); recorded now, consumed by the Phase 7 engine.",
+  },
+  {
+    key: "circle.lsAttestCredit",
+    value: 1,
+    unit: "points",
+    description:
+      "Light Score credit to each ATTESTOR — smaller than authoring, the LIGHT_SCORE spec's shipped default (its OQ2 keeps this a rail). Derived: the anchor unit, one reply's worth of standing.",
+  },
+  {
+    key: "circle.lsDailyCapPoints",
+    value: 10,
+    unit: "points",
+    description:
+      "Per-profile, per-Circle, per-day cap on Circle-derived Light Score credits — the anti-collusion guardrail (LIGHT_SCORE §5.1's required daily cap); derived: the v2 per-discussion participation cap. Authored credits also halve within the day (diminishing returns, same section).",
+  },
 ];
 
 /** Read one rail's current value. Throws if the rail was never seeded —

@@ -48,6 +48,12 @@ export async function createPollDiscussion(
     include: { pillar: true },
   });
   if (!poll) return { ok: false, reason: "No such poll." };
+  if (poll.visibilityScope === "circle") {
+    return {
+      ok: false,
+      reason: "A Circle poll's context is the members' room — no public context space.",
+    };
+  }
 
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
@@ -155,6 +161,15 @@ export async function upgradePostPermanence(
   if (post.permanentUpgraded) {
     return { ok: false, reason: "Already permanent." };
   }
+  // The members' room is not the permanent record (CIRCLES §2.3) — a
+  // members-only post never hash-commits to the public ledger. The
+  // action log is where a Circle's permanent claims live.
+  if (post.discussion.circleId) {
+    return {
+      ok: false,
+      reason: "Members'-room conversation stays in the room — log an action instead; the action log is the permanent record.",
+    };
+  }
 
   try {
     await db.$transaction(async (tx) => {
@@ -233,6 +248,18 @@ export async function createPost(
   if (!profile) return { ok: false, reason: "No such profile." };
   if (profile.status !== "active") {
     return { ok: false, reason: "This face has not activated yet." };
+  }
+  // The members' room (Phase 6, CIRCLES §2.2): a Circle-scoped
+  // Discussion writes only for active members of a living Circle.
+  if (discussion.circleId) {
+    const { activeMembership } = await import("./circles");
+    const circle = await db.circle.findUniqueOrThrow({ where: { id: discussion.circleId } });
+    if (circle.status === "closed") {
+      return { ok: false, reason: "This Circle is closed — its room is read-only for former members." };
+    }
+    if (!(await activeMembership(db, circle.id, profile.id))) {
+      return { ok: false, reason: "Members only — the working conversation belongs to the Circle." };
+    }
   }
   // Consent before the first post, always (ONBOARDING Stage 4 — the
   // blocking acks are not legal wallpaper; they gate the pen).

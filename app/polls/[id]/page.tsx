@@ -30,17 +30,32 @@ export default async function PollPage({
   });
   if (!poll) notFound();
 
-  const parking = await checkParking(poll.pillarId);
-  if (parking.state === "blocked") {
-    return (
-      <BlockedPanel
-        pillarName={poll.pillar.name}
-        pillarId={poll.pillarId}
-        pillarSlug={poll.pillar.slug}
-        heldByHandle={parking.heldByHandle}
-        heldByFace={parking.heldByFace}
-      />
-    );
+  // Circle-restricted polls live inside the members' room: read access
+  // is the room's (CIRCLES §7), and the parking rule does NOT apply —
+  // a Circle is not a pillar surface, and both of a soul's faces may
+  // legitimately be members (§7 accepts that cost by design).
+  let circle: { id: string; name: string; status: string } | null = null;
+  if (poll.visibilityScope === "circle" && poll.circleRef) {
+    circle = await db.circle.findUnique({ where: { id: poll.circleRef } });
+    const viewerFace = await activeFace();
+    const { roomAccess } = await import("@/lib/circles");
+    const access = circle
+      ? await roomAccess(db, circle, viewerFace?.id ?? null)
+      : { read: false };
+    if (!circle || !access.read) notFound();
+  } else {
+    const parking = await checkParking(poll.pillarId);
+    if (parking.state === "blocked") {
+      return (
+        <BlockedPanel
+          pillarName={poll.pillar.name}
+          pillarId={poll.pillarId}
+          pillarSlug={poll.pillar.slug}
+          heldByHandle={parking.heldByHandle}
+          heldByFace={parking.heldByFace}
+        />
+      );
+    }
   }
 
   const [viewer, tally] = await Promise.all([activeFace(), visibleTally(db, poll.id)]);
@@ -54,18 +69,35 @@ export default async function PollPage({
   return (
     <>
       <p>
-        <Link
-          href={
-            poll.isGovernance
-              ? `/pillars/${poll.pillar.slug}/governance`
-              : `/pillars/${poll.pillar.slug}`
-          }
-        >
-          ← {poll.pillar.icon} {poll.pillar.name}
-          {poll.isGovernance ? " · Governance room" : ""}
-        </Link>
+        {circle ? (
+          <Link href={`/circles/${circle.id}/room`}>← Members&apos; room — {circle.name}</Link>
+        ) : (
+          <Link
+            href={
+              poll.isGovernance
+                ? `/pillars/${poll.pillar.slug}/governance`
+                : `/pillars/${poll.pillar.slug}`
+            }
+          >
+            ← {poll.pillar.icon} {poll.pillar.name}
+            {poll.isGovernance ? " · Governance room" : ""}
+          </Link>
+        )}
       </p>
       <h1>{poll.title}</h1>
+      {circle && (
+        <p>
+          <span className="badge locked">
+            Circle-restricted — visible to {circle.name}&apos;s members; per-profile
+            vote, like every poll
+          </span>{" "}
+          {poll.circleAction && (
+            <span className="badge permanent">
+              Binding decision: executes at close if adopted
+            </span>
+          )}
+        </p>
+      )}
       {poll.description && <p>{poll.description}</p>}
 
       {/* The mode, stated plainly before anything else (POLLS §2). */}
@@ -150,7 +182,7 @@ export default async function PollPage({
               {poll.outcome === "passed"
                 ? `Consensus reached: the leading option cleared the ${Math.round((poll.consensusThreshold ?? 0) * 100)}% threshold.`
                 : `No consensus reached — the ${Math.round((poll.consensusThreshold ?? 0) * 100)}% threshold was not met. That isn't a dead end:`}
-              {poll.outcome === "no-consensus" && viewer && (
+              {poll.outcome === "no-consensus" && viewer && !circle && (
                 <form action={startPollDiscussion} className="inline">
                   <input type="hidden" name="pollId" value={poll.id} />
                   {" "}
@@ -234,22 +266,31 @@ export default async function PollPage({
       )}
 
       <h3>Deliberation</h3>
-      {poll.discussions.length > 0 ? (
-        <ul className="discussions">
-          {poll.discussions.map((d) => (
-            <li key={d.id}>
-              <Link href={`/d/${d.id}`}>{d.title}</Link>
-            </li>
-          ))}
-        </ul>
+      {circle ? (
+        <p className="lore">
+          The deliberation is the members&apos; room — a Circle poll needs no
+          public context space.
+        </p>
       ) : (
-        <p className="lore">No Discussion attached yet.</p>
-      )}
-      {viewer && poll.discussions.length === 0 && (
-        <form action={startPollDiscussion}>
-          <input type="hidden" name="pollId" value={poll.id} />
-          <button type="submit">Start the Discussion for this poll</button>
-        </form>
+        <>
+          {poll.discussions.length > 0 ? (
+            <ul className="discussions">
+              {poll.discussions.map((d) => (
+                <li key={d.id}>
+                  <Link href={`/d/${d.id}`}>{d.title}</Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="lore">No Discussion attached yet.</p>
+          )}
+          {viewer && poll.discussions.length === 0 && (
+            <form action={startPollDiscussion}>
+              <input type="hidden" name="pollId" value={poll.id} />
+              <button type="submit">Start the Discussion for this poll</button>
+            </form>
+          )}
+        </>
       )}
     </>
   );

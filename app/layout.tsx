@@ -88,6 +88,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               Hub
             </button>
           </form>
+          <Link href="/circles">Circles</Link>
           <Link href="/ledger">Ledger</Link>
           <FaceBar />
         </header>

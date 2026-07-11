@@ -14,6 +14,16 @@ import {
   upgradePostPermanence,
 } from "@/lib/discussions";
 import { createPoll, castVote } from "@/lib/polls";
+import {
+  formCircle,
+  editPurpose,
+  joinCircle,
+  leaveCircle,
+  postOffer,
+  updateOffer,
+  logAction,
+  attestAction,
+} from "@/lib/circles";
 import { tip, grant, grantAlreadyGiven } from "@/lib/economy";
 import { getRail } from "@/lib/rails";
 import { fileFlag } from "@/lib/flags";
@@ -157,6 +167,7 @@ export async function submitPoll(formData: FormData) {
   const isGovernance = formData.get("isGovernance") === "1";
   const type = String(formData.get("type") ?? "single") as "single" | "multi" | "consensus";
   const thresholdRaw = Number(formData.get("thresholdPercent") ?? "");
+  const circleId = String(formData.get("circleId") ?? "");
 
   const result = await createPoll(db, {
     profileId: face.id,
@@ -170,6 +181,7 @@ export async function submitPoll(formData: FormData) {
     consensusThreshold: type === "consensus" ? thresholdRaw / 100 : undefined,
     isGovernance,
     liveTally: formData.get("liveTally") === "on",
+    circle: circleId ? { circleId } : undefined,
   });
   if (!result.ok) {
     const back = String(formData.get("backTo") ?? "/");
@@ -194,6 +206,176 @@ export async function startPollDiscussion(formData: FormData) {
   const result = await createPollDiscussion(db, { pollId, profileId: face.id });
   if (!result.ok) backTo(`/polls/${pollId}`, result.reason);
   redirect(`/d/${result.postId}`);
+}
+
+// --------------------------------------------------------------- circles
+
+export async function submitCircle(formData: FormData) {
+  const face = await requireFace();
+  const result = await formCircle(db, {
+    profileId: face.id,
+    name: String(formData.get("name") ?? ""),
+    purpose: String(formData.get("purpose") ?? ""),
+    pillarId: String(formData.get("pillarId") ?? "") || null,
+    placeTag: String(formData.get("placeTag") ?? "") || null,
+    problem: String(formData.get("problem") ?? "") || null,
+  });
+  if (!result.ok) backTo("/circles", result.reason);
+  redirect(`/circles/${result.circleId}`);
+}
+
+export async function submitPurposeEdit(formData: FormData) {
+  const face = await requireFace();
+  const circleId = String(formData.get("circleId") ?? "");
+  const result = await editPurpose(db, {
+    circleId,
+    profileId: face.id,
+    purpose: String(formData.get("purpose") ?? ""),
+    pillarId: String(formData.get("pillarId") ?? "") || null,
+    placeTag: String(formData.get("placeTag") ?? "") || null,
+    problem: String(formData.get("problem") ?? "") || null,
+  });
+  revalidatePath(`/circles/${circleId}`);
+  backTo(`/circles/${circleId}`, result.ok ? "Purpose amended — the prior version stays on the record." : result.reason);
+}
+
+export async function submitJoinCircle(formData: FormData) {
+  const face = await requireFace();
+  const circleId = String(formData.get("circleId") ?? "");
+  const result = await joinCircle(db, {
+    circleId,
+    profileId: face.id,
+    acceptedAliasWarning: formData.get("acceptedAliasWarning") === "on",
+  });
+  if (!result.ok && result.aliasWarning) {
+    backTo(`/circles/${circleId}/join`, result.reason);
+  }
+  revalidatePath(`/circles/${circleId}`);
+  backTo(`/circles/${circleId}`, result.ok ? "You are in — the Circle is its members." : result.reason);
+}
+
+export async function submitLeaveCircle(formData: FormData) {
+  const face = await requireFace();
+  const circleId = String(formData.get("circleId") ?? "");
+  const result = await leaveCircle(db, { circleId, profileId: face.id });
+  revalidatePath(`/circles/${circleId}`);
+  backTo(`/circles/${circleId}`, result.ok ? "You left — logged as public record, like joining." : result.reason);
+}
+
+export async function submitOffer(formData: FormData) {
+  const face = await requireFace();
+  const circleId = String(formData.get("circleId") ?? "");
+  const result = await postOffer(db, {
+    circleId,
+    profileId: face.id,
+    kind: String(formData.get("kind") ?? ""),
+    body: String(formData.get("body") ?? ""),
+  });
+  revalidatePath(`/circles/${circleId}/room`);
+  backTo(`/circles/${circleId}/room`, result.ok ? undefined : result.reason);
+}
+
+export async function submitOfferUpdate(formData: FormData) {
+  const face = await requireFace();
+  const circleId = String(formData.get("circleId") ?? "");
+  const result = await updateOffer(db, {
+    offerId: String(formData.get("offerId") ?? ""),
+    profileId: face.id,
+    body: String(formData.get("body") ?? "") || undefined,
+    retract: formData.get("retract") === "1",
+  });
+  revalidatePath(`/circles/${circleId}/room`);
+  backTo(`/circles/${circleId}/room`, result.ok ? undefined : result.reason);
+}
+
+export async function submitActionEntry(formData: FormData) {
+  const face = await requireFace();
+  const circleId = String(formData.get("circleId") ?? "");
+  const result = await logAction(db, {
+    circleId,
+    profileId: face.id,
+    body: String(formData.get("body") ?? ""),
+    didAt: String(formData.get("didAt") ?? ""),
+    place: String(formData.get("place") ?? ""),
+    correctionOfId: String(formData.get("correctionOfId") ?? "") || undefined,
+    drewOnOfferIds: formData.getAll("drewOn").map(String).filter(Boolean),
+  });
+  revalidatePath(`/circles/${circleId}`);
+  backTo(
+    `/circles/${circleId}`,
+    result.ok
+      ? "Logged — permanent public record, awaiting co-signers."
+      : result.reason
+  );
+}
+
+export async function submitAttest(formData: FormData) {
+  const face = await requireFace();
+  const circleId = String(formData.get("circleId") ?? "");
+  const result = await attestAction(db, {
+    entryId: String(formData.get("entryId") ?? ""),
+    profileId: face.id,
+  });
+  revalidatePath(`/circles/${circleId}`);
+  backTo(
+    `/circles/${circleId}`,
+    result.ok ? "Attested — your pseudonymous reputation is on it, permanently." : result.reason
+  );
+}
+
+/** Binding stewardship polls (CIRCLES §7): the form picks the decision,
+ *  this action composes the poll — consensus type, Adopt/Decline, the
+ *  Circle's own bar. */
+export async function submitStewardshipPoll(formData: FormData) {
+  const face = await requireFace();
+  const circleId = String(formData.get("circleId") ?? "");
+  const kind = String(formData.get("kind") ?? "");
+  const target = String(formData.get("target") ?? "").trim().replace(/^@/, "");
+  const back = `/circles/${circleId}/room`;
+
+  const circle = await db.circle.findUnique({ where: { id: circleId } });
+  if (!circle) backTo(back, "No such Circle.");
+
+  let action: string;
+  let title: string;
+  let threshold = circle.removalBarPercent / 100;
+  switch (kind) {
+    case "remove-member":
+      action = `remove-member:${target}`;
+      title = `Remove @${target} from this Circle?`;
+      break;
+    case "appoint-founder":
+      action = `appoint-founder:${target}`;
+      title = `Appoint @${target} as founder (purpose-statement steward)?`;
+      threshold = 0.5;
+      break;
+    case "close-circle":
+      action = "close-circle";
+      title = "Close this Circle? Its page and log remain public forever; the room goes read-only.";
+      threshold = 0.5;
+      break;
+    case "set-attestation-threshold":
+      action = `set-attestation-threshold:${target}`;
+      title = `Set the attestation threshold to ${target} co-signers?`;
+      threshold = 0.5;
+      break;
+    default:
+      backTo(back, "Unknown stewardship decision.");
+  }
+
+  const result = await createPoll(db, {
+    profileId: face.id,
+    pillarId: circle.pillarId ?? (await db.pillar.findFirstOrThrow({ where: { isMeta: true } })).id,
+    title,
+    type: "consensus",
+    mode: "pseudonymous",
+    options: ["Adopt", "Decline"],
+    durationHours: Number(formData.get("durationHours") ?? 72),
+    consensusThreshold: threshold,
+    circle: { circleId, action },
+  });
+  if (!result.ok) backTo(back, result.reason);
+  redirect(`/polls/${result.pollId}`);
 }
 
 // ------------------------------------------------------------ moderation

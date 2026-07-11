@@ -6,16 +6,20 @@ export function PollForm({
   pillarId,
   isGovernance,
   backTo,
+  circleId,
 }: {
   pillarId: string;
   isGovernance: boolean;
   backTo: string;
+  /** Circle-restricted visibility (POLLS §4.5): members-only ballot box. */
+  circleId?: string;
 }) {
   return (
     <form action={submitPoll} className="composer">
       <input type="hidden" name="pillarId" value={pillarId} />
       <input type="hidden" name="isGovernance" value={isGovernance ? "1" : "0"} />
       <input type="hidden" name="backTo" value={backTo} />
+      {circleId && <input type="hidden" name="circleId" value={circleId} />}
       <label>
         The question
         <input type="text" name="title" required maxLength={200} />
