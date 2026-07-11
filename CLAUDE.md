@@ -63,15 +63,20 @@ under it.**
 
 ## Current Phase
 
-**Phase 5 — Moderation Live (+ Notifications)** (see BUILD_ORDER.md,
-`Moderation/MODERATION_SPEC.md`, `Moderation/
-CONTENT_MODERATION_RULEBOOK.md`, `Notifications/NOTIFICATIONS_SPEC.md`;
-Phases 0–4 checkpointed per CHECKPOINTS.md — Phase 4 self-verified
-under the 2026-07-11 amended methodology). The flags queued since
-Phase 1 meet their adjudicators. Notifications joined this phase by
-ratified scheduling (badge offers need them).
+**Phase 6 — Circles (the action layer)** (see BUILD_ORDER.md and
+`Circles/CIRCLES_SPEC.md`; Phases 0–5 checkpointed per CHECKPOINTS.md
+— read it first). Deliberation becomes provable action: formation
+(25u fee, thin founders), browse/filter discovery + transparent
+values-alignment surfacing (Phase 2 seed data), join gate with Alias
+small-community warnings, the members' room (Circle-scoped
+Discussion), resource board (non-custodial pledges),
+Circle-restricted Polls (Phase 3 machinery), and THE ACTION LOG with
+attestation — logged → attested (2+) → ledger — plus permanence
+badges and Light Score crediting (recorded for the Phase 7 engine,
+like the Phase 5 deductions).
 
-**Phase 5 checkpoint:** a flag travels the whole road — filed, offered
-to a sortitioned badge-holder, ruled with a cited rule, consequences
-auto-applied, tombstone visible, deposit refunded/forfeited — with the
-triangle of blindness intact and every resolution on the ledger.
+**Phase 6 checkpoint:** a Circle forms, deliberates in its room,
+decides by restricted poll, logs an action, gets it attested by 2+
+members, and the attested action lands on the public ledger —
+Alias warnings shown at the join gate, values-alignment visible in
+discovery.
