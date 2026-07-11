@@ -170,6 +170,16 @@ export async function upgradePostPermanence(
       reason: "Members'-room conversation stays in the room — log an action instead; the action log is the permanent record.",
     };
   }
+  // The workshop is enclosed (POLLINATOR §4.3): a public hash-commit of
+  // an enclosed draft would leak that the soul works inside. The Arena
+  // (post-launch) is where a chamber's case goes on the permanent
+  // record — drafts stay drafts.
+  if (post.discussion.chamberId) {
+    return {
+      ok: false,
+      reason: "Workshop drafts stay in the workshop — enclosed by design. The Arena is where a chamber's case becomes permanent record.",
+    };
+  }
 
   try {
     await db.$transaction(async (tx) => {
@@ -261,6 +271,14 @@ export async function createPost(
       return { ok: false, reason: "Members only — the working conversation belongs to the Circle." };
     }
   }
+  // The workshop (Phase 7.5, POLLINATOR §4.3): a chamber-scoped
+  // Discussion writes only for souls who entered the chamber.
+  if (discussion.chamberId) {
+    const { chamberMembership } = await import("./chambers");
+    if (!(await chamberMembership(db, discussion.chamberId, profile.id))) {
+      return { ok: false, reason: "Enter the chamber to work its idea — the workshop is enter-to-see." };
+    }
+  }
   // Consent before the first post, always (ONBOARDING Stage 4 — the
   // blocking acks are not legal wallpaper; they gate the pen).
   if (!(await hasPostingConsents(db, profile.id))) {
@@ -287,11 +305,16 @@ export async function createPost(
   // Every post is its own action instance: the scope is unique per post,
   // so the nullifier proves humanity for THIS act (DUAL_IDENTITY §3.2 —
   // every gated action re-proves fresh) rather than rationing posts.
+  // Workshop posts clear in PRIVATE recording: chamber membership is
+  // enclosed-space information (unlike Circles, whose membership is
+  // public record by spec), so a public clearance naming the workshop
+  // would leak who works inside. The gate still enforces everything.
   const actionRef = randomUUID();
   const gate = await clearGate(db, {
     profileId: profile.id,
     scope: `discussion:${discussion.id}:post:${actionRef}`,
     scopeKind: "per-profile",
+    ledgerRecording: discussion.chamberId ? "private" : "pseudonymous",
   });
   if (gate.outcome !== "CLEARED") {
     return { ok: false, reason: `Gate: ${gate.outcome}` };
@@ -302,16 +325,29 @@ export async function createPost(
 
   try {
     const post = await db.$transaction(async (tx) => {
-    // The reply micro-fee (participation-cost rule): acting costs.
-    const fee = await chargeToTreasury(tx, {
-      profileId: profile.id,
-      currency: "PC",
-      amount: await getRail(tx, "discussion.replyFee"),
-      kind: "fee.reply",
-      refType: "discussion",
-      refId: discussion.id,
-    });
-    if (!fee.ok) throw new InsufficientFunds(fee.reason);
+    // The participation fee: workshop posts carry the dual-token
+    // signature (POLLINATOR §3 — both currencies, rails chamber.postFee*);
+    // everywhere else, the standard reply micro-fee.
+    if (discussion.chamberId) {
+      const { chargeWorkshopPostFee, touchChamberActivity } = await import("./chambers");
+      const fee = await chargeWorkshopPostFee(tx, {
+        profileId: profile.id,
+        discussionId: discussion.id,
+      });
+      if (!fee.ok) throw new InsufficientFunds(fee.reason);
+      await touchChamberActivity(tx, discussion.chamberId);
+    } else {
+      // The reply micro-fee (participation-cost rule): acting costs.
+      const fee = await chargeToTreasury(tx, {
+        profileId: profile.id,
+        currency: "PC",
+        amount: await getRail(tx, "discussion.replyFee"),
+        kind: "fee.reply",
+        refType: "discussion",
+        refId: discussion.id,
+      });
+      if (!fee.ok) throw new InsufficientFunds(fee.reason);
+    }
     await maybeFirstActionGrant(tx, profile.id);
     await accrueForAction(tx, profile.id);
 

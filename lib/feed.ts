@@ -63,6 +63,7 @@ interface SourceSet {
   domainIds: Set<string>;
   discussionIds: Set<string>; // explicit + implicit (join = follow)
   circleIds: Set<string>;
+  chamberIds: Set<string>; // entered chambers (Phase 7.5, §2.1)
   pollIds: Set<string>;
   fellowSouls: boolean;
 }
@@ -82,6 +83,7 @@ export async function chosenSources(db: PrismaClient, profileId: string): Promis
     domainIds: new Set(),
     discussionIds: new Set(authored.map((a) => a.discussionId)),
     circleIds: new Set(),
+    chamberIds: new Set(),
     pollIds: new Set(),
     fellowSouls: false,
   };
@@ -90,6 +92,7 @@ export async function chosenSources(db: PrismaClient, profileId: string): Promis
     else if (r.kind === "domain" && r.refId) set.domainIds.add(r.refId);
     else if (r.kind === "discussion" && r.refId) set.discussionIds.add(r.refId);
     else if (r.kind === "circle" && r.refId) set.circleIds.add(r.refId);
+    else if (r.kind === "chamber" && r.refId) set.chamberIds.add(r.refId);
     else if (r.kind === "poll" && r.refId) set.pollIds.add(r.refId);
     else if (r.kind === "fellow-souls") set.fellowSouls = true;
   }
@@ -122,7 +125,7 @@ export async function buildFeed(
         where: {
           authorProfileId: { in: bondedIds },
           status: "visible",
-          discussion: { circleId: null },
+          discussion: { circleId: null, chamberId: null },
           ...(since ? { createdAt: { gt: since } } : {}),
         },
         select: { discussionId: true, authorHandle: true },
@@ -143,20 +146,31 @@ export async function buildFeed(
   });
   const memberCircleIds = new Set(memberships.map((m) => m.circleId));
   const followedCircleIds = [...sources.circleIds].filter((id) => memberCircleIds.has(id));
+  // Entered chambers (Phase 7.5): workshops surface ONLY through a
+  // chamber source and only to a soul who entered — the enclosed-space
+  // rule, chamber edition. The card carries space-level facts only.
+  const chamberMemberships = await db.chamberMember.findMany({
+    where: { profileId },
+    select: { chamberId: true },
+  });
+  const memberChamberIds = new Set(chamberMemberships.map((m) => m.chamberId));
+  const followedChamberIds = [...sources.chamberIds].filter((id) => memberChamberIds.has(id));
 
   const discussions = await db.discussion.findMany({
     where: {
       OR: [
-        { circleId: null, pillarId: { in: [...sources.pillarIds] } },
-        { circleId: null, domainId: { in: [...sources.domainIds] } },
-        { circleId: null, id: { in: [...sources.discussionIds, ...fellowHandles.keys()] } },
+        { circleId: null, chamberId: null, pillarId: { in: [...sources.pillarIds] } },
+        { circleId: null, chamberId: null, domainId: { in: [...sources.domainIds] } },
+        { circleId: null, chamberId: null, id: { in: [...sources.discussionIds, ...fellowHandles.keys()] } },
         { circleId: { in: followedCircleIds } },
+        { chamberId: { in: followedChamberIds } },
       ],
     },
     include: {
       pillar: { select: { slug: true, name: true, icon: true } },
       domain: { select: { id: true, title: true } },
       circle: { select: { id: true, name: true } },
+      chamber: { select: { id: true, title: true } },
       posts: {
         where: { status: "visible", ...(since ? { createdAt: { gt: since } } : {}) },
         select: { authorHandle: true, createdAt: true },
@@ -173,7 +187,9 @@ export async function buildFeed(
     );
     // The why-line (§1.2): the most specific chosen source wins.
     let whyLine: string;
-    if (d.circle && sources.circleIds.has(d.circle.id)) {
+    if (d.chamber && sources.chamberIds.has(d.chamber.id)) {
+      whyLine = `In your feed: a chamber you've entered — ${d.chamber.title} (workshop)`;
+    } else if (d.circle && sources.circleIds.has(d.circle.id)) {
       whyLine = `In your feed: your Circle ${d.circle.name} (members' room)`;
     } else if (fellowHandles.has(d.id)) {
       whyLine = `In your feed: your fellow soul @${fellowHandles.get(d.id)} is active here (source you switched on)`;
@@ -261,6 +277,47 @@ export async function buildFeed(
   return { cards, since };
 }
 
+export interface StorefrontCard {
+  chamberId: string;
+  title: string;
+  subject: string;
+  whyCare: string;
+  creatorHandle: string;
+  members: number;
+  createdAt: Date;
+  lastActivityAt: Date;
+  whyLine: string;
+}
+
+/** Chamber storefront cards (§2.3 — a launch-host hand-off): new and
+ *  active PUBLIC chambers, most recent workshop activity first — a
+ *  legible rule stated on every card, identical for everyone. Only the
+ *  storefront rides the card; workshop contents never leave the
+ *  workshop. */
+export async function chamberStorefrontCards(
+  db: PrismaClient,
+  limit = 5
+): Promise<StorefrontCard[]> {
+  const chambers = await db.chamber.findMany({
+    where: { isPublic: true },
+    include: { members: { select: { id: true } } },
+    orderBy: { lastActivityAt: "desc" },
+    take: limit,
+  });
+  return chambers.map((c) => ({
+    chamberId: c.id,
+    title: c.title,
+    subject: c.subject,
+    whyCare: c.whyCare,
+    creatorHandle: c.creatorHandle,
+    members: c.members.length,
+    createdAt: c.createdAt,
+    lastActivityAt: c.lastActivityAt,
+    whyLine:
+      "New & active public chambers — most recent workshop activity first, same for everyone",
+  }));
+}
+
 /** The open lens (§2.2): "Popular now", ranked by the PUBLISHED
  *  participation formula — identical for everyone, over public
  *  Discussions only. Views and dwell time are never inputs.
@@ -280,7 +337,7 @@ export async function openLens(db: PrismaClient, limit = 10): Promise<LensCard[]
   const windowStart = new Date(Date.now() - 4 * halfLife * 3_600_000);
 
   const discussions = await db.discussion.findMany({
-    where: { circleId: null, posts: { some: { createdAt: { gt: windowStart } } } },
+    where: { circleId: null, chamberId: null, posts: { some: { createdAt: { gt: windowStart } } } },
     include: {
       pillar: { select: { slug: true, name: true, icon: true } },
       posts: {

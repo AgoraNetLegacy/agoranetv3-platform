@@ -27,7 +27,7 @@ export const ENTITY_TYPES = [
 export type EntityType = (typeof ENTITY_TYPES)[number];
 
 export const ENTITY_LABELS: Record<EntityType, string> = {
-  content: "Content — Discussions, replies, Circle pages",
+  content: "Content — Discussions, replies, Circle pages, Chamber storefronts",
   souls: "Souls — lookup by @handle or display name",
   "fellow-souls": "Fellow souls — within your own list",
   places: "Places — Circles working in a city or region",
@@ -87,13 +87,19 @@ export async function search(
   const created = dateWhere(filters);
 
   // 1 — Content: public Discussions + visible replies in them + public
-  // Circle pages. Members' rooms and DMs are structurally absent: the
-  // discussion query REQUIRES circleId null; no DM table is touched.
+  // Circle pages + Chamber STOREFRONTS (never workshop interiors —
+  // FEED_AND_SEARCH §4.1: a soul searching inside a space they entered
+  // is in-space search, on the workshop page). Members' rooms, workshops,
+  // and DMs are structurally absent: the discussion and post queries
+  // REQUIRE circleId AND chamberId null; the chamber query touches only
+  // storefront fields, and a private chamber matches on its minimal
+  // storefront (the title) alone.
   if (want(filters, "content")) {
-    const [discussions, posts, circles] = await Promise.all([
+    const [discussions, posts, circles, chambers] = await Promise.all([
       db.discussion.findMany({
         where: {
           circleId: null,
+          chamberId: null,
           title: { contains: q },
           ...(filters.pillarSlug ? { pillar: { slug: filters.pillarSlug } } : {}),
           ...(filters.permanence === "permanent"
@@ -112,6 +118,7 @@ export async function search(
           body: { contains: q },
           discussion: {
             circleId: null,
+            chamberId: null,
             ...(filters.pillarSlug ? { pillar: { slug: filters.pillarSlug } } : {}),
           },
           ...(filters.hasSources ? { sources: { some: {} } } : {}),
@@ -127,6 +134,18 @@ export async function search(
           ...(filters.place ? { placeTag: { contains: filters.place } } : {}),
         },
         include: { members: { where: { leftAt: null }, select: { id: true } } },
+        take: LIMIT_PER_TYPE,
+      }),
+      db.chamber.findMany({
+        where: {
+          OR: [
+            { title: { contains: q } },
+            { isPublic: true, subject: { contains: q } },
+            { isPublic: true, pitch: { contains: q } },
+            { isPublic: true, whyCare: { contains: q } },
+          ],
+        },
+        include: { members: { select: { id: true } } },
         take: LIMIT_PER_TYPE,
       }),
     ]);
@@ -157,6 +176,18 @@ export async function search(
         snippet: c.purpose.slice(0, 180),
         badge: `⭕ Circle${c.placeTag ? ` · 📍 ${c.placeTag}` : ""}`,
         score: 2 + c.members.length,
+      });
+    }
+    for (const c of chambers) {
+      hits.push({
+        type: "content",
+        title: c.title,
+        href: `/pollinator/${c.id}`,
+        snippet: c.isPublic ? c.whyCare.slice(0, 180) : undefined,
+        badge: c.isPublic
+          ? `🐝 Chamber storefront · ${c.members.length} soul${c.members.length === 1 ? "" : "s"} inside`
+          : "🐝 Chamber · private — invite-only",
+        score: 2 + (c.isPublic ? c.members.length : 0),
       });
     }
   }
@@ -388,7 +419,9 @@ export async function search(
       take: LIMIT_PER_TYPE,
     });
     for (const s of sources) {
-      const publicUsages = s.usages.filter((u) => u.post.discussion.circleId === null);
+      const publicUsages = s.usages.filter(
+        (u) => u.post.discussion.circleId === null && u.post.discussion.chamberId === null
+      );
       if (publicUsages.length === 0) continue;
       const discussions = [...new Map(publicUsages.map((u) => [u.post.discussion.id, u.post.discussion])).values()];
       hits.push({

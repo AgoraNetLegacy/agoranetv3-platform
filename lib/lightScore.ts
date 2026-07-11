@@ -158,7 +158,10 @@ export async function faceConstellation(
       where: {
         authorProfileId: profileId,
         status: "visible",
-        discussion: { circleId: null },
+        // Never members'-room posts, never workshop drafts (the
+        // enclosed spaces are not the record — a public number must
+        // never derive from private activity).
+        discussion: { circleId: null, chamberId: null },
       },
       select: {
         discussionId: true,
