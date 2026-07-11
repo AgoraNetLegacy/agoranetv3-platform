@@ -196,3 +196,60 @@ form.inline { display: inline; }
 .pillar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.7rem; padding: 0; list-style: none; }
 .pillar-grid li { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 0.8rem; }
 .pillar-grid .lore { font-size: 0.78rem; color: var(--muted); }
+
+/* Phase 7 — the platform's face */
+.pillar-grid.hub .tile-title { font-size: 1.05rem; }
+.pillar-grid.hub .hook { font-size: 0.82rem; margin: 0.3rem 0; }
+.agora-tile {
+  border: 2px solid;
+  border-radius: 12px;
+  background: #faf5ff;
+  padding: 1rem;
+  margin-top: 0.9rem;
+}
+.agora-tile .tile-title { font-size: 1.15rem; }
+.agora-tile .hook { font-size: 0.85rem; margin: 0.3rem 0; }
+.why-banner { border-radius: 10px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.why-banner .why-text { font-size: 0.95rem; }
+.picture-object .why-text { white-space: pre-wrap; }
+.stat-row { display: flex; gap: 0.7rem; margin: 0.9rem 0 0.3rem; }
+.stat {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  text-align: center;
+}
+.stat-number { font-size: 1.3rem; font-weight: 700; }
+.stat-label { font-size: 0.72rem; color: var(--muted); }
+.domain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.7rem; padding: 0; list-style: none; }
+.domain-grid li { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 0.8rem; }
+.domain-grid .hook { font-size: 0.82rem; margin: 0.3rem 0; font-style: italic; }
+.domain-grid .lore { font-size: 0.75rem; color: var(--muted); }
+.opening-question {
+  border-left: 4px solid var(--accent);
+  margin: 0.8rem 0;
+  padding: 0.5rem 0.9rem;
+  font-style: italic;
+  background: #f8fafc;
+}
+.picture-object {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffdf5;
+  padding: 0.9rem 1rem;
+  margin: 1rem 0;
+}
+.deep-dive { margin-top: 1.2rem; font-size: 0.9rem; }
+.deep-dive summary { cursor: pointer; color: var(--muted); }
+.reference-doc h2, .reference-doc h3, .reference-doc h4 { margin-top: 1.2rem; }
+.why-line { font-size: 0.72rem; color: var(--muted); font-style: italic; }
+.caught-up {
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 1.2rem 0;
+  color: var(--muted);
+}

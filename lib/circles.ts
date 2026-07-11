@@ -183,6 +183,8 @@ export async function formCircle(
     name: string;
     purpose: string;
     pillarId?: string | null;
+    // Optional domain within the pillar (§2.1) — data since Phase 7.
+    domainId?: string | null;
     placeTag?: string | null;
     problem?: string | null;
   }
@@ -217,6 +219,15 @@ export async function formCircle(
     pillar = await db.pillar.findUnique({ where: { id: pillarId } });
     if (!pillar) return { ok: false, reason: "No such pillar." };
   }
+  // A domain tag is always a domain OF the tagged pillar.
+  let domain = null;
+  if (input.domainId) {
+    if (!pillar) return { ok: false, reason: "A domain tag needs its pillar tag." };
+    domain = await db.domain.findUnique({ where: { id: input.domainId } });
+    if (!domain || domain.pillarId !== pillar.id) {
+      return { ok: false, reason: "That domain doesn't belong to the tagged pillar." };
+    }
+  }
   // The members' room is a Discussion, and Discussions live in a pillar;
   // an untagged Circle's room is homed in the meta pillar (the Agora —
   // the platform's own container), which changes nothing about access:
@@ -249,6 +260,7 @@ export async function formCircle(
           name,
           purpose,
           pillarId,
+          domainId: domain?.id ?? null,
           placeTag,
           problem,
           founderProfileId: profile.id,
@@ -283,6 +295,7 @@ export async function formCircle(
           name,
           purpose,
           pillar: pillar?.slug,
+          domain: domain?.title ?? undefined,
           place: placeTag ?? undefined,
           problem: problem ?? undefined,
           handle: profile.handle,

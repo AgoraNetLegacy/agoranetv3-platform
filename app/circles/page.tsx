@@ -19,14 +19,19 @@ export default async function CirclesPage({
   searchParams: Promise<{
     m?: string;
     pillar?: string;
+    domain?: string;
     place?: string;
     q?: string;
     status?: string;
   }>;
 }) {
-  const { m, pillar: pillarFilter, place, q, status } = await searchParams;
-  const [pillars, viewer, creationFee] = await Promise.all([
+  const { m, pillar: pillarFilter, domain: domainFilter, place, q, status } = await searchParams;
+  const [pillars, domains, viewer, creationFee] = await Promise.all([
     db.pillar.findMany({ orderBy: { position: "asc" } }),
+    db.domain.findMany({
+      orderBy: [{ pillarId: "asc" }, { position: "asc" }],
+      include: { pillar: { select: { name: true, icon: true, position: true } } },
+    }),
     activeFace(),
     getRail(db, "circle.creationFee"),
   ]);
@@ -34,6 +39,7 @@ export default async function CirclesPage({
   const circles = await db.circle.findMany({
     where: {
       ...(pillarFilter ? { pillar: { slug: pillarFilter } } : {}),
+      ...(domainFilter ? { domainId: domainFilter } : {}),
       ...(place ? { placeTag: { contains: place } } : {}),
       ...(q
         ? {
@@ -47,6 +53,7 @@ export default async function CirclesPage({
     },
     include: {
       pillar: true,
+      domain: { select: { title: true, position: true } },
       members: { where: { leftAt: null }, select: { profileId: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -147,6 +154,7 @@ export default async function CirclesPage({
               </div>
               <div className="meta">
                 {c.pillar ? `${c.pillar.icon} ${c.pillar.name}` : "No pillar tag"}
+                {c.domain ? ` → ${c.domain.position}. ${c.domain.title}` : ""}
                 {c.placeTag ? ` · 📍 ${c.placeTag}` : ""} · {c.members.length}{" "}
                 member{c.members.length === 1 ? "" : "s"} ·{" "}
                 {attested.get(c.id)
@@ -193,6 +201,25 @@ export default async function CirclesPage({
                     <option key={p.id} value={p.id}>
                       {p.icon} {p.name}
                     </option>
+                  ))}
+              </select>
+            </label>{" "}
+            <label>
+              Domain within that pillar (optional){" "}
+              <select name="domainId" defaultValue={domainFilter ?? ""}>
+                <option value="">None — the whole pillar</option>
+                {pillars
+                  .filter((p) => !p.isMeta)
+                  .map((p) => (
+                    <optgroup key={p.id} label={`${p.icon} ${p.name}`}>
+                      {domains
+                        .filter((d) => d.pillarId === p.id)
+                        .map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.position}. {d.title}
+                          </option>
+                        ))}
+                    </optgroup>
                   ))}
               </select>
             </label>{" "}

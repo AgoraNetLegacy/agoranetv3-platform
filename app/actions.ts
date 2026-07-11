@@ -232,11 +232,37 @@ export async function submitCircle(formData: FormData) {
     name: String(formData.get("name") ?? ""),
     purpose: String(formData.get("purpose") ?? ""),
     pillarId: String(formData.get("pillarId") ?? "") || null,
+    domainId: String(formData.get("domainId") ?? "") || null,
     placeTag: String(formData.get("placeTag") ?? "") || null,
     problem: String(formData.get("problem") ?? "") || null,
   });
   if (!result.ok) backTo("/circles", result.reason);
   redirect(`/circles/${result.circleId}`);
+}
+
+// ---------------------------------------------------------------- repairs
+
+export async function submitRepair(formData: FormData) {
+  const domainId = String(formData.get("domainId") ?? "");
+  const pillarSlug = String(formData.get("pillarSlug") ?? "");
+  const position = String(formData.get("position") ?? "");
+  const face = await requireFace();
+
+  const { submitRepair: submit } = await import("@/lib/domains");
+  const result = await submit(db, {
+    domainId,
+    profileId: face.id,
+    challenge: String(formData.get("challenge") ?? ""),
+    proposedText: String(formData.get("proposedText") ?? ""),
+  });
+  const path = `/pillars/${pillarSlug}/domains/${position}`;
+  revalidatePath(path);
+  backTo(
+    path,
+    result.ok
+      ? "Repair submitted — the governance poll deciding it is open in this pillar's room."
+      : result.reason
+  );
 }
 
 export async function submitPurposeEdit(formData: FormData) {

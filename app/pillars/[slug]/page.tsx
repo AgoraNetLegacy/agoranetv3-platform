@@ -6,13 +6,15 @@ import { closeDuePolls } from "@/lib/polls";
 import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
 import { PollForm } from "@/app/polls/PollForm";
+import { editorialFor } from "@/lib/pillarContent";
+import { MECHANISM_DOCS } from "@/lib/mechanismDocs.generated";
+import { repairStatus } from "@/lib/domains";
+import { pillarStanding } from "@/lib/lightScore";
 
 export const dynamic = "force-dynamic";
 
 // The labeled sort menu (DISCUSSIONS §6.2): every sort names exactly what
-// it measures; there is no hidden formula and no blended default. The
-// menu grows as its inputs arrive — unique tippers and sourced posts
-// activate with Phase 4's economy.
+// it measures; there is no hidden formula and no blended default.
 const SORTS = {
   active: {
     label: "Recently active",
@@ -38,6 +40,9 @@ const SORTS = {
 
 type SortKey = keyof typeof SORTS;
 
+// The full pillar dashboard (DASHBOARD §5): Why banner with the pillar's
+// full identity → stat row → domain cards → canon threads → Circles →
+// Governance door → mechanism deep-dive (deliberately secondary).
 export default async function PillarPage({
   params,
   searchParams,
@@ -52,15 +57,17 @@ export default async function PillarPage({
   const pillar = await db.pillar.findUnique({
     where: { slug },
     include: {
+      domains: { orderBy: { position: "asc" } },
       discussions: {
         // Members' rooms are Circle-scoped and never surface on pillar
-        // pages — the pillar surfaces the Circle itself, below.
-        where: { circleId: null },
+        // pages; domain threads get their own cards below.
+        where: { circleId: null, domainId: null },
         include: {
           question: true,
           posts: {
             select: {
               authorHandle: true,
+              authorProfileId: true,
               createdAt: true,
               tips: { select: { tipperProfileId: true } },
               sources: { select: { id: true } },
@@ -86,9 +93,9 @@ export default async function PillarPage({
   }
 
   await closeDuePolls(db);
-  const [polls, viewer, circles] = await Promise.all([
+  const editorial = editorialFor(pillar.slug);
+  const [polls, viewer, circles, domainStatus] = await Promise.all([
     db.poll.findMany({
-      // Circle-restricted polls belong to their members' rooms.
       where: { pillarId: pillar.id, isGovernance: false, visibilityScope: "public" },
       orderBy: { createdAt: "desc" },
     }),
@@ -97,11 +104,29 @@ export default async function PillarPage({
       where: { pillarId: pillar.id },
       include: { members: { where: { leftAt: null }, select: { profileId: true } } },
     }),
+    repairStatus(db, (await db.domain.findMany({ where: { pillarId: pillar.id }, select: { id: true } })).map((d) => d.id)),
   ]);
 
-  // Circles surfaced by recency of ATTESTED action — active hands rank
-  // above old claims (CIRCLES §6.3); the stat counts the viewer's own
-  // memberships in this pillar (§4).
+  // The stat row (§5.2) — this pillar only, this face only; never a
+  // cross-pillar or global number.
+  const viewerCircleCount = viewer
+    ? circles.filter((c) => c.members.some((m) => m.profileId === viewer.id)).length
+    : 0;
+  const domainThreads = await db.discussion.findMany({
+    where: { pillarId: pillar.id, domainId: { not: null } },
+    select: { id: true, domainId: true, posts: { select: { authorProfileId: true } } },
+  });
+  const liveThreads = pillar.discussions.length + domainThreads.length;
+  const participatedThreads = viewer
+    ? pillar.discussions.filter((d) => d.posts.some((p) => p.authorProfileId === viewer.id))
+        .length +
+      domainThreads.filter((d) => d.posts.some((p) => p.authorProfileId === viewer.id)).length
+    : 0;
+  const standing = viewer ? await pillarStanding(db, viewer.id, pillar.id) : null;
+
+  const threadByDomain = new Map(domainThreads.map((d) => [d.domainId, d.id]));
+
+  // Circles surfaced by recency of ATTESTED action (CIRCLES §6.3).
   const { lastAttestedAt } = await import("@/lib/circles");
   const attestedRecency = await lastAttestedAt(db, circles.map((c) => c.id));
   const rankedCircles = [...circles].sort(
@@ -109,9 +134,6 @@ export default async function PillarPage({
       (attestedRecency.get(b.id)?.getTime() ?? b.createdAt.getTime()) -
       (attestedRecency.get(a.id)?.getTime() ?? a.createdAt.getTime())
   );
-  const viewerCircleCount = viewer
-    ? circles.filter((c) => c.members.some((m) => m.profileId === viewer.id)).length
-    : 0;
 
   const rows = pillar.discussions.map((d) => {
     const lastPost = d.posts.reduce<Date | null>(
@@ -138,18 +160,94 @@ export default async function PillarPage({
     return b.lastActivity.getTime() - a.lastActivity.getTime();
   });
 
+  const mechanismDocs = MECHANISM_DOCS.filter((m) => m.pillarSlug === pillar.slug);
+
   return (
     <>
       <p>
-        <Link href="/">← All pillars</Link>
-      </p>
-      <h1>
-        {pillar.icon} {pillar.name}
-      </h1>
-      <p className="lore">
-        {pillar.classicalName} — {pillar.loreName}
+        <Link href="/">← The hub</Link>
       </p>
 
+      {/* The Why banner (§5.1): emotional context + the pillar's full
+          identity, shown once a soul has actually entered. */}
+      <div
+        className="why-banner"
+        style={{ borderLeft: `5px solid ${pillar.colorPrimary}`, background: pillar.colorLight }}
+      >
+        <h1 style={{ marginBottom: "0.1rem" }}>
+          {pillar.icon} {pillar.name}
+        </h1>
+        <p className="lore" style={{ marginTop: 0 }}>
+          {pillar.classicalName} — {pillar.loreName}
+        </p>
+        <p className="why-text">{editorial.whyBanner}</p>
+        <p className="lore">
+          Flagship Stoic principle: <em>{editorial.stoicPrinciple}</em>
+        </p>
+      </div>
+
+      {/* The stat row (§5.2) — this pillar, this face, nothing global. */}
+      <div className="stat-row">
+        <div className="stat">
+          <div className="stat-number">
+            {viewer ? `${participatedThreads} / ${liveThreads}` : liveThreads}
+          </div>
+          <div className="stat-label">
+            {viewer ? "Discussions you're in / live here" : "live Discussions"}
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-number">{viewer ? viewerCircleCount : circles.length}</div>
+          <div className="stat-label">
+            {viewer ? `your Circles in ${pillar.name}` : "Circles working here"}
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-number">{standing ? standing.points : "—"}</div>
+          <div className="stat-label">
+            your standing{" "}
+            {viewer ? (
+              <Link href="/profile">(why?)</Link>
+            ) : (
+              <span>(sign in)</span>
+            )}
+          </div>
+        </div>
+      </div>
+      <p className="lore">
+        Standing is per-face, per-pillar — insight over volume, positions
+        never scored. No universal score exists, by design.
+      </p>
+
+      {/* Domain cards (§5.3): the second ring. Live repair status — real
+          data, never decorative. */}
+      <h3>The {pillar.domains.length} domains</h3>
+      <ul className="domain-grid">
+        {pillar.domains.map((d) => {
+          const status = domainStatus.get(d.id);
+          return (
+            <li key={d.id}>
+              <Link href={`/pillars/${pillar.slug}/domains/${d.position}`}>
+                <strong>
+                  {d.position}. {d.title}
+                </strong>
+              </Link>
+              <div className="hook">{d.openingQuestion}</div>
+              <div className="lore">
+                {status?.openRepairs
+                  ? `${status.openRepairs} open repair${status.openRepairs === 1 ? "" : "s"}`
+                  : "no open repairs"}
+                {status?.lastRepairedAt
+                  ? ` · last repaired ${status.lastRepairedAt.toLocaleDateString()}`
+                  : " · never repaired"}
+                {threadByDomain.get(d.id) ? " · live thread" : ""}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      <h3>The canonical questions</h3>
       <div className="sort-menu">
         {(Object.keys(SORTS) as SortKey[]).map((key) => (
           <Link
@@ -212,12 +310,17 @@ export default async function PillarPage({
         )}
       </ul>
 
-      <h3>
-        🏛 <Link href={`/pillars/${pillar.slug}/governance`}>Governance room</Link>
-      </h3>
-      <p className="lore">
-        The permanent room: this pillar's governance polls and records.
-      </p>
+      {/* The Governance door (§5.5): a visibly marked threshold. */}
+      <div className="door-banner">
+        <h3 style={{ marginTop: 0 }}>
+          🏛 <Link href={`/pillars/${pillar.slug}/governance`}>The Governance room</Link>
+        </h3>
+        <p style={{ marginBottom: 0 }}>
+          Beyond this door, everything written is permanent public record,
+          and governance votes carry the PollCoin micro-fee. Permanence is
+          a place you knowingly walk into — this is the threshold.
+        </p>
+      </div>
 
       <h3>Polls</h3>
       <ul className="discussions">
@@ -248,6 +351,32 @@ export default async function PillarPage({
           />
         </details>
       )}
+
+      {/* Mechanism deep-dive (§5.4): deliberately secondary, opt-in. */}
+      {mechanismDocs.length > 0 && (
+        <details className="deep-dive">
+          <summary>
+            Mechanism deep-dive — the reference documents behind this pillar
+          </summary>
+          <p className="lore">
+            Dense reference material, not everyday reading: the biology and
+            psychology this pillar's diagnosis stands on.
+          </p>
+          <ul>
+            {mechanismDocs.map((m) => (
+              <li key={m.slug}>
+                <Link href={`/pillars/${pillar.slug}/reference/${m.slug}`}>{m.title}</Link>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      <p className="lore" style={{ marginTop: "1.5rem" }}>
+        Read the Pictures. Challenge one with a repair. Join a domain's
+        Discussion, or find a Circle already working the problem — this
+        pillar is a place to act, not just to read.
+      </p>
     </>
   );
 }
