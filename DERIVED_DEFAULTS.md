@@ -54,12 +54,12 @@ Sentinel bundles it to the Tribunal. 24h is the platform's rhythm unit
   is ~14.4h, sitting between the ratified 12h offer window and the 24h
   cycle: long enough that "camp the deadline" is a real gamble, short
   enough that honest early voters are untouched.
-- **Face-switch cooldown: 5 min (test default).** Derived as
-  timeout ÷ 6 (pillar session timeout 30 min). The privacy-grade
-  setting would be **15 min** — the grace window, the platform's
-  ratified "moment of reconsideration" unit — and should be considered
-  at the Phase 8 hardening pass; the shorter default keeps dual-face
-  testing humane until then.
+- **Face-switch cooldown: NONE (owner-resolved 2026-07-11).** The
+  vision is seamless switching; the parking rule (one face per pillar)
+  remains the ratified timing mitigation, and timing-pattern risk stays
+  honestly disclosed at the Alias ceremony as the soul's own to manage.
+  The mechanism survives as a rail (0–15 min) should governance ever
+  vote a pause in.
 
 ## Already anchored elsewhere (no action)
 

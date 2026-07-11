@@ -52,8 +52,8 @@ async function FaceBar() {
           <summary>switch face</summary>
           <div className="switch-panel">
             <p>
-              Switching is deliberate: it ends this face's pillar sessions
-              and starts the switch cooldown.
+              Switching is deliberate: it ends this face's pillar
+              sessions.
             </p>
             {others.map((p) => (
               <form key={p.id} action={switchToFace}>

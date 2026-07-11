@@ -82,10 +82,12 @@ export const RAIL_DEFAULTS: RailDefault[] = [
   },
   {
     key: "identity.faceSwitchCooldownMinutes",
-    value: 5,
+    value: 0,
     unit: "minutes",
+    boundMin: 0,
+    boundMax: 15,
     description:
-      "Modest cooldown after a face switch (DUAL_IDENTITY §7.2 timing mitigation; length was open item DUAL_ID OQ5 — build-time default, owner-adjustable).",
+      "Face-switch cooldown — OWNER-RESOLVED (2026-07-11, DUAL_ID OQ5): NONE; seamless switching is the product vision. The parking rule remains the timing mitigation. Mechanism retained as a rail (0–15 min) should governance ever want it.",
   },
   {
     key: "identity.pillarSessionTimeoutMinutes",

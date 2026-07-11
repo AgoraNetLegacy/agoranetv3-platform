@@ -110,7 +110,7 @@ async function main() {
 
   const s1 = await parking.switchFace(db, { sessionId, fromProfileId: null, toProfileId: ts.profileId });
   const s2 = await parking.switchFace(db, { sessionId, fromProfileId: ts.profileId, toProfileId: aliasRow.id });
-  console.log(`Rapid face-switch: first ${s1.ok ? "ok" : "?"}, second → ${s2.ok ? "UNEXPECTED" : `refused ("${!s2.ok && s2.reason}")`}`);
+  console.log(`Rapid face-switch: first ${s1.ok ? "ok" : "?"}, second ${s2.ok ? "ok — seamless, as the owner intended (no cooldown; the parking rule is the timing mitigation)" : `UNEXPECTED: ${!s2.ok && s2.reason}`}`);
 
   banner("5. THE LINKAGE AUDIT — what actually connects the two faces?");
   const tsIds = [ts.profileId, "bright-heron-42"];

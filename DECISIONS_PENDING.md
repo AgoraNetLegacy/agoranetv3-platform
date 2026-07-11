@@ -30,11 +30,10 @@ never live here — they interrupt directly.
    (= v2 engine's answer weight / participation cap), Sentinel 5
    flags/24h (= an appeal-deposit's worth of collective stake in one
    day-cycle), poll-closing-soon 6h (¼ day-cycle). Still rails; still
-   expire at the Phase 9 re-review. One residual judgment call:
-   face-switch cooldown stays at the test-friendly 5 min; the
-   privacy-grade value would be 15 min (the grace-window unit) —
-   suggested for the Phase 8 hardening pass. Supervision cold-start
-   interim unchanged (a rule, not a number).
+   expire at the Phase 9 re-review. Face-switch cooldown
+   RESOLVED by owner (2026-07-11): none — seamless switching is the
+   vision; mechanism retained as a 0–15 min rail. Supervision
+   cold-start interim unchanged (a rule, not a number).
 
 6. **Notification categories awaiting host features:** replies-on-join
    (needs join=follow), governance-poll-opened (needs pillar follow),

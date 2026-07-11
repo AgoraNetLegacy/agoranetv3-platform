@@ -293,13 +293,28 @@ describe("the parking rule", () => {
     await releaseLocks(db, { sessionId, profileId: aliasId });
   });
 
-  it("face-switching enforces the cooldown rail", async () => {
+  it("switches faces instantly (owner-resolved: no cooldown) — but the rail still enforces if ever set", async () => {
     const first = await switchFace(db, { sessionId, fromProfileId: null, toProfileId: tsId });
     expect(first.ok).toBe(true);
+    // The vision: seamless switching.
     const second = await switchFace(db, { sessionId, fromProfileId: tsId, toProfileId: aliasId });
-    expect(second.ok).toBe(false);
-    if (second.ok) return;
-    expect(second.reason).toContain("cooldown");
+    expect(second.ok).toBe(true);
+
+    // The mechanism survives as a governance dial: set the rail, and it
+    // enforces; zero it, and it vanishes.
+    await db.rail.update({
+      where: { key: "identity.faceSwitchCooldownMinutes" },
+      data: { value: 5 },
+    });
+    const third = await switchFace(db, { sessionId, fromProfileId: aliasId, toProfileId: tsId });
+    expect(third.ok).toBe(false);
+    if (!third.ok) expect(third.reason).toContain("cooldown");
+    await db.rail.update({
+      where: { key: "identity.faceSwitchCooldownMinutes" },
+      data: { value: 0 },
+    });
+    const fourth = await switchFace(db, { sessionId, fromProfileId: aliasId, toProfileId: tsId });
+    expect(fourth.ok).toBe(true);
   });
 
   it("expired sessions purge, faces and locks with them (short retention)", async () => {
