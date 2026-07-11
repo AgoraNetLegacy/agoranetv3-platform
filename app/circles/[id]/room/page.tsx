@@ -18,10 +18,10 @@ export default async function CircleRoomPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ m?: string }>;
+  searchParams: Promise<{ m?: string; q?: string }>;
 }) {
   const { id } = await params;
-  const { m } = await searchParams;
+  const { m, q } = await searchParams;
   const circle = await db.circle.findUnique({
     where: { id },
     include: {
@@ -83,6 +83,28 @@ export default async function CircleRoomPage({
         </p>
       ) : (
         <p className="lore">No room Discussion found.</p>
+      )}
+
+      {/* In-space search (FEED_AND_SEARCH §4.1, owner-resolved: ships at
+          launch): members searching INSIDE their own room. Scoped to
+          this space, member-gated above, never in the public index. */}
+      {room && (
+        <details open={Boolean(q)}>
+          <summary className="lore">Search inside this room</summary>
+          <form method="get" className="inline">
+            <input
+              type="search"
+              name="q"
+              defaultValue={q ?? ""}
+              placeholder="Search the working conversation…"
+              style={{ width: "16rem" }}
+            />{" "}
+            <button type="submit">Search</button>
+          </form>
+          {q && (
+            <RoomSearchResults roomId={room.id} query={q} />
+          )}
+        </details>
       )}
 
       <h3>Resource board</h3>
@@ -222,5 +244,27 @@ export default async function CircleRoomPage({
         ))}
       </ul>
     </>
+  );
+}
+
+async function RoomSearchResults({ roomId, query }: { roomId: string; query: string }) {
+  const posts = await db.post.findMany({
+    where: { discussionId: roomId, status: "visible", body: { contains: query } },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
+  return (
+    <ul className="discussions">
+      {posts.map((p) => (
+        <li key={p.id}>
+          <Link href={`/d/${roomId}`}>@{p.authorHandle}</Link>
+          <span className="lore"> · {p.createdAt.toLocaleString()}</span>
+          <div className="meta">{p.body.slice(0, 200)}</div>
+        </li>
+      ))}
+      {posts.length === 0 && (
+        <li className="lore">Nothing in this room matches.</li>
+      )}
+    </ul>
   );
 }

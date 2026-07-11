@@ -324,6 +324,23 @@ export async function followInFeed(formData: FormData) {
   backTo(returnTo, "Added to your feed's chosen sources.");
 }
 
+// ---------------------------------------------------------------- search
+
+export async function deleteSearchQuery(formData: FormData) {
+  const face = await requireFace();
+  const id = String(formData.get("id") ?? "");
+  await db.searchQuery.deleteMany({ where: { id, profileId: face.id } });
+  revalidatePath("/search/history");
+  backTo("/search/history");
+}
+
+export async function clearSearchHistory() {
+  const face = await requireFace();
+  await db.searchQuery.deleteMany({ where: { profileId: face.id } });
+  revalidatePath("/search/history");
+  backTo("/search/history");
+}
+
 // ---------------------------------------------------------------- repairs
 
 export async function submitRepair(formData: FormData) {
