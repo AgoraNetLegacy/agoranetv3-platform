@@ -23,9 +23,15 @@ under it.**
 
 1. **Build exactly what the specs say. Where they're silent, FLAG —
    never invent.** (Owner: "you just build like the specs say.")
-2. **One slice, one review** (BUILD_ORDER Rule 1): every phase ends
-   with the owner seeing its checkpoint work. No phase begins before
-   the previous phase's review.
+2. **One slice, one checkpoint** (BUILD_ORDER Rule 1; owner-amended
+   2026-07-11): every phase ends at a recorded checkpoint. Claude's
+   verification gates advancement — tests, db:verify, the phase demo,
+   a browser walkthrough, and a line-by-line spec-conformance pass,
+   all green — with the evidence written to `CHECKPOINTS.md`. The
+   owner reviews at his leisure ("if your tests pass, there's no need
+   for me to test as well"); anything that genuinely needs HIS
+   judgment is flagged to him explicitly — blocking decisions
+   interrupt, non-blocking ones queue in `DECISIONS_PENDING.md`.
 3. **No feature ever bypasses the gate interface** — even in Phase A
    when bypassing would be easy.
 4. **SQLite alone until deployment is imminent** (DATABASE_SETUP.md);
@@ -57,20 +63,15 @@ under it.**
 
 ## Current Phase
 
-**Phase 4 — The Internal Economy** (see BUILD_ORDER.md and
-`tokenomics/TOKENOMICS_SPEC.md` + `Economics/
-ECONOMIC_STARTING_DEFAULTS.md`; Phases 0–3 passed owner review
-2026-07-10): per-profile internal balances (PollCoin AND Gratium),
-the treasury account, every ratified fee wired — creation fees,
-reply/vote micro-fees, governance micro-fee, paid permanence — plus
-the Welcome Grant (deferred from Phase 2); tipping (unique-tipper
-ranking activates in the sort menu); attestation rails (human-made
-marks, vouched/unverified sharing, track-record counts); source tags
-+ shared source objects (AI summaries may trail as their own
-mini-review). Legal gate check: internal-only currencies need
-review-lite; confirm the non-withdrawable Gratium posture with
-counsel before launch marketing mentions tokens.
+**Phase 5 — Moderation Live (+ Notifications)** (see BUILD_ORDER.md,
+`Moderation/MODERATION_SPEC.md`, `Moderation/
+CONTENT_MODERATION_RULEBOOK.md`, `Notifications/NOTIFICATIONS_SPEC.md`;
+Phases 0–4 checkpointed per CHECKPOINTS.md — Phase 4 self-verified
+under the 2026-07-11 amended methodology). The flags queued since
+Phase 1 meet their adjudicators. Notifications joined this phase by
+ratified scheduling (badge offers need them).
 
-**Phase 4 checkpoint (owner review):** the owner tips, pays for
-permanence, and watches the treasury fill on a raw inspection page
-(dashboard comes later).
+**Phase 5 checkpoint:** a flag travels the whole road — filed, offered
+to a sortitioned badge-holder, ruled with a cited rule, consequences
+auto-applied, tombstone visible, deposit refunded/forfeited — with the
+triangle of blindness intact and every resolution on the ledger.
