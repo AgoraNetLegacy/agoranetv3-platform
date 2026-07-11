@@ -22,12 +22,19 @@ never live here — they interrupt directly.
    interests + one-time +5 G share bonus — not yet built; the grant
    rail exists. Gates: Phase 7 feed/discovery would consume it.
 
-5. **Phase 5 build-time defaults (owner-adjustable rails):** strike
-   penalties 2/5 uG and Light Score deductions 5/10 ×tier (amounts were
-   not in the ratified schedule); Sentinel brigade threshold 5 distinct
-   flags/24h; poll-closing-soon window 6h; supervision cold-start
-   interim (no qualified second moderator anywhere → rulings effect
-   directly, mirroring the interim-tribunal rule).
+5. **Gap numbers now DERIVED from the ratified lattice (owner
+   directive 2026-07-11, "fill in the gaps according to the other
+   numbers") — see `DERIVED_DEFAULTS.md` for every derivation:** strike
+   penalties 5/15 uG (= flag deposit / permanence-fee magnitudes; the
+   §7 symmetry priced equally on both sides), LS deductions 5/10 ×tier
+   (= v2 engine's answer weight / participation cap), Sentinel 5
+   flags/24h (= an appeal-deposit's worth of collective stake in one
+   day-cycle), poll-closing-soon 6h (¼ day-cycle). Still rails; still
+   expire at the Phase 9 re-review. One residual judgment call:
+   face-switch cooldown stays at the test-friendly 5 min; the
+   privacy-grade value would be 15 min (the grace-window unit) —
+   suggested for the Phase 8 hardening pass. Supervision cold-start
+   interim unchanged (a rule, not a number).
 
 6. **Notification categories awaiting host features:** replies-on-join
    (needs join=follow), governance-poll-opened (needs pillar follow),
