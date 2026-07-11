@@ -22,7 +22,7 @@ import {
   ScoreConstellation,
 } from "../lib/lightScore";
 import { submitRepair, currentPicture, repairStatus } from "../lib/domains";
-import { castVote, closeDuePolls } from "../lib/polls";
+import { castVote, closeDuePolls, candleCommitmentFor } from "../lib/polls";
 import { createPost } from "../lib/discussions";
 import { makeOnboardedSoul, topUpForTests } from "./helpers/souls";
 
@@ -263,12 +263,15 @@ describe("the Picture repair loop", () => {
       expect(vote.ok).toBe(true);
     }
 
-    // Time-travel to close; votes landed before the candle.
+    // Time-travel to close; votes landed before the candle. The candle
+    // recommits for the moved moment (the phase-3 pattern).
+    const movedClose = new Date(Date.now() - 500);
     await db.poll.update({
       where: { id: poll.id },
       data: {
         nominalCloseAt: new Date(Date.now() - 1000),
-        trueCloseAt: new Date(Date.now() - 500),
+        trueCloseAt: movedClose,
+        candleCommitment: candleCommitmentFor(movedClose, poll.candleSalt!),
       },
     });
     await db.ballot.updateMany({
@@ -325,11 +328,14 @@ describe("the Picture repair loop", () => {
       where: { pollId: submitted.pollId, position: 2 },
     });
     await castVote(db, { pollId: submitted.pollId, profileId: voterBId, optionIds: [decline.id] });
+    const declinePoll = await db.poll.findUniqueOrThrow({ where: { id: submitted.pollId } });
+    const movedClose2 = new Date(Date.now() - 500);
     await db.poll.update({
       where: { id: submitted.pollId },
       data: {
         nominalCloseAt: new Date(Date.now() - 1000),
-        trueCloseAt: new Date(Date.now() - 500),
+        trueCloseAt: movedClose2,
+        candleCommitment: candleCommitmentFor(movedClose2, declinePoll.candleSalt!),
       },
     });
     await db.ballot.updateMany({

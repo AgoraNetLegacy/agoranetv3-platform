@@ -86,6 +86,28 @@ Sentinel bundles it to the Tribunal. 24h is the platform's rhythm unit
   (CIRCLES OQ1 rail): floor 2 so "attested" always means more than one
   voice; ceiling 4× the default, the standard bounds policy.
 
+## Phase 7 rails (2026-07-11 — same derivation discipline)
+
+- **Light Score engine weights** (declared v2 reuse, now rails):
+  answer **5**, debate reply **1**, per-discussion participation cap
+  **10** — the v2 constants verbatim.
+- **Accepted-repair credit: 5 points** = the substantive-answer weight
+  (an accepted repair to a Picture is at least a substantive answer —
+  the same anchor as the Circle author credit).
+- **Moderation-service credit: 1 point per case resolved** (the anchor
+  unit — deliberately small, LIGHT_SCORE §5.3), **daily cap 10** (the
+  participation cap), quality-gated by supervision.
+- **Repair consensus bar: 60%** (the platform's consensus example;
+  floor 50% — never below simple majority) · **repair poll duration:
+  72h** (the platform's default deliberation window).
+- **Open-lens weights** (FEED §9.1 defers finals to real data):
+  unique contributors **×3** = the v2 insightful-vote weight (quality's
+  multiplier, and the "weighted highest" the spec requires), unique
+  tippers **×1** and sourced posts **×1** (anchor units), **half-life
+  72h** (the deliberation window), activity window 4× half-life.
+- **Treasury snapshot cadence: 24h** — owner-ratified daily
+  (TREASURY §6.2); held as a rail like everything else.
+
 ## Already anchored elsewhere (no action)
 
 Consensus threshold default 60% (the spec's own example) · read-only

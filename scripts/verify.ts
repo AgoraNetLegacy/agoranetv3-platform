@@ -67,6 +67,25 @@
 //     plaintext-smuggled message fails loudly); stale pending requests
 //     are swept per the expiry rail; every flag and case carries
 //     exactly one evidence pointer (post XOR DM excerpt).
+// Phase 7:
+// 20. Domain & Picture integrity: 56 domains (8 per pillar), each with
+//     its permanent thread and a contiguous revision history whose v1
+//     is the seed and whose every later version traces to exactly one
+//     ACCEPTED repair; every accepted repair rides a closed governance
+//     poll that PASSED with Adopt leading, in the domain's own pillar,
+//     system-opened ("system" is tombstoned, never claimable); declined
+//     repairs left no revision and no credit; every picture-repair
+//     Light Score credit references a real accepted repair at the rail
+//     amount in the right pillar.
+// 21. Transparency books: every economy kind maps to a category (the
+//     Constitution's budgeted-categories guardrail — an unmapped flow
+//     fails here, not renders as "misc"); the latest treasury snapshot
+//     re-derives from the entries as of its timestamp — the dashboard
+//     is a view, never a second set of books.
+// 22. Feed & search privacy: reading-surface state (feed sources,
+//     settings, search history) is per-profile operator space — no
+//     feed/search event type exists on the public ledger and no such
+//     row id appears anywhere in it; every feed source is a known kind.
 
 import { createHash } from "crypto";
 import { PrismaClient } from "@prisma/client";
@@ -1259,6 +1278,218 @@ async function main() {
     );
   } else {
     failures += dmProblems;
+  }
+
+  // --- 20. Domain & Picture integrity (Phase 7).
+  let domainProblems = 0;
+  const domains = await db.domain.findMany({
+    include: {
+      pillar: { select: { slug: true } },
+      discussion: true,
+      revisions: { orderBy: { version: "asc" } },
+      repairs: true,
+    },
+  });
+  if (domains.length !== 56) {
+    domainProblems++;
+    console.error(`✗ DOMAIN COUNT: ${domains.length} (expected 56)`);
+  }
+  const perPillar = new Map<string, number>();
+  for (const d of domains) {
+    perPillar.set(d.pillar.slug, (perPillar.get(d.pillar.slug) ?? 0) + 1);
+    if (!d.discussion || d.discussion.permanence !== "permanent-canonical") {
+      domainProblems++;
+      console.error(`✗ DOMAIN THREAD: ${d.pillar.slug} domain ${d.position} lacks its permanent thread`);
+    }
+    // Revision history: contiguous from 1; v1 is the seed; every later
+    // version traces to exactly one accepted repair of THIS domain.
+    d.revisions.forEach((r, i) => {
+      if (r.version !== i + 1) {
+        domainProblems++;
+        console.error(`✗ REVISION GAP: ${d.pillar.slug} domain ${d.position} v${r.version} at index ${i}`);
+      }
+    });
+    if (d.revisions.length === 0 || d.revisions[0].repairId !== null) {
+      domainProblems++;
+      console.error(`✗ PICTURE SEED: ${d.pillar.slug} domain ${d.position} v1 missing or not the seed`);
+    }
+    for (const r of d.revisions.slice(1)) {
+      const repair = d.repairs.find((rep) => rep.id === r.repairId);
+      if (!repair || repair.status !== "accepted") {
+        domainProblems++;
+        console.error(`✗ ORPHAN REVISION: ${d.pillar.slug} domain ${d.position} v${r.version} has no accepted repair behind it`);
+      }
+    }
+  }
+  for (const [slug, count] of perPillar) {
+    if (count !== 8) {
+      domainProblems++;
+      console.error(`✗ DOMAIN SHAPE: ${slug} has ${count} domains (expected 8)`);
+    }
+  }
+  const allRepairs = await db.pictureRepair.findMany({
+    include: { domain: { select: { pillarId: true } }, revision: true },
+  });
+  const repairRail = await db.rail.findUnique({ where: { key: "lightScore.repairAcceptedCredit" } });
+  for (const r of allRepairs) {
+    const poll = r.pollId ? await db.poll.findUnique({ where: { id: r.pollId }, include: { options: true } }) : null;
+    if (!poll) {
+      domainProblems++;
+      console.error(`✗ POLL-LESS REPAIR: ${r.id} has no acceptance poll`);
+      continue;
+    }
+    if (!poll.isGovernance || poll.pillarId !== r.domain.pillarId || poll.creatorHandle !== "system") {
+      domainProblems++;
+      console.error(`✗ REPAIR POLL SHAPE: ${r.id} — not a system governance poll in the domain's pillar`);
+    }
+    if (r.status === "open" && poll.status !== "open") {
+      domainProblems++;
+      console.error(`✗ REPAIR STATE: ${r.id} open but its poll closed without executing`);
+    }
+    if (r.status === "accepted") {
+      const adopt = poll.options.find((o) => o.position === 1)?.tally ?? 0;
+      const top = Math.max(0, ...poll.options.map((o) => o.tally ?? 0));
+      if (poll.status !== "closed" || poll.outcome !== "passed" || adopt !== top || adopt === 0) {
+        domainProblems++;
+        console.error(`✗ UNBACKED ACCEPTANCE: repair ${r.id} accepted without a passing Adopt poll`);
+      }
+      if (!r.revision) {
+        domainProblems++;
+        console.error(`✗ MISSING REVISION: accepted repair ${r.id} produced no Picture version`);
+      }
+    }
+    if (r.status === "declined" && r.revision) {
+      domainProblems++;
+      console.error(`✗ GHOST REVISION: declined repair ${r.id} has a revision`);
+    }
+  }
+  const repairCredits = await db.lightScoreAdjustment.findMany({
+    where: { refType: "picture-repair" },
+  });
+  const acceptedById = new Map(allRepairs.filter((r) => r.status === "accepted").map((r) => [r.id, r]));
+  for (const credit of repairCredits) {
+    const repair = credit.refId ? acceptedById.get(credit.refId) : undefined;
+    if (!repair) {
+      domainProblems++;
+      console.error(`✗ PHANTOM REPAIR CREDIT: adjustment ${credit.id} references no accepted repair`);
+      continue;
+    }
+    if (
+      repair.authorProfileId !== credit.profileId ||
+      repair.domain.pillarId !== credit.pillarId ||
+      (repairRail && credit.amount !== repairRail.value)
+    ) {
+      domainProblems++;
+      console.error(`✗ REPAIR CREDIT SHAPE: adjustment ${credit.id} wrong soul, pillar, or amount`);
+    }
+  }
+  const systemTombstone = await db.handleTombstone.findUnique({ where: { handle: "system" } });
+  if (!systemTombstone) {
+    domainProblems++;
+    console.error(`✗ RESERVED HANDLE: "system" is claimable`);
+  }
+  if (domainProblems === 0) {
+    const accepted = allRepairs.filter((r) => r.status === "accepted").length;
+    console.log(
+      `✓ Domain & Picture integrity (${domains.length} domains, ${allRepairs.length} repair(s), ${accepted} accepted; histories contiguous, every acceptance poll-backed)`
+    );
+  } else {
+    failures += domainProblems;
+  }
+
+  // --- 21. Transparency books re-derive.
+  let bookProblems = 0;
+  const { kindInfo, computeBooks } = await import("../lib/transparency");
+  const distinctKinds = await db.economyEntry.groupBy({ by: ["kind"] });
+  for (const k of distinctKinds) {
+    try {
+      kindInfo(k.kind);
+    } catch {
+      bookProblems++;
+      console.error(`✗ UNCATEGORIZED FLOW: economy kind "${k.kind}" has no budget category`);
+    }
+  }
+  const latestSnapshot = await db.treasurySnapshot.findFirst({ orderBy: { takenAt: "desc" } });
+  if (latestSnapshot) {
+    const rederived = await computeBooks(db, latestSnapshot.takenAt);
+    const stored = {
+      balances: JSON.parse(latestSnapshot.balances),
+      inflows: JSON.parse(latestSnapshot.inflows),
+      outflows: JSON.parse(latestSnapshot.outflows),
+    };
+    const close = (a: number, b: number) => Math.abs(a - b) < 1e-6;
+    if (
+      !close(rederived.balances.PC, stored.balances.PC) ||
+      !close(rederived.balances.G, stored.balances.G)
+    ) {
+      bookProblems++;
+      console.error(
+        `✗ SNAPSHOT DRIFT: ${latestSnapshot.day} balances ${JSON.stringify(stored.balances)} != re-derived ${JSON.stringify(rederived.balances)}`
+      );
+    }
+    for (const [section, storedTotals] of [
+      ["inflows", stored.inflows],
+      ["outflows", stored.outflows],
+    ] as const) {
+      const fresh = rederived[section];
+      const categories = new Set([...Object.keys(storedTotals), ...Object.keys(fresh)]);
+      for (const c of categories) {
+        const s = storedTotals[c] ?? { PC: 0, G: 0 };
+        const f = fresh[c] ?? { PC: 0, G: 0 };
+        if (!close(s.PC, f.PC) || !close(s.G, f.G)) {
+          bookProblems++;
+          console.error(`✗ SNAPSHOT DRIFT: ${latestSnapshot.day} ${section} "${c}" stored ${s.PC}/${s.G} != re-derived ${f.PC}/${f.G}`);
+        }
+      }
+    }
+  }
+  if (bookProblems === 0) {
+    console.log(
+      `✓ Transparency books (every kind categorized; ${latestSnapshot ? `snapshot ${latestSnapshot.day} re-derives` : "no snapshot yet"})`
+    );
+  } else {
+    failures += bookProblems;
+  }
+
+  // --- 22. Feed & search privacy.
+  let feedProblems = 0;
+  for (const e of events) {
+    if (e.eventType.startsWith("feed.") || e.eventType.startsWith("search.")) {
+      feedProblems++;
+      console.error(`✗ READING-SURFACE LEAK: ledger event ${e.seq} is ${e.eventType}`);
+    }
+  }
+  const [feedSources, feedSettingsRows, searchQueries] = await Promise.all([
+    db.feedSource.findMany(),
+    db.feedSettings.findMany(),
+    db.searchQuery.findMany({ select: { id: true } }),
+  ]);
+  const readingIds = [
+    ...feedSources.map((f) => f.id),
+    ...searchQueries.map((s) => s.id),
+  ];
+  if (readingIds.length > 0) {
+    for (const ev of events) {
+      const hit = findForbiddenId(ev, readingIds);
+      if (hit) {
+        feedProblems++;
+        console.error(`✗ READING-SURFACE LEAK: id ${hit} in ledger event ${ev.seq}`);
+      }
+    }
+  }
+  const validKinds = new Set(["pillar", "domain", "discussion", "circle", "poll", "fellow-souls"]);
+  for (const source of feedSources) {
+    if (!validKinds.has(source.kind) || (source.kind !== "fellow-souls" && !source.refId)) {
+      feedProblems++;
+      console.error(`✗ FEED SOURCE SHAPE: ${source.id} kind "${source.kind}"`);
+    }
+  }
+  if (feedProblems === 0) {
+    console.log(
+      `✓ Feed & search privacy (${feedSources.length} source(s), ${feedSettingsRows.length} setting(s), ${searchQueries.length} quer(ies); nothing on the ledger)`
+    );
+  } else {
+    failures += feedProblems;
   }
 
   if (failures > 0) {

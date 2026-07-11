@@ -90,7 +90,50 @@ never live here — they interrupt directly.
      surfaces (Circles are open-join in v1; Chambers arrive 7.5).
      Fellow-souls feed source + search scope land with Phase 7 hosts.
 
-10. **Build-time rail defaults set by Claude, owner-adjustable:**
+10. **Phase 7 flags (non-blocking, 2026-07-11):**
+   - **The 16 drafted Opening Questions (Compassion + Hope).** Those two
+     breakdowns predate the per-domain Opening Question template the
+     other five carry; their questions were DRAFTED in the ratified
+     style (marked `derived-draft` in data, noted on their domain
+     pages). Ratify or edit at leisure — wording changes are
+     ledger-evented amendments, per canon law. Gates: nothing; the
+     16 threads are live.
+   - **The Agora dashboard is INCLUDED.** The dashboard spec (§8)
+     deferred the Agora's own dashboard until its content existed; the
+     ratified capstone (2026-07-10) provides the full canon template
+     including per-domain "In service of the pillars" blocks, so the
+     Agora renders with the identical pillar anatomy. Confirm this
+     reading — trivially revertible to a bare hub view.
+   - **Repair acceptance = system-opened governance poll** in the
+     domain's pillar (consensus at the platform bar, sealed + candle,
+     auto-executed at close). The dashboard spec makes the Picture a
+     living object and names Polls the resolution mechanism (§6.3) but
+     doesn't specify the flow; this is the least-inventive assembly of
+     ratified machinery. **Repair submission is FREE** (the fee lattice
+     read strictly); one open repair per soul per domain is the
+     structural anti-spam. Both are rails-adjacent decisions to bless.
+   - **Repair-outcome notifications deferred:** the NOTIFICATIONS
+     category list is exhaustive by design; a "repair decided" category
+     awaits your say. Voters learn results via poll-results; authors
+     check the domain page.
+   - **Open-lens weights shipped as derived rails, flagged** (FEED §9.1
+     defers exact weights + anti-gaming review to real usage data):
+     contributors ×3 (the v2 insightful weight — quality's multiplier),
+     tippers ×1, sourced ×1, half-life 72h (the default deliberation
+     window), activity window 4× half-life. The formula page renders
+     live from the rails and is versioned (v1 — 2026-07-11).
+   - **Minimal poll cards in the feed** (status changes only — never a
+     sealed tally): §2.1 makes followed polls a launch SOURCE, so
+     ignoring them silently seemed worse; §9.3 (card rollout order
+     beyond Discussions) remains yours.
+   - **"system" is tombstoned in the handle namespace** — system-opened
+     polls speak as "system" and that attribution must never be
+     claimable. Consider also reserving "agoranet"/"treasury".
+   - **Treasury per-category trend charts** are v1-thin (running totals
+     + balance history; per-day category deltas derivable from stored
+     snapshots when wanted). Cosmetic.
+
+11. **Build-time rail defaults set by Claude, owner-adjustable:**
    face-switch cooldown 5 min · pillar session timeout 30 min · alias
    activation 24–72h/daily cohorts (spec-indicative) · candle window
    20% of poll duration · display-name cooldown 7 days · handle charset

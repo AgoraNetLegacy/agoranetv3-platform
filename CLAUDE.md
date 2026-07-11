@@ -63,30 +63,29 @@ under it.**
 
 ## Current Phase
 
-**Phase 7 — Light Score & The Dashboards** (see BUILD_ORDER.md;
-Phases 0–6.5 checkpointed per CHECKPOINTS.md — read it first, plus
-DECISIONS_PENDING.md and DERIVED_DEFAULTS.md). Standing becomes
-visible; the platform gets its face:
-- **Light Score v3** (`Light Score/LIGHT_SCORE_EXTENSION_SPEC.md`):
-  the v2 engine (declared reuse — `lib/score.ts` weights) + the three
-  new inputs already RECORDED as LightScoreAdjustment rows (attested
-  Circle actions from Phase 6, accepted repairs when Pictures exist,
-  moderation service from Phase 5) + the deductions; anti-sum guard
-  (never global, never averaged, never ranked); the explainable
-  score-change log ("attested action in Circle X").
-- **The hub + full pillar dashboards**
-  (`7 Pillars/SEVEN_PILLAR_DASHBOARD_SPEC.md`): naming scheme, Why
-  banners, domain cards (domains become DATA — the Phase 6 flag on
-  domain-level Circle tags resolves here), Picture-as-object with
-  repair status, stat rows, Governance room doors.
-- **Public transparency dashboards:** moderation stats + treasury
-  daily snapshots with ledger drill-down
-  (`Treasury Dashboard/TREASURY_DASHBOARD_SPEC.md`).
-- **Feed & Search** (`Feed and Search/FEED_AND_SEARCH_SPEC.md`):
-  chosen sources (fellow souls is one, off by default) + the open
-  lens with a published formula, "you're caught up," per-persona
-  feeds; the nine-entity search index, visibility-scoped.
+**Phase 7.5 — Chambers (Pollinator v1)** (see BUILD_ORDER.md; Phases
+0–7 checkpointed per CHECKPOINTS.md — read it first, plus
+DECISIONS_PENDING.md and DERIVED_DEFAULTS.md). The idea incubator —
+the last product surface before hardening. Per
+`Neural Pollinator/NEURAL_POLLINATOR_SPEC.md`, **Chambers only**
+(Leaderboard and Tournament remain post-launch by owner decision):
+- Creation with the pre-convo scaffold + the "why should people care"
+  storefront field; dual-token fees (Phase 4's economy — the
+  ECONOMIC_STARTING_DEFAULTS chamber lines); public/private chambers;
+  the three visibility layers (storefront public, workshop enclosed);
+  the standard Phase 5 moderation path.
+- The creator's Light Score is public record on public-chamber
+  storefronts (owner addition, POLLS/POLLINATOR ratification).
+- The data model must NOT preclude the post-launch Tournament
+  (public/private flag, storefront, permanence classes).
+- ⚠ v2's "chambers" (pillar containers) ≠ v3 Chambers. Never merge.
+- Phase 7 hand-offs to consume: chamber storefront cards in the feed
+  and chamber-storefront search arrive with their host (FEED §2.3,
+  §4.1.1); in-space search extends to workshops (owner: launch);
+  "fee.chamber" needs its transparency category or db:verify fails
+  loudly (by design).
 
-**Phase 7 checkpoint:** hub → pillar → domain → Discussion → your own
-standing; treasury inspected publicly; feed sources tuned; a Circle
-found by searching its city.
+**Phase 7.5 checkpoint:** owner creates a public chamber through the
+full scaffold, pays the dual-token fee, works an idea in the workshop,
+and verifies the storefront reads right and the workshop stays
+enclosed.

@@ -239,4 +239,103 @@ run `npm run db:verify`. Judge: does "good people find each other"
 feel mechanical now — and does the graph feel like nobody's business
 but yours?
 
-## Phase 7 — Light Score & The Dashboards ⏳ NOT STARTED
+## Phase 7 — Light Score & The Dashboards ✅ SELF-VERIFIED (2026-07-11)
+
+**Shipped:** standing became visible and the platform got its face.
+**Domains became data:** all 56 domains (8 × 7 pillars, the Agora
+included — its ratified capstone provides the full canon template)
+extracted VERBATIM from the corpus breakdowns by a committed generator
+script, seeded with ledger events, each with its permanent
+Opening-Question thread (the canon reconciliation's second ring) and
+its Picture as revision 1 of a living content object. **Light Score
+v3:** the v2 engine ported deliberately (weights as rails; v2's
+vote-received inputs don't exist in v3 by design — tips are NOT a score
+input), deriving per-face per-pillar standing from public Discussion
+contributions (members'-room posts never feed standing) + the
+already-recorded adjustment rows (Circle credits, Phase 5 deductions
+decaying on the strike clock) + moderation service derived per resolved
+case, quality-gated, daily-capped, credited in the room actually
+served; the ANTI-SUM GUARD throws on total/sum/overall/global/combined;
+the owner-only score-change log names every cause ("Attested action in
+Circle X," "Accepted repair on Domain Y"). **The dashboards:** hub
+(grid-with-Agora-apart, the spec's sanctioned fallback; hook lines from
+the Strategic Conclusions; per-pillar standing chips — a constellation,
+never a sum), full pillar anatomy (Why banner with the three-name
+identity + flagship Stoic principle, the pillar-only stat row, eight
+domain cards with LIVE repair status, canon threads, Circles by
+attested recency, the Governance door as a marked threshold, mechanism
+deep-dives rendering the 12 reference docs verbatim), and dedicated
+domain pages (every breakdown field; the Picture versioned with public
+dated history; Open-for-Repair questions with a real submission
+control). **The repair loop:** any verified soul challenges a Picture
+free of charge (the fee lattice read strictly; one open repair per soul
+per domain is the structural anti-spam); acceptance is a SYSTEM-opened
+governance poll in the domain's pillar (consensus at the platform bar,
+sealed + candled, executed at close via the Phase 6 binding-poll
+pattern); adopted → new revision + Light Score credit with its named
+cause; declined → nothing (honest misses stay safe). **Transparency:**
+/transparency answers the three questions publicly — inflows by source
+category, outflows by budget category (the Constitution's
+must-guardrail rendered structurally: an unmapped flow THROWS, here and
+in db:verify), issuance in its own section, the admin-log mirror as an
+honest empty log, daily snapshots (owner-ratified cadence as a rail;
+lazily generated, timestamped, ledger-evented, re-derivable),
+drill-down to pseudonymous entries (stipends/rewards aggregate-only —
+moderator anonymity beats itemization), CSV export, and the public
+moderation-stats page. **Feed:** cold-start defaults (all seven
+pillars + open lens + balanced diet), chosen sources only (pillars,
+domains, join=follow Discussions, member Circles, followed polls,
+fellow souls OFF by default), a why-line on every card, "you're caught
+up" as a designed moment with an explicit mark-read, and the open lens
+ranked by the published formula — versioned, rendered LIVE from the
+rails at /feed/formula, arithmetic shown on every card, identical for
+everyone. **Search:** nine entity types, visibility-scoped at the query
+(rooms and DMs structurally absent; moderator identity unsearchable;
+nothing cross-persona exists to leak), published ranking, per-face
+deletable history never used to rank, §4.2 filters, and in-space room
+search (owner-resolved: ships at launch). Circle formation gained the
+domain tag — the Phase 6 flag, resolved.
+
+**Evidence:** 150 tests across 13 files (23 new: the engine, the
+anti-sum guard, decay, room exclusion, service quality-gating, the
+repair loop both directions, per-persona feed separation, the
+enclosed-space rule against a forged feed source, lens formula and
+room exclusion, city search, souls lookup, history isolation,
+snapshot re-derivation). `db:verify` grew to 27 checks — Domain &
+Picture integrity (contiguous histories, every acceptance poll-backed
+with Adopt leading, phantom credits impossible, "system" tombstoned),
+Transparency books (every kind categorized; the snapshot re-derives
+from the entries as of its timestamp), Feed & search privacy (nothing
+on the ledger) — with snapshot drift and uncategorized flows
+demonstrated FAILING LOUDLY under test. `demo:phase7` walks the
+checkpoint end to end and ALL 27 CHECKS PASS on the exercised dev
+database. Live browser walkthrough: hub tiles → Compassion's Why
+banner and stat row → Domain 1 (Picture at v3, community-repaired,
+full revision history) → a repair submitted through the real form (its
+governance poll open in the room, sealed, candle-committed) → the
+domain's live thread → /transparency with drill-down to pseudonymous
+entries → the feed with why-lines and the caught-up moment → a Kelowna
+Circle found by searching its city. (One walkthrough hiccup was
+environmental, not product: running `next build` against a live dev
+server corrupts its assets — restart the dev server after builds.)
+
+**Flagged for the owner (non-blocking, queued in DECISIONS_PENDING):**
+the 16 drafted Opening Questions (Compassion + Hope breakdowns predate
+the template; drafts marked `derived-draft` in data and noted on their
+pages; ratification edits are ledger-evented amendments per canon
+law) · the Agora dashboard INCLUDED (the spec deferred it until its
+content existed; the ratified capstone provides it — confirm) · repair
+acceptance = system-opened governance poll (the spec names polls as
+the resolution mechanism but doesn't specify the repair flow) · repair
+submission free · lens weights derived as rails (§9.1 defers exact
+weights to real data) · minimal poll cards in the feed (§9.3 rollout
+order) · "system" handle tombstoned · repair-outcome notifications
+deferred (the category list is exhaustive by design).
+
+**If you choose to look (15 min):** the hub → Compassion → Domain 1
+(read the Picture, note v3 and its history) → submit a repair → find
+its poll behind the Governance door → `/profile` for your constellation
+and change log → `/transparency` (drill into a category) → `/feed`
+(tune sources, read the why-lines, reach "you're caught up") →
+`/search` for your city. Judge: does standing feel earned and
+explainable — and is this the face you wanted the platform to have?

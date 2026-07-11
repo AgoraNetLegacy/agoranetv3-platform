@@ -26,6 +26,8 @@ export default async function SearchPage({
     permanence?: string;
     hasSources?: string;
     pollStatus?: string;
+    from?: string;
+    to?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -47,6 +49,8 @@ export default async function SearchPage({
       params.pollStatus === "open" || params.pollStatus === "closed"
         ? params.pollStatus
         : undefined,
+    from: params.from ? new Date(params.from) : undefined,
+    to: params.to ? new Date(`${params.to}T23:59:59Z`) : undefined,
   };
 
   const pillars = await db.pillar.findMany({ orderBy: { position: "asc" } });
@@ -112,6 +116,12 @@ export default async function SearchPage({
             placeholder="Place filter"
             style={{ width: "8rem" }}
           />{" "}
+          <label>
+            from <input type="date" name="from" defaultValue={params.from ?? ""} />
+          </label>{" "}
+          <label>
+            to <input type="date" name="to" defaultValue={params.to ?? ""} />
+          </label>{" "}
           <button type="submit">Search</button>
         </div>
       </form>

@@ -98,16 +98,33 @@ export interface Books {
   issuance: CategoryTotals;
 }
 
-/** Re-derive the whole money story from the entry rows. */
-export async function computeBooks(db: DbOrTx): Promise<Books> {
-  const treasury = await db.treasuryBalance.findMany();
+/** Re-derive the whole money story from the entry rows. With `asOf`,
+ *  flows are cut at that moment and the treasury balances re-derive
+ *  from entries alone — how db:verify re-checks a snapshot. */
+export async function computeBooks(db: DbOrTx, asOf?: Date): Promise<Books> {
   const balances = { PC: 0, G: 0 };
-  for (const t of treasury) balances[t.currency as "PC" | "G"] = t.amount;
+  if (asOf) {
+    const entries = await db.economyEntry.findMany({
+      where: { createdAt: { lte: asOf } },
+      select: { currency: true, amount: true, fromTreasury: true, toTreasury: true },
+    });
+    for (const e of entries) {
+      const c = e.currency as "PC" | "G";
+      if (e.toTreasury) balances[c] += e.amount;
+      if (e.fromTreasury) balances[c] -= e.amount;
+    }
+    balances.PC = Math.round(balances.PC * 1e6) / 1e6;
+    balances.G = Math.round(balances.G * 1e6) / 1e6;
+  } else {
+    const treasury = await db.treasuryBalance.findMany();
+    for (const t of treasury) balances[t.currency as "PC" | "G"] = t.amount;
+  }
 
   const grouped = await db.economyEntry.groupBy({
     by: ["kind", "currency"],
     _sum: { amount: true },
     _count: true,
+    ...(asOf ? { where: { createdAt: { lte: asOf } } } : {}),
   });
 
   const inflows: CategoryTotals = {};
