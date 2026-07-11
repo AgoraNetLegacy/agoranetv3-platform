@@ -77,10 +77,10 @@ never live here — they interrupt directly.
    **Re-review mandatory at Phase 9** alongside the gate cutover.
 
 9. **Phase 6.5 derived rules (non-blocking, 2026-07-11):**
-   - **Releasing a bond:** the spec makes the bond mutual CONSENT and
-     never mentions ending one; built as: either side may withdraw,
-     quietly (no notification — the blocking discipline applied).
-     Confirm the feel.
+   - ~~**Releasing a bond**~~ — **OWNER-RATIFIED (2026-07-11, "this
+     sounds right"):** either side may withdraw quietly (no
+     notification — the blocking discipline applied). A bond is
+     ongoing mutual consent, not a contract.
    - **DM-conduct strikes land in the meta pillar.** Moderation is
      pillar-scoped by ratified design; DMs have no pillar. A violation
      in a private thread is read as conduct against the commons itself.
