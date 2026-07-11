@@ -56,6 +56,7 @@ export async function fileFlag(
     // a deposit; pattern penalties fall back to rate-limiting, not debt.
     const depositAmount = await getRail(tx, "moderation.flagDeposit");
     const { balanceOf } = await import("./economy");
+    let depositTaken = 0;
     if ((await balanceOf(tx, input.profileId, "PC")) >= depositAmount) {
       const deposit = await chargeToTreasury(tx, {
         profileId: input.profileId,
@@ -65,16 +66,27 @@ export async function fileFlag(
         refType: "flag",
       });
       if (!deposit.ok) throw new Error(deposit.reason);
+      depositTaken = depositAmount;
     }
-    return tx.flag.create({
+    const created = await tx.flag.create({
       data: {
         postId: post.id,
         ruleId: rule.id,
         note: input.note?.trim() || null,
         reporterProfileId: input.profileId,
         nullifier: gate.nullifier!,
+        depositHeld: depositTaken,
       },
     });
+    // Phase 5: the flag meets its adjudicators — open or join the
+    // post's case; content blurs (or full-hides in the expedited lane).
+    const { openOrJoinCase } = await import("./moderation");
+    await openOrJoinCase(tx, {
+      flagId: created.id,
+      postId: post.id,
+      ruleId: rule.id,
+    });
+    return created;
   });
 
   return { ok: true, flagId: flag.id };

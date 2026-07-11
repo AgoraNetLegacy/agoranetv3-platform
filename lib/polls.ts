@@ -382,6 +382,10 @@ export async function closeDuePolls(db: PrismaClient): Promise<number> {
         },
       });
 
+      // Results published → the voters' quiet inboxes.
+      const { notifyPollResults } = await import("./notifications");
+      await notifyPollResults(tx, poll.id, poll.title);
+
       // Public mode: the per-ballot records become public at close —
       // on this poll's record only, never compiled across polls.
       if (poll.mode === "public") {

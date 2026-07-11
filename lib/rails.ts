@@ -13,7 +13,20 @@ import type { DbOrTx } from "./db";
 export interface RailDefault {
   key: string;
   value: number;
-  unit: "uPC" | "uG" | "minutes" | "hours" | "days" | "percent";
+  unit:
+    | "uPC"
+    | "uG"
+    | "minutes"
+    | "hours"
+    | "days"
+    | "months"
+    | "percent"
+    | "badges"
+    | "cases"
+    | "points"
+    | "seats"
+    | "flags"
+    | "x";
   boundMin?: number; // defaults to ¼× value
   boundMax?: number; // defaults to 4× value
   description: string;
@@ -216,6 +229,35 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     description:
       "Streak bonuses flatten at +5u/week — habit acknowledged, obsession not cultivated.",
   },
+  // --- Moderation rails (Phase 5 — MODERATION_SPEC placeholders,
+  // owner-confirmed 2026-07-09; strike penalty amounts are build-time
+  // defaults flagged in DECISIONS_PENDING).
+  { key: "moderation.offerWindowHours", value: 12, unit: "hours", description: "Badge offer expiry — unanswered passes automatically (MODERATION §2.2)." },
+  { key: "moderation.termHours", value: 48, unit: "hours", description: "Badge term — hard cutoff, no carryover (§2.3–4)." },
+  { key: "moderation.cooldownDays", value: 7, unit: "days", description: "Per-profile cooldown before re-eligibility; no consecutive holds (§2.5)." },
+  { key: "moderation.poolMin", value: 5, unit: "badges", description: "Minimum concurrent badges (§OQ1)." },
+  { key: "moderation.poolMax", value: 200, unit: "badges", description: "Maximum concurrent badges — the auto-scaling bound (§OQ1)." },
+  { key: "moderation.slaHours", value: 48, unit: "hours", description: "Target time-to-ruling; pool scales to hold it (§OQ1)." },
+  { key: "moderation.supervisionInitialCases", value: 10, unit: "cases", description: "A new moderator's first N rulings are 100% double-checked (§OQ3)." },
+  { key: "moderation.supervisionAgreementPct", value: 85, unit: "percent", description: "Agreement rate that graduates a moderator to sampled supervision (§OQ3)." },
+  { key: "moderation.qaSamplePct", value: 5, unit: "percent", description: "Standing blind re-review sample of ALL moderators' rulings (§6.1)." },
+  { key: "moderation.caseRewardG", value: 3, unit: "uG", description: "Base Gratium per case RESOLVED — never per uphold (fixed law; ECONOMIC §5)." },
+  { key: "moderation.ratingMultiplierMax", value: 2, unit: "x", description: "Moderation Rating reward multiplier cap — floor 1×, no moderator aristocracy (owner-confirmed 2×)." },
+  { key: "moderation.strikeDecayMonths", value: 6, unit: "months", description: "Active-strike decay — the record is permanent, the count is not; Light Score deductions share this clock (§7)." },
+  { key: "moderation.strike1PenaltyG", value: 2, unit: "uG", description: "Strike 1 Gratium penalty (build-time default — amounts not in the ratified schedule; flagged)." },
+  { key: "moderation.strike2PenaltyG", value: 5, unit: "uG", description: "Strike 2 Gratium penalty (build-time default, flagged)." },
+  { key: "moderation.strike1LsDeduction", value: 5, unit: "points", description: "Strike 1 Light Score deduction, pillar-scoped, tier-scaled ×tier (build-time default; Phase 7 engine consumes)." },
+  { key: "moderation.strike2LsDeduction", value: 10, unit: "points", description: "Strike 2 Light Score deduction (build-time default)." },
+  { key: "moderation.rateLimitHours", value: 24, unit: "hours", description: "Strike 2 short rate-limit duration (build-time default)." },
+  { key: "moderation.readOnlyDays", value: 7, unit: "days", description: "Strike 3: read-only period + Tribunal review (§7)." },
+  { key: "tribunal.seats", value: 7, unit: "seats", description: "The platform's number, deliberately (§8)." },
+  { key: "tribunal.termDays", value: 30, unit: "days", description: "Staggered terms, no consecutive (§8)." },
+  { key: "tribunal.stipendG", value: 100, unit: "uG", description: "Treasury-paid stipend per 30-day term (ECONOMIC §5)." },
+  { key: "tribunal.appealDepositPc", value: 25, unit: "uPC", description: "Appeal deposit — refunded if the ruling changes, forfeited if baseless (ECONOMIC §2)." },
+  { key: "sentinel.brigadeFlagThreshold", value: 5, unit: "flags", description: "Sentinel v1: distinct-profile flags on one target within the window that bundle to the Tribunal as suspected coordination (build-time default)." },
+  { key: "sentinel.brigadeWindowHours", value: 24, unit: "hours", description: "Sentinel v1 brigade detection window (build-time default)." },
+  { key: "notifications.digestCadenceHours", value: 24, unit: "hours", description: "Quiet-inbox digest cadence (spec default: daily)." },
+  { key: "notifications.pollClosingSoonHours", value: 6, unit: "hours", description: "How close to a poll's nominal end the closing-soon notification fires (build-time default)." },
 ];
 
 /** Read one rail's current value. Throws if the rail was never seeded —

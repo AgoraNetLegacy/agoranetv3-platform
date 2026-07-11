@@ -53,6 +53,9 @@ model Profile {
   // Aliases are born PENDING and activate at a randomized, cohort-batched
   // moment (ONBOARDING §3.3–3.4); True Selves are born active.
   status       String        @default("active") // "active" | "pending"
+  // Strike-ladder consequences (auto-applied, MODERATION §7).
+  rateLimitedUntil DateTime?
+  readOnlyUntil    DateTime?
   activateAt   DateTime?
   // Coarse join period only — never a precise timestamp (§3.5).
   joinedPeriod String
@@ -522,6 +525,141 @@ model Flag {
   note              String?
   reporterProfileId String
   nullifier         String // gate nullifier — keys the flag for Phase 5 handling
-  status            String   @default("queued")
+  status            String   @default("queued") // "queued" | "in-case" | "refunded" | "forfeited" | "settled"
+  depositHeld       Float    @default(0) // 0 when filed at zero balance
+  caseId            String?
+  case              ModCase? @relation(fields: [caseId], references: [id])
   createdAt         DateTime @default(now())
+}
+
+// ------------------------------------------------------------------
+// Moderation Live (Phase 5 — MODERATION_SPEC.md + the rulebook).
+// Sortition, 48-hour badges, fact-finding-only rulings, consequences
+// auto-applied, the triangle of blindness throughout: rulings are
+// nullifier-keyed in every public record; moderator identity exists
+// only in Phase A operator space (rewards need it), never in a case
+// file, event, or page.
+// ------------------------------------------------------------------
+
+model ModCase {
+  id          String   @id @default(cuid())
+  postId      String
+  ruleId      String // the alleged rule (the case category, §3.1)
+  tier        Int // 1 routine | 2 serious | 3 severe (from the rule)
+  // Heavy handling: removal from a permanent space needs 3 independent
+  // rulings (§4); severe goes to the Tribunal lane.
+  heavy       Boolean  @default(false)
+  expedited   Boolean  @default(false) // R3.1/R3.3 only: full-hide lane
+  tribunal    Boolean  @default(false)
+  status      String   @default("open") // "open" | "awaiting-supervision" | "ruled" | "appealed" | "resolved"
+  outcome     String? // "upheld" | "declined" | "no-rule-fits"
+  badFaithFlag Boolean @default(false) // explicit bad-faith ruling → deposits forfeit
+  // Sentinel v1 (§11): machine-flagged suspected coordination, bundled
+  // to the Tribunal. Labeled to the Tribunal; never auto-punishes.
+  sentinelBundled Boolean @default(false)
+  createdAt   DateTime @default(now())
+  resolvedAt  DateTime?
+  flags       Flag[]
+  rulings     Ruling[]
+  // One appeal per ruling (§9); fresh eyes or Tribunal.
+  appealOfId  String?  @unique
+  appealOf    ModCase? @relation("Appeal", fields: [appealOfId], references: [id])
+  appealedBy  ModCase? @relation("Appeal")
+}
+
+model Ruling {
+  id                 String   @id @default(cuid())
+  caseId             String
+  case               ModCase  @relation(fields: [caseId], references: [id])
+  // The public/audit key (v2 sealed-vote pattern): derived per-profile
+  // for scope ruling:{caseId}, recorded on the ledger. NEVER a handle.
+  moderatorNullifier String
+  // Operator space only — pays the reward, feeds the rating, routes
+  // supervision. Never rendered, never in events (db:verify enforces).
+  moderatorProfileId String
+  verdict            String // "uphold" | "decline" | "no-rule-fits" | "escalate"
+  citedRuleId        String? // required for uphold
+  badFaithFlag       Boolean  @default(false)
+  supervision        String   @default("none") // "none" | "pending" | "confirmed" | "overridden"
+  createdAt          DateTime @default(now())
+
+  @@unique([caseId, moderatorNullifier]) // one ruling per moderator per case
+}
+
+model BadgeOffer {
+  id        String    @id @default(cuid())
+  profileId String // per-profile, never per-human (§2.1)
+  offeredAt DateTime  @default(now())
+  expiresAt DateTime // 12h rail; unanswered passes automatically
+  status    String    @default("offered") // "offered" | "equipped" | "passed" | "expired"
+  term      BadgeTerm?
+}
+
+model BadgeTerm {
+  id             String     @id @default(cuid())
+  offerId        String     @unique
+  offer          BadgeOffer @relation(fields: [offerId], references: [id])
+  profileId      String
+  startedAt      DateTime   @default(now())
+  endsAt         DateTime // hard 48h cutoff — access revokes sharply
+  casesCompleted Int        @default(0)
+  gratiumEarned  Float      @default(0)
+}
+
+// Strikes: the record is permanent; the ACTIVE count decays (6-month
+// rail — one redemption clock shared with Light Score deductions).
+model Strike {
+  id          String    @id @default(cuid())
+  profileId   String
+  pillarId    String
+  tier        Int
+  caseId      String
+  restorative Boolean   @default(false) // repair accepted → reduced weight
+  createdAt   DateTime  @default(now())
+  decaysAt    DateTime
+}
+
+// Recorded now, consumed by Phase 7's Light Score engine. Pillar-scoped
+// (never global — the no-universal-score invariant), decaying on the
+// strike clock.
+model LightScoreAdjustment {
+  id        String   @id @default(cuid())
+  profileId String
+  pillarId  String
+  amount    Float // negative for deductions
+  caseId    String?
+  createdAt DateTime @default(now())
+  decaysAt  DateTime?
+}
+
+model TribunalSeat {
+  id        String   @id @default(cuid())
+  profileId String
+  termStart DateTime @default(now())
+  termEnd   DateTime // 30-day staggered terms, no consecutive
+}
+
+// ------------------------------------------------------------------
+// Notifications (NOTIFICATIONS_SPEC.md): two tiers, per-persona, the
+// quietest functional defaults. No streaks, no nags, no re-notification
+// — the category list is exhaustive by design.
+// ------------------------------------------------------------------
+
+model Notification {
+  id             String    @id @default(cuid())
+  profileId      String // per-profile, never per-human
+  tier           String // "time-sensitive" | "quiet"
+  category       String // "badge-offer" | "ruling" | "poll-closing" | "tip" | "poll-results"
+  title          String
+  body           String
+  refType        String?
+  refId          String?
+  // High-volume events collapse into one updating entry (§6).
+  aggregationKey String?
+  count          Int       @default(1)
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now())
+
+  @@unique([profileId, aggregationKey])
 }

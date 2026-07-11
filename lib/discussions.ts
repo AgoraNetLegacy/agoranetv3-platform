@@ -242,6 +242,20 @@ export async function createPost(
       reason: "The permanence and Constitution acknowledgments come first.",
     };
   }
+  // Strike-ladder consequences (MODERATION §7), auto-applied and
+  // auto-enforced: read-only silences writing; rate-limit slows it.
+  const now = new Date();
+  if (profile.readOnlyUntil && profile.readOnlyUntil > now) {
+    return { ok: false, reason: `Read-only until ${profile.readOnlyUntil.toLocaleString()} (strike 3 — Tribunal review pending).` };
+  }
+  if (profile.rateLimitedUntil && profile.rateLimitedUntil > now) {
+    const recent = await db.post.findFirst({
+      where: { authorProfileId: profile.id, createdAt: { gte: new Date(Date.now() - 600_000) } },
+    });
+    if (recent) {
+      return { ok: false, reason: "Rate-limited (strike 2): one post per 10 minutes for now." };
+    }
+  }
 
   // Every post is its own action instance: the scope is unique per post,
   // so the nullifier proves humanity for THIS act (DUAL_IDENTITY §3.2 —

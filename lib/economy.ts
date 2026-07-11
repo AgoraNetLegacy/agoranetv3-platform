@@ -195,6 +195,20 @@ export async function tip(
       // Giving is positive participation (TOKENOMICS §4) — it accrues.
       const { accrueForAction } = await import("./accrual");
       await accrueForAction(tx, input.tipperProfileId);
+      // Quiet inbox: tips on one post collapse into one updating entry.
+      const { notify } = await import("./notifications");
+      const stats = await tx.tip.findMany({ where: { postId: post.id } });
+      const totalNow = stats.reduce((s, t) => s + t.amount, 0);
+      await notify(tx, {
+        profileId: post.authorProfileId,
+        tier: "quiet",
+        category: "tip",
+        title: "Your contribution was tipped",
+        body: `${totalNow.toFixed(2)} G from ${new Set(stats.map((t) => t.tipperProfileId)).size} unique tipper(s) so far.`,
+        refType: "post",
+        refId: post.id,
+        aggregationKey: `tip:${post.id}`,
+      });
       return { ok: true as const };
     });
   } catch (err) {
