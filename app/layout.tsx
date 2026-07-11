@@ -45,6 +45,7 @@ async function FaceBar() {
         {pc.toFixed(2)} PC · {g.toFixed(2)} G
       </span>
       <Link href="/inbox">inbox{unread > 0 ? ` (${unread})` : ""}</Link>
+      <Link href="/souls">souls</Link>
       <Link href="/moderation">workbench</Link>
       <Link href="/profile">profile</Link>
       {others.length > 0 && (

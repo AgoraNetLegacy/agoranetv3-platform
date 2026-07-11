@@ -59,7 +59,24 @@ never live here — they interrupt directly.
      Discussion/Poll needs a pillar row; access is unaffected — Circle
      scoping overrides pillar surfaces everywhere). Cosmetic only.
 
-8. **Build-time rail defaults set by Claude, owner-adjustable:**
+8. **DM encryption stack — RESOLVED at phase start (Phase 6.5,
+   2026-07-11, per OPEN_ITEMS Track 5 #29 "build-time technical"):**
+   the spec's "simpler asymmetric scheme for v1" — X25519 key agreement
+   → HKDF per-thread key → AES-256-GCM per message (Signal-family
+   primitives, all industry standard). Per-profile keypairs; in Phase A
+   the private keys are held encrypted under an operator secret
+   (`DM_MASTER_SECRET`) — the exact trust posture as the gate, disclosed
+   verbatim in the DM UI: encrypted at rest, operator-escrowed keys,
+   the client-side rail (soul's wallet holds the key; platform
+   structurally cannot read) cuts over at Phase 9 with Lace. Why not a
+   double ratchet now: with a server-rendered app and no client key
+   store, ratchet keys would live server-side anyway — cryptographic
+   theater. This choice is honest about what Phase A is, and the §9.1
+   multi-device/key-backup concerns dissolve into the Phase 9 wallet
+   story. Recipient-side excerpt reporting works cleanly under escrow.
+   **Re-review mandatory at Phase 9** alongside the gate cutover.
+
+9. **Build-time rail defaults set by Claude, owner-adjustable:**
    face-switch cooldown 5 min · pillar session timeout 30 min · alias
    activation 24–72h/daily cohorts (spec-indicative) · candle window
    20% of poll duration · display-name cooldown 7 days · handle charset

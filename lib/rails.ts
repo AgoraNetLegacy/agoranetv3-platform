@@ -325,6 +325,43 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     description:
       "Per-profile, per-Circle, per-day cap on Circle-derived Light Score credits — the anti-collusion guardrail (LIGHT_SCORE §5.1's required daily cap); derived: the v2 per-discussion participation cap. Authored credits also halve within the day (diminishing returns, same section).",
   },
+  // --- Social rails (Phase 6.5 — FELLOW_SOULS_AND_DM_SPEC + the
+  // ratified fee lattice). Initiator pays; spam prices itself out.
+  {
+    key: "social.requestFee",
+    value: 2,
+    unit: "uPC",
+    description:
+      "Fellow-soul request fee — social actions cost slightly more than speech, initiator pays (ECONOMIC_STARTING_DEFAULTS §1). Accept/ignore/decline are free.",
+  },
+  {
+    key: "social.requestCooldownDays",
+    value: 30,
+    unit: "days",
+    description:
+      "A declined or ignored requester cannot re-request the same profile for this window (FELLOW_SOULS §2, shipped default 30).",
+  },
+  {
+    key: "social.requestExpiryDays",
+    value: 30,
+    unit: "days",
+    description:
+      "Pending requests (fellow-soul AND stranger DM threads) expire after this many days, or earlier if deleted by the receiver — owner-resolved 2026-07-09 (FELLOW_SOULS §9.4).",
+  },
+  {
+    key: "dm.threadFee",
+    value: 2,
+    unit: "uPC",
+    description:
+      "DM thread-opening fee — stranger contact priced like a request, initiator pays (ECONOMIC §1). Recipients never pay to receive or reply within an accepted thread.",
+  },
+  {
+    key: "dm.messageFee",
+    value: 0.1,
+    unit: "uPC",
+    description:
+      "Per-message micro-fee, sender pays — near-invisible to humans; spam still compounds to real cost (ECONOMIC §1).",
+  },
 ];
 
 /** Read one rail's current value. Throws if the rail was never seeded —

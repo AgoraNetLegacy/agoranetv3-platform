@@ -33,14 +33,22 @@ function ratingMultiplier(agreementRate: number, max: number): number {
 
 // ------------------------------------------------------------------ cases
 
-/** Open a case for a flag, or join the post's existing open case.
- *  Blur under review; full-hide only in the expedited lane (§5). */
+/** Open a case for a flag, or join the evidence's existing open case.
+ *  Posts blur under review (full-hide only in the expedited lane, §5);
+ *  DM excerpts (Phase 6.5) carry no content action — nothing public
+ *  exists to blur, and the recipient already holds the message. */
 export async function openOrJoinCase(
   tx: Tx,
-  input: { flagId: string; postId: string; ruleId: string }
+  input: { flagId: string; ruleId: string; postId?: string; dmExcerptId?: string }
 ): Promise<string> {
+  if (!input.postId && !input.dmExcerptId) {
+    throw new Error("A case needs evidence: a post or a DM excerpt.");
+  }
   const existing = await tx.modCase.findFirst({
-    where: { postId: input.postId, status: { in: ["open", "awaiting-supervision"] } },
+    where: {
+      ...(input.postId ? { postId: input.postId } : { dmExcerptId: input.dmExcerptId }),
+      status: { in: ["open", "awaiting-supervision"] },
+    },
   });
   if (existing) {
     await tx.flag.update({
@@ -51,18 +59,22 @@ export async function openOrJoinCase(
   }
 
   const rule = await tx.rule.findUniqueOrThrow({ where: { id: input.ruleId } });
-  const post = await tx.post.findUniqueOrThrow({
-    where: { id: input.postId },
-    include: { discussion: true },
-  });
   const expedited = EXPEDITED_RULES.includes(rule.id);
-  // Heavy = removal from a permanent space — three independent rulings.
-  const heavy =
-    post.discussion.permanence.startsWith("permanent") || post.permanentUpgraded;
+
+  let heavy = false;
+  if (input.postId) {
+    const post = await tx.post.findUniqueOrThrow({
+      where: { id: input.postId },
+      include: { discussion: true },
+    });
+    // Heavy = removal from a permanent space — three independent rulings.
+    heavy = post.discussion.permanence.startsWith("permanent") || post.permanentUpgraded;
+  }
 
   const created = await tx.modCase.create({
     data: {
-      postId: post.id,
+      postId: input.postId ?? null,
+      dmExcerptId: input.dmExcerptId ?? null,
       ruleId: rule.id,
       tier: rule.tier,
       heavy,
@@ -74,12 +86,38 @@ export async function openOrJoinCase(
     where: { id: input.flagId },
     data: { caseId: created.id, status: "in-case" },
   });
-  // Blur, don't erase — a flag is never an instant censor button.
-  await tx.post.update({
-    where: { id: post.id },
-    data: { status: expedited ? "hidden" : "blurred" },
-  });
+  if (input.postId) {
+    // Blur, don't erase — a flag is never an instant censor button.
+    await tx.post.update({
+      where: { id: input.postId },
+      data: { status: expedited ? "hidden" : "blurred" },
+    });
+  }
   return created.id;
+}
+
+/**
+ * The accused behind a case's evidence, plus the pillar its
+ * consequences land in. DM conduct (Phase 6.5) strikes in the meta
+ * pillar — a violation of the commons' rules rather than any one
+ * pillar's room (build-time interim, flagged in DECISIONS_PENDING).
+ */
+async function accusedOf(
+  db: PrismaClient | Tx,
+  modCase: { postId: string | null; dmExcerptId: string | null }
+): Promise<{ profileId: string; pillarId: string }> {
+  if (modCase.postId) {
+    const post = await db.post.findUniqueOrThrow({
+      where: { id: modCase.postId },
+      include: { discussion: true },
+    });
+    return { profileId: post.authorProfileId, pillarId: post.discussion.pillarId };
+  }
+  const excerpt = await db.dmExcerpt.findUniqueOrThrow({
+    where: { id: modCase.dmExcerptId! },
+  });
+  const meta = await db.pillar.findFirstOrThrow({ where: { isMeta: true } });
+  return { profileId: excerpt.senderProfileId, pillarId: meta.id };
 }
 
 // ----------------------------------------------------------------- badges
@@ -208,35 +246,54 @@ export async function activeTermFor(db: PrismaClient, profileId: string) {
 
 // -------------------------------------------------------------- the queue
 
-/** The minimal case file (§3.1) — and nothing else. */
+/** The minimal case file (§3.1) — and nothing else. DM cases show the
+ *  revealed excerpt in place of a post; the triangle holds identically
+ *  (no handles, no ids, standing only). */
 export async function caseFileFor(db: PrismaClient, caseId: string) {
   const modCase = await db.modCase.findUniqueOrThrow({
     where: { id: caseId },
     include: { flags: { select: { note: true } } },
   });
-  const post = await db.post.findUniqueOrThrow({
-    where: { id: modCase.postId },
-    include: { discussion: { include: { pillar: true } } },
-  });
-  const accused = post.authorProfileId;
-  const activeStrikes = await activeStrikeCount(db, accused);
+  const accused = await accusedOf(db, modCase);
+  const activeStrikes = await activeStrikeCount(db, accused.profileId);
   const lsAdjustments = await db.lightScoreAdjustment.aggregate({
-    where: { profileId: accused, pillarId: post.discussion.pillarId },
+    where: { profileId: accused.profileId, pillarId: accused.pillarId },
     _sum: { amount: true },
   });
-  // Thread excerpt: the parent post, if any, for minimal context.
-  const parent = post.parentId
-    ? await db.post.findUnique({ where: { id: post.parentId }, select: { body: true } })
-    : null;
+
+  let content: string;
+  let parentExcerpt: string | null = null;
+  let pillarName: string;
+  if (modCase.postId) {
+    const post = await db.post.findUniqueOrThrow({
+      where: { id: modCase.postId },
+      include: { discussion: { include: { pillar: true } } },
+    });
+    content = post.body;
+    // Thread excerpt: the parent post, if any, for minimal context.
+    const parent = post.parentId
+      ? await db.post.findUnique({ where: { id: post.parentId }, select: { body: true } })
+      : null;
+    parentExcerpt = parent?.body?.slice(0, 280) ?? null;
+    pillarName = post.discussion.pillar.name;
+  } else {
+    const excerpt = await db.dmExcerpt.findUniqueOrThrow({
+      where: { id: modCase.dmExcerptId! },
+    });
+    content = excerpt.body;
+    pillarName = "Direct message (recipient-revealed excerpt)";
+  }
+
   return {
     caseId: modCase.id,
     allegedRule: modCase.ruleId,
     tier: modCase.tier,
     heavy: modCase.heavy,
     expedited: modCase.expedited,
-    content: post.body,
-    parentExcerpt: parent?.body?.slice(0, 280) ?? null,
-    pillar: post.discussion.pillar.name,
+    isDm: modCase.dmExcerptId !== null,
+    content,
+    parentExcerpt,
+    pillar: pillarName,
     // The accused as a case, never a person: standing + history only.
     accusedActiveStrikes: activeStrikes,
     accusedPillarStanding: lsAdjustments._sum.amount ?? 0,
@@ -256,11 +313,8 @@ export async function caseQueueFor(db: PrismaClient, profileId: string) {
   });
   const out: ModCase[] = [];
   for (const c of cases) {
-    const post = await db.post.findUnique({
-      where: { id: c.postId },
-      select: { authorProfileId: true },
-    });
-    if (!post || post.authorProfileId === profileId) continue; // own content
+    const accused = await accusedOf(db, c);
+    if (accused.profileId === profileId) continue; // own content
     if (c.flags.some((f) => f.reporterProfileId === profileId)) continue; // own flag
     if (c.rulings.some((r) => r.moderatorProfileId === profileId)) continue; // already ruled
     // Fresh eyes (§9): an appeal is never judged by an original ruler.
@@ -327,8 +381,8 @@ export async function submitRuling(
   if (!modCase || !["open", "awaiting-supervision"].includes(modCase.status)) {
     return { ok: false, reason: "This case is not open." };
   }
-  const post = await db.post.findUniqueOrThrow({ where: { id: modCase.postId } });
-  if (post.authorProfileId === input.profileId) {
+  const accused = await accusedOf(db, modCase);
+  if (accused.profileId === input.profileId) {
     return { ok: false, reason: "Conflict: your own content." };
   }
   if (modCase.flags.some((f) => f.reporterProfileId === input.profileId)) {
@@ -505,10 +559,10 @@ export async function resolveCase(
       where: { id: input.caseId },
       include: { rulings: true, flags: true },
     });
-    const post = await tx.post.findUniqueOrThrow({
-      where: { id: modCase.postId },
-      include: { discussion: true },
-    });
+    const accused = await accusedOf(tx, modCase);
+    const post = modCase.postId
+      ? await tx.post.findUniqueOrThrow({ where: { id: modCase.postId } })
+      : null;
 
     await tx.modCase.update({
       where: { id: modCase.id },
@@ -522,29 +576,33 @@ export async function resolveCase(
 
     // Content: tombstone on uphold; restore on decline (blur was never
     // erasure). The tombstone keeps the rule citation, publicly, forever.
+    // DM cases carry no content action — the message lives in a private
+    // thread the recipient already holds; consequences are personal.
     if (input.outcome === "upheld") {
-      await tx.post.update({
-        where: { id: post.id },
-        data: { status: "removed" },
-      });
-      await appendEvent(tx, {
-        actorType: "system",
-        eventType: "content.removed",
-        payload: {
-          postRef: post.id,
-          discussionRef: post.discussionId,
-          rule: input.citedRuleId,
-          caseRef: modCase.id,
-          contentHash: contentHash(post.body),
-        },
-      });
+      if (post) {
+        await tx.post.update({
+          where: { id: post.id },
+          data: { status: "removed" },
+        });
+        await appendEvent(tx, {
+          actorType: "system",
+          eventType: "content.removed",
+          payload: {
+            postRef: post.id,
+            discussionRef: post.discussionId,
+            rule: input.citedRuleId,
+            caseRef: modCase.id,
+            contentHash: contentHash(post.body),
+          },
+        });
+      }
       await applyStrikeLadder(tx, {
-        profileId: post.authorProfileId,
-        pillarId: post.discussion.pillarId,
+        profileId: accused.profileId,
+        pillarId: accused.pillarId,
         tier: modCase.tier,
         caseId: modCase.id,
       });
-    } else {
+    } else if (post) {
       await tx.post.update({
         where: { id: post.id },
         data: { status: "visible" },
@@ -574,6 +632,15 @@ export async function resolveCase(
           .map((r) => ({ nullifier: r.moderatorNullifier, verdict: r.verdict })),
       },
     });
+
+    // Where ruling notifications point: the post, or the DM thread
+    // (both parties already know the thread exists — nothing leaks).
+    const excerpt = modCase.dmExcerptId
+      ? await tx.dmExcerpt.findUniqueOrThrow({ where: { id: modCase.dmExcerptId } })
+      : null;
+    const notifyRef = post
+      ? { refType: "post", refId: post.id }
+      : { refType: "dm-thread", refId: excerpt!.threadId };
 
     // Deposits: refunded on upheld AND good-faith declined; forfeited
     // only on an explicit bad-faith ruling (DISCUSSIONS §7).
@@ -616,23 +683,23 @@ export async function resolveCase(
             : input.badFaith
               ? "Declined and ruled bad-faith — your deposit is forfeited to the treasury."
               : `Declined in good faith. ${flag.depositHeld > 0 ? "Your deposit is refunded." : ""}`,
-        refType: "post",
-        refId: post.id,
+        ...notifyRef,
       });
     }
 
     // The accused learns the ruling and the citation — never who.
     await notify(tx, {
-      profileId: post.authorProfileId,
+      profileId: accused.profileId,
       tier: "time-sensitive",
       category: "ruling",
       title: input.outcome === "upheld" ? "A ruling on your content" : "Your content was reviewed and stands",
       body:
         input.outcome === "upheld"
-          ? `Removed under ${input.citedRuleId}. You may appeal once; a restorative option may be available.`
-          : "A flag on your content was declined — it is visible again.",
-      refType: "post",
-      refId: post.id,
+          ? `${post ? "Removed" : "Upheld"} under ${input.citedRuleId}. You may appeal once${modCase.tier <= 2 ? "; a restorative option may be available" : ""}.`
+          : post
+            ? "A flag on your content was declined — it is visible again."
+            : "A report on a message of yours was declined.",
+      ...notifyRef,
     });
 
     // Rewards: per case RESOLVED, never per uphold — every effective
@@ -773,10 +840,13 @@ async function applyStrikeLadder(
       where: { id: input.profileId },
       data: { readOnlyUntil: new Date(Date.now() + readOnlyDays * 86_400_000) },
     });
-    // Tribunal review of the third strike (§7 ladder).
+    // Tribunal review of the third strike (§7 ladder) — the docket
+    // entry carries the originating case's evidence, whichever kind.
+    const origin = await tx.modCase.findUniqueOrThrow({ where: { id: input.caseId } });
     await tx.modCase.create({
       data: {
-        postId: (await tx.modCase.findUniqueOrThrow({ where: { id: input.caseId } })).postId,
+        postId: origin.postId,
+        dmExcerptId: origin.dmExcerptId,
         ruleId: "R3.6", // placeholder docket entry: severe-lane review
         tier: 3,
         tribunal: true,
@@ -807,8 +877,8 @@ export async function appealCase(
   if (original.appealedBy) {
     return { ok: false, reason: "One appeal per ruling — this case has had its appeal." };
   }
-  const post = await db.post.findUniqueOrThrow({ where: { id: original.postId } });
-  if (post.authorProfileId !== input.profileId) {
+  const accused = await accusedOf(db, original);
+  if (accused.profileId !== input.profileId) {
     return { ok: false, reason: "Only the accused may appeal." };
   }
 
@@ -827,6 +897,7 @@ export async function appealCase(
       return tx.modCase.create({
         data: {
           postId: original.postId,
+          dmExcerptId: original.dmExcerptId,
           ruleId: original.ruleId,
           tier: original.tier,
           heavy: original.heavy,
@@ -857,7 +928,9 @@ export async function settleAppeal(db: PrismaClient, appealCaseId: string): Prom
   if (appeal.status !== "resolved" || !appeal.appealOf) return;
   const original = appeal.appealOf;
   const changed = appeal.outcome !== original.outcome;
-  const post = await db.post.findUniqueOrThrow({ where: { id: appeal.postId } });
+  const post = appeal.postId
+    ? await db.post.findUniqueOrThrow({ where: { id: appeal.postId } })
+    : null;
 
   await db.$transaction(async (tx) => {
     const depositEntry = await tx.economyEntry.findFirst({
@@ -885,8 +958,12 @@ export async function settleAppeal(db: PrismaClient, appealCaseId: string): Prom
       });
     }
     // Original upheld, appeal says otherwise → restore and unwind.
+    // (DM cases have no content to restore; the personal consequences
+    // unwind identically.)
     if (changed && original.outcome === "upheld") {
-      await tx.post.update({ where: { id: post.id }, data: { status: "visible" } });
+      if (post) {
+        await tx.post.update({ where: { id: post.id }, data: { status: "visible" } });
+      }
       await tx.strike.deleteMany({ where: { caseId: original.id } });
       await tx.lightScoreAdjustment.deleteMany({ where: { caseId: original.id } });
       await appendEvent(tx, {
@@ -1058,7 +1135,6 @@ export async function acceptRestorative(
   const correction = input.correction.trim();
   if (!correction) return { ok: false, reason: "The correction needs words." };
 
-  const post = await db.post.findUniqueOrThrow({ where: { id: modCase.postId } });
   const profile = await db.profile.findUniqueOrThrow({ where: { id: input.profileId } });
 
   const gate = await clearGate(db, {
@@ -1070,38 +1146,63 @@ export async function acceptRestorative(
   if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
 
   await db.$transaction(async (tx) => {
-    const graceMinutes = await getRail(tx, "discussion.graceWindowMinutes");
-    const discussion = await tx.discussion.findUniqueOrThrow({
-      where: { id: post.discussionId },
-    });
-    // The correction is appended where the harm happened — remediation,
-    // not participation: no fee. In a permanent space it is hash-
-    // committed like every other permanent record.
     const body = `[Restorative correction] ${correction}`;
-    const created = await tx.post.create({
-      data: {
-        discussionId: post.discussionId,
-        parentId: post.id,
-        authorProfileId: profile.id,
-        authorHandle: profile.handle,
-        authorDisplayName: profile.displayName,
-        body,
-        editableUntil: new Date(Date.now() + graceMinutes * 60_000),
-      },
-    });
-    if (discussion.permanence.startsWith("permanent")) {
-      await appendEvent(tx, {
-        actorType: "soul",
-        actorId: profile.handle,
-        eventType: "post.recorded",
-        payload: {
-          discussionRef: post.discussionId,
-          postRef: created.id,
-          contentHash: contentHash(body),
-          handle: profile.handle,
-          displayName: profile.displayName,
-          restorative: true,
+    if (modCase.postId) {
+      const post = await tx.post.findUniqueOrThrow({ where: { id: modCase.postId } });
+      const graceMinutes = await getRail(tx, "discussion.graceWindowMinutes");
+      const discussion = await tx.discussion.findUniqueOrThrow({
+        where: { id: post.discussionId },
+      });
+      // The correction is appended where the harm happened — remediation,
+      // not participation: no fee. In a permanent space it is hash-
+      // committed like every other permanent record.
+      const created = await tx.post.create({
+        data: {
+          discussionId: post.discussionId,
+          parentId: post.id,
+          authorProfileId: profile.id,
+          authorHandle: profile.handle,
+          authorDisplayName: profile.displayName,
+          body,
+          editableUntil: new Date(Date.now() + graceMinutes * 60_000),
         },
+      });
+      if (discussion.permanence.startsWith("permanent")) {
+        await appendEvent(tx, {
+          actorType: "soul",
+          actorId: profile.handle,
+          eventType: "post.recorded",
+          payload: {
+            discussionRef: post.discussionId,
+            postRef: created.id,
+            contentHash: contentHash(body),
+            handle: profile.handle,
+            displayName: profile.displayName,
+            restorative: true,
+          },
+        });
+      }
+    } else if (modCase.dmExcerptId) {
+      // DM case: the harm happened in the thread — the correction is
+      // appended there, fee-exempt, encrypted like any message.
+      const excerpt = await tx.dmExcerpt.findUniqueOrThrow({
+        where: { id: modCase.dmExcerptId },
+      });
+      const thread = await tx.dmThread.findUniqueOrThrow({
+        where: { id: excerpt.threadId },
+      });
+      const { threadKeyFor, sealMessage } = await import("./dmCrypto");
+      const threadKey = await threadKeyFor(tx, thread);
+      await tx.dmMessage.create({
+        data: {
+          threadId: thread.id,
+          senderProfileId: profile.id,
+          ciphertext: sealMessage(threadKey, thread.id, profile.id, body),
+        },
+      });
+      await tx.dmThread.update({
+        where: { id: thread.id },
+        data: { lastMessageAt: new Date() },
       });
     }
     await tx.strike.update({
@@ -1118,6 +1219,10 @@ export async function acceptRestorative(
         data: { amount: adjustment.amount / 2 },
       });
     }
+    // Public-record only for public content: a DM case's ruling is
+    // known to its parties alone, so no ledger event may name the
+    // accused (the correction lives in the private thread).
+    if (!modCase.postId) return;
     await appendEvent(tx, {
       actorType: "soul",
       actorId: profile.handle,

@@ -24,6 +24,21 @@ import {
   logAction,
   attestAction,
 } from "@/lib/circles";
+import {
+  sendFellowSoulRequest,
+  respondToRequest,
+  releaseBond,
+  blockSoul,
+  unblockSoul,
+} from "@/lib/fellowSouls";
+import {
+  openThread,
+  sendMessage,
+  declineThread,
+  setThreadMute,
+  deleteThreadForMe,
+  reportMessage,
+} from "@/lib/dm";
 import { tip, grant, grantAlreadyGiven } from "@/lib/economy";
 import { getRail } from "@/lib/rails";
 import { fileFlag } from "@/lib/flags";
@@ -376,6 +391,134 @@ export async function submitStewardshipPoll(formData: FormData) {
   });
   if (!result.ok) backTo(back, result.reason);
   redirect(`/polls/${result.pollId}`);
+}
+
+// ------------------------------------------------- fellow souls & messages
+
+export async function submitFellowRequest(formData: FormData) {
+  const face = await requireFace();
+  const result = await sendFellowSoulRequest(db, {
+    fromProfileId: face.id,
+    toHandle: String(formData.get("handle") ?? ""),
+    note: String(formData.get("note") ?? ""),
+  });
+  backTo("/souls", result.ok ? "Request sent — it waits quietly; no clock ticks at them." : result.reason);
+}
+
+export async function submitRequestResponse(formData: FormData) {
+  const face = await requireFace();
+  const accept = formData.get("accept") === "1";
+  const result = await respondToRequest(db, {
+    requestId: String(formData.get("requestId") ?? ""),
+    profileId: face.id,
+    accept,
+  });
+  backTo(
+    "/souls",
+    result.ok
+      ? accept
+        ? "Fellow souls — DMs now land direct."
+        : "Declined, quietly. They are not told."
+      : result.reason
+  );
+}
+
+export async function submitReleaseBond(formData: FormData) {
+  const face = await requireFace();
+  const result = await releaseBond(db, {
+    profileId: face.id,
+    otherProfileId: String(formData.get("otherProfileId") ?? ""),
+  });
+  backTo("/souls", result.ok ? "Bond released, quietly." : result.reason);
+}
+
+export async function submitBlock(formData: FormData) {
+  const face = await requireFace();
+  const result = await blockSoul(db, {
+    blockerProfileId: face.id,
+    blockedHandle: String(formData.get("handle") ?? ""),
+  });
+  backTo("/souls", result.ok ? "Blocked, quietly — they are never told." : result.reason);
+}
+
+export async function submitUnblock(formData: FormData) {
+  const face = await requireFace();
+  await unblockSoul(db, {
+    blockerProfileId: face.id,
+    blockedProfileId: String(formData.get("blockedProfileId") ?? ""),
+  });
+  backTo("/souls");
+}
+
+export async function submitOpenThread(formData: FormData) {
+  const face = await requireFace();
+  const result = await openThread(db, {
+    fromProfileId: face.id,
+    toHandle: String(formData.get("handle") ?? ""),
+    body: String(formData.get("body") ?? ""),
+  });
+  if (!result.ok) backTo("/souls", result.reason);
+  redirect(`/dm/${result.threadId}`);
+}
+
+export async function submitDmMessage(formData: FormData) {
+  const face = await requireFace();
+  const threadId = String(formData.get("threadId") ?? "");
+  const result = await sendMessage(db, {
+    threadId,
+    senderProfileId: face.id,
+    body: String(formData.get("body") ?? ""),
+  });
+  revalidatePath(`/dm/${threadId}`);
+  backTo(`/dm/${threadId}`, result.ok ? undefined : result.reason);
+}
+
+export async function submitDeclineThread(formData: FormData) {
+  const face = await requireFace();
+  const result = await declineThread(db, {
+    threadId: String(formData.get("threadId") ?? ""),
+    profileId: face.id,
+  });
+  backTo("/souls", result.ok ? "Declined — the thread is closed, quietly." : result.reason);
+}
+
+export async function submitThreadMute(formData: FormData) {
+  const face = await requireFace();
+  const threadId = String(formData.get("threadId") ?? "");
+  await setThreadMute(db, {
+    threadId,
+    profileId: face.id,
+    muted: formData.get("muted") === "1",
+  });
+  revalidatePath(`/dm/${threadId}`);
+  backTo(`/dm/${threadId}`);
+}
+
+export async function submitThreadDelete(formData: FormData) {
+  const face = await requireFace();
+  const result = await deleteThreadForMe(db, {
+    threadId: String(formData.get("threadId") ?? ""),
+    profileId: face.id,
+  });
+  backTo("/souls", result.ok ? "Deleted for you — their copy is theirs." : result.reason);
+}
+
+export async function submitDmReport(formData: FormData) {
+  const face = await requireFace();
+  const threadId = String(formData.get("threadId") ?? "");
+  const result = await reportMessage(db, {
+    messageId: String(formData.get("messageId") ?? ""),
+    profileId: face.id,
+    ruleId: String(formData.get("ruleId") ?? ""),
+    note: String(formData.get("note") ?? ""),
+  });
+  revalidatePath(`/dm/${threadId}`);
+  backTo(
+    `/dm/${threadId}`,
+    result.ok
+      ? "Reported — the excerpt goes to a random adjudicator; deposit rules apply as everywhere."
+      : result.reason
+  );
 }
 
 // ------------------------------------------------------------ moderation

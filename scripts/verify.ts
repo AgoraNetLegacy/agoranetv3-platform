@@ -54,6 +54,19 @@
 //     never the question text; every circle-poll voter was a member;
 //     Circle Light Score credits reference real attested entries and
 //     respect the per-circle daily cap.
+// Phase 6.5:
+// 18. Social privacy — the graph never leaks: NOTHING social on the
+//     public ledger (no event types, no bond/request/thread/message/
+//     excerpt/block ids anywhere in it); every social gate clearance
+//     ran in PRIVATE recording; social fee entries are blinded (no
+//     counterparty reference); no notification carries message content.
+// 19. Social integrity: bonds are normalized non-self pairs, each
+//     backed by an accepted request; threads join exactly their two
+//     members and every message's ciphertext AUTHENTICATES and
+//     decrypts under the re-derived thread key (a silently altered or
+//     plaintext-smuggled message fails loudly); stale pending requests
+//     are swept per the expiry rail; every flag and case carries
+//     exactly one evidence pointer (post XOR DM excerpt).
 
 import { createHash } from "crypto";
 import { PrismaClient } from "@prisma/client";
@@ -1065,6 +1078,187 @@ async function main() {
     console.log(`✓ Members'-room privacy & circle-poll discipline (${roomPosts.length} room post(s) unleaked, ${circlePolls.length} circle poll(s) hash-committed, ${circleCredits.length} LS credit(s) capped)`);
   } else {
     failures += roomProblems;
+  }
+
+  // --- 18. Social privacy: the graph never leaks.
+  let socialProblems = 0;
+  const bonds = await db.fellowSoulBond.findMany();
+  const requests = await db.fellowSoulRequest.findMany();
+  const threads = await db.dmThread.findMany();
+  const dmMessages = await db.dmMessage.findMany();
+  const excerpts = await db.dmExcerpt.findMany();
+  const blocks = await db.block.findMany();
+
+  // No social event types, ever.
+  const socialEventTypes = events.filter((ev) =>
+    /^(fellow|dm|request|bond|block)/i.test(ev.eventType)
+  );
+  if (socialEventTypes.length > 0) {
+    socialProblems++;
+    console.error(`✗ GRAPH LEAK: ${socialEventTypes.length} social event(s) on the public ledger`);
+  }
+  // No social row id anywhere in the ledger.
+  const socialIds = new Set<string>([
+    ...bonds.map((b) => b.id),
+    ...requests.map((r) => r.id),
+    ...threads.map((t) => t.id),
+    ...dmMessages.map((m) => m.id),
+    ...excerpts.map((e) => e.id),
+    ...blocks.map((b) => b.id),
+  ]);
+  for (const ev of events) {
+    const hit = findForbiddenId(ev, socialIds);
+    if (hit) {
+      socialProblems++;
+      console.error(`✗ GRAPH LEAK: social id on the ledger at seq ${ev.seq}`);
+      break;
+    }
+  }
+  // Every social clearance ran private (enforcement must never become
+  // an observation channel — and the graph is nobody's civic record).
+  const socialScopes = await db.gateRequest.findMany({
+    where: {
+      status: "CLEARED",
+      OR: [
+        { scope: { startsWith: "fellow-request:" } },
+        { scope: { startsWith: "dm-thread:" } },
+        { scope: { startsWith: "dm-message:" } },
+        { scope: { startsWith: "flag:dm:" } },
+      ],
+    },
+    select: { id: true, ledgerRecording: true },
+  });
+  for (const req of socialScopes) {
+    if (req.ledgerRecording !== "private") {
+      socialProblems++;
+      console.error(`✗ GRAPH LEAK: social clearance ${req.id} recorded publicly`);
+    }
+  }
+  // Blinded fees: who-asked-whom and who-messages-whom stay out of the
+  // economy table.
+  const socialFees = economyEntries.filter((e) =>
+    ["fee.request", "fee.dm-thread", "fee.dm-message"].includes(e.kind)
+  );
+  for (const fee of socialFees) {
+    if (fee.refId || fee.toProfileId) {
+      socialProblems++;
+      console.error(`✗ FEE LEAK: social fee entry ${fee.id} names a counterparty or reference`);
+    }
+  }
+  if (socialProblems === 0) {
+    console.log(
+      `✓ Social privacy (${bonds.length} bond(s), ${threads.length} thread(s), ${dmMessages.length} message(s); nothing on the ledger, clearances private, fees blind)`
+    );
+  } else {
+    failures += socialProblems;
+  }
+
+  // --- 19. Social integrity + encryption.
+  let dmProblems = 0;
+  const requestPairs = new Set(
+    requests
+      .filter((r) => r.status === "accepted")
+      .map((r) => [r.fromProfileId, r.toProfileId].sort().join(":"))
+  );
+  const seenBondPairs = new Set<string>();
+  for (const bond of bonds) {
+    if (bond.aProfileId >= bond.bProfileId) {
+      dmProblems++;
+      console.error(`✗ BOND SHAPE: ${bond.id} is not a normalized pair`);
+    }
+    const key = `${bond.aProfileId}:${bond.bProfileId}`;
+    if (seenBondPairs.has(key)) {
+      dmProblems++;
+      console.error(`✗ DOUBLE BOND: ${key}`);
+    }
+    seenBondPairs.add(key);
+    if (!requestPairs.has(key)) {
+      dmProblems++;
+      console.error(`✗ CONSENTLESS BOND: ${bond.id} has no accepted request behind it`);
+    }
+  }
+
+  const { threadKeyFor, openMessage } = await import("../lib/dmCrypto");
+  const threadById = new Map(threads.map((t) => [t.id, t]));
+  const decryptedBodies: string[] = [];
+  for (const t of threads) {
+    const expectedKey = [t.initiatorProfileId, t.otherProfileId].sort().join(":");
+    if (t.pairKey !== expectedKey || t.initiatorProfileId === t.otherProfileId) {
+      dmProblems++;
+      console.error(`✗ THREAD SHAPE: ${t.id} pairKey/self mismatch`);
+    }
+  }
+  for (const message of dmMessages) {
+    const thread = threadById.get(message.threadId);
+    if (!thread) {
+      dmProblems++;
+      console.error(`✗ ORPHAN MESSAGE: ${message.id}`);
+      continue;
+    }
+    if (
+      message.senderProfileId !== thread.initiatorProfileId &&
+      message.senderProfileId !== thread.otherProfileId
+    ) {
+      dmProblems++;
+      console.error(`✗ INTRUDER MESSAGE: ${message.id} sender is not a thread member`);
+      continue;
+    }
+    try {
+      const key = await threadKeyFor(db, thread);
+      decryptedBodies.push(
+        openMessage(key, thread.id, message.senderProfileId, message.ciphertext)
+      );
+    } catch {
+      dmProblems++;
+      console.error(`✗ CIPHERTEXT BROKEN: message ${message.id} fails authentication — altered, or plaintext smuggled into the column`);
+    }
+  }
+  // Notification bodies never carry message content (§6's enclosed-
+  // content rule applied to DMs).
+  const allNotifications = await db.notification.findMany({ select: { id: true, body: true } });
+  for (const n of allNotifications) {
+    if (decryptedBodies.some((b) => b.length >= 8 && n.body.includes(b))) {
+      dmProblems++;
+      console.error(`✗ CONTENT LEAK: notification ${n.id} carries DM plaintext`);
+    }
+  }
+  // Requests hygiene: sweep, then assert (the sessions pattern).
+  const expiryRail = await db.rail.findUnique({ where: { key: "social.requestExpiryDays" } });
+  if (expiryRail) {
+    const cutoff = new Date(Date.now() - expiryRail.value * 86_400_000);
+    await db.fellowSoulRequest.updateMany({
+      where: { status: "pending", createdAt: { lte: cutoff } },
+      data: { status: "expired", resolvedAt: new Date() },
+    });
+    const stale = await db.fellowSoulRequest.count({
+      where: { status: "pending", createdAt: { lte: cutoff } },
+    });
+    if (stale > 0) {
+      dmProblems++;
+      console.error(`✗ REQUEST RETENTION: ${stale} pending request(s) past the expiry rail`);
+    }
+  }
+  // Exactly one evidence pointer per flag and per case.
+  const allFlags = await db.flag.findMany({ select: { id: true, postId: true, dmExcerptId: true } });
+  for (const f of allFlags) {
+    if (!!f.postId === !!f.dmExcerptId) {
+      dmProblems++;
+      console.error(`✗ EVIDENCE SHAPE: flag ${f.id} has ${f.postId ? "two" : "no"} evidence pointers`);
+    }
+  }
+  const allCases = await db.modCase.findMany({ select: { id: true, postId: true, dmExcerptId: true } });
+  for (const c of allCases) {
+    if (!!c.postId === !!c.dmExcerptId) {
+      dmProblems++;
+      console.error(`✗ EVIDENCE SHAPE: case ${c.id} has ${c.postId ? "two" : "no"} evidence pointers`);
+    }
+  }
+  if (dmProblems === 0) {
+    console.log(
+      `✓ Social integrity & encryption (${bonds.length} bond(s) consented, ${dmMessages.length} message(s) authenticate and decrypt, requests swept, evidence pointers exact)`
+    );
+  } else {
+    failures += dmProblems;
   }
 
   if (failures > 0) {

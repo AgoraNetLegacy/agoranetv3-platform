@@ -532,8 +532,13 @@ model PostRevision {
 
 model Flag {
   id                String   @id @default(cuid())
-  postId            String
-  post              Post     @relation(fields: [postId], references: [id])
+  // Exactly one evidence pointer: a public post, or a DM excerpt the
+  // recipient revealed (Phase 6.5 — FELLOW_SOULS §5.1: reports feed the
+  // standard flag path unchanged).
+  postId            String?
+  post              Post?    @relation(fields: [postId], references: [id])
+  dmExcerptId       String?
+  dmExcerpt         DmExcerpt? @relation(fields: [dmExcerptId], references: [id])
   ruleId            String // which rule is alleged (the case category)
   rule              Rule     @relation(fields: [ruleId], references: [id])
   note              String?
@@ -557,7 +562,13 @@ model Flag {
 
 model ModCase {
   id          String   @id @default(cuid())
-  postId      String
+  // Evidence: a public post, or a revealed DM excerpt (Phase 6.5) —
+  // exactly one. DM cases carry no content actions (nothing public to
+  // blur or tombstone); consequences are personal, and the triangle of
+  // blindness holds identically.
+  postId      String?
+  dmExcerptId String?
+  dmExcerpt   DmExcerpt? @relation(fields: [dmExcerptId], references: [id])
   ruleId      String // the alleged rule (the case category, §3.1)
   tier        Int // 1 routine | 2 serious | 3 severe (from the rule)
   // Heavy handling: removal from a permanent space needs 3 independent
@@ -668,7 +679,7 @@ model Notification {
   id             String    @id @default(cuid())
   profileId      String // per-profile, never per-human
   tier           String // "time-sensitive" | "quiet"
-  category       String // "badge-offer" | "ruling" | "poll-closing" | "tip" | "poll-results" | "circle-activity"
+  category       String // "badge-offer" | "ruling" | "poll-closing" | "tip" | "poll-results" | "circle-activity" | "dm" | "request"
   title          String
   body           String
   refType        String?
@@ -827,4 +838,116 @@ model ActionEntryPledge {
   kind    String // snapshot
   body    String // snapshot
   @@id([entryId, offerId])
+}
+
+// ------------------------------------------------------------------
+// Fellow Souls & Direct Messages (Phase 6.5 —
+// Fellow Souls and DMs/FELLOW_SOULS_AND_DM_SPEC.md).
+//
+// The governing constraint: two personas, two lives. A friend graph is
+// one of the most re-identifiable structures in existence, so the
+// answer is structural (§4): graphs are PRIVATE (your list is visible
+// to you alone, no counts, no third-party relationships), there is no
+// suggestion engine ever, and everything is per-profile — a human's
+// two faces have two disjoint social worlds. NOTHING in this section
+// ever reaches the public ledger: social actions clear the gate in
+// PRIVATE recording mode, and db:verify hunts for leaks.
+// ------------------------------------------------------------------
+
+// Per-profile DM keypair (X25519). Phase A: the private key is held
+// encrypted under DM_MASTER_SECRET — operator-escrowed, the gate's
+// exact trust posture, disclosed verbatim in the DM UI. Phase 9 moves
+// private keys into the soul's wallet (true E2E; platform keeps only
+// the public half).
+model DmKeypair {
+  profileId     String   @id
+  publicKey     String // base64 raw X25519 public key
+  privateKeyEnc String // iv:ciphertext:tag, AES-256-GCM under the master secret
+  createdAt     DateTime @default(now())
+}
+
+// A fellow-soul request (§2): gate-cleared, initiator pays the rail.
+// Accept/ignore/decline are free. Ignored requests sit quietly until
+// the expiry rail; declined/ignored senders face the cooldown rail.
+model FellowSoulRequest {
+  id            String    @id @default(cuid())
+  fromProfileId String
+  toProfileId   String
+  note          String?
+  status        String    @default("pending") // "pending" | "accepted" | "declined" | "expired"
+  createdAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+}
+
+// The bond (§1): mutual, profile-to-profile, any face combination.
+// Stored as a normalized pair (aProfileId < bProfileId). Never
+// rendered to anyone but the two members themselves (§4.4), never
+// counted publicly, never on the ledger.
+model FellowSoulBond {
+  id         String   @id @default(cuid())
+  aProfileId String
+  bProfileId String
+  createdAt  DateTime @default(now())
+
+  @@unique([aProfileId, bProfileId])
+}
+
+// A DM thread (§5): strangers arrive as requests, fellow souls land
+// direct. One thread per profile pair (pairKey = sorted ids). Private,
+// deletable by each side for themselves; metadata is per-profile
+// operator space, never aggregated per-human, never public.
+model DmThread {
+  id                 String      @id @default(cuid())
+  pairKey            String      @unique // "minProfileId:maxProfileId"
+  initiatorProfileId String
+  otherProfileId     String
+  status             String      @default("request") // "request" | "open" | "declined"
+  initiatorMuted     Boolean     @default(false)
+  otherMuted         Boolean     @default(false)
+  // Delete-for-me: messages at or before this moment are hidden from
+  // that side only (Decision 1 private-content classification).
+  initiatorDeletedAt DateTime?
+  otherDeletedAt     DateTime?
+  createdAt          DateTime    @default(now())
+  lastMessageAt      DateTime    @default(now())
+  messages           DmMessage[]
+  excerpts           DmExcerpt[]
+}
+
+model DmMessage {
+  id              String   @id @default(cuid())
+  threadId        String
+  thread          DmThread @relation(fields: [threadId], references: [id])
+  senderProfileId String
+  ciphertext      String // iv:ciphertext:tag, AES-256-GCM under the thread key
+  createdAt       DateTime @default(now())
+}
+
+// Recipient-side reporting (§5.1): the recipient reveals a specific
+// excerpt to moderation as flag evidence. The plaintext is frozen here
+// at reveal time and feeds the standard case path; reporter and sender
+// ids are Phase A operator space — the case file shows the words and
+// the accused's standing, never a handle (triangle of blindness).
+model DmExcerpt {
+  id                String    @id @default(cuid())
+  threadId          String
+  thread            DmThread  @relation(fields: [threadId], references: [id])
+  reporterProfileId String
+  senderProfileId   String
+  body              String
+  createdAt         DateTime  @default(now())
+  flags             Flag[]
+  cases             ModCase[]
+}
+
+// Blocking (§5.2): one-way, per-persona, quiet — the blocked soul is
+// never notified and cannot DM or request. Private like everything
+// else here.
+model Block {
+  id               String   @id @default(cuid())
+  blockerProfileId String
+  blockedProfileId String
+  createdAt        DateTime @default(now())
+
+  @@unique([blockerProfileId, blockedProfileId])
 }

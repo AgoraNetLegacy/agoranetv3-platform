@@ -11,6 +11,7 @@ jobs:
     env:
       DATABASE_URL: "file:./ci.db"
       GATE_OPERATOR_SECRET: "ci-only-secret-not-used-anywhere-real"
+      DM_MASTER_SECRET: "ci-only-dm-secret-not-used-anywhere-real"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
