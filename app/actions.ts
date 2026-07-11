@@ -18,6 +18,16 @@ import { tip, grant, grantAlreadyGiven } from "@/lib/economy";
 import { getRail } from "@/lib/rails";
 import { fileFlag } from "@/lib/flags";
 import {
+  equipBadge,
+  passBadge,
+  submitRuling,
+  reviewSupervisedRuling,
+  submitTribunalRuling,
+  appealCase,
+  acceptRestorative,
+} from "@/lib/moderation";
+import { markRead } from "@/lib/notifications";
+import {
   verifyHumanity,
   registerTrueSelf,
   registerAlias,
@@ -184,6 +194,101 @@ export async function startPollDiscussion(formData: FormData) {
   const result = await createPollDiscussion(db, { pollId, profileId: face.id });
   if (!result.ok) backTo(`/polls/${pollId}`, result.reason);
   redirect(`/d/${result.postId}`);
+}
+
+// ------------------------------------------------------------ moderation
+
+export async function equipOffer(formData: FormData) {
+  const face = await requireFace();
+  const result = await equipBadge(db, {
+    offerId: String(formData.get("offerId") ?? ""),
+    profileId: face.id,
+  });
+  backTo("/moderation", result.ok ? "Badge equipped — 48 hours on the bench." : result.reason);
+}
+
+export async function passOffer(formData: FormData) {
+  const face = await requireFace();
+  await passBadge(db, {
+    offerId: String(formData.get("offerId") ?? ""),
+    profileId: face.id,
+  });
+  backTo("/moderation", "Passed, freely — the next draw is just as random.");
+}
+
+export async function submitCaseRuling(formData: FormData) {
+  const face = await requireFace();
+  const result = await submitRuling(db, {
+    caseId: String(formData.get("caseId") ?? ""),
+    profileId: face.id,
+    verdict: String(formData.get("verdict") ?? "") as
+      | "uphold"
+      | "decline"
+      | "no-rule-fits"
+      | "escalate",
+    citedRuleId: String(formData.get("citedRuleId") ?? "") || undefined,
+    badFaithFlag: formData.get("badFaithFlag") === "on",
+  });
+  backTo("/moderation", result.ok ? "Ruled. Consequences, if any, apply themselves." : result.reason);
+}
+
+export async function submitSupervision(formData: FormData) {
+  const face = await requireFace();
+  const result = await reviewSupervisedRuling(db, {
+    rulingId: String(formData.get("rulingId") ?? ""),
+    profileId: face.id,
+    agree: String(formData.get("agree")) === "1",
+  });
+  backTo("/moderation", result.ok ? "Supervision recorded." : result.reason);
+}
+
+export async function submitTribunalCaseRuling(formData: FormData) {
+  const face = await requireFace();
+  const result = await submitTribunalRuling(db, {
+    caseId: String(formData.get("caseId") ?? ""),
+    profileId: face.id,
+    verdict: String(formData.get("verdict") ?? "") as "uphold" | "decline",
+    citedRuleId: String(formData.get("citedRuleId") ?? "") || undefined,
+  });
+  backTo("/moderation", result.ok ? "Tribunal ruling recorded." : result.reason);
+}
+
+export async function submitAppeal(formData: FormData) {
+  const face = await requireFace();
+  const discussionId = String(formData.get("discussionId") ?? "");
+  const result = await appealCase(db, {
+    caseId: String(formData.get("caseId") ?? ""),
+    profileId: face.id,
+  });
+  backTo(
+    `/d/${discussionId}`,
+    result.ok
+      ? "Appeal filed — fresh eyes (or the Tribunal) will review. Deposit returns if the ruling changes."
+      : result.reason
+  );
+}
+
+export async function submitRestorative(formData: FormData) {
+  const face = await requireFace();
+  const discussionId = String(formData.get("discussionId") ?? "");
+  const result = await acceptRestorative(db, {
+    caseId: String(formData.get("caseId") ?? ""),
+    profileId: face.id,
+    correction: String(formData.get("correction") ?? ""),
+  });
+  backTo(
+    `/d/${discussionId}`,
+    result.ok ? "Correction appended where the harm happened — strike reduced." : result.reason
+  );
+}
+
+export async function markNotificationRead(formData: FormData) {
+  const face = await requireFace();
+  await markRead(db, {
+    profileId: face.id,
+    notificationId: String(formData.get("notificationId") ?? ""),
+  });
+  redirect("/inbox");
 }
 
 // ------------------------------------------------------------- onboarding

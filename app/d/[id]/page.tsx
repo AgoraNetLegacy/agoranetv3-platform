@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { getRail } from "@/lib/rails";
 import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
-import { submitPost, submitEdit, submitFlag, submitTip, submitPermanenceUpgrade } from "@/app/actions";
+import { submitPost, submitEdit, submitFlag, submitTip, submitPermanenceUpgrade, submitAppeal, submitRestorative } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -118,6 +118,46 @@ function FlagForm({
   );
 }
 
+async function RemovedControls({
+  postId,
+  discussionId,
+}: {
+  postId: string;
+  discussionId: string;
+}) {
+  const resolved = await db.modCase.findFirst({
+    where: { postId, status: { in: ["resolved", "appealed"] }, outcome: "upheld" },
+    include: { appealedBy: true },
+  });
+  if (!resolved) return null;
+  return (
+    <div className="byline">
+      Ruled under the cited rule (see the ledger).{" "}
+      {!resolved.appealedBy && resolved.status === "resolved" && (
+        <details>
+          <summary>Appeal (once; 25 PC deposit, returned if the ruling changes)</summary>
+          <form action={submitAppeal} className="inline">
+            <input type="hidden" name="caseId" value={resolved.id} />
+            <input type="hidden" name="discussionId" value={discussionId} />
+            <button type="submit">File appeal</button>
+          </form>
+        </details>
+      )}
+      {resolved.tier <= 2 && (
+        <details>
+          <summary>Restorative option — acknowledge & append a correction for a reduced strike</summary>
+          <form action={submitRestorative} className="composer">
+            <input type="hidden" name="caseId" value={resolved.id} />
+            <input type="hidden" name="discussionId" value={discussionId} />
+            <textarea name="correction" required placeholder="The correction, appended where the harm happened. Offered, never forced." />
+            <button type="submit">Acknowledge & append</button>
+          </form>
+        </details>
+      )}
+    </div>
+  );
+}
+
 function PostNode({
   post,
   childrenByParent,
@@ -160,7 +200,27 @@ function PostNode({
           <span className="badge permanent">Permanent — creator-designated</span>
         )}
       </div>
-      <div className="body">{post.body}</div>
+      {post.status === "removed" ? (
+        <div className="notice">
+          🪦 <strong>Removed by moderation</strong> — rule cited on the
+          public record; the tombstone preserves the fact of removal,
+          forever.
+        </div>
+      ) : post.status === "hidden" ? (
+        <div className="notice">
+          Hidden pending expedited review (severe category) — not
+          click-viewable by design.
+        </div>
+      ) : post.status === "blurred" ? (
+        <details>
+          <summary className="lore">
+            ⚠ Under review — blurred, not erased. Click to view.
+          </summary>
+          <div className="body">{post.body}</div>
+        </details>
+      ) : (
+        <div className="body">{post.body}</div>
+      )}
       {post.sources.length > 0 && (
         <div className="byline">
           {post.sources.map((s) => (
@@ -195,7 +255,10 @@ function PostNode({
         </details>
       )}
 
-      {viewerProfileId && (
+      {own && post.status === "removed" && (
+        <RemovedControls postId={post.id} discussionId={discussionId} />
+      )}
+      {viewerProfileId && post.status !== "removed" && post.status !== "hidden" && (
         <>
           <details>
             <summary>Reply</summary>

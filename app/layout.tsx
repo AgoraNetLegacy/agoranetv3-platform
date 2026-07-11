@@ -30,9 +30,10 @@ async function FaceBar() {
   }
   const others = faces.filter((f) => f.id !== face.id);
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
-  const [pc, g] = await Promise.all([
+  const [pc, g, unread] = await Promise.all([
     balanceOf(db, face.id, "PC"),
     balanceOf(db, face.id, "G"),
+    db.notification.count({ where: { profileId: face.id, readAt: null } }),
   ]);
   return (
     <div className="face-bar">
@@ -43,6 +44,8 @@ async function FaceBar() {
       <span className="lore" title="This face's own balances — your two faces' funds never touch.">
         {pc.toFixed(2)} PC · {g.toFixed(2)} G
       </span>
+      <Link href="/inbox">inbox{unread > 0 ? ` (${unread})` : ""}</Link>
+      <Link href="/moderation">workbench</Link>
       <Link href="/profile">profile</Link>
       {others.length > 0 && (
         <details className="switch-control">
