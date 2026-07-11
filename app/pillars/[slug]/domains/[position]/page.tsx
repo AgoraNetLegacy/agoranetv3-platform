@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
 import { currentPicture } from "@/lib/domains";
-import { submitRepair as submitRepairAction } from "@/app/actions";
+import { submitRepair as submitRepairAction, followInFeed } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -250,6 +250,22 @@ export default async function DomainPage({
             </span>
           )}
         </li>
+        {viewer && (
+          <li>
+            <form action={followInFeed} className="inline">
+              <input type="hidden" name="kind" value="domain" />
+              <input type="hidden" name="refId" value={domain.id} />
+              <input
+                type="hidden"
+                name="returnTo"
+                value={`/pillars/${pillar.slug}/domains/${domain.position}`}
+              />
+              <button type="submit" className="linklike">
+                Follow this domain in your feed →
+              </button>
+            </form>
+          </li>
+        )}
         <li>
           Circles working this Impact Point:{" "}
           {domain.circles.length === 0 ? (

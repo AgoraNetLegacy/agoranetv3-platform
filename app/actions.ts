@@ -240,6 +240,90 @@ export async function submitCircle(formData: FormData) {
   redirect(`/circles/${result.circleId}`);
 }
 
+// ------------------------------------------------------------------ feed
+
+export async function markCaughtUp() {
+  const face = await requireFace();
+  await db.feedSettings.upsert({
+    where: { profileId: face.id },
+    create: { profileId: face.id, caughtUpAt: new Date() },
+    update: { caughtUpAt: new Date() },
+  });
+  revalidatePath("/feed");
+  backTo("/feed");
+}
+
+export async function saveFeedSources(formData: FormData) {
+  const face = await requireFace();
+  const pillarIds = formData.getAll("pillar").map(String);
+  const circleIds = formData.getAll("circle").map(String);
+  const domainIds = formData.getAll("domain").map(String);
+  const pollIds = formData.getAll("poll").map(String);
+  const fellowSouls = formData.get("fellowSouls") === "on";
+
+  await db.$transaction(async (tx) => {
+    // Replace this face's chosen sources with the submitted set —
+    // one screen, adjustable anytime. (Domain/poll rows can only be
+    // UNCHECKED here; they're added from their own pages.)
+    await tx.feedSource.deleteMany({
+      where: {
+        profileId: face.id,
+        OR: [
+          { kind: "pillar" },
+          { kind: "circle" },
+          { kind: "fellow-souls" },
+          { kind: "domain", refId: { notIn: domainIds } },
+          { kind: "poll", refId: { notIn: pollIds } },
+        ],
+      },
+    });
+    for (const refId of pillarIds) {
+      await tx.feedSource.create({ data: { profileId: face.id, kind: "pillar", refId } });
+    }
+    for (const refId of circleIds) {
+      // Members only — a circle source you left does nothing, but keep
+      // the choice honest at write time.
+      const member = await tx.circleMember.findFirst({
+        where: { circleId: refId, profileId: face.id, leftAt: null },
+      });
+      if (member) {
+        await tx.feedSource.create({ data: { profileId: face.id, kind: "circle", refId } });
+      }
+    }
+    if (fellowSouls) {
+      await tx.feedSource.create({ data: { profileId: face.id, kind: "fellow-souls" } });
+    }
+    await tx.feedSettings.upsert({
+      where: { profileId: face.id },
+      create: {
+        profileId: face.id,
+        openLens: formData.get("openLens") === "on",
+        balancedDiet: formData.get("balancedDiet") === "on",
+      },
+      update: {
+        openLens: formData.get("openLens") === "on",
+        balancedDiet: formData.get("balancedDiet") === "on",
+      },
+    });
+  });
+  revalidatePath("/feed");
+  backTo("/feed/sources", "Sources saved — this feed is yours.");
+}
+
+export async function followInFeed(formData: FormData) {
+  const face = await requireFace();
+  const kind = String(formData.get("kind") ?? "");
+  const refId = String(formData.get("refId") ?? "");
+  const returnTo = String(formData.get("returnTo") ?? "/feed");
+  if (!["domain", "poll", "discussion"].includes(kind) || !refId) backTo(returnTo);
+  await db.feedSource.upsert({
+    where: { profileId_kind_refId: { profileId: face.id, kind, refId } },
+    create: { profileId: face.id, kind, refId },
+    update: {},
+  });
+  backTo(returnTo, "Added to your feed's chosen sources.");
+}
+
 // ---------------------------------------------------------------- repairs
 
 export async function submitRepair(formData: FormData) {

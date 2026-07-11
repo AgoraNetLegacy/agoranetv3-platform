@@ -89,8 +89,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               Hub
             </button>
           </form>
+          <Link href="/feed">Feed</Link>
+          <Link href="/search">Search</Link>
           <Link href="/circles">Circles</Link>
           <Link href="/ledger">Ledger</Link>
+          <Link href="/transparency">Transparency</Link>
           <FaceBar />
         </header>
         <main>{children}</main>

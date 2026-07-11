@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { closeDuePolls, visibleTally, candleCommitmentFor } from "@/lib/polls";
 import { activeFace } from "@/lib/webSession";
+import { followInFeed } from "@/app/actions";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
 import { submitVote, startPollDiscussion } from "@/app/actions";
 
@@ -85,6 +86,16 @@ export default async function PollPage({
         )}
       </p>
       <h1>{poll.title}</h1>
+      {viewer && !circle && (
+        <form action={followInFeed} className="inline">
+          <input type="hidden" name="kind" value="poll" />
+          <input type="hidden" name="refId" value={poll.id} />
+          <input type="hidden" name="returnTo" value={`/polls/${poll.id}`} />
+          <button type="submit" className="linklike">
+            Follow this poll in your feed →
+          </button>
+        </form>
+      )}
       {circle && (
         <p>
           <span className="badge locked">
