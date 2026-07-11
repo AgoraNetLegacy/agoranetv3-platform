@@ -86,6 +86,22 @@
 //     settings, search history) is per-profile operator space — no
 //     feed/search event type exists on the public ledger and no such
 //     row id appears anywhere in it; every feed source is a known kind.
+// Phase 7.5:
+// 23. Chamber integrity: every chamber paid BOTH halves of the
+//     dual-token creation fee and has its chamber.created event;
+//     exactly one workshop Discussion per chamber, deletable class
+//     (never permanent — the drafts are not the record); the scaffold
+//     and the "why should people care" field are non-empty (the
+//     ratified creation requirements); every workshop post's author
+//     entered the chamber, and every workshop post paid the dual-token
+//     participation fee (PC and G entries pair 1:1 with posts); every
+//     private-chamber member is the creator or was invited.
+// 24. Workshop enclosure: no workshop post ever hash-commits to the
+//     public ledger or upgrades to permanence; no chamber member,
+//     invite, or workshop-discussion id appears anywhere in the
+//     ledger (entry, invites, and workshop posting all clear the gate
+//     in PRIVATE recording — membership is enclosed-space information,
+//     the public sees count and activity level only).
 
 import { createHash } from "crypto";
 import { PrismaClient } from "@prisma/client";
@@ -1477,7 +1493,7 @@ async function main() {
       }
     }
   }
-  const validKinds = new Set(["pillar", "domain", "discussion", "circle", "poll", "fellow-souls"]);
+  const validKinds = new Set(["pillar", "domain", "discussion", "circle", "chamber", "poll", "fellow-souls"]);
   for (const source of feedSources) {
     if (!validKinds.has(source.kind) || (source.kind !== "fellow-souls" && !source.refId)) {
       feedProblems++;
@@ -1490,6 +1506,161 @@ async function main() {
     );
   } else {
     failures += feedProblems;
+  }
+
+  // --- 23. Chamber integrity (Phase 7.5).
+  let chamberProblems = 0;
+  const chambers = await db.chamber.findMany({
+    include: {
+      members: true,
+      invites: true,
+      discussions: true,
+    },
+  });
+  const chamberCreatedEvents = new Set<string>();
+  for (const ev of events) {
+    if (ev.eventType !== "chamber.created") continue;
+    try {
+      const p = JSON.parse(ev.payload);
+      if (typeof p?.chamberRef === "string") chamberCreatedEvents.add(p.chamberRef);
+    } catch {
+      /* chain check covers bytes */
+    }
+  }
+  const chamberFeesPc = economyEntries.filter((e) => e.kind === "fee.chamber" && e.currency === "PC");
+  const chamberFeesG = economyEntries.filter((e) => e.kind === "fee.chamber" && e.currency === "G");
+  if (chamberFeesPc.length < chambers.length || chamberFeesG.length < chambers.length) {
+    chamberProblems++;
+    console.error(
+      `✗ HALF-PAID CHAMBER: ${chambers.length} chamber(s) but ${chamberFeesPc.length} PC / ${chamberFeesG.length} G creation fee entries — the dual-token signature is both halves or neither`
+    );
+  }
+  const workshopDiscussionIds = new Set<string>();
+  for (const chamber of chambers) {
+    if (!chamberCreatedEvents.has(chamber.id)) {
+      chamberProblems++;
+      console.error(`✗ OFF-LEDGER CHAMBER: ${chamber.id} has no chamber.created event`);
+    }
+    const workshops = chamber.discussions.filter((d) => d.chamberId === chamber.id);
+    if (workshops.length !== 1) {
+      chamberProblems++;
+      console.error(`✗ WORKSHOP COUNT: chamber ${chamber.id} has ${workshops.length} workshops`);
+    }
+    for (const w of workshops) {
+      workshopDiscussionIds.add(w.id);
+      if (w.permanence !== "deletable") {
+        chamberProblems++;
+        console.error(`✗ WORKSHOP PERMANENCE: chamber ${chamber.id} workshop is "${w.permanence}" — the drafts are not the record`);
+      }
+    }
+    if (
+      !chamber.scaffoldSolving.trim() ||
+      !chamber.scaffoldNeedToKnow.trim() ||
+      !chamber.scaffoldSuccess.trim() ||
+      !chamber.whyCare.trim() ||
+      !chamber.pitch.trim()
+    ) {
+      chamberProblems++;
+      console.error(`✗ UNSCAFFOLDED CHAMBER: ${chamber.id} is missing ratified creation requirements`);
+    }
+    if (!chamber.isPublic) {
+      const invited = new Set(chamber.invites.map((i) => i.profileId));
+      for (const m of chamber.members) {
+        if (m.profileId !== chamber.creatorProfileId && !invited.has(m.profileId)) {
+          chamberProblems++;
+          console.error(`✗ UNINVITED ENTRY: private chamber ${chamber.id} member ${m.id} was never invited`);
+        }
+      }
+    }
+  }
+  // Workshop posts: authors entered; the dual-token micro-fee paired 1:1.
+  const workshopPosts = await db.post.findMany({
+    where: { discussion: { chamberId: { not: null } } },
+    include: { discussion: { select: { chamberId: true } } },
+  });
+  const memberKey = new Set(
+    chambers.flatMap((c) => c.members.map((m) => `${c.id}|${m.profileId}`))
+  );
+  for (const post of workshopPosts) {
+    if (!memberKey.has(`${post.discussion.chamberId}|${post.authorProfileId}`)) {
+      chamberProblems++;
+      console.error(`✗ INTRUDER DRAFT: workshop post ${post.id} by a soul who never entered`);
+    }
+  }
+  const postFeesPc = economyEntries.filter((e) => e.kind === "fee.chamber-post" && e.currency === "PC");
+  const postFeesG = economyEntries.filter((e) => e.kind === "fee.chamber-post" && e.currency === "G");
+  if (postFeesPc.length !== workshopPosts.length || postFeesG.length !== workshopPosts.length) {
+    chamberProblems++;
+    console.error(
+      `✗ FEE MISMATCH: ${workshopPosts.length} workshop post(s) but ${postFeesPc.length} PC / ${postFeesG.length} G participation fee entries`
+    );
+  }
+  if (chamberProblems === 0) {
+    console.log(
+      `✓ Chamber integrity (${chambers.length} chamber(s), ${workshopPosts.length} workshop post(s); dual-token fees both halves, scaffolds complete, private entry invite-backed)`
+    );
+  } else {
+    failures += chamberProblems;
+  }
+
+  // --- 24. Workshop enclosure — the enter-to-see boundary is structural.
+  let enclosureProblems = 0;
+  for (const post of workshopPosts) {
+    if (lastHashByPost.has(post.id)) {
+      enclosureProblems++;
+      console.error(`✗ WORKSHOP LEAK: post ${post.id} is hash-committed on the public ledger`);
+    }
+    if (post.permanentUpgraded) {
+      enclosureProblems++;
+      console.error(`✗ WORKSHOP PERMANENCE: post ${post.id} was permanence-upgraded`);
+    }
+  }
+  // No enclosed row id — member, invite, workshop discussion — anywhere
+  // in the ledger. (The chamber id itself is public: creating a chamber
+  // is a civic act; what happens inside is not.)
+  const enclosedIds = new Set<string>([
+    ...chambers.flatMap((c) => c.members.map((m) => m.id)),
+    ...chambers.flatMap((c) => c.invites.map((i) => i.id)),
+    ...workshopDiscussionIds,
+  ]);
+  for (const ev of events) {
+    const hit = findForbiddenId(ev, enclosedIds);
+    if (hit) {
+      enclosureProblems++;
+      console.error(`✗ ENCLOSURE LEAK: enclosed chamber id on the ledger at seq ${ev.seq}`);
+      break;
+    }
+  }
+  // Entry, invites, and workshop posting all clear the gate PRIVATELY —
+  // enforcement must never become an observation channel for who works
+  // inside.
+  const chamberScopes = await db.gateRequest.findMany({
+    where: { status: "CLEARED", scope: { startsWith: "chamber:" } },
+    select: { id: true, ledgerRecording: true },
+  });
+  for (const req of chamberScopes) {
+    if (req.ledgerRecording !== "private") {
+      enclosureProblems++;
+      console.error(`✗ ENCLOSURE LEAK: chamber clearance ${req.id} recorded publicly`);
+    }
+  }
+  const workshopPostScopes = await db.gateRequest.findMany({
+    where: { status: "CLEARED", scope: { startsWith: "discussion:" } },
+    select: { id: true, scope: true, ledgerRecording: true },
+  });
+  for (const req of workshopPostScopes) {
+    const discussionId = req.scope.split(":")[1];
+    if (workshopDiscussionIds.has(discussionId) && req.ledgerRecording !== "private") {
+      enclosureProblems++;
+      console.error(`✗ ENCLOSURE LEAK: workshop post clearance ${req.id} recorded publicly`);
+    }
+  }
+  if (enclosureProblems === 0) {
+    console.log(
+      `✓ Workshop enclosure (${workshopPosts.length} draft(s) unleaked, ${chamberScopes.length} chamber clearance(s) private)`
+    );
+  } else {
+    failures += enclosureProblems;
   }
 
   if (failures > 0) {
