@@ -139,3 +139,41 @@ never live here — they interrupt directly.
    20% of poll duration · display-name cooldown 7 days · handle charset
    3–30 `[a-z0-9_-]` · consensus threshold = leading option's share of
    counted ballots.
+
+12. **Phase 7.5 flags (non-blocking, 2026-07-11):**
+   - **"Carrying both tokens" = a nonzero balance in each** (the OQ5
+     resolution named "the identity gate + carrying both tokens" as the
+     complete public-chamber prerequisite; participation inside charges
+     both, so entry asks for a working stock of both — any amount).
+     The refusal message points at the earnable paths. Confirm the
+     reading, or set a floor rail if "carrying" should mean more.
+   - **Chamber membership is enclosed-space information.** The spec's
+     storefront publishes member COUNT and activity level, never the
+     list (contrast CIRCLES, whose spec makes joins public record) — so
+     entry, invites, and workshop posting clear the gate in PRIVATE
+     recording, and handles are visible only inside the workshop.
+     chamber.created remains public civic record.
+   - **Private-chamber storefront = name + private marker** (§4.3's
+     "may be minimal"; §10.6 lifecycle remains open — no
+     public/private conversion, no abandonment states built).
+   - **Invites surface on /pollinator, not as notifications** — the
+     NOTIFICATIONS category list is exhaustive by design; a
+     chamber-invite category awaits your say (the same discipline as
+     Phase 7's repair-outcome deferral). Private-chamber invites are
+     creator-only per §4.2; FELLOW_SOULS §3's "invite each other"
+     resolves to sharing the storefront for public chambers.
+   - **Workshop permanence upgrades blocked** (the members'-room
+     precedent applied: a public hash-commit of an enclosed draft would
+     leak who works inside; the Arena is where a chamber's case goes on
+     the permanent record, post-launch).
+   - **Workshop posts don't feed Light Score** — the room-is-not-the-
+     record principle: a public number never derives from enclosed
+     activity.
+   - **Transparency mapping:** fee.chamber → "Creation fees",
+     fee.chamber-post → "Reply & vote micro-fees" (the dual-token story
+     shows in each category's PC/G columns). A dedicated "Pollinator"
+     category is a two-line change if you want the signature itemized.
+   - **chamber-activity event set:** soul-entered + scaffold-sharpened
+     notify (quiet, aggregated, space-name-only); workshop REPLIES
+     deliberately don't — NOTIFICATIONS §5 gives ambient activity on
+     followed things to the feed (the entered-chambers source).

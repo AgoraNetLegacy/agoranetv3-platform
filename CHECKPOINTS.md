@@ -343,3 +343,83 @@ and change log → `/transparency` (drill into a category) → `/feed`
 (tune sources, read the why-lines, reach "you're caught up") →
 `/search` for your city. Judge: does standing feel earned and
 explainable — and is this the face you wanted the platform to have?
+
+## Phase 7.5 — Chambers (Pollinator v1) ✅ SELF-VERIFIED (2026-07-11)
+
+**Shipped:** the idea incubator, launch scope per
+`Neural Pollinator/NEURAL_POLLINATOR_SPEC.md` — **Chambers only**
+(Leaderboard/Tournament post-launch by owner decision; the data model
+does not preclude them: public/private flag, storefront, per-layer
+permanence classes). Creation through the FULL pre-convo scaffold
+(three first-class fields — what are we solving / what do we need to
+know / what does success look like — creator-sharpenable with edit
+history visible in the workshop) + the required storefront "why should
+people care" (what problem, for whom, why now) · **the dual-token
+signature**: creation 20 PC + 20 G, workshop posts 1 PC + 1 G (rails;
+the first surface priced in both tokens — both halves clear or
+neither) · public/private FIXED at creation; private chambers are
+creator-invite-only and never compete · **the three visibility
+layers**: storefronts public and free for every chamber (a private
+chamber's is minimal — name + private marker), the workshop
+enter-to-see (the Discussion primitive chamber-scoped — threading,
+grace windows, moderation all reuse; NO bespoke machinery), the Arena
+reserved for post-launch · **the creator's Light Score public on
+public storefronts** (owner addition — per-face per-pillar, never a
+sum; transparency instead of gatekeeping per resolved OQ5: entry =
+the gate + carrying both tokens, no Light Score floor) · **the
+enclosure is structural**: chamber membership is enclosed-space
+information (the storefront publishes count + coarse activity level,
+never the list; entry/invites/workshop posting all clear the gate in
+PRIVATE recording), workshop drafts never hash-commit, never
+permanence-upgrade, never feed Light Score, the open lens, or public
+search — while standard Phase 5 moderation applies inside as
+everywhere (flags on workshop posts feed the unchanged path). Phase 7
+hand-offs consumed: the entered-chambers feed source (membership-
+verified; forged sources feed nothing) + chamber storefront cards
+("New in the Pollinator," legible ordering stated on the card) +
+storefront search (never interiors; ninth-entity content type grew
+the label) + in-space search inside workshops (owner: launch) +
+"fee.chamber"/"fee.chamber-post" categorized in the transparency
+books (an unmapped flow throws, by design) + the ratified
+"chamber-activity" quiet notification category (aggregated,
+space-name-only).
+
+**Evidence:** 175 tests across 14 files (25 new in
+`tests/chambers.test.ts`); `db:verify` grew to 29 checks — Chamber
+integrity (dual fees both halves 1:1 with chambers and workshop
+posts, chamber.created on-ledger, exactly one deletable workshop
+each, scaffolds complete, workshop authors entered, private entry
+invite-backed) and Workshop enclosure (drafts unleaked and never
+upgraded; member/invite/workshop ids nowhere in the ledger; every
+chamber clearance private) — tampering demonstrated FAILING LOUDLY
+under test (a member smuggled into a private chamber, a halved dual
+fee, back-door permanence on a draft). `demo:phase7.5` walks the
+checkpoint end to end; all 29 checks pass on the exercised dev
+database. **Live browser walkthrough** (screenshots in session
+record): signed in as a review soul, created "Walkable Winters"
+through the full scaffold form, watched the header pay both halves
+(48.90→29.90 PC, 30.00→10.00 G), read the storefront (pitch,
+why-care, creator standing honestly "no standing yet," count-never-
+list), posted a first-principles draft in the workshop (composer
+priced "1 PC + 1 G," G visibly −1), then proved the enclosure from
+outside: signed-out requests to the workshop URLs get the refusal
+with a storefront pointer and zero draft text; the draft's words
+return nothing in public search while the storefront returns the
+chamber; the feed carries the storefront strip; the ledger holds
+chamber.created and zero workshop references.
+
+**Derived rules set this phase (flagged in DECISIONS_PENDING #12):**
+"carrying both tokens" read as nonzero in each · membership enclosed
+(count public, list never — private clearances) · private storefront
+minimal · invite notifications await a category (invites surface on
+/pollinator) · workshop permanence upgrades blocked · workshop posts
+excluded from Light Score · fee transparency mapping.
+
+**If you choose to look (15 min):** `/pollinator` → open a chamber
+through the scaffold (watch both balances drop 20) → read your own
+storefront the way a stranger would (your standing is on it) → work
+the idea in the workshop (1 PC + 1 G per post) → sign out and try the
+workshop URL, then search for your draft's words (nothing), then your
+chamber's title (storefront) → `npm run db:verify`. Judge: is this
+the incubator you designed — public face, enclosed workbench, priced
+in both tokens?

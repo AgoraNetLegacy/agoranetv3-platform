@@ -63,29 +63,22 @@ under it.**
 
 ## Current Phase
 
-**Phase 7.5 — Chambers (Pollinator v1)** (see BUILD_ORDER.md; Phases
-0–7 checkpointed per CHECKPOINTS.md — read it first, plus
-DECISIONS_PENDING.md and DERIVED_DEFAULTS.md). The idea incubator —
-the last product surface before hardening. Per
-`Neural Pollinator/NEURAL_POLLINATOR_SPEC.md`, **Chambers only**
-(Leaderboard and Tournament remain post-launch by owner decision):
-- Creation with the pre-convo scaffold + the "why should people care"
-  storefront field; dual-token fees (Phase 4's economy — the
-  ECONOMIC_STARTING_DEFAULTS chamber lines); public/private chambers;
-  the three visibility layers (storefront public, workshop enclosed);
-  the standard Phase 5 moderation path.
-- The creator's Light Score is public record on public-chamber
-  storefronts (owner addition, POLLS/POLLINATOR ratification).
-- The data model must NOT preclude the post-launch Tournament
-  (public/private flag, storefront, permanence classes).
-- ⚠ v2's "chambers" (pillar containers) ≠ v3 Chambers. Never merge.
-- Phase 7 hand-offs to consume: chamber storefront cards in the feed
-  and chamber-storefront search arrive with their host (FEED §2.3,
-  §4.1.1); in-space search extends to workshops (owner: launch);
-  "fee.chamber" needs its transparency category or db:verify fails
-  loudly (by design).
+**Phase 8 — Deployment Hardening** (see BUILD_ORDER.md; Phases 0–7.5
+checkpointed per CHECKPOINTS.md — read it first, plus
+DECISIONS_PENDING.md and DERIVED_DEFAULTS.md). Goal: other humans can
+touch it.
+- **Postgres track + parity checking** (now it's warranted —
+  `DATABASE_SETUP.md` governs; Build Law rule 4's SQLite-only era ends
+  here), staging environment, backups/DR per `Backup and DR/`.
+- Rate limiting / anti-Sybil controls; **minimal-log discipline
+  audit** — the correlation-vector review against DUAL_IDENTITY §7.
+- Analytics funnel (privacy-constrained, per `Analytics/`).
+- Content seeding plan: canon + pillar content is the seed by design;
+  confirm cold-start surfaces. Invite mechanics if launch is gated
+  (owner decision).
 
-**Phase 7.5 checkpoint:** owner creates a public chamber through the
-full scaffold, pays the dual-token fee, works an idea in the workshop,
-and verifies the storefront reads right and the workshop stays
-enclosed.
+**Phase 8 checkpoint:** a small real cohort (not the owner) onboards
+unaided; funnel and logs reviewed together. NOTE: this checkpoint
+inherently needs the owner — recruiting the cohort and the joint
+review are his; flag readiness explicitly when the build half is
+verified.
