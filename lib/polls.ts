@@ -499,6 +499,14 @@ export async function closeDuePolls(db: PrismaClient): Promise<number> {
         }
       }
 
+      // A Picture repair rides its acceptance poll (Phase 7): execute
+      // the community's decision — adopt appends a revision, anything
+      // else declines quietly.
+      {
+        const { executeRepairPoll } = await import("./domains");
+        await executeRepairPoll(tx, poll, outcome, tallies);
+      }
+
       // Results published → the voters' quiet inboxes.
       const { notifyPollResults } = await import("./notifications");
       await notifyPollResults(tx, poll.id, poll.title);
