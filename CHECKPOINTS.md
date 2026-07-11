@@ -105,4 +105,73 @@ with one face, flag with another, `/moderation` with a third (or run
 citing the rule, and both inboxes learning their outcomes without
 learning any names.
 
-## Phase 6 — Circles ⏳ NOT STARTED
+## Phase 6 — Circles ✅ SELF-VERIFIED (2026-07-11)
+
+**Shipped:** the action layer, spec-complete against `Circles/CIRCLES_SPEC.md` —
+formation (25u rail, gate-cleared, live immediately, no approval queue) ·
+thin founders (purpose/tags only, versioned — a Circle can't quietly
+rewrite what it claimed to be) · browse/filter discovery + the
+transparent values-alignment signal with its why in plain language
+("Shown because you answered the X values question…" — no black-box
+ranking, per the product-identity commitment) · join gate with the
+DUAL_IDENTITY §7.1 small-community warning VERBATIM for Alias faces
+(small OR place-tagged; informed choice with required acknowledgment,
+never a wall) · members' room = Discussion primitive Circle-scoped
+(members-only including reads, deletable class, never ledger-committed,
+permanence upgrades blocked — the room is not the record) · resource
+board (non-custodial listings; snapshot becomes permanent record only
+when a logged action references it) · Circle-restricted Polls (Phase 3
+machinery: member-only ballots, poll.created hash-commits the question
+— tamper-evidence without disclosure; the §7 sharp rule holds — always
+per-profile) · binding stewardship polls (remove-member at the Circle's
+bar ≥ simple majority, close-circle, appoint-founder, attestation-dial
+within rail bounds — consensus Adopt/Decline, auto-executed at close) ·
+THE ACTION LOG: logged → attested (threshold rail, default 2, floor 2)
+→ public civic ledger; append-only, no edit no delete, corrections by
+reference; the honest claim fixed in the UI ("N verified humans put
+their names to this claim — not that the platform verified it") ·
+Light Score credits recorded for the Phase 7 engine (author 5 >
+attestor 1, attested entries only, per-circle daily cap 10 +
+diminishing returns — LIGHT_SCORE §5.1 guardrails as rails) · lifecycle
+(inactive = derived honest label off the 90d rail, auto-lifting; closed
+by poll only; failed Circles stay visible forever) · pillar pages
+surface Circles by attested recency + the viewer's membership count ·
+"circle-activity" quiet notifications (space name + event type only,
+aggregated — NOTIFICATIONS §6 enclosed-space rule).
+
+**Evidence:** 109 tests across 10 files (30 new in
+`tests/circles.test.ts`); `db:verify` grew to 22 checks — Circle
+integrity (formation fee + ledger evidence, membership rows ↔ public
+events, action log re-hashes against its commitments, attestations
+member-only/never-author/never-doubled, attested ⇒ ≥2 floor) and
+members'-room privacy (room posts never on the ledger in any form,
+offer ids never leak, circle-poll contentHash re-derives with no
+question text, every circle-poll voter was a member, LS daily cap
+holds) — both demonstrated FAILING LOUDLY under test (silent log edit,
+smuggled self-attestation). `demo:phase6` walks the checkpoint end to
+end. Live browser walkthrough (screenshots in session record): formed a
+Circle through the UI (fee visibly charged), Alias saw the verbatim
+warning at a place-tagged join and had to acknowledge it, action logged
+under the permanence badge, attested by two co-signers with the state
+flipping live to ✓ ATTESTED, the full chain on /ledger pseudonym-only,
+the room refused to a signed-out guest. One real bug found by the
+browser pass and fixed (form-in-`<p>` hydration remount swallowing
+submits). Spec-conformance pass: every CIRCLES_SPEC section built or
+explicitly flagged (domain-level pillar tags await Phase 7's domain
+data; size filter in browse is display-only v1 — noted in
+DECISIONS_PENDING).
+
+**Derived/build-time rails set this phase (all flagged in
+DERIVED_DEFAULTS.md):** small-community warning threshold 25 members ·
+inactivity label 90 days · LS credits 5/1/cap 10 · removal bar default
+60%, floor 50% · attestation threshold default 2, bounds [2, 8].
+
+**If you choose to look (15 min):** `/circles` → form one (watch the
+fee) → join it with your Alias somewhere place-tagged (read the warning
+— that's DUAL_IDENTITY vector 5, said at the exact right moment) → log
+an action → have another face attest → watch the badge flip and find
+the whole story on `/ledger`. Judge: does the action layer make the
+mission literal — is this where "we talked about it" becomes "here's
+proof we did it"?
+
+## Phase 6.5 — Fellow Souls & Direct Messages ⏳ NOT STARTED

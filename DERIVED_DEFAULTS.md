@@ -61,6 +61,31 @@ Sentinel bundles it to the Tribunal. 24h is the platform's rhythm unit
   The mechanism survives as a rail (0–15 min) should governance ever
   vote a pause in.
 
+## Circle rails (Phase 6, 2026-07-11 — same derivation discipline)
+
+- **Small-community warning threshold: 25 members** (CIRCLES OQ6). The
+  lattice's serious-stake magnitude — Circle fee, appeal deposit, and
+  the verification grant are all 25: when the crowd you're anonymous
+  within is thinner than "an appeal's worth" of souls, the Alias
+  warning speaks. Place-tagged Circles always warn, regardless of size
+  (the spec's own OR).
+- **Inactivity auto-label: 90 days** (CIRCLES OQ4) — the spec's own
+  first suggestion; = 3 tribunal terms. Derived label, auto-lifting;
+  never blocks joining.
+- **Light Score credits** (LIGHT_SCORE spec leaves amounts to the
+  technical pass; recorded now for Phase 7): **author 5 points** = the
+  v2 engine's substantive-answer weight — an attested real-world action
+  is worth at least a substantive answer; **attestor 1 point** = the
+  anchor unit (one reply's worth of standing; smaller than authoring,
+  per the spec's shipped default); **per-circle daily cap 10 points** =
+  the v2 per-discussion participation cap, with authored credits
+  halving within the day (the §5.1 diminishing-returns requirement).
+- **Removal bar default 60%** (CIRCLES OQ2 rail) = the platform's
+  consensus example; floor 50% = never below simple majority (spec's
+  own bound). **Attestation threshold default 2, bounds [2, 8]**
+  (CIRCLES OQ1 rail): floor 2 so "attested" always means more than one
+  voice; ceiling 4× the default, the standard bounds policy.
+
 ## Already anchored elsewhere (no action)
 
 Consensus threshold default 60% (the spec's own example) · read-only

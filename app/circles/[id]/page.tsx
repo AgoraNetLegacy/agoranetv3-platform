@@ -138,8 +138,9 @@ export default async function CirclePage({
         </details>
       )}
 
-      {/* Membership actions */}
-      <p>
+      {/* Membership actions — a div, not a <p>: a form may not descend
+          from a paragraph, and the hydration remount breaks submits. */}
+      <div style={{ margin: "1rem 0" }}>
         {membership ? (
           <>
             <Link href={`/circles/${circle.id}/room`}>
@@ -159,7 +160,7 @@ export default async function CirclePage({
             Verify once to join →
           </Link>
         )}
-      </p>
+      </div>
 
       <h3>The action log — the permanent public record</h3>
       <div className="notice">{HONEST_CLAIM}</div>

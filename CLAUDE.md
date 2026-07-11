@@ -63,20 +63,20 @@ under it.**
 
 ## Current Phase
 
-**Phase 6 — Circles (the action layer)** (see BUILD_ORDER.md and
-`Circles/CIRCLES_SPEC.md`; Phases 0–5 checkpointed per CHECKPOINTS.md
-— read it first). Deliberation becomes provable action: formation
-(25u fee, thin founders), browse/filter discovery + transparent
-values-alignment surfacing (Phase 2 seed data), join gate with Alias
-small-community warnings, the members' room (Circle-scoped
-Discussion), resource board (non-custodial pledges),
-Circle-restricted Polls (Phase 3 machinery), and THE ACTION LOG with
-attestation — logged → attested (2+) → ledger — plus permanence
-badges and Light Score crediting (recorded for the Phase 7 engine,
-like the Phase 5 deductions).
+**Phase 6.5 — Fellow Souls & Direct Messages (the social layer)** (see
+BUILD_ORDER.md and `Fellow Souls and DMs/FELLOW_SOULS_AND_DM_SPEC.md`;
+Phases 0–6 checkpointed per CHECKPOINTS.md — read it first). Souls
+find each other, launch scope: mutual-consent bonds, initiator-pays
+requests (2u rail), private graphs — no lists, no counts, no
+suggestions, ever — per-persona separation throughout. Encrypted DMs
+with recipient-side reporting feeding the Phase 5 moderation path
+(that ordering is why 6.5 follows 5); requests-vs-direct arrival
+split; blocking; DM notification tiers on the Phase 5 module.
+**Encryption stack selection (spec §9.1) resolves at this phase's
+start** — OPEN_ITEMS Track 5 #29.
 
-**Phase 6 checkpoint:** a Circle forms, deliberates in its room,
-decides by restricted poll, logs an action, gets it attested by 2+
-members, and the attested action lands on the public ledger —
-Alias warnings shown at the join gate, values-alignment visible in
-discovery.
+**Phase 6.5 checkpoint:** a stranger request goes out from one
+profile (fee paid), is accepted by another soul, encrypted DMs flow
+both ways, a message is reported, and the report lands in the
+moderation queue — with nothing anywhere revealing either soul's
+graph.

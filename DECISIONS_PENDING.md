@@ -40,7 +40,26 @@ never live here — they interrupt directly.
    DMs (Phase 6.5). The exhaustive-list law is honored; these activate
    with their features.
 
-7. **Build-time rail defaults set by Claude, owner-adjustable:**
+7. **Phase 6 flags (non-blocking, 2026-07-11):**
+   - **Domain-level Circle tags** (CIRCLES §2.1 "optionally a specific
+     domain within it"): pillar-breakdown domains aren't data until
+     Phase 7's dashboards; Circles tag at pillar level for now. Wire the
+     domain option when domains become rows. Gates: nothing — Phase 7
+     consumes.
+   - **Browse-by-size filter** (CIRCLES §4): member counts are displayed
+     and recency-of-attested-action orders the browse; an explicit size
+     filter is a five-line addition when wanted.
+   - **Circle-activity notification scope:** the quiet "Circle activity
+     (your Circles)" category fires on member-joined / action-logged /
+     entry-attested / internal-poll-opened, aggregated per Circle.
+     Room REPLIES deliberately don't notify — NOTIFICATIONS §5 gives
+     ambient followed-thing activity to the feed (Phase 7). Confirm the
+     event set feels right in use.
+   - **Untagged Circles' rooms/polls are homed in the meta pillar** (a
+     Discussion/Poll needs a pillar row; access is unaffected — Circle
+     scoping overrides pillar surfaces everywhere). Cosmetic only.
+
+8. **Build-time rail defaults set by Claude, owner-adjustable:**
    face-switch cooldown 5 min · pillar session timeout 30 min · alias
    activation 24–72h/daily cohorts (spec-indicative) · candle window
    20% of poll duration · display-name cooldown 7 days · handle charset
