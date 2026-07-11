@@ -253,3 +253,7 @@ form.inline { display: inline; }
   margin: 1.2rem 0;
   color: var(--muted);
 }
+
+table.books { border-collapse: collapse; width: 100%; margin: 0.6rem 0 1rem; font-size: 0.85rem; }
+table.books th, table.books td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: left; }
+table.books th { background: #f8fafc; }
