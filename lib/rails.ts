@@ -461,6 +461,40 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     description:
       "Open-lens recency decay half-life — activity's weight halves every this many hours.",
   },
+  // --- Chamber rails (Phase 7.5 — NEURAL_POLLINATOR §3, the ratified
+  // dual-token signature: the Pollinator is the first surface whose
+  // fees are paid in BOTH tokens, deliberately, so active Pollinator
+  // souls carry a working stock of both. Amounts are the ratified v0
+  // test schedule: Chamber = 2× Discussion, in both tokens; workshop
+  // posts at the anchor unit in both.)
+  {
+    key: "chamber.creationFeePc",
+    value: 20,
+    unit: "uPC",
+    description:
+      "Chamber creation fee, PollCoin half — owner: double a Discussion, and in both tokens (ECONOMIC_STARTING_DEFAULTS §1).",
+  },
+  {
+    key: "chamber.creationFeeG",
+    value: 20,
+    unit: "uG",
+    description:
+      "Chamber creation fee, Gratium half — the dual-token signature (NEURAL_POLLINATOR §3).",
+  },
+  {
+    key: "chamber.postFeePc",
+    value: 1,
+    unit: "uPC",
+    description:
+      "Workshop participation micro-fee, PollCoin half — the dual-token signature at micro scale (ECONOMIC_STARTING_DEFAULTS §1).",
+  },
+  {
+    key: "chamber.postFeeG",
+    value: 1,
+    unit: "uG",
+    description:
+      "Workshop participation micro-fee, Gratium half.",
+  },
   // --- Treasury dashboard (Phase 7 — TREASURY_DASHBOARD §6.2,
   // owner-ratified: daily snapshots; the cadence is itself a rail).
   {

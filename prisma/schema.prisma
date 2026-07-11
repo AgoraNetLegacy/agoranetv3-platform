@@ -108,7 +108,7 @@ model TreasuryBalance {
 // accounted honestly).
 model EconomyEntry {
   id            String   @id @default(cuid())
-  kind          String // "fee.reply" | "fee.vote" | "fee.poll" | "fee.discussion" | "fee.permanence" | "deposit.flag" | "grant.welcome" | "grant.seed" | "grant.orientation" | "grant.first-action" | "grant.hatch" | "grant.test" | "tip" | "tip.cut"
+  kind          String // "fee.reply" | "fee.vote" | "fee.poll" | "fee.discussion" | "fee.chamber" | "fee.chamber-post" | "fee.permanence" | "deposit.flag" | "grant.welcome" | "grant.seed" | "grant.orientation" | "grant.first-action" | "grant.hatch" | "grant.test" | "tip" | "tip.cut"
   currency      String // "PC" | "G"
   amount        Float
   fromProfileId String? // null = treasury or issuance
@@ -445,6 +445,15 @@ model Discussion {
   // ledger commits and no permanence upgrades inside it.
   circleId   String?
   circle     Circle?   @relation(fields: [circleId], references: [id])
+  // Chamber-scoped Discussion (Phase 7.5 — the workshop, POLLINATOR
+  // §4.3 layer 2): the same reuse. Enter-to-see, deletable class
+  // (POLLINATOR §7: "standard deletable-with-due-process"), no ledger
+  // commits, no permanence upgrades — the enclosed drafts are not the
+  // record; the Arena (post-launch) is where a chamber's case goes
+  // public. Homed in the meta pillar (a Discussion needs a pillar row;
+  // chamber scoping overrides pillar surfaces everywhere).
+  chamberId  String?
+  chamber    Chamber?  @relation(fields: [chamberId], references: [id])
   // Canonical threads map 1:1 onto canon questions (the civic spine).
   questionId String?   @unique
   question   Question? @relation(fields: [questionId], references: [id])
@@ -762,7 +771,7 @@ model Notification {
   id             String    @id @default(cuid())
   profileId      String // per-profile, never per-human
   tier           String // "time-sensitive" | "quiet"
-  category       String // "badge-offer" | "ruling" | "poll-closing" | "tip" | "poll-results" | "circle-activity" | "dm" | "request"
+  category       String // "badge-offer" | "ruling" | "poll-closing" | "tip" | "poll-results" | "circle-activity" | "chamber-activity" | "dm" | "request"
   title          String
   body           String
   refType        String?
@@ -930,6 +939,109 @@ model ActionEntryPledge {
 }
 
 // ------------------------------------------------------------------
+// Chambers (Phase 7.5 — Neural Pollinator/NEURAL_POLLINATOR_SPEC.md,
+// launch scope: Chambers ONLY; Leaderboard/Tournament are post-launch
+// by owner decision, and nothing here may depend on them existing —
+// the model just must not preclude them: the public/private flag, the
+// storefront, and the per-layer permanence classes are the
+// load-bearing pieces).
+//
+// One chamber, one idea. Three visibility layers (§4.3): the
+// STOREFRONT is public and free to read (a private chamber's is
+// minimal — name + private marker, §10.6 interim); the WORKSHOP is
+// enter-to-see (a chamber-scoped Discussion — reuse, not
+// reinvention); the ARENA is post-launch. ⚠ v2's "chambers" (pillar
+// containers) ≠ these Chambers. Never merge.
+//
+// Membership is per-profile, never per-human, and NOT public record:
+// the spec publishes member COUNT and activity level on the
+// storefront, never the list — entry clears the gate in private
+// recording (unlike Circles, whose spec makes joins public). The
+// first dual-token surface: creation and workshop posts charge both
+// PollCoin and Gratium (the §3 signature).
+// ------------------------------------------------------------------
+
+model Chamber {
+  id      String  @id @default(cuid())
+  title   String
+  // The chamber's subject: a topic, question, inquiry, initiative, or
+  // proposal (§4.1) — one idea being worked toward viability.
+  subject String
+  // The storefront pitch (§4.1) plus the required "why should people
+  // care" field (owner-ratified 2026-07-08): what problem, for whom,
+  // why now — a chamber that cannot answer it isn't ready to ask for
+  // attention.
+  pitch   String
+  whyCare String
+  // Public/private, FIXED at creation (§4.1; conversion is the §10.6
+  // lifecycle open item — not built). Private chambers never qualify
+  // for the tournament (owner-ratified); no conversion path is needed
+  // for competition because competition is not what they're for.
+  isPublic Boolean
+  // The pre-convo scaffold (owner-ratified 2026-07-08): first-class
+  // fields, not free text buried in a post. Creator-editable as
+  // understanding sharpens, with edit history visible inside the
+  // workshop (ChamberScaffoldRevision).
+  scaffoldSolving    String // 1. What are we solving?
+  scaffoldNeedToKnow String // 2. What do we need to know?
+  scaffoldSuccess    String // 3. What does success look like?
+  creatorProfileId String // Phase A operator space — never public
+  // Public attribution — and the creator's Light Score is public
+  // record on public-chamber storefronts (owner addition, 2026-07-09):
+  // a bad-standing creator can still build, but never behind a curtain.
+  creatorHandle String
+  createdAt      DateTime @default(now())
+  lastActivityAt DateTime @default(now())
+
+  members           ChamberMember[]
+  invites           ChamberInvite[]
+  scaffoldRevisions ChamberScaffoldRevision[]
+  discussions       Discussion[]
+}
+
+// Prior scaffold versions, kept on every creator edit — the history is
+// visible inside the workshop (§4.1), not on the public storefront.
+model ChamberScaffoldRevision {
+  id         String   @id @default(cuid())
+  chamberId  String
+  chamber    Chamber  @relation(fields: [chamberId], references: [id])
+  solving    String
+  needToKnow String
+  success    String
+  editedAt   DateTime @default(now())
+}
+
+// Entered souls (§4.2): prerequisites are the identity gate + carrying
+// both tokens — the complete definition (owner-resolved OQ5,
+// 2026-07-09: no Light Score floor, no extra hurdles). Handles are
+// visible INSIDE the workshop (participants see each other); the row
+// itself is enclosed-space data — never on the ledger, never public.
+model ChamberMember {
+  id        String   @id @default(cuid())
+  chamberId String
+  chamber   Chamber  @relation(fields: [chamberId], references: [id])
+  profileId String // operator space
+  handle    String // visible inside the workshop only
+  enteredAt DateTime @default(now())
+
+  @@unique([chamberId, profileId])
+}
+
+// Private-chamber invites (§4.2): the creator selects who gets
+// invited. Enclosed data, like membership. Entering consumes the
+// invite's permission; the row stays as the record of it.
+model ChamberInvite {
+  id        String   @id @default(cuid())
+  chamberId String
+  chamber   Chamber  @relation(fields: [chamberId], references: [id])
+  profileId String // invitee — operator space
+  handle    String
+  createdAt DateTime @default(now())
+
+  @@unique([chamberId, profileId])
+}
+
+// ------------------------------------------------------------------
 // Fellow Souls & Direct Messages (Phase 6.5 —
 // Fellow Souls and DMs/FELLOW_SOULS_AND_DM_SPEC.md).
 //
@@ -1053,7 +1165,8 @@ model Block {
 // ------------------------------------------------------------------
 
 // One explicit subscription (§2.1). Kinds: "pillar" | "domain" |
-// "discussion" | "circle" | "poll" | "fellow-souls" (refId null — the
+// "discussion" | "circle" | "chamber" (entered chambers, Phase 7.5) |
+// "poll" | "fellow-souls" (refId null — the
 // Phase 6.5 source, OFF by default: absence of the row means off).
 // Discussion follows also arise implicitly from participation
 // (join = follow, DISCUSSIONS §3) — computed at read time, not stored.
