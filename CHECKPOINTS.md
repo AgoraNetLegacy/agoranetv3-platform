@@ -239,7 +239,11 @@ run `npm run db:verify`. Judge: does "good people find each other"
 feel mechanical now — and does the graph feel like nobody's business
 but yours?
 
-## Phase 7 — Light Score & The Dashboards ✅ SELF-VERIFIED (2026-07-11)
+## Phase 7 — Light Score & The Dashboards ✅ OWNER-RATIFIED (2026-07-11)
+
+Self-verified 2026-07-11; owner walked the checkpoint the same day
+(signed in as a minted review soul, submitted a repair through the
+live UI) and ratified: "that worked. we're good to proceed."
 
 **Shipped:** standing became visible and the platform got its face.
 **Domains became data:** all 56 domains (8 × 7 pillars, the Agora
