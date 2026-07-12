@@ -56,6 +56,25 @@ need from you.)
    interests + one-time +5 G share bonus — not yet built; the grant
    rail exists. Say when.
 
+18. **The Testnet Track — owner-proposed (2026-07-12), awaiting his
+    scheduling ratification.** Proposal: since production/real money
+    waits for counsel anyway, build the chain integration against
+    TESTNET (Cardano preprod + Midnight testnet — valueless play
+    money, legally weightless) so the platform can be showcased
+    working on its real rails for promotion and funding — especially
+    the Cardano-native audience (Hoskinson outreach, Project
+    Catalyst), where running on their stack is the credibility
+    threshold. The smart split: (a) the IDENTITY rail (Midnight/Lace
+    ID, ZK nullifiers, wallet connect) is buildable testnet-first —
+    it's identity, not money, and it's the hard half worth de-risking
+    early; (b) the MONEY rail gets demo-grade only (a test policy,
+    tokens visibly moving) — production custody/withdrawal/purchase
+    mechanics still wait for counsel, whose answers shape them.
+    Requires a short BUILD_ORDER scheduling amendment (owner
+    ratifies) defining the track's scope and checkpoint. Gates:
+    nothing — pure opportunity; slots anywhere after the cohort test
+    (or alongside, his call).
+
 17. **Key recovery / Alias succession — needs a build slice before
     PUBLIC launch (surfaced 2026-07-11 reviewing onboarding).** The
     spec designed recovery (DUAL_IDENTITY §8: True Self recoverable
