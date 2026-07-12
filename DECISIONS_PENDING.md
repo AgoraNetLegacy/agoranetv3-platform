@@ -1,14 +1,48 @@
-# Decisions Pending — the owner's queue
+# The Owner's Queue
 
-Non-blocking items awaiting Shawn's attention, oldest first. Nothing
-here stops the build; each names what it gates. Blocking questions
-never live here — they interrupt directly.
+**The short version: you have ONE thing to do, a few decisions that
+only matter when we aim at the public, and a stack of receipts.**
+Most numbered entries below are NOT questions — they are records of
+defaults Claude set on your behalf, kept so you can overrule any of
+them, anytime, with a sentence. Nothing on this page stops the build;
+each entry names what it gates. Blocking questions never live here —
+they interrupt directly.
+
+(Numbering is stable — checkpoint records cite these by number — so
+items keep their numbers even though they're grouped by what they
+need from you.)
+
+---
+
+## A. Needs you now — one thing
+
+14. **Hosting — DECIDED: Render (2026-07-11, in session; Vercel
+    considered and set aside — its serverless shape would split the
+    ops jobs across three services).** What's left is the part only
+    you can do: **create the account at render.com and put a card on
+    it** (~US$25–40/mo for staging-grade everything). Then say "done"
+    and Claude does the rest in one sitting — databases, app, cron
+    jobs, settings — paint-by-numbers per docs/DEPLOYMENT.md. Gates:
+    the Phase 8 checkpoint's real cohort needs a URL to touch.
+
+---
+
+## B. Decisions that wait for PUBLIC launch — nothing here matters for the cohort test
 
 1. **Legal gate check (BUILD_ORDER Phase 4; external track).**
    Internal-only currencies want review-lite, and the non-withdrawable
    Gratium posture should be confirmed with counsel **before any launch
    marketing mentions tokens**. The compliance memo in the corpus
    `Legal/` folder frames it. Gates: launch comms, Phase 9.
+
+15. **Invite mechanics — your launch-gating call (BUILD_ORDER Phase 8:
+    "invite mechanics if launch is gated").** Nothing is built,
+    deliberately — building an invite system presumes the answer.
+    The cohort test does NOT need this: an unlisted staging URL is the
+    gate (recruit by link). The real decision is public-launch posture:
+    open door vs. invite waves. If you choose gated, say so and the
+    invite mechanics get specced against ONBOARDING (the anti-Sybil
+    audit lists invite gating as defense-in-depth, not a requirement).
 
 2. **Support staking UI (TOKENOMICS "live at launch").** The poll-page
    "attach a PollCoin support target" surface (POLLS §4.8) isn't built
@@ -20,223 +54,146 @@ never live here — they interrupt directly.
 
 4. **Declared interests (ONBOARDING Stage 5.5).** Optional per-persona
    interests + one-time +5 G share bonus — not yet built; the grant
-   rail exists. Gates: Phase 7 feed/discovery would consume it.
+   rail exists. Say when.
 
-5. **Gap numbers now DERIVED from the ratified lattice (owner
-   directive 2026-07-11, "fill in the gaps according to the other
-   numbers") — see `DERIVED_DEFAULTS.md` for every derivation:** strike
-   penalties 5/15 uG (= flag deposit / permanence-fee magnitudes; the
-   §7 symmetry priced equally on both sides), LS deductions 5/10 ×tier
+---
+
+## C. The record — defaults already set, yours to overrule (not questions)
+
+Read at leisure, or never. A nod is enough; silence is also fine.
+Every rail here is adjustable live, and the derived numbers all expire
+at the Phase 9 real-money re-review regardless.
+
+5. **Gap numbers DERIVED from the ratified lattice (your directive,
+   2026-07-11, "fill in the gaps according to the other numbers") —
+   see `DERIVED_DEFAULTS.md` for every derivation:** strike penalties
+   5/15 uG (= flag deposit / permanence-fee magnitudes; the §7
+   symmetry priced equally on both sides), LS deductions 5/10 ×tier
    (= v2 engine's answer weight / participation cap), Sentinel 5
    flags/24h (= an appeal-deposit's worth of collective stake in one
-   day-cycle), poll-closing-soon 6h (¼ day-cycle). Still rails; still
-   expire at the Phase 9 re-review. Face-switch cooldown
-   RESOLVED by owner (2026-07-11): none — seamless switching is the
-   vision; mechanism retained as a 0–15 min rail. Supervision
+   day-cycle), poll-closing-soon 6h (¼ day-cycle). Face-switch
+   cooldown RESOLVED by you (2026-07-11): none — seamless switching is
+   the vision; mechanism retained as a 0–15 min rail. Supervision
    cold-start interim unchanged (a rule, not a number).
 
 6. **Notification categories awaiting host features:** replies-on-join
    (needs join=follow), governance-poll-opened (needs pillar follow),
-   DMs (Phase 6.5). The exhaustive-list law is honored; these activate
-   with their features.
+   DMs (Phase 6.5 — live). The exhaustive-list law is honored; these
+   activate with their features.
 
-7. **Phase 6 flags (non-blocking, 2026-07-11):**
-   - **Domain-level Circle tags** (CIRCLES §2.1 "optionally a specific
-     domain within it"): pillar-breakdown domains aren't data until
-     Phase 7's dashboards; Circles tag at pillar level for now. Wire the
-     domain option when domains become rows. Gates: nothing — Phase 7
-     consumes.
-   - **Browse-by-size filter** (CIRCLES §4): member counts are displayed
-     and recency-of-attested-action orders the browse; an explicit size
+7. **Phase 6 flags (2026-07-11):**
+   - **Domain-level Circle tags** (CIRCLES §2.1): wired at Phase 7 when
+     domains became rows. Resolved by the build.
+   - **Browse-by-size filter** (CIRCLES §4): member counts displayed,
+     recency-of-attested-action orders the browse; an explicit size
      filter is a five-line addition when wanted.
-   - **Circle-activity notification scope:** the quiet "Circle activity
-     (your Circles)" category fires on member-joined / action-logged /
-     entry-attested / internal-poll-opened, aggregated per Circle.
-     Room REPLIES deliberately don't notify — NOTIFICATIONS §5 gives
-     ambient followed-thing activity to the feed (Phase 7). Confirm the
-     event set feels right in use.
-   - **Untagged Circles' rooms/polls are homed in the meta pillar** (a
-     Discussion/Poll needs a pillar row; access is unaffected — Circle
-     scoping overrides pillar surfaces everywhere). Cosmetic only.
+   - **Circle-activity notification scope:** fires on member-joined /
+     action-logged / entry-attested / internal-poll-opened, aggregated
+     per Circle. Room REPLIES deliberately don't notify —
+     NOTIFICATIONS §5 gives ambient followed-thing activity to the
+     feed. Confirm the event set feels right in use.
+   - **Untagged Circles' rooms/polls homed in the meta pillar**
+     (a Discussion/Poll needs a pillar row; access unaffected).
+     Cosmetic only.
 
-8. **DM encryption stack — RESOLVED at phase start (Phase 6.5,
-   2026-07-11, per OPEN_ITEMS Track 5 #29 "build-time technical"):**
-   the spec's "simpler asymmetric scheme for v1" — X25519 key agreement
-   → HKDF per-thread key → AES-256-GCM per message (Signal-family
-   primitives, all industry standard). Per-profile keypairs; in Phase A
-   the private keys are held encrypted under an operator secret
-   (`DM_MASTER_SECRET`) — the exact trust posture as the gate, disclosed
-   verbatim in the DM UI: encrypted at rest, operator-escrowed keys,
-   the client-side rail (soul's wallet holds the key; platform
-   structurally cannot read) cuts over at Phase 9 with Lace. Why not a
-   double ratchet now: with a server-rendered app and no client key
-   store, ratchet keys would live server-side anyway — cryptographic
-   theater. This choice is honest about what Phase A is, and the §9.1
-   multi-device/key-backup concerns dissolve into the Phase 9 wallet
-   story. Recipient-side excerpt reporting works cleanly under escrow.
-   **Re-review mandatory at Phase 9** alongside the gate cutover.
+8. **DM encryption stack — RESOLVED at Phase 6.5 start (2026-07-11;
+   OPEN_ITEMS Track 5 #29 is build-time technical):** X25519 → HKDF
+   per-thread key → AES-256-GCM per message (Signal-family primitives,
+   all industry standard). Phase A: private keys operator-escrowed
+   under `DM_MASTER_SECRET` — the exact trust posture as the gate,
+   disclosed verbatim in the thread UI; the wallet-side rail cuts over
+   at Phase 9 with Lace. Why not a double ratchet now: with a
+   server-rendered app and no client key store, ratchet keys would
+   live server-side anyway — cryptographic theater. **Re-review
+   mandatory at Phase 9** alongside the gate cutover.
 
-9. **Phase 6.5 derived rules (non-blocking, 2026-07-11):**
-   - ~~**Releasing a bond**~~ — **OWNER-RATIFIED (2026-07-11, "this
-     sounds right"):** either side may withdraw quietly (no
-     notification — the blocking discipline applied). A bond is
+9. **Phase 6.5 derived rules (2026-07-11):**
+   - ~~**Releasing a bond**~~ — **YOU RATIFIED (2026-07-11, "this
+     sounds right"):** either side may withdraw quietly. A bond is
      ongoing mutual consent, not a contract.
    - **DM-conduct strikes land in the meta pillar.** Moderation is
-     pillar-scoped by ratified design; DMs have no pillar. A violation
-     in a private thread is read as conduct against the commons itself.
-     Alternative would be a per-human "conduct" bucket — which the
-     no-universal-score invariant forbids. Interim until reviewed.
+     pillar-scoped by ratified design; DMs have no pillar. The
+     alternative (a per-human "conduct" bucket) is forbidden by the
+     no-universal-score invariant. Interim until reviewed.
    - **§3's Circle/Chamber invites** await invite mechanics on those
-     surfaces (Circles are open-join in v1; Chambers arrive 7.5).
-     Fellow-souls feed source + search scope land with Phase 7 hosts.
+     surfaces (Circles are open-join in v1).
 
-10. **Phase 7 flags (non-blocking, 2026-07-11):**
-   - **The 16 drafted Opening Questions (Compassion + Hope).** Those two
-     breakdowns predate the per-domain Opening Question template the
-     other five carry; their questions were DRAFTED in the ratified
-     style (marked `derived-draft` in data, noted on their domain
-     pages). Ratify or edit at leisure — wording changes are
-     ledger-evented amendments, per canon law. Gates: nothing; the
-     16 threads are live.
-   - **The Agora dashboard is INCLUDED.** The dashboard spec (§8)
-     deferred the Agora's own dashboard until its content existed; the
-     ratified capstone (2026-07-10) provides the full canon template
-     including per-domain "In service of the pillars" blocks, so the
-     Agora renders with the identical pillar anatomy. Confirm this
-     reading — trivially revertible to a bare hub view.
-   - **Repair acceptance = system-opened governance poll** in the
-     domain's pillar (consensus at the platform bar, sealed + candle,
-     auto-executed at close). The dashboard spec makes the Picture a
-     living object and names Polls the resolution mechanism (§6.3) but
-     doesn't specify the flow; this is the least-inventive assembly of
-     ratified machinery. **Repair submission is FREE** (the fee lattice
-     read strictly); one open repair per soul per domain is the
-     structural anti-spam. Both are rails-adjacent decisions to bless.
-   - **Repair-outcome notifications deferred:** the NOTIFICATIONS
-     category list is exhaustive by design; a "repair decided" category
-     awaits your say. Voters learn results via poll-results; authors
-     check the domain page.
-   - **Open-lens weights shipped as derived rails, flagged** (FEED §9.1
-     defers exact weights + anti-gaming review to real usage data):
-     contributors ×3 (the v2 insightful weight — quality's multiplier),
-     tippers ×1, sourced ×1, half-life 72h (the default deliberation
-     window), activity window 4× half-life. The formula page renders
-     live from the rails and is versioned (v1 — 2026-07-11).
+10. **Phase 7 flags (2026-07-11):**
+   - **The 16 drafted Opening Questions (Compassion + Hope).** Drafted
+     in the ratified style (marked `derived-draft` in data, noted on
+     their pages). Ratify or edit at leisure — wording changes are
+     ledger-evented amendments, per canon law. The threads are live.
+   - **The Agora dashboard is INCLUDED** (the ratified capstone
+     provides its content). Trivially revertible to a bare hub view.
+   - **Repair acceptance = system-opened governance poll** (consensus
+     at the platform bar, sealed + candle, auto-executed at close) —
+     the least-inventive assembly of ratified machinery. **Repair
+     submission is FREE** (the fee lattice read strictly); one open
+     repair per soul per domain is the structural anti-spam.
+   - **Repair-outcome notifications deferred** (the category list is
+     exhaustive by design; a "repair decided" category awaits your say).
+   - **Open-lens weights shipped as derived rails** (contributors ×3 =
+     the v2 insightful weight, tippers ×1, sourced ×1, half-life 72h);
+     the formula page renders live from the rails, versioned.
    - **Minimal poll cards in the feed** (status changes only — never a
-     sealed tally): §2.1 makes followed polls a launch SOURCE, so
-     ignoring them silently seemed worse; §9.3 (card rollout order
-     beyond Discussions) remains yours.
-   - **"system" is tombstoned in the handle namespace** — system-opened
-     polls speak as "system" and that attribution must never be
-     claimable. Consider also reserving "agoranet"/"treasury".
-   - **Treasury per-category trend charts** are v1-thin (running totals
-     + balance history; per-day category deltas derivable from stored
-     snapshots when wanted). Cosmetic.
+     sealed tally); card rollout order beyond Discussions remains yours.
+   - **"system" is tombstoned in the handle namespace.** Consider also
+     reserving "agoranet"/"treasury".
+   - **Treasury per-category trend charts are v1-thin.** Cosmetic.
 
-11. **Build-time rail defaults set by Claude, owner-adjustable:**
-   face-switch cooldown 5 min · pillar session timeout 30 min · alias
-   activation 24–72h/daily cohorts (spec-indicative) · candle window
-   20% of poll duration · display-name cooldown 7 days · handle charset
-   3–30 `[a-z0-9_-]` · consensus threshold = leading option's share of
-   counted ballots.
+11. **Build-time rail defaults, owner-adjustable:** pillar session
+   timeout 30 min · alias activation 24–72h/daily cohorts
+   (spec-indicative) · candle window 20% of poll duration ·
+   display-name cooldown 7 days · handle charset 3–30 `[a-z0-9_-]` ·
+   consensus threshold = leading option's share of counted ballots.
 
-12. **Phase 7.5 flags (non-blocking, 2026-07-11):**
-   - **"Carrying both tokens" = a nonzero balance in each** (the OQ5
-     resolution named "the identity gate + carrying both tokens" as the
-     complete public-chamber prerequisite; participation inside charges
-     both, so entry asks for a working stock of both — any amount).
-     The refusal message points at the earnable paths. Confirm the
-     reading, or set a floor rail if "carrying" should mean more.
-   - **Chamber membership is enclosed-space information.** The spec's
-     storefront publishes member COUNT and activity level, never the
-     list (contrast CIRCLES, whose spec makes joins public record) — so
-     entry, invites, and workshop posting clear the gate in PRIVATE
-     recording, and handles are visible only inside the workshop.
-     chamber.created remains public civic record.
-   - **Private-chamber storefront = name + private marker** (§4.3's
-     "may be minimal"; §10.6 lifecycle remains open — no
-     public/private conversion, no abandonment states built).
-   - **Invites surface on /pollinator, not as notifications** — the
-     NOTIFICATIONS category list is exhaustive by design; a
-     chamber-invite category awaits your say (the same discipline as
-     Phase 7's repair-outcome deferral). Private-chamber invites are
-     creator-only per §4.2; FELLOW_SOULS §3's "invite each other"
-     resolves to sharing the storefront for public chambers.
+12. **Phase 7.5 flags (2026-07-11):**
+   - **"Carrying both tokens" = a nonzero balance in each.** The
+     refusal message points at the earnable paths. Set a floor rail if
+     "carrying" should mean more.
+   - **Chamber membership is enclosed-space information** (count
+     public, list never — private gate clearances; contrast CIRCLES,
+     whose spec makes joins public). chamber.created stays public.
+   - **Private-chamber storefront = name + private marker** (§4.3
+     "may be minimal"; §10.6 lifecycle remains open).
+   - **Invites surface on /pollinator, not as notifications** (a
+     chamber-invite category awaits your say — same discipline as the
+     repair-outcome deferral).
    - **Workshop permanence upgrades blocked** (the members'-room
-     precedent applied: a public hash-commit of an enclosed draft would
-     leak who works inside; the Arena is where a chamber's case goes on
-     the permanent record, post-launch).
-   - **Workshop posts don't feed Light Score** — the room-is-not-the-
-     record principle: a public number never derives from enclosed
-     activity.
+     precedent: a public hash-commit of an enclosed draft would leak
+     who works inside).
+   - **Workshop posts don't feed Light Score** (the room is not the
+     record).
    - **Transparency mapping:** fee.chamber → "Creation fees",
-     fee.chamber-post → "Reply & vote micro-fees" (the dual-token story
-     shows in each category's PC/G columns). A dedicated "Pollinator"
-     category is a two-line change if you want the signature itemized.
+     fee.chamber-post → "Reply & vote micro-fees". A dedicated
+     "Pollinator" category is a two-line change if you want it.
    - **chamber-activity event set:** soul-entered + scaffold-sharpened
-     notify (quiet, aggregated, space-name-only); workshop REPLIES
-     deliberately don't — NOTIFICATIONS §5 gives ambient activity on
-     followed things to the feed (the entered-chambers source).
+     notify (quiet, aggregated); workshop replies deliberately don't.
 
-13. **Phase 8 analytics flags (non-blocking, 2026-07-11):**
+13. **Phase 8 analytics flags (2026-07-11):**
    - **Tool selection (OPEN_ITEMS #30) resolved in-house-minimal:** an
-     event is a name + timestamp in our own database (AnalyticsEvent /
-     AnalyticsAggregate), NOT a deployed Umami/Plausible instance. Why:
-     the ratified constraints are STRICTER than those tools' defaults
-     (they retain hashed-IP visitor keys and user-agents; we retain
-     nothing), and one database keeps analytics inside the same backup/
-     verify/access discipline as everything else. The measured
-     vocabulary is CLOSED (db:verify check 26 fails on any unaudited
-     event name — "dwell.time.ms" cannot ship quietly). Swappable later
-     if richer tooling is ever wanted.
-   - **State of the Commons placement (ANALYTICS §8.2):** its own page
-     at /commons, linked from /transparency. Cosmetic; move at will.
-   - **The public stat set (§8.3):** shipped with §4's proposed list
-     (souls, verified humans, discussions, contributions, ballots,
-     polls, Circle actions attested/logged, Circles+Chambers) plus the
-     onboarding funnel table. Final set is your pass when you look.
-   - **Funnel stage nuance:** Phase A's interim issuer verifies
-     instantly, so funnel.gate and funnel.verified fire together until
-     the Phase 9 issuer makes verification a real trip. Subject-keying
-     is scoped to trueself/oriented/action.any only — the hatch
-     ceremony never surfaces the Alias id, so funnel.alias is
-     count-only by design.
-   - **Admin metrics surface (§6):** aggregates are public on /commons;
-     raw-event access is operator database access (host-attributable).
-     An in-app admin metrics console awaits the ADMIN_OPS console,
-     which BUILD_ORDER never scheduled — say if you want it as a
-     post-launch item.
+     event is a name + timestamp in our own database, NOT a deployed
+     Umami/Plausible instance — the ratified constraints are STRICTER
+     than those tools' defaults, and one database keeps analytics
+     inside the same backup/verify/access discipline as everything
+     else. The measured vocabulary is CLOSED (db:verify fails on any
+     unaudited event name). Swappable later if richer tooling is wanted.
+   - **State of the Commons placement:** its own page at /commons,
+     linked from /transparency. Cosmetic; move at will.
+   - **The public stat set:** shipped with the spec's proposed list +
+     the onboarding funnel table. Final set is your pass when you look.
+   - **Funnel nuance:** Phase A's interim issuer verifies instantly, so
+     gate/verified fire together until Phase 9's real issuer.
+     funnel.alias is count-only — analytics doesn't get what the hatch
+     ceremony withholds.
+   - **Admin metrics surface:** aggregates are public on /commons;
+     raw-event access is operator database access. An in-app admin
+     console was never scheduled by BUILD_ORDER — say if you want it
+     post-launch.
 
-14. **Hosting provider (Track 5 #37) — recommendation ready, provisioning
-    is yours.** Recommended: **Render** (one dashboard: web service +
-    managed Postgres + native cron + persistent disks); runner-up
-    Railway; Fly.io if multi-region control ever outweighs simplicity;
-    serverless ruled out (the ops scripts want a real filesystem).
-    docs/DEPLOYMENT.md has the full requirements matrix and the
-    step-by-step staging setup — the repo is deployable from this
-    commit and provider-agnostic. **What only you can do:** create the
-    account/billing, provision the databases, paste the env, add the
-    four cron jobs, set the access-log posture (LOG_DISCIPLINE_AUDIT
-    #4). Budget ~US$25–40/mo for staging-grade everything. Gates: the
-    Phase 8 checkpoint's real cohort needs a URL to touch.
-
-15. **Invite mechanics — YOUR launch-gating decision (BUILD_ORDER
-    Phase 8: "invite mechanics if launch is gated").** Nothing is built,
-    deliberately — building an invite system presumes the answer.
-    Recommendation: the Phase 8 checkpoint cohort does NOT need invite
-    mechanics — an unlisted staging URL is the gate (recruit by link).
-    The real decision is PUBLIC launch posture: open door vs. invite
-    waves. If you choose gated, say so and the invite mechanics get
-    specced against ONBOARDING (they touch the anti-Sybil story — the
-    audit's surface #1 lists "invite gating in early phases" as a
-    defense-in-depth option, not a requirement). Gates: public launch
-    only; the cohort test proceeds without it.
-
-16. **Early-platform crowd-size honesty (DUAL_IDENTITY §7.2, vector
-    5) — built this phase, bless the wording.** Below 25 active souls
-    (rail `identity.smallPopulationThreshold`, the lattice's 25 anchor —
-    same as the Circle small-community warning), the Alias ceremony
-    carries a plain note: the crowd is small, patterns identify, the
-    records are still unlinkable, the note lifts itself as the commons
-    grows. §7.2's own directive ("early-platform UX should say so"),
-    surfaced at the exact moment it matters. Never blocks hatching.
+16. **Early-platform crowd-size honesty (DUAL_IDENTITY §7.2) — built,
+    bless the wording:** below 25 active souls (rail), the Alias
+    ceremony says plainly that a small crowd thins anonymity, the
+    records are still unlinkable, and the note lifts itself as the
+    commons grows. §7.2's own directive, surfaced at the exact moment
+    it matters. Never blocks hatching.
