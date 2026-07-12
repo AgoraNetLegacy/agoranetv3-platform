@@ -1240,3 +1240,39 @@ model RateLimitBucket {
 
   @@index([windowStart])
 }
+
+// ------------------------------------------------------------------
+// Analytics (Phase 8 — ANALYTICS_SPEC, owner-ratified 2026-07-08).
+// Deliberately dumber than industry standard: an event is a NAME and a
+// TIMESTAMP — there is structurally no payload, no IP, no user-agent,
+// no page-path-per-soul. subjectKey (HMAC'd profile key, set only on
+// the retention-relevant events) exists solely so cohort return rates
+// can be computed at crush time; no query may join it back to a
+// profile. Raw events live for the analytics.retentionDays rail
+// (90 days, lengthening structurally capped), then are crushed into
+// aggregates and DELETED (scripts/crush-analytics.ts). Analytics never
+// feeds ranking — lib/feed.ts and lib/search.ts importing this
+// pipeline fails the test suite.
+// ------------------------------------------------------------------
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  name       String // "funnel.gate", "action.posting", ...
+  subjectKey String? // HMAC — never a raw profile id (db:verify check 26)
+  createdAt  DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([createdAt])
+}
+
+// Permanent aggregates — what survives the crush. Counts only; no
+// soul-level information exists here by construction.
+model AnalyticsAggregate {
+  id       String @id @default(cuid())
+  period   String // UTC "YYYY-MM-DD" (daily) or "YYYY-Wnn" (cohort weeks)
+  name     String // event name, or "retention.<cohortWeek>.week<n>" / ".size"
+  count    Int
+  distinct Int? // distinct subjects that period, where subjects were kept
+
+  @@unique([period, name])
+}

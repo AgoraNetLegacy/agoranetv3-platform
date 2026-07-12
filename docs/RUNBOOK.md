@@ -37,6 +37,7 @@ The platform's schedule (all times UTC):
 | `0 3 * * *` (03:00 daily) | `cd /app && npm run db:backup:postgres` | The nightly backup. Cadence = the RPO rail; tightening RPO means adding lines (e.g. hourly `0 * * * *`), nothing else changes. |
 | `30 3 * * *` (03:30 daily) | `cd /app && npm run rate-limits:prune` | Deletes expired rate-limit counters (minimal-log discipline). |
 | `0 4 1 * *` (04:00, 1st of month) | `cd /app && npm run db:restore-drill` | The monthly automated restore drill (§4). **A failed drill is a production incident** — the job exits nonzero so the host's failure alert fires; make sure that alert is switched on. |
+| `45 3 * * *` (03:45 daily) | `cd /app && npm run analytics:crush` | The 90-day crush (ANALYTICS §5): raw events past the retention rail become permanent aggregates and are deleted. db:verify check 26 fails if this stops running. |
 
 Required environment for the jobs (beyond the app's own env):
 `BACKUP_DIR` (a path on the region-replicated volume),

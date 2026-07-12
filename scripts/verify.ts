@@ -110,6 +110,14 @@
 //     attribution and file reference and NOTHING beyond the audited
 //     payload fields — ops-log payload creep toward soul data fails
 //     loudly here.
+// 26. Analytics discipline (ANALYTICS_SPEC): every event name is in
+//     the closed measured vocabulary (an unaudited event type cannot
+//     ship); subject keys are HMAC-shaped and appear ONLY on the
+//     retention/funnel events that need them (a raw profile id can
+//     never persist in analytics); no raw event outlives the
+//     retention rail plus a one-week crush grace (the 90-day promise
+//     is checked, not assumed); nothing analytics-flavored exists on
+//     the public ledger.
 
 import { createHash } from "crypto";
 import { PrismaClient } from "@prisma/client";
@@ -1719,6 +1727,61 @@ async function main() {
     );
   } else {
     failures += opsProblems;
+  }
+
+  // --- 26. Analytics discipline (Phase 8 — ANALYTICS_SPEC)
+  let analyticsProblems = 0;
+  const { MEASURED_EVENTS, SUBJECT_KEYED_EVENTS } = await import("../lib/analytics");
+  const analyticsEvents = await db.analyticsEvent.findMany({
+    select: { id: true, name: true, subjectKey: true, createdAt: true },
+  });
+  const retentionDays = (await db.rail.findUnique({
+    where: { key: "analytics.retentionDays" },
+  }))!.value;
+  const crushDeadline = new Date(
+    Date.now() - (retentionDays + 7) * 24 * 60 * 60 * 1000
+  );
+  for (const ev of analyticsEvents) {
+    if (!MEASURED_EVENTS.has(ev.name)) {
+      analyticsProblems++;
+      console.error(`✗ ANALYTICS: unaudited event name "${ev.name}"`);
+      break;
+    }
+  }
+  for (const ev of analyticsEvents) {
+    if (ev.subjectKey !== null) {
+      if (!/^[0-9a-f]{64}$/.test(ev.subjectKey)) {
+        analyticsProblems++;
+        console.error(`✗ ANALYTICS: subject key is not an HMAC on "${ev.name}"`);
+        break;
+      }
+      if (!SUBJECT_KEYED_EVENTS.has(ev.name)) {
+        analyticsProblems++;
+        console.error(`✗ ANALYTICS: "${ev.name}" carries a subject key it is not entitled to`);
+        break;
+      }
+    }
+  }
+  const overdue = analyticsEvents.filter((ev) => ev.createdAt < crushDeadline);
+  if (overdue.length) {
+    analyticsProblems++;
+    console.error(
+      `✗ ANALYTICS: ${overdue.length} raw event(s) outlived the ${retentionDays}d retention rail + crush grace — the crush job is not running`
+    );
+  }
+  const analyticsLedgerLeak = events.find((e) =>
+    e.eventType.startsWith("analytics")
+  );
+  if (analyticsLedgerLeak) {
+    analyticsProblems++;
+    console.error(`✗ ANALYTICS: analytics event type on the public ledger at seq ${analyticsLedgerLeak.seq}`);
+  }
+  if (analyticsProblems === 0) {
+    console.log(
+      `✓ Analytics discipline (${analyticsEvents.length} raw event(s) in vocabulary, subject-keying scoped, retention honored, ledger clean)`
+    );
+  } else {
+    failures += analyticsProblems;
   }
 
   if (failures > 0) {

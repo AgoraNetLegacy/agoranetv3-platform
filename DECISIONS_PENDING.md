@@ -177,3 +177,32 @@ never live here — they interrupt directly.
      notify (quiet, aggregated, space-name-only); workshop REPLIES
      deliberately don't — NOTIFICATIONS §5 gives ambient activity on
      followed things to the feed (the entered-chambers source).
+
+13. **Phase 8 analytics flags (non-blocking, 2026-07-11):**
+   - **Tool selection (OPEN_ITEMS #30) resolved in-house-minimal:** an
+     event is a name + timestamp in our own database (AnalyticsEvent /
+     AnalyticsAggregate), NOT a deployed Umami/Plausible instance. Why:
+     the ratified constraints are STRICTER than those tools' defaults
+     (they retain hashed-IP visitor keys and user-agents; we retain
+     nothing), and one database keeps analytics inside the same backup/
+     verify/access discipline as everything else. The measured
+     vocabulary is CLOSED (db:verify check 26 fails on any unaudited
+     event name — "dwell.time.ms" cannot ship quietly). Swappable later
+     if richer tooling is ever wanted.
+   - **State of the Commons placement (ANALYTICS §8.2):** its own page
+     at /commons, linked from /transparency. Cosmetic; move at will.
+   - **The public stat set (§8.3):** shipped with §4's proposed list
+     (souls, verified humans, discussions, contributions, ballots,
+     polls, Circle actions attested/logged, Circles+Chambers) plus the
+     onboarding funnel table. Final set is your pass when you look.
+   - **Funnel stage nuance:** Phase A's interim issuer verifies
+     instantly, so funnel.gate and funnel.verified fire together until
+     the Phase 9 issuer makes verification a real trip. Subject-keying
+     is scoped to trueself/oriented/action.any only — the hatch
+     ceremony never surfaces the Alias id, so funnel.alias is
+     count-only by design.
+   - **Admin metrics surface (§6):** aggregates are public on /commons;
+     raw-event access is operator database access (host-attributable).
+     An in-app admin metrics console awaits the ADMIN_OPS console,
+     which BUILD_ORDER never scheduled — say if you want it as a
+     post-launch item.

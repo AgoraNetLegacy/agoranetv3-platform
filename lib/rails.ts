@@ -533,6 +533,16 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     description:
       "Monthly backups retained (BACKUP_DR §2 shipped default): the first backup of each month is kept a year.",
   },
+  // --- Analytics (Phase 8 — ANALYTICS_SPEC §5, owner-ratified 90 days).
+  {
+    key: "analytics.retentionDays",
+    value: 90,
+    unit: "days",
+    boundMin: 7,
+    boundMax: 90,
+    description:
+      "Raw analytics events live this long, then are crushed into permanent aggregates and deleted. Shortening is always allowed; the bound CAPS at the ratified 90 — lengthening is a code change requiring the same scrutiny as any privacy-touching parameter (§5).",
+  },
   // --- Rate limits (Phase 8 — the consolidated W4 schedule,
   // ANTI_SYBIL_CONSOLIDATION §3). Each value is the max acts per its
   // policy's window (lib/rateLimit.ts fixes the windows: 10-min burst,

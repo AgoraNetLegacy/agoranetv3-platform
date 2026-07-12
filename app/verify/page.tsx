@@ -1,5 +1,7 @@
 import { GATE_INTRO } from "@/lib/disclosures";
 import { beginVerification } from "@/app/actions";
+import { db } from "@/lib/db";
+import { recordEvent } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +13,9 @@ export default async function VerifyIntro({
   searchParams: Promise<{ returnTo?: string }>;
 }) {
   const { returnTo } = await searchParams;
+  // The funnel's top: this doorway was seen. A count and a moment —
+  // no cookie, no subject (the page is force-dynamic, so it's a real view).
+  await recordEvent(db, "funnel.arrival");
   return (
     <div className="ceremony">
       <h2>The gate</h2>

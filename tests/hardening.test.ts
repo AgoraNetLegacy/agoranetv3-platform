@@ -213,6 +213,114 @@ describe("minimal-log discipline guards (DUAL_IDENTITY §7.1 vector 4)", () => {
   });
 });
 
+describe("analytics discipline (ANALYTICS_SPEC — measure the product, never the person)", () => {
+  it("analytics NEVER feeds ranking: feed and search cannot import the pipeline", () => {
+    for (const file of ["lib/feed.ts", "lib/search.ts"]) {
+      const src = readFileSync(join(REPO_ROOT, file), "utf8");
+      expect(
+        src.includes("analytics"),
+        `${file} touches analytics — the published-formula law forbids hidden inputs`
+      ).toBe(false);
+    }
+  });
+
+  it("an event is a name and a moment — subject keys only where entitled, always HMAC", async () => {
+    const { recordEvent } = await import("../lib/analytics");
+    await recordEvent(db, "action.posting", "profile-raw-id"); // not entitled
+    await recordEvent(db, "action.any", "profile-raw-id"); // entitled
+    const bare = await db.analyticsEvent.findFirst({
+      where: { name: "action.posting" },
+      orderBy: { createdAt: "desc" },
+    });
+    const keyed = await db.analyticsEvent.findFirst({
+      where: { name: "action.any" },
+      orderBy: { createdAt: "desc" },
+    });
+    expect(bare?.subjectKey).toBeNull();
+    expect(keyed?.subjectKey).toMatch(/^[0-9a-f]{64}$/);
+    expect(keyed?.subjectKey).not.toContain("profile-raw-id");
+  });
+
+  it("analytics subject keys can never join to rate-limit keys (distinct derivations)", async () => {
+    const { analyticsSubjectKey } = await import("../lib/analytics");
+    const { bucketKey } = await import("../lib/rateLimit");
+    expect(analyticsSubjectKey("p1")).not.toBe(bucketKey("posting", "p1", 0));
+  });
+
+  it("recordEvent swallows failure — measurement never breaks the product", async () => {
+    const { recordEvent } = await import("../lib/analytics");
+    const broken = {
+      analyticsEvent: {
+        create: () => Promise.reject(new Error("db down")),
+      },
+    } as never;
+    await expect(recordEvent(broken, "action.posting")).resolves.toBeUndefined();
+  });
+
+  it("the crush: old events become aggregates and are DELETED; the young survive", async () => {
+    const { analyticsSubjectKey } = await import("../lib/analytics");
+    const old = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000);
+    const oldDay = old.toISOString().slice(0, 10);
+    const subject = analyticsSubjectKey("cohort-soul");
+    await db.analyticsEvent.createMany({
+      data: [
+        { name: "funnel.trueself", subjectKey: subject, createdAt: old },
+        { name: "funnel.arrival", createdAt: old },
+        { name: "funnel.arrival", createdAt: old },
+        {
+          name: "action.any",
+          subjectKey: subject,
+          createdAt: new Date(old.getTime() + 8 * 24 * 60 * 60 * 1000),
+        },
+        { name: "funnel.arrival" }, // young — must survive
+      ],
+    });
+    const crush = spawnSync("npx", ["tsx", "scripts/crush-analytics.ts"], {
+      cwd: REPO_ROOT,
+      env: { ...process.env, DATABASE_URL: url },
+      encoding: "utf8",
+    });
+    expect(crush.status, crush.stdout + crush.stderr).toBe(0);
+
+    const oldRemaining = await db.analyticsEvent.count({
+      where: { createdAt: { lt: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000) } },
+    });
+    expect(oldRemaining).toBe(0);
+    const youngRemaining = await db.analyticsEvent.count({
+      where: { name: "funnel.arrival" },
+    });
+    expect(youngRemaining).toBeGreaterThan(0);
+
+    const arrivals = await db.analyticsAggregate.findUnique({
+      where: { period_name: { period: oldDay, name: "funnel.arrival" } },
+    });
+    expect(arrivals?.count).toBe(2);
+    // The cohort math: one soul joined, and returned in a later week.
+    const size = await db.analyticsAggregate.findFirst({
+      where: { name: "retention.size" },
+    });
+    expect(size?.count).toBe(1);
+    const returned = await db.analyticsAggregate.findFirst({
+      where: { name: { startsWith: "retention.returned." } },
+    });
+    expect(returned?.count).toBe(1);
+  });
+
+  it("check 26 FAILS LOUDLY on an unaudited event name", async () => {
+    await db.analyticsEvent.create({
+      data: { name: "dwell.time.ms" }, // the thing we swore never to measure
+    });
+    const verify = spawnSync("npx", ["tsx", "scripts/verify.ts"], {
+      cwd: REPO_ROOT,
+      env: { ...process.env, DATABASE_URL: url },
+      encoding: "utf8",
+    });
+    expect(verify.status).not.toBe(0);
+    expect(`${verify.stdout}${verify.stderr}`).toContain('unaudited event name "dwell.time.ms"');
+    await db.analyticsEvent.deleteMany({ where: { name: "dwell.time.ms" } });
+  });
+});
+
 describe("backup retention policy (BACKUP_DR §2 — 30 daily / 12 monthly)", () => {
   const day = (d: string, n = 0) => `agoranet-${d}T0${n}-00-00-000Z.dump`;
 

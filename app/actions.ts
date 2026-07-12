@@ -79,6 +79,7 @@ import {
   clientAddress,
 } from "@/lib/webSession";
 import { enforceRateLimit, type RateLimitPolicyName } from "@/lib/rateLimit";
+import { recordEvent, type AnalyticsEventName } from "@/lib/analytics";
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
@@ -89,11 +90,24 @@ function backTo(path: string, message?: string): never {
 // (lib/rateLimit.ts) plus the global backstop. Identifiers are HMAC-hashed
 // before any bucket row exists — nothing here stores who acted.
 
+// Feature vitals fall out of the same policy families the W4 schedule
+// names: one count per family (never a query trail), plus the
+// subject-keyed retention signal. Face-switching is a session mechanic,
+// not a feature — deliberately unmeasured.
+const MEASURED_FAMILIES = new Set<RateLimitPolicyName>([
+  "posting", "votes", "economy", "creation", "flags",
+  "moderation", "appeals", "social", "dmMessages", "settings",
+]);
+
 async function requireFace(policy?: RateLimitPolicyName) {
   const face = await activeFace();
   if (!face) throw new Error("No face is active in this session.");
   if (policy) await enforceRateLimit(db, policy, face.id);
   await enforceRateLimit(db, "global", face.id);
+  if (policy && MEASURED_FAMILIES.has(policy)) {
+    await recordEvent(db, `action.${policy}` as AnalyticsEventName);
+    await recordEvent(db, "action.any", face.id);
+  }
   return face;
 }
 
@@ -178,6 +192,7 @@ export async function completeOrientation(formData: FormData) {
         kind: "grant.orientation",
       });
     });
+    await recordEvent(db, "funnel.oriented", face.id);
   }
   redirect(`/verify/seed${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`);
 }
@@ -853,7 +868,11 @@ export async function markNotificationRead(formData: FormData) {
 export async function beginVerification(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "");
   await limitArrival("verify");
+  await recordEvent(db, "funnel.gate");
   const { credential } = await verifyHumanity(db);
+  // Phase A's interim issuer verifies instantly; the two funnel steps
+  // separate for real when the Phase 9 issuer makes verification a trip.
+  await recordEvent(db, "funnel.verified");
   await setOneTimeSecret(credential);
   redirect(`/verify/credential${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`);
 }
@@ -874,6 +893,7 @@ export async function createTrueSelf(formData: FormData) {
 
   const result = await registerTrueSelf(db, { credential, handle, displayName });
   if (!result.ok) backTo(`/verify/trueself${query}`, result.reason);
+  await recordEvent(db, "funnel.trueself", result.profileId);
 
   // Sign the new face in and make it active.
   const sessionId = await ensureSessionId();
@@ -892,6 +912,7 @@ export async function acknowledgeConsent(formData: FormData) {
   }
   const face = await requireFace("settings");
   await recordAck(db, { profileId: face.id, kind });
+  await recordEvent(db, "funnel.consents");
   redirect(next);
 }
 
@@ -901,6 +922,7 @@ export async function submitSeedAnswer(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "");
   const face = await requireFace("settings");
   await saveSeedAnswer(db, { profileId: face.id, questionId, body });
+  await recordEvent(db, "funnel.seed");
   revalidatePath("/verify/seed");
   backTo(`/verify/seed${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`);
 }
@@ -921,6 +943,9 @@ export async function hatchAlias(formData: FormData) {
     disclosuresAccepted,
   });
   if (!result.ok) backTo("/alias", result.reason);
+  // Count-only, deliberately: the hatch ceremony never surfaces the new
+  // Alias's id, and analytics doesn't get what the ceremony withholds.
+  await recordEvent(db, "funnel.alias");
 
   await setOneTimeSecret(result.accessKey);
   redirect("/alias/key");

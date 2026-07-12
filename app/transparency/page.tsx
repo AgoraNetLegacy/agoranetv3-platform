@@ -196,6 +196,7 @@ export default async function TransparencyPage() {
 
       <p style={{ marginTop: "1rem" }}>
         <Link href="/transparency/moderation">Moderation statistics →</Link> ·{" "}
+        <Link href="/commons">State of the Commons →</Link> ·{" "}
         <Link href="/treasury">The raw inspection page →</Link>
       </p>
     </>

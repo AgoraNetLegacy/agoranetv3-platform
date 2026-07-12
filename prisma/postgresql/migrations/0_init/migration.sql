@@ -824,6 +824,27 @@ CREATE TABLE "RateLimitBucket" (
     CONSTRAINT "RateLimitBucket_pkey" PRIMARY KEY ("key")
 );
 
+-- CreateTable
+CREATE TABLE "AnalyticsEvent" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "subjectKey" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AnalyticsEvent_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AnalyticsAggregate" (
+    "id" TEXT NOT NULL,
+    "period" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "count" INTEGER NOT NULL,
+    "distinct" INTEGER,
+
+    CONSTRAINT "AnalyticsAggregate_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Human_credentialHash_key" ON "Human"("credentialHash");
 
@@ -928,6 +949,15 @@ CREATE UNIQUE INDEX "TreasurySnapshot_day_key" ON "TreasurySnapshot"("day");
 
 -- CreateIndex
 CREATE INDEX "RateLimitBucket_windowStart_idx" ON "RateLimitBucket"("windowStart");
+
+-- CreateIndex
+CREATE INDEX "AnalyticsEvent_name_createdAt_idx" ON "AnalyticsEvent"("name", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "AnalyticsEvent_createdAt_idx" ON "AnalyticsEvent"("createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AnalyticsAggregate_period_name_key" ON "AnalyticsAggregate"("period", "name");
 
 -- AddForeignKey
 ALTER TABLE "Profile" ADD CONSTRAINT "Profile_humanId_fkey" FOREIGN KEY ("humanId") REFERENCES "Human"("id") ON DELETE SET NULL ON UPDATE CASCADE;
