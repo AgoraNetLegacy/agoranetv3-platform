@@ -12,6 +12,7 @@ jobs:
       DATABASE_URL: "file:./ci.db"
       GATE_OPERATOR_SECRET: "ci-only-secret-not-used-anywhere-real"
       DM_MASTER_SECRET: "ci-only-dm-secret-not-used-anywhere-real"
+      RATE_LIMIT_SECRET: "ci-only-rate-limit-secret-not-real"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,6 +23,10 @@ jobs:
       - run: npx prisma generate
       - run: npx vitest run
       - run: npx tsc --noEmit
+      # The dual-provider parity discipline is a REQUIRED CI check
+      # (DATABASE_SETUP.md): drift between the SQLite and Postgres
+      # schemas fails the build here, not in a deploy.
+      - run: npm run db:validate:postgres
       - name: Seed a fresh database and run the invariant check
         run: |
           npx prisma db push --skip-generate

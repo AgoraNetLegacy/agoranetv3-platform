@@ -36,12 +36,17 @@ beforeAll(() => {
   if (seeded.status !== 0) throw new Error(`seed failed: ${seeded.stderr}`);
 });
 
+// These tests run seed/verify as REAL subprocesses (several seconds
+// each on CI runners, and the verify suite grows every phase) — the
+// default 5s vitest timeout is far too tight for them.
+const SUBPROCESS_TIMEOUT = 120_000;
+
 describe("db:verify", () => {
   it("passes on an honestly seeded database", () => {
     const result = run("scripts/verify.ts");
     expect(result.stdout).toContain("ALL CHECKS PASSED");
     expect(result.status).toBe(0);
-  });
+  }, SUBPROCESS_TIMEOUT);
 
   it("fails loudly when a ledger payload is tampered with", () => {
     sql(`UPDATE LedgerEvent SET payload = '{"tampered":true}' WHERE seq = 3;`);
@@ -50,7 +55,7 @@ describe("db:verify", () => {
     expect(result.stdout + result.stderr).toContain("LEDGER CHAIN BROKEN");
     // Restore the honest row is impossible — the chain does not forgive.
     // Rebuild the db for the next test instead.
-  });
+  }, SUBPROCESS_TIMEOUT);
 
   it("fails loudly when an internal id leaks onto the ledger", () => {
     // Fresh database (the previous test broke the chain on purpose).
@@ -74,5 +79,5 @@ describe("db:verify", () => {
     const result = run("scripts/verify.ts");
     expect(result.status).toBe(1);
     expect(result.stdout + result.stderr).toContain("LEDGER IDENTITY LEAK");
-  });
+  }, SUBPROCESS_TIMEOUT);
 });

@@ -30,6 +30,10 @@ import { RAIL_DEFAULTS } from "../lib/rails";
 
 const db = new PrismaClient({ datasources: { db: { url } } });
 
+// Tests that spawn seed/crush/verify as real subprocesses need CI-sized
+// timeouts — the invariant suite grows every phase.
+const SUBPROCESS_TIMEOUT = 120_000;
+
 beforeAll(async () => {
   const seeded = spawnSync("npx", ["tsx", "prisma/seed.ts"], {
     cwd: REPO_ROOT,
@@ -304,7 +308,7 @@ describe("analytics discipline (ANALYTICS_SPEC — measure the product, never th
       where: { name: { startsWith: "retention.returned." } },
     });
     expect(returned?.count).toBe(1);
-  });
+  }, SUBPROCESS_TIMEOUT);
 
   it("check 26 FAILS LOUDLY on an unaudited event name", async () => {
     await db.analyticsEvent.create({
@@ -318,7 +322,7 @@ describe("analytics discipline (ANALYTICS_SPEC — measure the product, never th
     expect(verify.status).not.toBe(0);
     expect(`${verify.stdout}${verify.stderr}`).toContain('unaudited event name "dwell.time.ms"');
     await db.analyticsEvent.deleteMany({ where: { name: "dwell.time.ms" } });
-  });
+  }, SUBPROCESS_TIMEOUT);
 });
 
 describe("backup retention policy (BACKUP_DR §2 — 30 daily / 12 monthly)", () => {
@@ -470,7 +474,7 @@ describe("the consolidated rate-limit schedule (W4)", () => {
       encoding: "utf8",
     });
     expect(clean.status, clean.stdout + clean.stderr).toBe(0);
-  });
+  }, SUBPROCESS_TIMEOUT);
 
   it("prunes buckets older than two day-cycles, keeps live ones", async () => {
     const ancient = new Date("2026-07-01T00:00:00Z");
