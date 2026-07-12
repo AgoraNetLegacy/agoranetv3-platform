@@ -67,6 +67,20 @@ in a browser walkthrough with tests green.
 11. **Theme & effects** — a coherent visual style, built as design
     tokens (colors, spacing, type scale) so whole themes can be
     swapped and experimented with without touching structure.
+12. **THEME = IDENTITY (owner's vision, 2026-07-11).** True Self =
+    white theme with the platform's aqua blue; Alias = dark/black
+    theme with the same blue; the blue is the brand thread across
+    both — one brand, two faces. **Face switching = the card flip:**
+    the entire page flips like a playing card, white side to dark
+    side. The soul always knows which face they're wearing from the
+    room's color alone — the dual-identity invariant rendered as
+    ambient, unmissable state. Design notes: theme-as-signal
+    deliberately overrides personal light/dark preference (the
+    safety signal wins — posting as the wrong face is the error that
+    self-doxxes); signed-out readers get a third neutral treatment so
+    "no face" is also legible; the flip honors reduced-motion
+    preferences (instant crossfade fallback); the permanent-space
+    amber banner must read on both themes.
 
 ## F. Process notes
 
