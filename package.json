@@ -37,6 +37,7 @@
     "demo:phase6.5": "tsx scripts/demo-phase6.5.ts",
     "demo:phase7": "tsx scripts/demo-phase7.ts",
     "demo:phase7.5": "tsx scripts/demo-phase7.5.ts",
+    "demo:phase8": "tsx scripts/demo-phase8.ts",
     "demo:tamper": "tsx scripts/demo-tamper.ts",
     "test": "vitest run",
     "check": "npm run db:generate && npm test && npm run db:validate:postgres && tsc --noEmit && npm run build"

@@ -1735,9 +1735,16 @@ async function main() {
   const analyticsEvents = await db.analyticsEvent.findMany({
     select: { id: true, name: true, subjectKey: true, createdAt: true },
   });
-  const retentionDays = (await db.rail.findUnique({
+  const retentionRail = await db.rail.findUnique({
     where: { key: "analytics.retentionDays" },
-  }))!.value;
+  });
+  if (!retentionRail) {
+    analyticsProblems++;
+    console.error(
+      "✗ ANALYTICS: rail analytics.retentionDays is not seeded — run db:seed (a missing rail is a build error)"
+    );
+  }
+  const retentionDays = retentionRail?.value ?? 90;
   const crushDeadline = new Date(
     Date.now() - (retentionDays + 7) * 24 * 60 * 60 * 1000
   );

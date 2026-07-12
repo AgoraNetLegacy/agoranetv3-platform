@@ -423,3 +423,122 @@ workshop URL, then search for your draft's words (nothing), then your
 chamber's title (storefront) → `npm run db:verify`. Judge: is this
 the incubator you designed — public face, enclosed workbench, priced
 in both tokens?
+
+## Phase 8 — Deployment Hardening ⚙ BUILD HALF SELF-VERIFIED (2026-07-11) — checkpoint awaits YOUR cohort
+
+**The split, stated plainly:** everything BUILD_ORDER names for Phase 8
+is built and verified below. The checkpoint itself — a small real
+cohort (not you) onboarding unaided, funnel and logs reviewed together
+— is inherently yours: recruiting the cohort, provisioning the staging
+host (DECISIONS_PENDING #14; billing/accounts are owner-inherent), and
+the joint review. The build half is ready for that day.
+
+**Shipped:**
+- **The Postgres track** (DATABASE_SETUP.md; Build Law rule 4's
+  SQLite-only era ends here): prisma/postgresql/schema.prisma with
+  model definitions BYTE-IDENTICAL to the SQLite schema, consolidated
+  0_init migration, `db:validate:postgres` parity check wired into
+  `npm run check` (drift fails the build), `lib/runtimeConfig.ts` —
+  a hosted environment REFUSES TO BOOT on a non-Postgres/placeholder
+  DATABASE_URL, weak trust secrets, or an undeclared proxy.
+- **Backups & DR** (BACKUP_DR_SPEC, owner-ratified): nightly pg_dump +
+  retention (30 daily / 12 monthly, rails; cadence IS the RPO rail,
+  bounds 1–24h — tightening is a config change by design), the monthly
+  automated restore drill (restores the latest backup to scratch, runs
+  the FULL invariant suite on the restored copy — recovery is provably
+  untampered, exits nonzero: a failed drill is a production incident),
+  the worst-day restore with its consent gate, and docs/RUNBOOK.md
+  (cron schedule explained, quarterly manual drill checklist, the
+  corruption/outage/compromise decision tree). Every backup/restore/
+  drill run lands on the PUBLIC admin log (admin.backup.* ledger
+  events, operator-attributed), rendered on /transparency.
+- **The consolidated rate-limit schedule** (ANTI_SYBIL_CONSOLIDATION §3
+  watch-item W4 — closed): sixteen ratelimit.* rails (limits anchored
+  to the v2 platform's proven limiter, the Light Score anchor
+  discipline; windows structural: burst/hour/day-cycle), enforced at
+  EVERY write action via requireFace(policy) + a global backstop;
+  pre-identity ceremonies keyed on session + proxied address; the
+  faceSwitch wall is anti-automation, NOT a cooldown (owner: none).
+  Walls sit at machine speed — fees remain the ratified throttle.
+- **The minimal-log discipline audit** (DUAL_IDENTITY §7 vector-4
+  review — docs/LOG_DISCIPLINE_AUDIT.md): application code logs
+  NOTHING (zero console lines in lib/+app/, no IP/UA/device/geo column
+  anywhere — both now GUARDED by tests), headers() has exactly one
+  audited consumer (HMAC-fed, never stored), rate-limit counters are
+  HMAC-keyed and pruned, host access logs identified as the one
+  out-of-repo vector with a binding posture requirement. The honest
+  finding, named: SoulSession co-residency is the one operator-space
+  surface both faces share — inherent to Phase A, within the ratified
+  disclosure's words, swept short-retention, dissolves at Phase 9.
+- **The analytics funnel** (ANALYTICS_SPEC, privacy-constrained):
+  in-house-minimal pipeline (tool selection resolved + flagged #13 —
+  the ratified constraints are STRICTER than Umami/Plausible defaults);
+  an event is a NAME and a MOMENT (structurally no payload); CLOSED
+  measured vocabulary; subject keys HMAC'd on exactly three event
+  types (provably unjoinable to rate-limit keys); onboarding funnel
+  instrumented at the ceremonies; the 90-day crush (rail CAPPED at 90
+  — lengthening is structurally a code change) into permanent
+  aggregates + cohort curves; /commons — State of the Commons, the
+  honest growth numbers public; analytics NEVER feeds ranking (feed/
+  search importing the pipeline fails the suite).
+- **Staging deployability**: docs/DEPLOYMENT.md (host requirements
+  matrix, step-by-step staging setup), hosting recommendation Render
+  (flagged #14 — provisioning is yours), smoke:staging (signed-out
+  landmarks on the eight public surfaces). Deliberately NOT set up:
+  observability SaaS (needs its own §7 review first), email, CDN,
+  object storage.
+- **Cold start confirmed + early-platform honesty**: fresh-seed
+  walkthrough green (canon + pillar content IS the seed — 105
+  Discussions alive with zero user content; every empty state honest);
+  below 25 active souls (rail) the Alias ceremony says plainly that a
+  small crowd thins anonymity (§7.2's own directive, flagged #16).
+  Invite mechanics deliberately NOT built — your launch-gating
+  decision, queued #15 with a recommendation (the cohort needs only an
+  unlisted staging URL).
+
+**Evidence:** 206 tests across 15 files (31 new in
+tests/hardening.test.ts); `db:verify` grew to 31 checks — Ops &
+counter hygiene (HMAC-shaped bucket keys, payload-allowlisted +
+operator-attributed admin events) and Analytics discipline (closed
+vocabulary, scoped HMAC subject-keying, retention honored with crush
+grace, ledger clean) — both demonstrated FAILING LOUDLY under test (a
+raw session id smuggled as a counter key; a sourceIp field in an ops
+payload; a 'dwell.time.ms' event). `demo:phase8` walks the checkpoint
+build-half end to end; all 31 checks pass on the exercised database.
+**Live against a real PostgreSQL 17:** migrate deploy (0_init) → seed
+→ ALL 31 CHECKS PASS → backup → restore drill green end to end (the
+restored ledger verifies untampered), and a deliberately corrupted
+archive FAILS the drill loudly (exit 1, ok:false on the admin log).
+**Live browser walkthrough on a fresh cold-start database:** a soul
+onboarded unaided through the real UI (gate → credential → True Self →
+consents → orientation, grants visibly landing → values seed → first
+post in a canon thread, fee labeled); /commons tracked every funnel
+step exactly (1-1-1-1-2-1-1-0); the pace wall fired live on the 6th
+verification attempt ("Refused, honestly… try again in about 42
+minutes"); the early-platform note rendered at the hatch ceremony.
+Spec-conformance pass: DATABASE_SETUP, BACKUP_DR (§6.2 media lane N/A
+— no uploads at launch), ANALYTICS (§3 infrastructure vitals are the
+host dashboard's lane, noted in DEPLOYMENT.md), ANTI_SYBIL W4,
+DUAL_IDENTITY §7 — every line built or explicitly flagged.
+
+**Flagged for you (non-blocking, queued in DECISIONS_PENDING):**
+#13 analytics tool selection + /commons placement + public stat set ·
+#14 hosting provider (Render recommended; provisioning + ~$25–40/mo
+are yours) · #15 invite mechanics / launch gating (recommendation:
+cohort via unlisted URL, decide gating for public launch) · #16 the
+early-platform crowd-size note wording.
+
+**What only you can do to close Phase 8:** (1) provision staging per
+docs/DEPLOYMENT.md §3 (~an hour of dashboard work); (2) recruit the
+small cohort and hand them the URL; (3) when they've onboarded
+unaided, we review the funnel (/commons) and the logs together. The
+build will be waiting.
+
+**If you choose to look (15 min, no staging needed):** `npm run
+demo:phase8` (the walls, the counters that know nobody, the crush, the
+guard refusing an unsafe boot, all 31 checks) → then in the browser:
+try to verify 6 times fast (meet the wall, read its refusal) →
+`/commons` (watch the funnel move as you onboard a throwaway soul) →
+`/transparency` (the admin log now shows backup drills) → `/alias`
+(read the early-platform honesty note). Judge: is this a platform
+other humans can touch?

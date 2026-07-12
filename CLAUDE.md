@@ -63,22 +63,21 @@ under it.**
 
 ## Current Phase
 
-**Phase 8 — Deployment Hardening** (see BUILD_ORDER.md; Phases 0–7.5
-checkpointed per CHECKPOINTS.md — read it first, plus
-DECISIONS_PENDING.md and DERIVED_DEFAULTS.md). Goal: other humans can
-touch it.
-- **Postgres track + parity checking** (now it's warranted —
-  `DATABASE_SETUP.md` governs; Build Law rule 4's SQLite-only era ends
-  here), staging environment, backups/DR per `Backup and DR/`.
-- Rate limiting / anti-Sybil controls; **minimal-log discipline
-  audit** — the correlation-vector review against DUAL_IDENTITY §7.
-- Analytics funnel (privacy-constrained, per `Analytics/`).
-- Content seeding plan: canon + pillar content is the seed by design;
-  confirm cold-start surfaces. Invite mechanics if launch is gated
-  (owner decision).
+**Phase 8 — Deployment Hardening: BUILD HALF COMPLETE, self-verified
+2026-07-11** (CHECKPOINTS.md has the full record — read it first, plus
+DECISIONS_PENDING.md #13–16 and DERIVED_DEFAULTS.md). Every
+BUILD_ORDER Phase 8 deliverable is built and verified: the Postgres
+track + parity, backups/DR + the restore drill (proven live against a
+real Postgres 17), the consolidated rate-limit schedule (W4 closed),
+the minimal-log discipline audit (guarded, not just clean), the
+privacy-constrained analytics funnel + /commons, staging
+deployability (docs/DEPLOYMENT.md + docs/RUNBOOK.md), cold-start
+confirmed, invite mechanics queued as the owner's launch-gating
+decision.
 
-**Phase 8 checkpoint:** a small real cohort (not the owner) onboards
-unaided; funnel and logs reviewed together. NOTE: this checkpoint
-inherently needs the owner — recruiting the cohort and the joint
-review are his; flag readiness explicitly when the build half is
-verified.
+**What remains is inherently the owner's:** provision staging
+(DECISIONS_PENDING #14), recruit the small real cohort, and review the
+funnel and logs together — THE Phase 8 checkpoint. Do not start
+Phase 9 (the chain; hard legal gate) without owner ratification of
+this checkpoint. Sessions in the meantime: owner-directed polish,
+DECISIONS_PENDING items he resolves, or cohort-feedback fixes.
