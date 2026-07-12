@@ -1,12 +1,14 @@
-// AgoraNet v3 — SQLite schema (local dev + the fast test suite).
+// AgoraNet v3 — PostgreSQL schema (staging + production).
 //
 // Dual-provider from Phase 8 (DATABASE_SETUP.md): this file and
-// prisma/postgresql/schema.prisma keep their model definitions
-// BYTE-IDENTICAL — only the preamble above the first model differs.
-// Drift fails the build via `npm run db:validate:postgres`.
+// prisma/schema.prisma keep their model definitions BYTE-IDENTICAL —
+// only the preamble above the first model differs. Drift fails the
+// build via `npm run db:validate:postgres`. Migrations for this
+// provider live in prisma/postgresql/migrations (consolidated init,
+// then tracked 1:1 with SQLite — the v2 pattern).
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
