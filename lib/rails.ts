@@ -505,6 +505,34 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     description:
       "Transparency-dashboard snapshot cadence (owner-ratified daily, 2026-07-08). The underlying ledger stays live; only rendered aggregates are periodic.",
   },
+  // --- Backups (Phase 8 — BACKUP_DR_SPEC §1–2, owner-ratified
+  // 2026-07-08). The cadence is the RPO rail: nightly at launch,
+  // explicitly built to tighten to hourly/continuous WITHOUT redesign —
+  // change the rail, not the machinery. Mandatory re-review before the
+  // real-money era (Phase 9 entry checklist).
+  {
+    key: "backup.cadenceHours",
+    value: 24,
+    unit: "hours",
+    boundMin: 1,
+    boundMax: 24,
+    description:
+      "Backup cadence = the data-loss tolerance (RPO ~1 day at launch, owner-ratified with tighten-path). Lowering it is a config change by design; it can never exceed one day-cycle.",
+  },
+  {
+    key: "backup.retainDaily",
+    value: 30,
+    unit: "x",
+    description:
+      "Daily backups retained (BACKUP_DR §2 shipped default). Older dailies are pruned by the backup job itself.",
+  },
+  {
+    key: "backup.retainMonthly",
+    value: 12,
+    unit: "x",
+    description:
+      "Monthly backups retained (BACKUP_DR §2 shipped default): the first backup of each month is kept a year.",
+  },
   // --- Rate limits (Phase 8 — the consolidated W4 schedule,
   // ANTI_SYBIL_CONSOLIDATION §3). Each value is the max acts per its
   // policy's window (lib/rateLimit.ts fixes the windows: 10-min burst,

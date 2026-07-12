@@ -156,6 +156,46 @@ describe("dual-provider parity (DATABASE_SETUP.md)", () => {
   });
 });
 
+describe("backup retention policy (BACKUP_DR §2 — 30 daily / 12 monthly)", () => {
+  const day = (d: string, n = 0) => `agoranet-${d}T0${n}-00-00-000Z.dump`;
+
+  it("keeps everything inside the daily window", async () => {
+    const { selectPrunable } = await import("../scripts/backup-postgres");
+    const now = new Date("2026-07-11T12:00:00Z");
+    const files = [day("2026-07-11"), day("2026-07-01"), day("2026-06-15")];
+    expect(selectPrunable(files, now, 30, 12)).toEqual([]);
+  });
+
+  it("prunes old dailies but keeps each month's first backup", async () => {
+    const { selectPrunable } = await import("../scripts/backup-postgres");
+    const now = new Date("2026-07-11T12:00:00Z");
+    const files = [
+      day("2026-03-01"), // monthly keeper (first of March)
+      day("2026-03-02"), // prunable daily
+      day("2026-03-15"), // prunable daily
+      day("2026-07-10"), // inside daily window
+    ];
+    expect(selectPrunable(files, now, 30, 12)).toEqual([
+      day("2026-03-02"),
+      day("2026-03-15"),
+    ]);
+  });
+
+  it("prunes monthlies beyond the monthly window", async () => {
+    const { selectPrunable } = await import("../scripts/backup-postgres");
+    const now = new Date("2026-07-11T12:00:00Z");
+    const files = [day("2025-05-01"), day("2025-08-01")];
+    expect(selectPrunable(files, now, 30, 12)).toEqual([day("2025-05-01")]);
+  });
+
+  it("two same-day backups: only the first is the monthly keeper", async () => {
+    const { selectPrunable } = await import("../scripts/backup-postgres");
+    const now = new Date("2026-07-11T12:00:00Z");
+    const files = [day("2026-03-01", 1), day("2026-03-01", 2)];
+    expect(selectPrunable(files, now, 30, 12)).toEqual([day("2026-03-01", 2)]);
+  });
+});
+
 describe("the consolidated rate-limit schedule (W4)", () => {
   it("seeds a rail for every policy in the table", () => {
     const railKeys = new Set(RAIL_DEFAULTS.map((r) => r.key));
