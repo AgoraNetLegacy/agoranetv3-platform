@@ -1,5 +1,7 @@
 import { ALIAS_DISCLOSURES } from "@/lib/disclosures";
 import { hatchAlias } from "@/app/actions";
+import { db } from "@/lib/db";
+import { getRail } from "@/lib/rails";
 
 export const dynamic = "force-dynamic";
 
@@ -12,9 +14,28 @@ export default async function AliasPage({
   searchParams: Promise<{ m?: string }>;
 }) {
   const { m } = await searchParams;
+  // Early-platform honesty (DUAL_IDENTITY §7.2, vector 5): a small crowd
+  // thins anonymity, and the UX must say so rather than imply otherwise.
+  const [activeSouls, smallPopulation] = await Promise.all([
+    db.profile.count({ where: { status: "active" } }),
+    getRail(db, "identity.smallPopulationThreshold"),
+  ]);
+  const early = activeSouls < smallPopulation;
   return (
     <div className="ceremony">
       <h2>Hatch an Alias</h2>
+      {early && (
+        <div className="notice">
+          <strong>The platform is young — read this honestly.</strong> An
+          Alias hides you in a crowd, and right now the crowd is small
+          (fewer than {smallPopulation} active souls). In a small
+          population, patterns identify people regardless of cryptography —
+          &ldquo;the only soul active in both of two niche places&rdquo; is
+          a signature. Your Alias is still unlinkable in every record we
+          keep; the crowd it hides in simply hasn&rsquo;t arrived yet. This
+          note lifts itself as the commons grows.
+        </div>
+      )}
       <p>
         Your second face: for the argument you can't afford professionally,
         the report you can't sign, the struggle you won't wear publicly.

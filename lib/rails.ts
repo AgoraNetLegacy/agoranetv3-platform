@@ -533,6 +533,17 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     description:
       "Monthly backups retained (BACKUP_DR §2 shipped default): the first backup of each month is kept a year.",
   },
+  // --- Early-platform honesty (Phase 8 — DUAL_IDENTITY §7.2: "early-
+  // platform UX should say so rather than imply full crowd-anonymity
+  // from day one"). Same 25 anchor as the Circle small-community
+  // warning (the lattice's serious-stake magnitude, CIRCLES OQ6).
+  {
+    key: "identity.smallPopulationThreshold",
+    value: 25,
+    unit: "members",
+    description:
+      "Below this many active souls, the Alias ceremony carries the early-platform crowd-size honesty note (§7.2 vector 5). Auto-lifts as the commons grows; never blocks hatching.",
+  },
   // --- Analytics (Phase 8 — ANALYTICS_SPEC §5, owner-ratified 90 days).
   {
     key: "analytics.retentionDays",

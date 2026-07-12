@@ -219,3 +219,24 @@ never live here — they interrupt directly.
     four cron jobs, set the access-log posture (LOG_DISCIPLINE_AUDIT
     #4). Budget ~US$25–40/mo for staging-grade everything. Gates: the
     Phase 8 checkpoint's real cohort needs a URL to touch.
+
+15. **Invite mechanics — YOUR launch-gating decision (BUILD_ORDER
+    Phase 8: "invite mechanics if launch is gated").** Nothing is built,
+    deliberately — building an invite system presumes the answer.
+    Recommendation: the Phase 8 checkpoint cohort does NOT need invite
+    mechanics — an unlisted staging URL is the gate (recruit by link).
+    The real decision is PUBLIC launch posture: open door vs. invite
+    waves. If you choose gated, say so and the invite mechanics get
+    specced against ONBOARDING (they touch the anti-Sybil story — the
+    audit's surface #1 lists "invite gating in early phases" as a
+    defense-in-depth option, not a requirement). Gates: public launch
+    only; the cohort test proceeds without it.
+
+16. **Early-platform crowd-size honesty (DUAL_IDENTITY §7.2, vector
+    5) — built this phase, bless the wording.** Below 25 active souls
+    (rail `identity.smallPopulationThreshold`, the lattice's 25 anchor —
+    same as the Circle small-community warning), the Alias ceremony
+    carries a plain note: the crowd is small, patterns identify, the
+    records are still unlinkable, the note lifts itself as the commons
+    grows. §7.2's own directive ("early-platform UX should say so"),
+    surfaced at the exact moment it matters. Never blocks hatching.
