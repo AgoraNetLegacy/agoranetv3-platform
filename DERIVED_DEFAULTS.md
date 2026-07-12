@@ -108,6 +108,29 @@ Sentinel bundles it to the Tribunal. 24h is the platform's rhythm unit
 - **Treasury snapshot cadence: 24h** — owner-ratified daily
   (TREASURY §6.2); held as a rail like everything else.
 
+## Phase 8 rails (2026-07-11 — same derivation discipline)
+
+- **The consolidated rate-limit schedule** (ANTI_SYBIL_CONSOLIDATION §3
+  watch-item W4, the named Phase 8 deliverable): sixteen `ratelimit.*`
+  rails, one per surface family plus a global backstop, enforced at
+  every write action (lib/rateLimit.ts). **Anchor: the v2 platform's
+  proven limiter** — the same declared-reuse anchor as the Light Score
+  weights — with v2 values carried verbatim where the surface maps 1:1
+  (posting 12, votes 120, flags 20, moderation 60, appeals 5,
+  faceSwitch 30) and mapped to the nearest v2 family where v3's surface
+  is new (chambers → creation, DMs → the debate wall). Windows are
+  structural, not rails: the 10-minute burst window, the hour, and the
+  ratified 24h day-cycle. Walls sit at machine speed — fees and
+  deposits remain the ratified throttle (incentive design, per the
+  anti-Sybil audit's own verdict); these are the outer wall against
+  automation. **The faceSwitch wall is NOT a cooldown** (owner resolved
+  cooldown = NONE, 2026-07-11): 30/10min is two orders of magnitude
+  above human switching.
+- **Bucket retention: 2 day-cycles** — counters are HMAC-keyed
+  (RATE_LIMIT_SECRET; no raw IP/session/profile id is ever stored) and
+  pruned after twice the longest window. Minimal-log discipline applied
+  to our own counters.
+
 ## Already anchored elsewhere (no action)
 
 Consensus threshold default 60% (the spec's own example) · read-only

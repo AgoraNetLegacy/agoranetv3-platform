@@ -1222,3 +1222,21 @@ model TreasurySnapshot {
   inflows  String // JSON { category: { PC, G } } — running totals at snapshot
   outflows String // JSON { category: { PC, G } } — running totals at snapshot
 }
+
+// ------------------------------------------------------------------
+// Rate limiting (Phase 8 — ANTI_SYBIL_CONSOLIDATION §3 W4, the
+// consolidated schedule; lib/rateLimit.ts). Fixed-window counters.
+// The key is HMAC(policy, identifier, window) — no raw IP, session, or
+// profile id is ever stored here (DUAL_IDENTITY §7.1 vector 4), and a
+// bucket carries no payload. Rows expire with their window; the prune
+// job deletes them after two day-cycles. Short retention is the point.
+// ------------------------------------------------------------------
+
+model RateLimitBucket {
+  key         String   @id // HMAC — never a raw identifier
+  policy      String
+  windowStart DateTime
+  count       Int      @default(0)
+
+  @@index([windowStart])
+}

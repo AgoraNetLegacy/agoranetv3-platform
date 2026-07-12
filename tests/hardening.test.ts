@@ -1,15 +1,47 @@
-// Phase 8 — Deployment Hardening: the runtime config guard and the
-// dual-provider parity discipline (DATABASE_SETUP.md).
+// Phase 8 — Deployment Hardening: the runtime config guard, the
+// dual-provider parity discipline (DATABASE_SETUP.md), and the
+// consolidated rate-limit schedule (ANTI_SYBIL_CONSOLIDATION §3 W4).
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { spawnSync } from "child_process";
+import { createTestDb, REPO_ROOT } from "./helpers/testDb";
+
+const { url } = createTestDb("hardening");
+process.env.DATABASE_URL = url;
+process.env.GATE_OPERATOR_SECRET = "test-secret-for-hardening-tests";
+process.env.RATE_LIMIT_SECRET = "test-rate-limit-secret-for-hardening";
+
+import { PrismaClient } from "@prisma/client";
 import {
   validateRuntimeConfig,
   requireRuntimeConfig,
   isHostedEnvironment,
 } from "../lib/runtimeConfig";
-import { REPO_ROOT } from "./helpers/testDb";
+import {
+  checkRateLimit,
+  enforceRateLimit,
+  pruneRateLimitBuckets,
+  RateLimitError,
+  RATE_LIMIT_POLICIES,
+} from "../lib/rateLimit";
+import { RAIL_DEFAULTS } from "../lib/rails";
+
+const db = new PrismaClient({ datasources: { db: { url } } });
+
+beforeAll(async () => {
+  const seeded = spawnSync("npx", ["tsx", "prisma/seed.ts"], {
+    cwd: REPO_ROOT,
+    env: { ...process.env, DATABASE_URL: url },
+    encoding: "utf8",
+  });
+  if (seeded.status !== 0) throw new Error(`seed failed: ${seeded.stderr}`);
+});
+
+afterAll(async () => {
+  await db.$disconnect();
+});
 
 const STRONG = "a".repeat(20) + "b".repeat(20);
 
@@ -121,5 +153,89 @@ describe("dual-provider parity (DATABASE_SETUP.md)", () => {
         `CREATE TABLE "${model}"`
       );
     }
+  });
+});
+
+describe("the consolidated rate-limit schedule (W4)", () => {
+  it("seeds a rail for every policy in the table", () => {
+    const railKeys = new Set(RAIL_DEFAULTS.map((r) => r.key));
+    for (const policy of Object.values(RATE_LIMIT_POLICIES)) {
+      expect(railKeys.has(`ratelimit.${policy.name}`), policy.name).toBe(true);
+    }
+  });
+
+  it("allows under the wall and refuses over it, with a retry horizon", async () => {
+    const now = new Date("2026-07-11T12:00:00Z");
+    // register: 3/hour — small enough to walk over.
+    for (let i = 1; i <= 3; i++) {
+      const r = await checkRateLimit(db, "register", "soul-a", now);
+      expect(r.allowed).toBe(true);
+      expect(r.limit).toBe(3);
+    }
+    const fourth = await checkRateLimit(db, "register", "soul-a", now);
+    expect(fourth.allowed).toBe(false);
+    expect(fourth.remaining).toBe(0);
+    expect(fourth.retryAfterSeconds).toBeGreaterThan(0);
+    expect(fourth.retryAfterSeconds).toBeLessThanOrEqual(3600);
+  });
+
+  it("keys are per-identifier: one soul's flood never walls another", async () => {
+    const now = new Date("2026-07-11T12:00:00Z");
+    const r = await checkRateLimit(db, "register", "soul-b", now);
+    expect(r.allowed).toBe(true);
+  });
+
+  it("a new window is a clean slate", async () => {
+    const later = new Date("2026-07-11T13:00:01Z"); // next hour window
+    const r = await checkRateLimit(db, "register", "soul-a", later);
+    expect(r.allowed).toBe(true);
+  });
+
+  it("stores only HMAC keys — no raw identifier in any bucket row", async () => {
+    const buckets = await db.rateLimitBucket.findMany();
+    expect(buckets.length).toBeGreaterThan(0);
+    for (const bucket of buckets) {
+      expect(bucket.key).toMatch(/^[0-9a-f]{64}$/);
+      expect(bucket.key).not.toContain("soul-a");
+      expect(bucket.key).not.toContain("soul-b");
+    }
+  });
+
+  it("the limit is a rail: adjusting it moves the wall", async () => {
+    const now = new Date("2026-07-11T12:00:00Z");
+    await db.rail.update({
+      where: { key: "ratelimit.register" },
+      data: { value: 5 },
+    });
+    const r = await checkRateLimit(db, "register", "soul-a", now); // 5th act
+    expect(r.allowed).toBe(true);
+    const sixth = await checkRateLimit(db, "register", "soul-a", now);
+    expect(sixth.allowed).toBe(false);
+    await db.rail.update({
+      where: { key: "ratelimit.register" },
+      data: { value: 3 },
+    });
+  });
+
+  it("enforceRateLimit refuses in soul-facing words", async () => {
+    const now = new Date("2026-07-11T12:00:00Z");
+    await expect(
+      enforceRateLimit(db, "register", "soul-a", now)
+    ).rejects.toThrowError(RateLimitError);
+    await expect(
+      enforceRateLimit(db, "register", "soul-a", now)
+    ).rejects.toThrowError(/Pace wall.*machine speed/s);
+  });
+
+  it("prunes buckets older than two day-cycles, keeps live ones", async () => {
+    const ancient = new Date("2026-07-01T00:00:00Z");
+    await checkRateLimit(db, "posting", "soul-old", ancient);
+    const before = await db.rateLimitBucket.count();
+    const removed = await pruneRateLimitBuckets(db, new Date("2026-07-11T12:00:00Z"));
+    expect(removed).toBeGreaterThan(0);
+    const after = await db.rateLimitBucket.count();
+    expect(after).toBe(before - removed);
+    // The current-window buckets from the tests above survive.
+    expect(after).toBeGreaterThan(0);
   });
 });

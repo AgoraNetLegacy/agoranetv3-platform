@@ -27,7 +27,8 @@ export interface RailDefault {
     | "seats"
     | "flags"
     | "members"
-    | "x";
+    | "x"
+    | "actions";
   boundMin?: number; // defaults to ¼× value
   boundMax?: number; // defaults to 4× value
   description: string;
@@ -503,6 +504,117 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     unit: "hours",
     description:
       "Transparency-dashboard snapshot cadence (owner-ratified daily, 2026-07-08). The underlying ledger stays live; only rendered aggregates are periodic.",
+  },
+  // --- Rate limits (Phase 8 — the consolidated W4 schedule,
+  // ANTI_SYBIL_CONSOLIDATION §3). Each value is the max acts per its
+  // policy's window (lib/rateLimit.ts fixes the windows: 10-min burst,
+  // hour, or 24h day-cycle). Numbers anchor to the v2 platform's proven
+  // limiter — the same anchor discipline as the Light Score weights.
+  // Walls sit at machine speed; fees remain the real throttle.
+  {
+    key: "ratelimit.verify",
+    value: 5,
+    unit: "actions",
+    description:
+      "Verification attempts per hour per arrival (v2 signup wall). Identity multiplication is surface #1; the gate does the real work — this stops the hammering.",
+  },
+  {
+    key: "ratelimit.register",
+    value: 3,
+    unit: "actions",
+    description:
+      "Registration ceremonies per hour per arrival (v2 anchor). One-True-Self/one-Alias is enforced by nullifiers; this is the outer wall.",
+  },
+  {
+    key: "ratelimit.login",
+    value: 10,
+    unit: "actions",
+    description:
+      "Sign-in attempts per burst window per arrival — the credential-stuffing wall (v2 verify wall, burst-shaped).",
+  },
+  {
+    key: "ratelimit.posting",
+    value: 12,
+    unit: "actions",
+    description:
+      "Posts/edits per burst window per face (v2 answer wall verbatim). A deliberating human writes slower; a flood writes faster.",
+  },
+  {
+    key: "ratelimit.votes",
+    value: 120,
+    unit: "actions",
+    description:
+      "Ballots per burst window per face (v2 vote wall verbatim). Generous — a soul working through every open poll never meets it.",
+  },
+  {
+    key: "ratelimit.economy",
+    value: 30,
+    unit: "actions",
+    description:
+      "Tips/permanence upgrades per burst window per face (v2 debate wall). Tips already cost; this stops tip-bot cycling.",
+  },
+  {
+    key: "ratelimit.creation",
+    value: 6,
+    unit: "actions",
+    description:
+      "Space/poll/action creations per hour per face (v2 creation wall). Creations carry real fees — this is the automation backstop.",
+  },
+  {
+    key: "ratelimit.flags",
+    value: 20,
+    unit: "actions",
+    description:
+      "Flags/reports per hour per face (v2 flag wall verbatim). Deposits price flag abuse; the wall stops flag-storms outright.",
+  },
+  {
+    key: "ratelimit.moderation",
+    value: 60,
+    unit: "actions",
+    description:
+      "Moderation acts per hour per face (v2 moderate wall verbatim). A badge-holder working a full queue stays far under it.",
+  },
+  {
+    key: "ratelimit.appeals",
+    value: 5,
+    unit: "actions",
+    description:
+      "Appeals/restorative acceptances per day-cycle per face (v2 appeal wall verbatim). Appeals also carry the 25u deposit.",
+  },
+  {
+    key: "ratelimit.social",
+    value: 20,
+    unit: "actions",
+    description:
+      "Social acts (requests, joins, attestations, invites, thread opens) per burst window per face (v2 stance wall). Initiator-pays does the real anti-spam work.",
+  },
+  {
+    key: "ratelimit.dmMessages",
+    value: 30,
+    unit: "actions",
+    description:
+      "Direct messages per burst window per face (v2 debate wall). Conversation-speed is untouched; scripted blasts are not.",
+  },
+  {
+    key: "ratelimit.settings",
+    value: 60,
+    unit: "actions",
+    description:
+      "Preference changes (feed sources, follows, mutes, reads) per burst window per face. Cheap writes, generous wall.",
+  },
+  {
+    key: "ratelimit.faceSwitch",
+    value: 30,
+    unit: "actions",
+    description:
+      "Face switches per burst window per session (v2 switch wall verbatim). NOT a cooldown — the owner resolved that to NONE (2026-07-11); this is an anti-automation wall two orders of magnitude above human switching.",
+  },
+  {
+    key: "ratelimit.global",
+    value: 240,
+    unit: "actions",
+    description:
+      "The backstop: total write actions per burst window per face/session — 2x the most generous family wall. Nothing human meets it.",
   },
 ];
 

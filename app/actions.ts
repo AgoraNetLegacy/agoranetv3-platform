@@ -76,17 +76,41 @@ import {
   activeFace,
   setOneTimeSecret,
   clearOneTimeSecret,
+  clientAddress,
 } from "@/lib/webSession";
+import { enforceRateLimit, type RateLimitPolicyName } from "@/lib/rateLimit";
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
   redirect(`${path}${suffix}`);
 }
 
-async function requireFace() {
+// Every write action passes a wall from the consolidated W4 schedule
+// (lib/rateLimit.ts) plus the global backstop. Identifiers are HMAC-hashed
+// before any bucket row exists — nothing here stores who acted.
+
+async function requireFace(policy?: RateLimitPolicyName) {
   const face = await activeFace();
   if (!face) throw new Error("No face is active in this session.");
+  if (policy) await enforceRateLimit(db, policy, face.id);
+  await enforceRateLimit(db, "global", face.id);
   return face;
+}
+
+/** Walls for surfaces that exist before any face does (verification,
+ *  registration, sign-in): keyed on the browser session and — behind a
+ *  declared proxy — the client address. */
+async function limitArrival(policy: RateLimitPolicyName): Promise<void> {
+  const sessionId = await ensureSessionId();
+  await enforceRateLimit(db, policy, `session:${sessionId}`);
+  const address = await clientAddress();
+  if (address) await enforceRateLimit(db, policy, `addr:${address}`);
+}
+
+/** Session-keyed wall for face parking/switch controls. */
+async function limitSession(policy: RateLimitPolicyName): Promise<void> {
+  const session = await currentSession();
+  if (session) await enforceRateLimit(db, policy, `session:${session.id}`);
 }
 
 // ---------------------------------------------------------------- posting
@@ -96,7 +120,7 @@ export async function submitPost(formData: FormData) {
   const parentId = String(formData.get("parentId") ?? "") || null;
   const body = String(formData.get("body") ?? "");
   const sourceUrl = String(formData.get("sourceUrl") ?? "").trim();
-  const face = await requireFace();
+  const face = await requireFace("posting");
 
   const result = await createPost(db, {
     discussionId,
@@ -120,7 +144,7 @@ export async function submitTip(formData: FormData) {
   const postId = String(formData.get("postId") ?? "");
   const discussionId = String(formData.get("discussionId") ?? "");
   const amount = Number(formData.get("amount") ?? 0);
-  const face = await requireFace();
+  const face = await requireFace("economy");
 
   const result = await tip(db, { postId, tipperProfileId: face.id, amount });
   revalidatePath(`/d/${discussionId}`);
@@ -130,7 +154,7 @@ export async function submitTip(formData: FormData) {
 export async function submitPermanenceUpgrade(formData: FormData) {
   const postId = String(formData.get("postId") ?? "");
   const discussionId = String(formData.get("discussionId") ?? "");
-  const face = await requireFace();
+  const face = await requireFace("economy");
 
   const result = await upgradePostPermanence(db, { postId, profileId: face.id });
   revalidatePath(`/d/${discussionId}`);
@@ -144,7 +168,7 @@ export async function submitPermanenceUpgrade(formData: FormData) {
 
 export async function completeOrientation(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "");
-  const face = await requireFace();
+  const face = await requireFace("settings");
   if (!(await grantAlreadyGiven(db, face.id, "grant.orientation"))) {
     await db.$transaction(async (tx) => {
       await grant(tx, {
@@ -162,7 +186,7 @@ export async function submitEdit(formData: FormData) {
   const discussionId = String(formData.get("discussionId") ?? "");
   const postId = String(formData.get("postId") ?? "");
   const body = String(formData.get("body") ?? "");
-  const face = await requireFace();
+  const face = await requireFace("posting");
 
   const result = await editPost(db, { postId, profileId: face.id, body });
   revalidatePath(`/d/${discussionId}`);
@@ -174,7 +198,7 @@ export async function submitFlag(formData: FormData) {
   const postId = String(formData.get("postId") ?? "");
   const ruleId = String(formData.get("ruleId") ?? "");
   const note = String(formData.get("note") ?? "");
-  const face = await requireFace();
+  const face = await requireFace("flags");
 
   const result = await fileFlag(db, { postId, profileId: face.id, ruleId, note });
   backTo(`/d/${discussionId}`, result.ok ? "Flag received." : result.reason);
@@ -183,7 +207,7 @@ export async function submitFlag(formData: FormData) {
 // ------------------------------------------------------------------ polls
 
 export async function submitPoll(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("creation");
   const pillarId = String(formData.get("pillarId") ?? "");
   const isGovernance = formData.get("isGovernance") === "1";
   const type = String(formData.get("type") ?? "single") as "single" | "multi" | "consensus";
@@ -212,7 +236,7 @@ export async function submitPoll(formData: FormData) {
 }
 
 export async function submitVote(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("votes");
   const pollId = String(formData.get("pollId") ?? "");
   const optionIds = formData.getAll("optionIds").map(String).filter(Boolean);
 
@@ -222,7 +246,7 @@ export async function submitVote(formData: FormData) {
 }
 
 export async function startPollDiscussion(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("creation");
   const pollId = String(formData.get("pollId") ?? "");
   const result = await createPollDiscussion(db, { pollId, profileId: face.id });
   if (!result.ok) backTo(`/polls/${pollId}`, result.reason);
@@ -232,7 +256,7 @@ export async function startPollDiscussion(formData: FormData) {
 // --------------------------------------------------------------- circles
 
 export async function submitCircle(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("creation");
   const result = await formCircle(db, {
     profileId: face.id,
     name: String(formData.get("name") ?? ""),
@@ -249,7 +273,7 @@ export async function submitCircle(formData: FormData) {
 // -------------------------------------------------------------- chambers
 
 export async function submitChamber(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("creation");
   const result = await createChamber(db, {
     profileId: face.id,
     title: String(formData.get("title") ?? ""),
@@ -269,7 +293,7 @@ export async function submitChamber(formData: FormData) {
 
 export async function submitEnterChamber(formData: FormData) {
   const chamberId = String(formData.get("chamberId") ?? "");
-  const face = await requireFace();
+  const face = await requireFace("social");
   const result = await enterChamber(db, { chamberId, profileId: face.id });
   revalidatePath(`/pollinator/${chamberId}`);
   if (!result.ok) backTo(`/pollinator/${chamberId}`, result.reason);
@@ -278,7 +302,7 @@ export async function submitEnterChamber(formData: FormData) {
 
 export async function submitScaffoldEdit(formData: FormData) {
   const chamberId = String(formData.get("chamberId") ?? "");
-  const face = await requireFace();
+  const face = await requireFace("posting");
   const result = await editScaffold(db, {
     chamberId,
     profileId: face.id,
@@ -295,7 +319,7 @@ export async function submitScaffoldEdit(formData: FormData) {
 
 export async function submitChamberInvite(formData: FormData) {
   const chamberId = String(formData.get("chamberId") ?? "");
-  const face = await requireFace();
+  const face = await requireFace("social");
   const result = await inviteToChamber(db, {
     chamberId,
     profileId: face.id,
@@ -313,7 +337,7 @@ export async function submitChamberInvite(formData: FormData) {
 // ------------------------------------------------------------------ feed
 
 export async function markCaughtUp() {
-  const face = await requireFace();
+  const face = await requireFace("settings");
   await db.feedSettings.upsert({
     where: { profileId: face.id },
     create: { profileId: face.id, caughtUpAt: new Date() },
@@ -324,7 +348,7 @@ export async function markCaughtUp() {
 }
 
 export async function saveFeedSources(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("settings");
   const pillarIds = formData.getAll("pillar").map(String);
   const circleIds = formData.getAll("circle").map(String);
   const chamberIds = formData.getAll("chamber").map(String);
@@ -392,7 +416,7 @@ export async function saveFeedSources(formData: FormData) {
 }
 
 export async function followInFeed(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("settings");
   const kind = String(formData.get("kind") ?? "");
   const refId = String(formData.get("refId") ?? "");
   const returnTo = String(formData.get("returnTo") ?? "/feed");
@@ -408,7 +432,7 @@ export async function followInFeed(formData: FormData) {
 // ---------------------------------------------------------------- search
 
 export async function deleteSearchQuery(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("settings");
   const id = String(formData.get("id") ?? "");
   await db.searchQuery.deleteMany({ where: { id, profileId: face.id } });
   revalidatePath("/search/history");
@@ -416,7 +440,7 @@ export async function deleteSearchQuery(formData: FormData) {
 }
 
 export async function clearSearchHistory() {
-  const face = await requireFace();
+  const face = await requireFace("settings");
   await db.searchQuery.deleteMany({ where: { profileId: face.id } });
   revalidatePath("/search/history");
   backTo("/search/history");
@@ -428,7 +452,7 @@ export async function submitRepair(formData: FormData) {
   const domainId = String(formData.get("domainId") ?? "");
   const pillarSlug = String(formData.get("pillarSlug") ?? "");
   const position = String(formData.get("position") ?? "");
-  const face = await requireFace();
+  const face = await requireFace("creation");
 
   const { submitRepair: submit } = await import("@/lib/domains");
   const result = await submit(db, {
@@ -448,7 +472,7 @@ export async function submitRepair(formData: FormData) {
 }
 
 export async function submitPurposeEdit(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("posting");
   const circleId = String(formData.get("circleId") ?? "");
   const result = await editPurpose(db, {
     circleId,
@@ -463,7 +487,7 @@ export async function submitPurposeEdit(formData: FormData) {
 }
 
 export async function submitJoinCircle(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("social");
   const circleId = String(formData.get("circleId") ?? "");
   const result = await joinCircle(db, {
     circleId,
@@ -478,7 +502,7 @@ export async function submitJoinCircle(formData: FormData) {
 }
 
 export async function submitLeaveCircle(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("social");
   const circleId = String(formData.get("circleId") ?? "");
   const result = await leaveCircle(db, { circleId, profileId: face.id });
   revalidatePath(`/circles/${circleId}`);
@@ -486,7 +510,7 @@ export async function submitLeaveCircle(formData: FormData) {
 }
 
 export async function submitOffer(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("creation");
   const circleId = String(formData.get("circleId") ?? "");
   const result = await postOffer(db, {
     circleId,
@@ -499,7 +523,7 @@ export async function submitOffer(formData: FormData) {
 }
 
 export async function submitOfferUpdate(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("posting");
   const circleId = String(formData.get("circleId") ?? "");
   const result = await updateOffer(db, {
     offerId: String(formData.get("offerId") ?? ""),
@@ -512,7 +536,7 @@ export async function submitOfferUpdate(formData: FormData) {
 }
 
 export async function submitActionEntry(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("creation");
   const circleId = String(formData.get("circleId") ?? "");
   const result = await logAction(db, {
     circleId,
@@ -533,7 +557,7 @@ export async function submitActionEntry(formData: FormData) {
 }
 
 export async function submitAttest(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("social");
   const circleId = String(formData.get("circleId") ?? "");
   const result = await attestAction(db, {
     entryId: String(formData.get("entryId") ?? ""),
@@ -550,7 +574,7 @@ export async function submitAttest(formData: FormData) {
  *  this action composes the poll — consensus type, Adopt/Decline, the
  *  Circle's own bar. */
 export async function submitStewardshipPoll(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("creation");
   const circleId = String(formData.get("circleId") ?? "");
   const kind = String(formData.get("kind") ?? "");
   const target = String(formData.get("target") ?? "").trim().replace(/^@/, "");
@@ -604,7 +628,7 @@ export async function submitStewardshipPoll(formData: FormData) {
 // ------------------------------------------------- fellow souls & messages
 
 export async function submitFellowRequest(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("social");
   const result = await sendFellowSoulRequest(db, {
     fromProfileId: face.id,
     toHandle: String(formData.get("handle") ?? ""),
@@ -614,7 +638,7 @@ export async function submitFellowRequest(formData: FormData) {
 }
 
 export async function submitRequestResponse(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("social");
   const accept = formData.get("accept") === "1";
   const result = await respondToRequest(db, {
     requestId: String(formData.get("requestId") ?? ""),
@@ -632,7 +656,7 @@ export async function submitRequestResponse(formData: FormData) {
 }
 
 export async function submitReleaseBond(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("social");
   const result = await releaseBond(db, {
     profileId: face.id,
     otherProfileId: String(formData.get("otherProfileId") ?? ""),
@@ -641,7 +665,7 @@ export async function submitReleaseBond(formData: FormData) {
 }
 
 export async function submitBlock(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("social");
   const result = await blockSoul(db, {
     blockerProfileId: face.id,
     blockedHandle: String(formData.get("handle") ?? ""),
@@ -650,7 +674,7 @@ export async function submitBlock(formData: FormData) {
 }
 
 export async function submitUnblock(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("social");
   await unblockSoul(db, {
     blockerProfileId: face.id,
     blockedProfileId: String(formData.get("blockedProfileId") ?? ""),
@@ -659,7 +683,7 @@ export async function submitUnblock(formData: FormData) {
 }
 
 export async function submitOpenThread(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("social");
   const result = await openThread(db, {
     fromProfileId: face.id,
     toHandle: String(formData.get("handle") ?? ""),
@@ -670,7 +694,7 @@ export async function submitOpenThread(formData: FormData) {
 }
 
 export async function submitDmMessage(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("dmMessages");
   const threadId = String(formData.get("threadId") ?? "");
   const result = await sendMessage(db, {
     threadId,
@@ -682,7 +706,7 @@ export async function submitDmMessage(formData: FormData) {
 }
 
 export async function submitDeclineThread(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("social");
   const result = await declineThread(db, {
     threadId: String(formData.get("threadId") ?? ""),
     profileId: face.id,
@@ -691,7 +715,7 @@ export async function submitDeclineThread(formData: FormData) {
 }
 
 export async function submitThreadMute(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("settings");
   const threadId = String(formData.get("threadId") ?? "");
   await setThreadMute(db, {
     threadId,
@@ -703,7 +727,7 @@ export async function submitThreadMute(formData: FormData) {
 }
 
 export async function submitThreadDelete(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("settings");
   const result = await deleteThreadForMe(db, {
     threadId: String(formData.get("threadId") ?? ""),
     profileId: face.id,
@@ -712,7 +736,7 @@ export async function submitThreadDelete(formData: FormData) {
 }
 
 export async function submitDmReport(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("flags");
   const threadId = String(formData.get("threadId") ?? "");
   const result = await reportMessage(db, {
     messageId: String(formData.get("messageId") ?? ""),
@@ -732,7 +756,7 @@ export async function submitDmReport(formData: FormData) {
 // ------------------------------------------------------------ moderation
 
 export async function equipOffer(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("moderation");
   const result = await equipBadge(db, {
     offerId: String(formData.get("offerId") ?? ""),
     profileId: face.id,
@@ -741,7 +765,7 @@ export async function equipOffer(formData: FormData) {
 }
 
 export async function passOffer(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("moderation");
   await passBadge(db, {
     offerId: String(formData.get("offerId") ?? ""),
     profileId: face.id,
@@ -750,7 +774,7 @@ export async function passOffer(formData: FormData) {
 }
 
 export async function submitCaseRuling(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("moderation");
   const result = await submitRuling(db, {
     caseId: String(formData.get("caseId") ?? ""),
     profileId: face.id,
@@ -766,7 +790,7 @@ export async function submitCaseRuling(formData: FormData) {
 }
 
 export async function submitSupervision(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("moderation");
   const result = await reviewSupervisedRuling(db, {
     rulingId: String(formData.get("rulingId") ?? ""),
     profileId: face.id,
@@ -776,7 +800,7 @@ export async function submitSupervision(formData: FormData) {
 }
 
 export async function submitTribunalCaseRuling(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("moderation");
   const result = await submitTribunalRuling(db, {
     caseId: String(formData.get("caseId") ?? ""),
     profileId: face.id,
@@ -787,7 +811,7 @@ export async function submitTribunalCaseRuling(formData: FormData) {
 }
 
 export async function submitAppeal(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("appeals");
   const discussionId = String(formData.get("discussionId") ?? "");
   const result = await appealCase(db, {
     caseId: String(formData.get("caseId") ?? ""),
@@ -802,7 +826,7 @@ export async function submitAppeal(formData: FormData) {
 }
 
 export async function submitRestorative(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("appeals");
   const discussionId = String(formData.get("discussionId") ?? "");
   const result = await acceptRestorative(db, {
     caseId: String(formData.get("caseId") ?? ""),
@@ -816,7 +840,7 @@ export async function submitRestorative(formData: FormData) {
 }
 
 export async function markNotificationRead(formData: FormData) {
-  const face = await requireFace();
+  const face = await requireFace("settings");
   await markRead(db, {
     profileId: face.id,
     notificationId: String(formData.get("notificationId") ?? ""),
@@ -828,7 +852,7 @@ export async function markNotificationRead(formData: FormData) {
 
 export async function beginVerification(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "");
-  await ensureSessionId();
+  await limitArrival("verify");
   const { credential } = await verifyHumanity(db);
   await setOneTimeSecret(credential);
   redirect(`/verify/credential${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`);
@@ -846,6 +870,7 @@ export async function createTrueSelf(formData: FormData) {
   const displayName = String(formData.get("displayName") ?? "");
   const returnTo = String(formData.get("returnTo") ?? "");
   const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
+  await limitArrival("register");
 
   const result = await registerTrueSelf(db, { credential, handle, displayName });
   if (!result.ok) backTo(`/verify/trueself${query}`, result.reason);
@@ -865,7 +890,7 @@ export async function acknowledgeConsent(formData: FormData) {
   if (kind !== "permanence" && kind !== "constitution") {
     throw new Error("Unknown consent kind.");
   }
-  const face = await requireFace();
+  const face = await requireFace("settings");
   await recordAck(db, { profileId: face.id, kind });
   redirect(next);
 }
@@ -874,7 +899,7 @@ export async function submitSeedAnswer(formData: FormData) {
   const questionId = String(formData.get("questionId") ?? "");
   const body = String(formData.get("body") ?? "");
   const returnTo = String(formData.get("returnTo") ?? "");
-  const face = await requireFace();
+  const face = await requireFace("settings");
   await saveSeedAnswer(db, { profileId: face.id, questionId, body });
   revalidatePath("/verify/seed");
   backTo(`/verify/seed${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`);
@@ -887,6 +912,7 @@ export async function hatchAlias(formData: FormData) {
   const handle = String(formData.get("handle") ?? "");
   const displayName = String(formData.get("displayName") ?? "");
   const disclosuresAccepted = formData.get("disclosuresAccepted") === "on";
+  await limitArrival("register");
 
   const result = await registerAlias(db, {
     credential,
@@ -902,7 +928,7 @@ export async function hatchAlias(formData: FormData) {
 
 export async function updateDisplayName(formData: FormData) {
   const displayName = String(formData.get("displayName") ?? "");
-  const face = await requireFace();
+  const face = await requireFace("settings");
   const result = await changeDisplayName(db, { profileId: face.id, displayName });
   revalidatePath("/", "layout");
   backTo("/profile", result.ok ? "Display name updated (live surfaces only — permanent records keep the name they were written under)." : result.reason);
@@ -912,6 +938,7 @@ export async function updateDisplayName(formData: FormData) {
 
 export async function loginFace(formData: FormData) {
   const accessKey = String(formData.get("accessKey") ?? "");
+  await limitArrival("login");
   await activateDueAliases(db);
 
   const result = await profileForAccessKey(db, accessKey);
@@ -932,6 +959,7 @@ export async function loginFace(formData: FormData) {
 
 export async function switchToFace(formData: FormData) {
   const profileId = String(formData.get("profileId") ?? "");
+  await limitSession("faceSwitch");
   const session = await currentSession();
   if (!session) backTo("/", "Session expired.");
   const result = await switchFace(db, {
@@ -945,6 +973,7 @@ export async function switchToFace(formData: FormData) {
 
 /** Returning to the hub ends the active face's pillar sessions (§3.3.5). */
 export async function returnToHub() {
+  await limitSession("faceSwitch");
   const session = await currentSession();
   if (session?.activeProfileId) {
     await releaseLocks(db, {
@@ -960,6 +989,7 @@ export async function returnToHub() {
 export async function releasePillar(formData: FormData) {
   const pillarId = String(formData.get("pillarId") ?? "");
   const pillarSlug = String(formData.get("pillarSlug") ?? "");
+  await limitSession("faceSwitch");
   const session = await currentSession();
   if (!session) backTo("/", "Session expired.");
   await releaseLock(db, { sessionId: session.id, pillarId });

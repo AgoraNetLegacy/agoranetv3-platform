@@ -4,7 +4,7 @@
 // one-time httpOnly cookies rendered exactly once — never query strings,
 // which leak into history and logs (DUAL_IDENTITY §7.1 vector 4).
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { db } from "./db";
 import { createSession, getSession } from "./parking";
 
@@ -49,6 +49,17 @@ export async function sessionFaces() {
     where: { id: { in: session.faces.map((f) => f.profileId) } },
     orderBy: { createdAt: "asc" },
   });
+}
+
+/** The client address for rate-limit keying, ONLY behind a declared
+ *  proxy (TRUST_PROXY=true) where x-forwarded-for is trustworthy. The
+ *  value feeds an HMAC and is never stored or logged raw — minimal-log
+ *  discipline (DUAL_IDENTITY §7.1 vector 4). */
+export async function clientAddress(): Promise<string | null> {
+  if (process.env.TRUST_PROXY !== "true") return null;
+  const h = await headers();
+  const forwarded = h.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return forwarded || h.get("x-real-ip")?.trim() || null;
 }
 
 /** Stash a secret for one short-lived display (call from an action). */
