@@ -6,13 +6,21 @@ protected faces, an economy of assent instead of attention, and a
 constitution that hands the platform to its community on a seven-year
 schedule.
 
-**Status:** Phase 0 (Foundation) — construction began 2026-07-10
-against a complete ratified specification corpus.
+**Status:** Phases 0–7.5 checkpointed; **Phase 8 (Deployment
+Hardening) build half complete, self-verified 2026-07-11** — the
+checkpoint itself (a small real cohort onboarding unaided on staging)
+is the owner's half. Construction began 2026-07-10 against a complete
+ratified specification corpus. `CHECKPOINTS.md` is the authoritative
+per-phase record; `DECISIONS_PENDING.md` is the owner's queue.
 
 - Specifications: see `CLAUDE.md` for the corpus location and build law.
 - Construction sequence: BUILD_ORDER phases 0–9.
-- Stack: Next.js · Prisma (SQLite dev → Postgres at Phase 8) · Cardano +
-  Midnight at Phase 9, behind a legal gate.
+- Stack: Next.js · Prisma (SQLite dev · Postgres staging/production —
+  dual schemas kept byte-identical by `db:validate:postgres`) ·
+  Cardano + Midnight at Phase 9, behind a legal gate.
+- Operations: `docs/DEPLOYMENT.md` (staging setup),
+  `docs/RUNBOOK.md` (backups, drills, the worst day),
+  `docs/LOG_DISCIPLINE_AUDIT.md` (what is never logged, and why).
 
 ## Getting started
 
@@ -35,6 +43,11 @@ npm run demo:phase2        # Phase 2: both ceremonies → parking rule → THE L
 npm run demo:phase3        # Phase 3: governance poll end to end — seal, candle, sniper discarded, tamper caught
 npm run demo:phase4        # Phase 4: grants → fees → tip → paid permanence → treasury fills → conservation
 npm run demo:phase5        # Phase 5: a flag travels the whole road — blur → ruling → tombstone → appeal → tribunal
+npm run demo:phase6        # Phase 6: Circle formed → action logged → attested → the public civic ledger
+npm run demo:phase6.5      # Phase 6.5: request → bond → encrypted DMs → a report reaches the queue, graph unleaked
+npm run demo:phase7        # Phase 7: domains live → Light Score derives → a Picture repaired by governance poll
+npm run demo:phase7.5      # Phase 7.5: a chamber through the full scaffold — dual fees, enclosed workshop
+npm run demo:phase8        # Phase 8: the walls, the counters that know nobody, the crush, the guard, 31 checks
 ```
 
 All demos run against a self-contained `prisma/demo.db`; nothing touches
@@ -42,6 +55,29 @@ your dev database. The interactive version: `npm run dev`, then `/verify`
 — the real onboarding: gate intro, interim issuer, True Self ceremony,
 blocking consents, values seed, and back to what you came to do. Hatch
 an Alias at `/alias` with your credential.
+
+## What exists (Phases 6–8, in brief — CHECKPOINTS.md has the full record)
+
+- **Circles** (`lib/circles.ts`, `/circles`) — the action layer:
+  formation, members' rooms (never the public record), resource
+  boards, binding stewardship polls, and the attested action log on
+  the civic ledger.
+- **Fellow Souls & DMs** (`lib/fellowSouls.ts`, `lib/dm.ts`, `/souls`)
+  — mutual-consent bonds, structurally private graphs, encrypted
+  threads (Phase A escrow, disclosed verbatim), recipient-side
+  reporting into the unchanged moderation path.
+- **Light Score & the dashboards** (`lib/lightScore.ts`, the hub,
+  pillar and domain pages, `/transparency`, `/feed`, `/search`) — 56
+  domains as data, per-face per-pillar standing (never a sum), the
+  Picture repair loop, the published feed formula, nine-entity search.
+- **Chambers** (`lib/chambers.ts`, `/pollinator`) — the idea
+  incubator: public storefronts, enclosed workshops, dual-token fees.
+- **Deployment hardening** — the Postgres track + parity discipline,
+  backups with a self-proving restore drill, the consolidated
+  rate-limit schedule (walls at machine speed; fees remain the real
+  throttle), the minimal-log discipline (guarded by tests and
+  `db:verify`), the privacy-constrained analytics funnel, and
+  `/commons` — the State of the Commons.
 
 ## What exists (Phase 5)
 

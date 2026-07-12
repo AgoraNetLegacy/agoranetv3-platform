@@ -55,7 +55,7 @@ with the same discipline as the gate secret:
 
 | Vector | Status |
 |---|---|
-| 1. Timing | Parking rule (hard per-pillar lock) + cohort-batched randomized Alias activation + coarse `joinedPeriod`. Face-switch cooldown = NONE by owner decision (2026-07-11), risk disclosed at the ceremony as the soul's own. |
+| 1. Timing | Parking rule (hard per-pillar lock) + cohort-batched randomized Alias activation + coarse `joinedPeriod`. Face-switch cooldown = NONE by owner decision (2026-07-11), risk disclosed at the ceremony as the soul's own. **Session-end jitter (OPEN_ITEMS #36's second half) dispositioned here:** no public surface renders session ends and no retained log records them (this audit's finding + guards), so in Phase A there is no observable signal to jitter — a jitter mechanism would be motion without cover. Re-check at the Phase 9 wallet-session cutover, where session brokerage changes hands. |
 | 2. Stylometry | Cannot be fixed server-side; disclosed verbatim at hatch ("we cannot protect you from your own writing style"). |
 | 3. Funding trails | Internal balances are per-profile with blinded fee entries; no chain until Phase 9, where the paymaster posture (OPEN_ITEMS #34) kills the trail. |
 | 4. Network metadata | **This audit.** Nothing persisted (see table); host posture required; counters HMAC'd; session co-residency named in §2. |
