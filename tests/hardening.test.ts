@@ -156,6 +156,63 @@ describe("dual-provider parity (DATABASE_SETUP.md)", () => {
   });
 });
 
+describe("minimal-log discipline guards (DUAL_IDENTITY §7.1 vector 4)", () => {
+  const sourceFiles = (dir: string): string[] => {
+    const { readdirSync, statSync } = require("fs") as typeof import("fs");
+    const out: string[] = [];
+    const walk = (d: string) => {
+      for (const name of readdirSync(d)) {
+        const full = join(d, name);
+        if (statSync(full).isDirectory()) walk(full);
+        else if (/\.(ts|tsx)$/.test(name) && !name.endsWith(".generated.ts"))
+          out.push(full);
+      }
+    };
+    walk(join(REPO_ROOT, dir));
+    return out;
+  };
+
+  it("no console output anywhere in application code (lib/ and app/)", () => {
+    for (const file of [...sourceFiles("lib"), ...sourceFiles("app")]) {
+      const src = readFileSync(file, "utf8");
+      expect(
+        /\bconsole\.(log|info|warn|error|debug|trace)\(/.test(src),
+        `${file} writes a log line — the audit requires a reviewed exception`
+      ).toBe(false);
+    }
+  });
+
+  it("headers() is consumed ONLY at the audited clientAddress site", () => {
+    for (const file of [...sourceFiles("lib"), ...sourceFiles("app")]) {
+      const src = readFileSync(file, "utf8");
+      const readsHeaders =
+        /from ["']next\/headers["']/.test(src) && /\bheaders\b/.test(src);
+      if (readsHeaders && !file.endsWith(join("lib", "webSession.ts"))) {
+        throw new Error(
+          `${file} reads request headers — extend docs/LOG_DISCIPLINE_AUDIT.md and this allowlist in the same commit`
+        );
+      }
+    }
+    const audited = readFileSync(join(REPO_ROOT, "lib/webSession.ts"), "utf8");
+    expect(audited).toContain("x-forwarded-for");
+  });
+
+  it("the schema stores no network identity — no IP/UA/device/geo columns", () => {
+    const schema = readFileSync(join(REPO_ROOT, "prisma/schema.prisma"), "utf8");
+    const fieldNames = [...schema.matchAll(/^\s{2}(\w+)\s+\w/gm)].map((m) =>
+      m[1].toLowerCase()
+    );
+    for (const field of fieldNames) {
+      expect(
+        /(^|_)ip($|[A-Z_])|ipaddress|useragent|fingerprint|deviceid|latitude|longitude|geoip/.test(
+          field
+        ),
+        `schema field "${field}" looks like network identity`
+      ).toBe(false);
+    }
+  });
+});
+
 describe("backup retention policy (BACKUP_DR §2 — 30 daily / 12 monthly)", () => {
   const day = (d: string, n = 0) => `agoranet-${d}T0${n}-00-00-000Z.dump`;
 
@@ -265,6 +322,46 @@ describe("the consolidated rate-limit schedule (W4)", () => {
     await expect(
       enforceRateLimit(db, "register", "soul-a", now)
     ).rejects.toThrowError(/Pace wall.*machine speed/s);
+  });
+
+  it("check 25 FAILS LOUDLY on a raw counter key or an unaudited ops payload", async () => {
+    // Smuggle a raw identifier in as a bucket key, and an admin event
+    // whose payload carries a field the audit never approved.
+    const { appendEvent } = await import("../lib/ledger");
+    await db.rateLimitBucket.create({
+      data: {
+        key: "session:raw-session-id-oops",
+        policy: "posting",
+        windowStart: new Date(),
+        count: 1,
+      },
+    });
+    const poisoned = await appendEvent(db, {
+      actorType: "system",
+      actorId: null,
+      eventType: "admin.backup.created",
+      payload: { operator: "tester", file: "x.dump", sourceIp: "203.0.113.7" },
+    });
+
+    const verify = spawnSync("npx", ["tsx", "scripts/verify.ts"], {
+      cwd: REPO_ROOT,
+      env: { ...process.env, DATABASE_URL: url },
+      encoding: "utf8",
+    });
+    expect(verify.status).not.toBe(0);
+    const output = `${verify.stdout}${verify.stderr}`;
+    expect(output).toContain("COUNTER HYGIENE");
+    expect(output).toContain('unaudited payload field "sourceIp"');
+
+    // Remove the poison (the chain tail deletes cleanly) and re-verify.
+    await db.rateLimitBucket.delete({ where: { key: "session:raw-session-id-oops" } });
+    await db.ledgerEvent.delete({ where: { seq: poisoned.seq } });
+    const clean = spawnSync("npx", ["tsx", "scripts/verify.ts"], {
+      cwd: REPO_ROOT,
+      env: { ...process.env, DATABASE_URL: url },
+      encoding: "utf8",
+    });
+    expect(clean.status, clean.stdout + clean.stderr).toBe(0);
   });
 
   it("prunes buckets older than two day-cycles, keeps live ones", async () => {

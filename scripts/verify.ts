@@ -102,6 +102,14 @@
 //     ledger (entry, invites, and workshop posting all clear the gate
 //     in PRIVATE recording — membership is enclosed-space information,
 //     the public sees count and activity level only).
+// Phase 8:
+// 25. Ops & counter hygiene (minimal-log discipline, DUAL_IDENTITY
+//     §7.1 vector 4): every rate-limit bucket key is HMAC-shaped (a
+//     raw IP/session/profile identifier can never persist as a
+//     counter key); every admin.* ops event carries its operator
+//     attribution and file reference and NOTHING beyond the audited
+//     payload fields — ops-log payload creep toward soul data fails
+//     loudly here.
 
 import { createHash } from "crypto";
 import { PrismaClient } from "@prisma/client";
@@ -1661,6 +1669,56 @@ async function main() {
     );
   } else {
     failures += enclosureProblems;
+  }
+
+  // --- 25. Ops & counter hygiene (Phase 8 — minimal-log discipline)
+  let opsProblems = 0;
+  const buckets = await db.rateLimitBucket.findMany({
+    select: { key: true },
+  });
+  for (const bucket of buckets) {
+    if (!/^[0-9a-f]{64}$/.test(bucket.key)) {
+      opsProblems++;
+      console.error(
+        `✗ COUNTER HYGIENE: rate-limit bucket key is not an HMAC (a raw identifier may have persisted)`
+      );
+      break;
+    }
+  }
+  const OPS_PAYLOAD_FIELDS: Record<string, Set<string>> = {
+    "admin.backup.created": new Set(["operator", "file", "sizeBytes", "retained", "pruned"]),
+    "admin.backup.pruned": new Set(["operator", "file"]),
+    "admin.backup.drill": new Set(["operator", "file", "ok", "note"]),
+    "admin.backup.restored": new Set(["operator", "file"]),
+  };
+  const opsEvents = events.filter((e) => e.eventType.startsWith("admin."));
+  for (const ev of opsEvents) {
+    const allowed = OPS_PAYLOAD_FIELDS[ev.eventType];
+    if (!allowed) {
+      opsProblems++;
+      console.error(`✗ OPS LOG: unaudited admin event type ${ev.eventType} at seq ${ev.seq}`);
+      continue;
+    }
+    const payload = JSON.parse(ev.payload) as Record<string, unknown>;
+    if (typeof payload.operator !== "string" || !payload.operator) {
+      opsProblems++;
+      console.error(`✗ OPS LOG: admin event at seq ${ev.seq} lacks operator attribution`);
+    }
+    for (const field of Object.keys(payload)) {
+      if (!allowed.has(field)) {
+        opsProblems++;
+        console.error(
+          `✗ OPS LOG: admin event at seq ${ev.seq} carries unaudited payload field "${field}"`
+        );
+      }
+    }
+  }
+  if (opsProblems === 0) {
+    console.log(
+      `✓ Ops & counter hygiene (${buckets.length} bucket key(s) HMAC-shaped, ${opsEvents.length} ops event(s) within their audited payloads)`
+    );
+  } else {
+    failures += opsProblems;
   }
 
   if (failures > 0) {
