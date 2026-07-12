@@ -63,21 +63,24 @@ under it.**
 
 ## Current Phase
 
-**Phase 8 — Deployment Hardening: BUILD HALF COMPLETE, self-verified
-2026-07-11** (CHECKPOINTS.md has the full record — read it first, plus
-DECISIONS_PENDING.md #13–16 and DERIVED_DEFAULTS.md). Every
-BUILD_ORDER Phase 8 deliverable is built and verified: the Postgres
-track + parity, backups/DR + the restore drill (proven live against a
-real Postgres 17), the consolidated rate-limit schedule (W4 closed),
-the minimal-log discipline audit (guarded, not just clean), the
-privacy-constrained analytics funnel + /commons, staging
-deployability (docs/DEPLOYMENT.md + docs/RUNBOOK.md), cold-start
-confirmed, invite mechanics queued as the owner's launch-gating
-decision.
+**Phase 8.5 — The Presentation Era** (owner-ratified 2026-07-12; see
+the BUILD_ORDER amendment of the same date). Phases 0–8(build-half)
+are done — CHECKPOINTS.md has every record. The owner's ratified
+plan: build the platform to its FULL showcase form before promotion,
+learning, or the cohort test — first the presentation redesign
+(8.5), then the testnet rails (8.6: Midnight/Lace ID identity on
+testnet, demo-grade tokens on preprod — NO production money
+mechanics; those stay behind Phase 9's legal gate, unchanged).
 
-**What remains is inherently the owner's:** provision staging
-(DECISIONS_PENDING #14), recruit the small real cohort, and review the
-funnel and logs together — THE Phase 8 checkpoint. Do not start
-Phase 9 (the chain; hard legal gate) without owner ratification of
-this checkpoint. Sessions in the meantime: owner-directed polish,
-DECISIONS_PENDING items he resolves, or cohort-feedback fixes.
+**Gate for 8.5:** the owner ratifies
+`Presentation/PRESENTATION_SPEC.md` (drafted from his own session
+findings — repo docs/PRESENTATION_BACKLOG.md is the source list)
+BEFORE building. Gate for 8.6: he ratifies
+`Chain Integration/TESTNET_RAILS_SPEC.md`, whose step zero is a
+feasibility scout of Midnight/Lace ID testnet SDKs.
+
+**Standing owner rules (2026-07-12):** no production, and no mention
+of production, until the lawyer conversation concludes. The Phase 8
+cohort checkpoint runs on the showcase build. Theme = identity
+(white True Self / dark Alias / blue reader, card-flip switch) is
+his ratified design vision — build it exactly.
