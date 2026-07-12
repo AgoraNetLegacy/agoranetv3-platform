@@ -206,3 +206,16 @@ never live here — they interrupt directly.
      An in-app admin metrics console awaits the ADMIN_OPS console,
      which BUILD_ORDER never scheduled — say if you want it as a
      post-launch item.
+
+14. **Hosting provider (Track 5 #37) — recommendation ready, provisioning
+    is yours.** Recommended: **Render** (one dashboard: web service +
+    managed Postgres + native cron + persistent disks); runner-up
+    Railway; Fly.io if multi-region control ever outweighs simplicity;
+    serverless ruled out (the ops scripts want a real filesystem).
+    docs/DEPLOYMENT.md has the full requirements matrix and the
+    step-by-step staging setup — the repo is deployable from this
+    commit and provider-agnostic. **What only you can do:** create the
+    account/billing, provision the databases, paste the env, add the
+    four cron jobs, set the access-log posture (LOG_DISCIPLINE_AUDIT
+    #4). Budget ~US$25–40/mo for staging-grade everything. Gates: the
+    Phase 8 checkpoint's real cohort needs a URL to touch.
