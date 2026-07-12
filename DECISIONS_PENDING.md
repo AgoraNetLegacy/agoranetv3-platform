@@ -56,6 +56,24 @@ need from you.)
    interests + one-time +5 G share bonus — not yet built; the grant
    rail exists. Say when.
 
+17. **Key recovery / Alias succession — needs a build slice before
+    PUBLIC launch (surfaced 2026-07-11 reviewing onboarding).** The
+    spec designed recovery (DUAL_IDENTITY §8: True Self recoverable
+    through the issuer; lost Alias = hatch a fee-gated successor,
+    Light Score carrying both ways, lineage visible — you ratified
+    that as "hatching"), but BUILD_ORDER never scheduled it into a
+    phase, so **no recovery UI exists**: today a lost access key or
+    credential has no built remedy. Why the cohort test is fine
+    anyway: in Phase A the issuer is interim, so a tester who loses
+    keys just verifies again as a fresh soul — identity is cheap
+    until real Proof-of-Humanity arrives. Why launch is not fine:
+    with a real issuer, "start over" stops being possible, and the
+    successor-hatch needs revocation machinery (the one-Alias
+    nullifier must be re-spendable after revocation — plumbing
+    exists: handle tombstones already know "hatched"). Recommend
+    scheduling as a small slice after the cohort test. Gates: public
+    launch readiness.
+
 ---
 
 ## C. The record — defaults already set, yours to overrule (not questions)
