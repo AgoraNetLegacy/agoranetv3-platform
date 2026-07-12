@@ -58,6 +58,16 @@ in a browser walkthrough with tests green.
 8. **Design the dashboards properly:** per-pillar dashboards, the
    moderation workbench, and each feature's landing page get a real
    design pass (current state is functional scaffolding).
+8b. **A settings page — doesn't exist yet (owner, 2026-07-11).**
+   First residents: switch-animation method (#12), display-name
+   change (currently buried on /profile), notification/feed
+   preferences (currently scattered on their own surfaces), and the
+   future profile-bio editing (#7). Design rule: settings are
+   PER-FACE wherever they touch identity or expression — an Alias's
+   settings screen must never display or echo the True Self's
+   choices (a shared "account settings" page would itself be a
+   linkage surface). Browser-level choices like animation method can
+   be per-session instead.
 
 ## E. Design system (pure styling — safe anytime)
 
@@ -77,10 +87,14 @@ in a browser walkthrough with tests green.
     ambient, unmissable state. Design notes: theme-as-signal
     deliberately overrides personal light/dark preference (the
     safety signal wins — posting as the wrong face is the error that
-    self-doxxes); signed-out readers get a third neutral treatment so
-    "no face" is also legible; the flip honors reduced-motion
-    preferences (instant crossfade fallback); the permanent-space
-    amber banner must read on both themes.
+    self-doxxes); **the reader state is the BLUE theme** (owner,
+    2026-07-11): signed-out / no-face = the aqua blue itself — blue
+    means reading, white means True Self, dark means Alias, and the
+    brand color doubles as "free to read" made visible; **the switch
+    animation method is a soul's choice in settings** (card flip
+    default; crossfade or instant as alternatives — this also covers
+    reduced-motion needs by choice rather than detection); the
+    permanent-space amber banner must read on all three themes.
 
 ## F. Process notes
 
