@@ -92,10 +92,66 @@ need from you.)
     tying the bonus to True Self registration completing. Not built
     yet — this entry is the full spec for when it is.
 
-2. **Support staking UI (TOKENOMICS "live at launch").** The poll-page
-   "attach a PollCoin support target" surface (POLLS §4.8) isn't built
-   yet — auto-return at close is the ratified behavior. Needs a small
-   design pass. Gates: launch completeness, not any phase.
+2. ~~**Support staking UI**~~ — **REDESIGNED AND RATIFIED
+   (2026-07-13): retired from Polls, rebuilt as Chamber Mission
+   Funding, queued for a build slice.** The owner's own critique
+   killed the original idea correctly: auto-returned staking is
+   "cheap talk" — a signal that costs nothing carries no information,
+   since staking any amount is equally free when it's guaranteed back.
+   Session amendment, corpus specs updated the same day
+   (`Polls/POLLS_SPEC.md` §4.8 struck, `Neural Pollinator/
+   NEURAL_POLLINATOR_SPEC.md` §9 extended, `tokenomics/
+   TOKENOMICS_SPEC.md` §6 roadmap updated). The new design:
+   - **Polls carry NO staking mechanic at all, ever again.** A poll
+     that wants to show real backing reuses the EXISTING, already-
+     proven tip mechanic: attach a Discussion (already possible on
+     any poll) and let people tip its posts — real Gratium, no
+     refund, zero new code required. This alone satisfies "polls that
+     garner favor can receive Gratium tips."
+   - **Real PollCoin donations move to Chambers**, where they belong:
+     a Chamber already IS a stated mission/proposal/initiative (the
+     pre-convo scaffold, the storefront's "why should people care"),
+     unlike a poll's bare yes/no. A donation is a genuine transfer —
+     real cost, real signal, no auto-return — fixing the cheap-talk
+     problem by construction rather than by tuning a number.
+   - **Raised funds accumulate in a per-chamber balance** (same
+     architectural shape as the platform-wide TreasuryBalance,
+     scoped to one chamber instead of the whole platform).
+   - **Release requires either attestation (routine) or a binding
+     vote (contested/large)** — reusing machinery already built and
+     tested for Circles, not inventing new custody logic: the chamber
+     logs "releasing Y PollCoin for Z," members attest it's
+     legitimate (default threshold 2, bounds [2,8] — the same
+     numbers already ratified for Circle attestation), OR, above a
+     size threshold or when contested, a binding stewardship-style
+     poll authorizes it (reusing the Circle binding-poll pattern:
+     members vote, auto-executes on passage). Proposed size
+     threshold: **25 units** — the platform's own established
+     "serious-stake magnitude" (matches the Circle formation fee and
+     the appeal deposit; DERIVED_DEFAULTS.md's existing anchor,
+     reused rather than invented). Both numbers are rails, adjustable
+     per chamber within bounds.
+   - **The owner's instinct, preserved exactly as given:** the
+     *specific* accountability rules (exact thresholds, who may
+     propose a release) are ratifiable by each Chamber's own
+     contributors, not dictated platform-wide — matching the
+     Constitution's "community inherits the platform" ethos and the
+     same adjustable-within-bounds pattern already used for Circle
+     attestation.
+   - **Honest flag, not a blocker:** this is the first fund-custody-
+     flavored feature built — the platform holding real (internal)
+     money on behalf of a stated cause, released on someone's say-so.
+     No legal gate applies (nothing here is real-world money), but it
+     deserves the same seriousness as other custody-touching items —
+     which is exactly why the owner wants the community, not Claude,
+     writing the exact accountability rule.
+   Needs a build slice when scheduled: a per-chamber raised-funds
+   balance, a `grant`/`fee`-style economy-entry kind for donations
+   (transparency-book-categorized, an unmapped flow throws by
+   design), the attestation/vote release machinery reusing Circle's
+   existing code paths, and the `chamber.releaseAttestationThreshold`
+   / `chamber.releaseVoteThreshold` rails. Not built yet — this entry
+   is the full spec for when it is.
 
 3. **AI summaries (DISCUSSIONS §5).** Spec grants them "their own
    mini-review" as the first in-house AI surface. Say when.
