@@ -16,14 +16,27 @@ need from you.)
 
 ## A. Needs you now — one thing
 
-14. **Hosting — DECIDED: Render (2026-07-11, in session; Vercel
-    considered and set aside — its serverless shape would split the
-    ops jobs across three services).** What's left is the part only
-    you can do: **create the account at render.com and put a card on
-    it** (~US$25–40/mo for staging-grade everything). Then say "done"
-    and Claude does the rest in one sitting — databases, app, cron
-    jobs, settings — paint-by-numbers per docs/DEPLOYMENT.md. Gates:
-    the Phase 8 checkpoint's real cohort needs a URL to touch.
+14. **Hosting — REDECIDED: the $0/month path (2026-07-13, owner:
+    "eliminating monthly subscriptions to relieve financial
+    pressure").** Render is off the table — not because it was wrong,
+    but because it costs money and free options fully cover the
+    Phase 8 checkpoint's needs. **New plan, no subscription
+    anywhere:**
+    - **Vercel** (free Hobby tier) hosts the app.
+    - **Neon or Supabase** (free tier) hosts Postgres.
+    - **GitHub Actions** (already have the account; free at this
+      scale) runs the four ops jobs — backup, restore-drill, crush,
+      prune — on schedule, since Vercel's serverless functions can't
+      run pg_dump/pg_restore as real processes the way Render's
+      always-on service could.
+    - **Cloudflare R2** (free tier) holds the nightly backup files.
+    This is a genuine architecture change from the Render plan (ops
+    jobs move from cron-on-a-server to scheduled GitHub Actions
+    workflows) — Claude's work, not the owner's. **What's left for
+    the owner: create free accounts at vercel.com, neon.tech (or
+    supabase.com), and cloudflare.com — no card required for any of
+    them at this scale.** Then say "done." Gates: the Phase 8
+    checkpoint's real cohort needs a URL to touch.
 
 ---
 
