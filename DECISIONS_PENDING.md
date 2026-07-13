@@ -53,9 +53,44 @@ need from you.)
     deliberately — building an invite system presumes the answer.
     The cohort test does NOT need this: an unlisted staging URL is the
     gate (recruit by link). The real decision is public-launch posture:
-    open door vs. invite waves. If you choose gated, say so and the
-    invite mechanics get specced against ONBOARDING (the anti-Sybil
-    audit lists invite gating as defense-in-depth, not a requirement).
+    open door vs. invite waves. Works either way with #19 below —
+    referral tracking is not the same as referral gating.
+
+19. **The referral bonus — RATIFIED in conversation (2026-07-13),
+    queued for a build slice.** Owner-designed, worked through live:
+    - **True Self profiles only** may send invites and earn bonuses
+      (an Alias never does — keeps the Alias further from the
+      real-world social graph an invite inherently creates; §7.1
+      vector 5, small-population inference).
+    - **Sending an invite is free and unlimited.** Nobody is ever
+      blocked from joining because someone "ran out" — the cap limits
+      the REWARD, never entry. That distinction is load-bearing: it
+      keeps faith with "one verified human is always welcome."
+    - **A referral earns its bonus only when the invited human
+      completes True Self registration** (verifies AND registers — a
+      real account exists, not a spent, unused credential). Closes
+      any incentive to farm bare verifications.
+    - **Hard cap: 7 confirmed, rewarded referrals per human**
+      (enforced naturally per-True-Self-profile, since a human has
+      exactly one True Self ever — no cross-face bookkeeping needed).
+      The 8th+ referred person is still welcomed; the inviter simply
+      isn't paid again. Chose 7 partly for the anti-farming ceiling
+      (bounds the "humans for hire" residual risk, W3 in
+      ANTI_SYBIL_CONSOLIDATION, the same way other hard ceilings do
+      elsewhere) and partly because 7 is already the platform's own
+      number (pillars, lenses, Tribunal seats).
+    - **Bonus: 5 G per confirmed referral** (a rail, adjustable) —
+      DERIVED, not invented: matches the platform's two existing
+      "one-time reward for a single discrete good-faith act" anchors
+      (the first-action grant +5G, the declared-interests bonus +5G).
+      Maximum lifetime payout: 35 G per human — small by the same
+      discipline that protects the Welcome Grant from farming
+      ("grant &lt;&lt; effort, no loop").
+    Needs a build slice when scheduled: an invite/referral tracking
+    model, a `grant.referral` economy-entry kind, the
+    `referral.bonusG` and `referral.maxRewarded` rails, and gate logic
+    tying the bonus to True Self registration completing. Not built
+    yet — this entry is the full spec for when it is.
 
 2. **Support staking UI (TOKENOMICS "live at launch").** The poll-page
    "attach a PollCoin support target" surface (POLLS §4.8) isn't built
