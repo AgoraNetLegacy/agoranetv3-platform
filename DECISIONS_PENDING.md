@@ -16,26 +16,26 @@ need from you.)
 
 ## A. Needs you now — one thing
 
-14. **Hosting — REDECIDED: the $0/month path (2026-07-13, owner:
-    "eliminating monthly subscriptions to relieve financial
-    pressure").** Render is off the table — not because it was wrong,
-    but because it costs money and free options fully cover the
-    Phase 8 checkpoint's needs. **New plan, no subscription
-    anywhere:**
-    - **Vercel** (free Hobby tier) hosts the app.
-    - **Neon or Supabase** (free tier) hosts Postgres.
-    - **GitHub Actions** (already have the account; free at this
-      scale) runs the four ops jobs — backup, restore-drill, crush,
-      prune — on schedule, since Vercel's serverless functions can't
-      run pg_dump/pg_restore as real processes the way Render's
-      always-on service could.
-    - **Cloudflare R2** (free tier) holds the nightly backup files.
-    This is a genuine architecture change from the Render plan (ops
-    jobs move from cron-on-a-server to scheduled GitHub Actions
-    workflows) — Claude's work, not the owner's. **What's left for
-    the owner: create free accounts at vercel.com, neon.tech (or
-    supabase.com), and cloudflare.com — no card required for any of
-    them at this scale.** Then say "done." Gates: the Phase 8
+14. **Hosting — FINAL: Vercel + Railway (2026-07-13), the owner's
+    existing convention across his other projects.** Render is off
+    (cost); the Vercel+Neon+GitHub-Actions+R2 stitch considered
+    briefly the same day is ALSO off — Railway makes it unnecessary.
+    **The decided split:**
+    - **Vercel** hosts the app itself (pages + all its server-side
+      logic — this is a single Next.js codebase, not a split
+      frontend/backend; "the frontend" in the owner's convention maps
+      to "the whole app" here).
+    - **Railway** is the backend infra: managed Postgres (the live
+      database + a second free database for the restore drill) AND a
+      small always-on service running the four ops jobs (backup,
+      drill, crush, prune) on schedule, writing backups to a Railway
+      volume. Real persistent containers — no GitHub Actions or
+      external object storage needed.
+    Cost: Railway is usage-based, not free (historically a small
+    monthly minimum) — dramatically cheaper than Render's estimate,
+    and the owner already has the account, so no new signup either
+    way. **What's left for the owner: create a free Vercel account
+    (Railway already exists).** Then say "done." Gates: the Phase 8
     checkpoint's real cohort needs a URL to touch.
 
 ---
