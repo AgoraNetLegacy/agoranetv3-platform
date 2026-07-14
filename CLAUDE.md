@@ -72,12 +72,16 @@ learning, or the cohort test — first the presentation redesign
 testnet, demo-grade tokens on preprod — NO production money
 mechanics; those stay behind Phase 9's legal gate, unchanged).
 
-**Gate for 8.5:** the owner ratifies
-`Presentation/PRESENTATION_SPEC.md` (drafted from his own session
-findings — repo docs/PRESENTATION_BACKLOG.md is the source list)
-BEFORE building. Gate for 8.6: he ratifies
-`Chain Integration/TESTNET_RAILS_SPEC.md`, whose step zero is a
-feasibility scout of Midnight/Lace ID testnet SDKs.
+**BOTH GATES SATISFIED (owner ratifications, 2026-07-13):**
+`Presentation/PRESENTATION_SPEC.md` ratified (all ⭐ calls closed —
+names all kept, glyphs stay symbols, nav + one-liners blessed as
+drafted; fonts remain a build-time pick) and
+`Chain Integration/TESTNET_RAILS_SPEC.md` ratified with its scout
+appendix's honesty edits (§7 rulings: presentation fully first · DM
+custody holds at disclosed escrow until Phase 9 · test token =
+PollCoin Demo / dPOLL). **Phase 8.5 is build-ready NOW; 8.6 is
+build-ready behind it** — 8.6 starts only when 8.5's checkpoint
+(the owner's neither-bland-nor-confusing walkthrough) passes.
 
 **Standing owner rules (2026-07-12):** no production, and no mention
 of production, until the lawyer conversation concludes. The Phase 8

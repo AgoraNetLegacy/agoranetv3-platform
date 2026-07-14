@@ -1,5 +1,14 @@
 # Presentation Backlog — the owner's list
 
+> **SUPERSEDED for build purposes (2026-07-13):** this list was the
+> SOURCE for `Presentation/PRESENTATION_SPEC.md` (Desktop corpus),
+> which the owner has since corrected and RATIFIED — build from the
+> spec, never from here. Known divergences: item A1's "one place at
+> two depths" framing was owner-overruled (the Agora dashboard IS
+> the platform dashboard, one thing); item B4's renames were all
+> REJECTED (every name kept); item C6's wizards are DEFERRED. This
+> file stays as the historical record of his first-session findings.
+
 Started 2026-07-11, the day after the build finished. The plan, in
 Shawn's words: build to spec first, then fix and change presentation
 from a safe starting point without fear of breaking anything. The

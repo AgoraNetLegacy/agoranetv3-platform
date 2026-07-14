@@ -1,7 +1,8 @@
 # The Owner's Queue
 
-**The short version: you have ONE thing to do, a few decisions that
-only matter when we aim at the public, and a stack of receipts.**
+**The short version: nothing needs you right now (hosting closed
+2026-07-13) — just a few decisions that only matter when we aim at
+the public, and a stack of receipts.**
 Most numbered entries below are NOT questions — they are records of
 defaults Claude set on your behalf, kept so you can overrule any of
 them, anytime, with a sentence. Nothing on this page stops the build;
@@ -14,10 +15,15 @@ need from you.)
 
 ---
 
-## A. Needs you now — one thing
+## A. Needs you now
 
-14. **Hosting — FINAL: Vercel + Railway (2026-07-13), the owner's
-    existing convention across his other projects.** Render is off
+*(Nothing. Item 14 closed 2026-07-13 — kept below for the record.)*
+
+14. ~~**Hosting**~~ — **CLOSED (2026-07-13): Vercel + Railway, the
+    owner's existing convention across his other projects. Owner
+    confirmed same day that BOTH accounts already exist — nothing
+    left on his side; deployment can target them whenever the build
+    reaches it.** Render is off
     (cost); the Vercel+Neon+GitHub-Actions+R2 stitch considered
     briefly the same day is ALSO off — Railway makes it unnecessary.
     **The decided split:**
@@ -33,10 +39,10 @@ need from you.)
       external object storage needed.
     Cost: Railway is usage-based, not free (historically a small
     monthly minimum) — dramatically cheaper than Render's estimate,
-    and the owner already has the account, so no new signup either
-    way. **What's left for the owner: create a free Vercel account
-    (Railway already exists).** Then say "done." Gates: the Phase 8
-    checkpoint's real cohort needs a URL to touch.
+    and the owner already has both accounts — confirmed 2026-07-13;
+    no signup, no action, nothing left. Gates: nothing. (The Phase 8
+    checkpoint's real cohort gets its URL from these rails when
+    deployment happens.)
 
 ---
 
