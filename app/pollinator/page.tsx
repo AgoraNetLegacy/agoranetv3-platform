@@ -4,6 +4,7 @@ import { activeFace } from "@/lib/webSession";
 import { chamberActivityLevel, pendingInvitesFor } from "@/lib/chambers";
 import { getRail } from "@/lib/rails";
 import { submitChamber } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +70,7 @@ export default async function PollinatorPage({
 
   return (
     <>
-      <h1>🐝 The Pollinator — the idea incubator</h1>
+      <h1><Icon name="hive" /> The Pollinator — the idea incubator</h1>
       <p>
         <em>Workshop an idea before you defend it in public.</em>
       </p>

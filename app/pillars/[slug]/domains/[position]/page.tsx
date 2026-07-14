@@ -5,6 +5,7 @@ import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
 import { currentPicture } from "@/lib/domains";
 import { submitRepair as submitRepairAction, followInFeed } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -232,7 +233,7 @@ export default async function DomainPage({
               <textarea name="proposedText" rows={8} required defaultValue={picture.body} />
             </label>
             <div className="composer-badge">
-              ♾️ Permanent public record — the challenge, the poll, and the
+              <Icon name="infinity" /> Permanent public record — the challenge, the poll, and the
               outcome all enter the domain&rsquo;s dated history.
             </div>
             <button type="submit">Submit the repair</button>

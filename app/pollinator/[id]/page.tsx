@@ -9,6 +9,7 @@ import {
 } from "@/lib/chambers";
 import { faceConstellation } from "@/lib/lightScore";
 import { submitEnterChamber } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +58,7 @@ export default async function StorefrontPage({
         <p>
           <Link href="/pollinator">← The Pollinator</Link>
         </p>
-        <h1>🐝 {chamber.title}</h1>
+        <h1><Icon name="hive" /> {chamber.title}</h1>
         <p>
           <span className="badge locked">Private chamber — invite-only</span>
         </p>
@@ -91,7 +92,7 @@ export default async function StorefrontPage({
       <p>
         <Link href="/pollinator">← The Pollinator</Link>
       </p>
-      <h1>🐝 {chamber.title}</h1>
+      <h1><Icon name="hive" /> {chamber.title}</h1>
       <p>
         {chamber.isPublic ? (
           <span className="badge permanent">Public chamber</span>

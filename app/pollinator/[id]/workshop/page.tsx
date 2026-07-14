@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { workshopAccess, WORKSHOP_ENCLOSURE_NOTE } from "@/lib/chambers";
 import { submitScaffoldEdit, submitChamberInvite } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,7 @@ export default async function WorkshopPage({
     <>
       <p>
         <Link href={`/pollinator/${chamber.id}`}>
-          ← 🐝 {chamber.title} (storefront)
+          ← <Icon name="hive" /> {chamber.title} (storefront)
         </Link>
       </p>
       <h1>🚪 The workshop — {chamber.title}</h1>

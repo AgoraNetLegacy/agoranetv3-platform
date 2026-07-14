@@ -13,6 +13,7 @@ import {
   submitLeaveCircle,
   submitPurposeEdit,
 } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,7 @@ export default async function CirclePage({
       <p>
         <Link href="/circles">← All Circles</Link>
       </p>
-      <h1>⭕ {circle.name}</h1>
+      <h1><Icon name="circles" /> {circle.name}</h1>
       <p>
         {label === "active" && <span className="badge permanent">Active</span>}
         {label === "inactive" && (
@@ -170,7 +171,7 @@ export default async function CirclePage({
           <form action={submitActionEntry} className="composer">
             <input type="hidden" name="circleId" value={circle.id} />
             <span className="composer-badge">
-              🏛 Permanent public record — no edit, no delete, ever. A
+              <Icon name="infinity" /> Permanent public record — no edit, no delete, ever. A
               mistake is corrected by a later entry that references it.
               Free text may name meeting places for coordination — place
               yourself on the map, never someone else, and never a

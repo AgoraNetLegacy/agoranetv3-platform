@@ -6,6 +6,7 @@ import { PollForm } from "@/app/polls/PollForm";
 import { MECHANISM_DOCS } from "@/lib/mechanismDocs.generated";
 import { repairStatus } from "@/lib/domains";
 import { pillarStanding } from "@/lib/lightScore";
+import { Icon } from "@/components/Icon";
 
 // The pillar dashboard's body (DASHBOARD §5: stat row → domain cards →
 // canon threads → Circles → Governance door → mechanism deep-dive),
@@ -269,7 +270,7 @@ export async function PillarAnatomy({
         ))}
       </ul>
 
-      <h3>⭕ Circles working in {pillar.name}</h3>
+      <h3><Icon name="circles" /> Circles working in {pillar.name}</h3>
       <p className="lore">
         Deliberation becomes provable action — ordered by most recent
         attested action, so active hands rank above old claims.
@@ -298,7 +299,7 @@ export async function PillarAnatomy({
       {/* The Governance door (§5.5): a visibly marked threshold. */}
       <div className="door-banner">
         <h3 style={{ marginTop: 0 }}>
-          🏛 <Link href={`/pillars/${pillar.slug}/governance`}>The Governance room</Link>
+          <Icon name="temple" /> <Link href={`/pillars/${pillar.slug}/governance`}>The Governance room</Link>
         </h3>
         <p style={{ marginBottom: 0 }}>
           Beyond this door, everything written is permanent public record,

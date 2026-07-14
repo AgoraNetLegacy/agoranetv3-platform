@@ -9,6 +9,7 @@ import { balanceOf } from "@/lib/economy";
 import { activeTermFor } from "@/lib/moderation";
 import { activeFace, sessionFaces, faceFlipPending } from "@/lib/webSession";
 import { returnToHub, switchToFace, signOutSession } from "./actions";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -96,7 +97,7 @@ async function SideNav() {
     <nav className="sidebar" aria-label="The platform">
       <form action={returnToHub}>
         <button type="submit" className="navlink navlink-button">
-          🏛️ The Agora
+          <Icon name="temple" /> The Agora
           <span className="nav-note">the platform dashboard</span>
         </button>
       </form>
@@ -177,7 +178,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           </label>
           <form action={returnToHub} className="inline">
             <button type="submit" className="linklike brand">
-              🏛️ AgoraNet
+              <Icon name="temple" /> AgoraNet
             </button>
           </form>
           <Link href="/search">Search</Link>

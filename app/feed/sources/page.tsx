@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { ensureFeedDefaults } from "@/lib/feed";
 import { saveFeedSources } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -98,7 +99,7 @@ export default async function FeedSourcesPage({
                 value={mc.circle.id}
                 defaultChecked={followedCircleIds.has(mc.circle.id)}
               />{" "}
-              ⭕ {mc.circle.name} <span className="lore">(members&rsquo;-room activity)</span>
+              <Icon name="circles" /> {mc.circle.name} <span className="lore">(members&rsquo;-room activity)</span>
             </label>
           ))
         )}
@@ -115,7 +116,7 @@ export default async function FeedSourcesPage({
                 value={mc.chamber.id}
                 defaultChecked={followedChamberIds.has(mc.chamber.id)}
               />{" "}
-              🐝 {mc.chamber.title} <span className="lore">(workshop activity)</span>
+              <Icon name="hive" /> {mc.chamber.title} <span className="lore">(workshop activity)</span>
             </label>
           ))
         )}

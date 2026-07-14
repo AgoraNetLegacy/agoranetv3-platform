@@ -57,6 +57,7 @@ html[data-theme="reader"] {
   --line: #b3dce7;
   --accent: #0b6076;
   --accent-soft: #cdeef7;
+  --on-accent: #ffffff;
   --header-bg: #c9ecf5;
 }
 
@@ -70,6 +71,7 @@ html[data-theme="true-self"] {
   --line: #e2e9ec;
   --accent: #0e7490;
   --accent-soft: #e3f7fb;
+  --on-accent: #ffffff;
   --header-bg: #ffffff;
 }
 
@@ -83,10 +85,15 @@ html[data-theme="alias"] {
   --line: #263640;
   --accent: #46d7ef;
   --accent-soft: #113340;
+  --on-accent: #0c1114;
   --header-bg: #10181c;
 }
 
 * { box-sizing: border-box; }
+
+/* the platform icon family (§6.2): sized and colored by the text it
+   sits in, so one set reads correctly in all three rooms */
+.pi { width: 1em; height: 1em; vertical-align: -0.12em; display: inline-block; }
 
 body {
   margin: 0;
@@ -97,8 +104,45 @@ body {
 }
 
 h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 620; letter-spacing: 0.01em; }
+h1 { font-size: 1.85rem; margin: 0.5rem 0 0.9rem; }
+h2 { font-size: 1.4rem; margin: 1.6rem 0 0.6rem; }
+h3 { font-size: 1.12rem; margin: 1.5rem 0 0.5rem; }
 
 main { max-width: 780px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+/* §5.3 the design pass: buttons look decided, never browser-default.
+   Form submits inside ceremonies/composers carry the accent; everything
+   else is quiet. The reset classes (.linklike, .navlink-button) win. */
+button:not(.linklike):not(.navlink-button) {
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+}
+button:not(.linklike):not(.navlink-button):hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.ceremony button[type="submit"]:not(.linklike),
+form.composer button[type="submit"]:not(.linklike) {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+.ceremony button[type="submit"]:not(.linklike):hover,
+form.composer button[type="submit"]:not(.linklike):hover {
+  filter: brightness(1.08);
+}
+
+/* cards answer hover — small, consistent life on every grid */
+.pillar-grid li:hover,
+.domain-grid li:hover,
+ul.discussions li:hover { border-color: var(--accent); }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }

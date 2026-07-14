@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { buildFeed, openLens, chamberStorefrontCards } from "@/lib/feed";
 import { markCaughtUp } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 
 // Shared feed rendering (FEED_AND_SEARCH_SPEC), mounted in two places
 // since Phase 8.5: the full /feed page and the platform dashboard —
@@ -96,7 +97,7 @@ export async function PollinatorStrip() {
       <ul className="discussions">
         {storefronts.map((c) => (
           <li key={c.chamberId}>
-            <Link href={`/pollinator/${c.chamberId}`}>🐝 {c.title}</Link>{" "}
+            <Link href={`/pollinator/${c.chamberId}`}><Icon name="hive" /> {c.title}</Link>{" "}
             <span className="badge permanent">Public chamber</span>
             <div className="meta">
               {c.subject.length > 100 ? `${c.subject.slice(0, 100)}…` : c.subject} · by @

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { FUNNEL_EVENTS } from "@/lib/analytics";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +64,7 @@ export default async function CommonsPage() {
 
   return (
     <>
-      <h1>🌱 State of the Commons</h1>
+      <h1><Icon name="sprout" /> State of the Commons</h1>
       <p>
         Is the platform working? The honest numbers, public whether they
         flatter or not — the same transparency the{" "}

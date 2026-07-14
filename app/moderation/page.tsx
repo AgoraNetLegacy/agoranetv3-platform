@@ -18,6 +18,7 @@ import {
   submitSupervision,
   submitTribunalCaseRuling,
 } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,7 @@ export default async function ModerationPage({
 
       {offer && (
         <div className="door-banner">
-          🎗 <strong>You've been offered a moderation badge.</strong>{" "}
+          <Icon name="badge" /> <strong>You've been offered a moderation badge.</strong>{" "}
           Sortition chose this face; equip it or pass freely — passing
           concentrates nothing. Offer expires{" "}
           {offer.expiresAt.toLocaleString()}. Service is compensated, never
@@ -78,10 +79,25 @@ export default async function ModerationPage({
 
       {term ? (
         <>
+          {/* §5.3 design pass: the bench at a glance — this term, this
+              face, nothing global. */}
+          <div className="stat-row">
+            <div className="stat">
+              <div className="stat-number">{files.length}</div>
+              <div className="stat-label">cases waiting for you</div>
+            </div>
+            <div className="stat">
+              <div className="stat-number">{term.casesCompleted}</div>
+              <div className="stat-label">completed this term</div>
+            </div>
+            <div className="stat">
+              <div className="stat-number">{term.gratiumEarned.toFixed(1)} G</div>
+              <div className="stat-label">earned — service is paid, never charged</div>
+            </div>
+          </div>
           <p className="lore">
             Badge active until {term.endsAt.toLocaleString()} — hard cutoff,
-            no carryover. Cases completed this term: {term.casesCompleted} ·
-            Gratium earned: {term.gratiumEarned.toFixed(2)}.
+            no carryover.
           </p>
 
           <h3>Case queue ({files.length})</h3>

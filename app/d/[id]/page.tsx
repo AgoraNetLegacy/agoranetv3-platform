@@ -5,6 +5,7 @@ import { getRail } from "@/lib/rails";
 import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
 import { submitPost, submitEdit, submitFlag, submitTip, submitPermanenceUpgrade, submitAppeal, submitRestorative } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ function Composer({
       <span className="composer-badge">
         {permanent ? (
           <>
-            🏛 Permanent record — a {graceMinutes}-minute grace window for
+            <Icon name="infinity" /> Permanent record — a {graceMinutes}-minute grace window for
             typo repair with visible edit history, then your words lock
             into the record.
           </>
@@ -437,11 +438,11 @@ export default async function DiscussionPage({
       <p>
         {discussion.circle ? (
           <Link href={`/circles/${discussion.circle.id}`}>
-            ← ⭕ {discussion.circle.name}
+            ← <Icon name="circles" /> {discussion.circle.name}
           </Link>
         ) : discussion.chamber ? (
           <Link href={`/pollinator/${discussion.chamber.id}/workshop`}>
-            ← 🐝 {discussion.chamber.title} (workshop)
+            ← <Icon name="hive" /> {discussion.chamber.title} (workshop)
           </Link>
         ) : (
           <Link href={`/pillars/${discussion.pillar.slug}`}>
@@ -467,7 +468,7 @@ export default async function DiscussionPage({
         </div>
       ) : discussion.chamber ? (
         <div className="notice">
-          🐝 <strong>The workshop.</strong> Enter-to-see and deletable-class
+          <Icon name="hive" /> <strong>The workshop.</strong> Enter-to-see and deletable-class
           — half-formed thinking gets worked out here without the open
           internet watching the drafts. Standard moderation applies as
           everywhere. Posting charges both tokens (the Pollinator&apos;s
@@ -475,7 +476,7 @@ export default async function DiscussionPage({
         </div>
       ) : permanent ? (
         <div className="door-banner">
-          🏛 <strong>You are standing in a permanent space.</strong> Everything
+          <Icon name="temple" /> <strong>You are standing in a permanent space.</strong> Everything
           posted here becomes permanent record — a {graceMinutes}-minute grace
           window allows typo repair with visible edit history, then each post
           locks. Reading is free; participation clears the humanity gate.

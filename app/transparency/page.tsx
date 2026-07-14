@@ -7,6 +7,7 @@ import {
   KIND_CATEGORIES,
   type CategoryTotals,
 } from "@/lib/transparency";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +90,7 @@ export default async function TransparencyPage() {
 
   return (
     <>
-      <h1>🏛 The transparency dashboard</h1>
+      <h1><Icon name="temple" /> The transparency dashboard</h1>
       <p>
         Every fee on this platform flows to the treasury, and this page is
         the answer to &ldquo;where did the money go&rdquo; — readable by

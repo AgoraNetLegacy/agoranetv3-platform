@@ -5,6 +5,7 @@ import { closeDuePolls } from "@/lib/polls";
 import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
 import { PollForm } from "@/app/polls/PollForm";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -54,9 +55,9 @@ export default async function GovernanceRoom({
           ← {pillar.icon} {pillar.name}
         </Link>
       </p>
-      <h1>🏛 {pillar.name} — Governance room</h1>
+      <h1><Icon name="temple" /> {pillar.name} — Governance room</h1>
       <div className="door-banner">
-        🏛 <strong>You are standing in the permanent room.</strong>{" "}
+        <Icon name="temple" /> <strong>You are standing in the permanent room.</strong>{" "}
         Everything here is permanent record. Governance polls are always
         sealed — no running tally for anyone — and close by candle: the
         true end is drawn at random inside the final stretch, committed in

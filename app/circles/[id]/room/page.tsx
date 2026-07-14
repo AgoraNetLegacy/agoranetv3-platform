@@ -5,6 +5,7 @@ import { activeFace } from "@/lib/webSession";
 import { roomAccess } from "@/lib/circles";
 import { PollForm } from "@/app/polls/PollForm";
 import { submitOffer, submitOfferUpdate, submitStewardshipPoll } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +61,7 @@ export default async function CircleRoomPage({
   return (
     <>
       <p>
-        <Link href={`/circles/${circle.id}`}>← ⭕ {circle.name} (public page)</Link>
+        <Link href={`/circles/${circle.id}`}>← <Icon name="circles" /> {circle.name} (public page)</Link>
       </p>
       <h1>🚪 Members&apos; room — {circle.name}</h1>
       {circle.status === "closed" && (

@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { activeFace, currentSession } from "@/lib/webSession";
 import { enterPillar } from "@/lib/parking";
 import { releasePillar } from "./actions";
+import { Icon } from "@/components/Icon";
 
 export type ParkingOutcome =
   | { state: "reader" }
@@ -46,7 +47,7 @@ export function BlockedPanel({
 }) {
   return (
     <div className="blocked-panel">
-      <h2>🅿️ This pillar is parked by your other face</h2>
+      <h2><Icon name="parking" /> This pillar is parked by your other face</h2>
       <p>
         Your {heldByFace} (<strong>{heldByHandle}</strong>) currently
         holds the {pillarName} lot. One face per pillar at a time — this is

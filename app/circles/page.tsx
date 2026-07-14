@@ -4,6 +4,7 @@ import { activeFace } from "@/lib/webSession";
 import { alignmentPillarsFor, lastAttestedAt, circleStatusLabel } from "@/lib/circles";
 import { getRail } from "@/lib/rails";
 import { submitCircle } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -88,7 +89,7 @@ export default async function CirclesPage({
 
   return (
     <>
-      <h1>⭕ Circles — the action layer</h1>
+      <h1><Icon name="circles" /> Circles — the action layer</h1>
       <p>
         <em>Turn talk into proof you acted.</em>
       </p>
