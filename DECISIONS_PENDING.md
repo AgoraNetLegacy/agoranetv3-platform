@@ -273,28 +273,31 @@ need from you.)
 17. ~~**Key recovery / Alias succession**~~ — **RESOLVED (2026-07-13):
     split into two genuinely different problems, ratified separately.**
 
-    - **True Self recovery: RATIFIED — no mechanism, permanently, in
-      Phase A. Lose your Humanity Credential, or your True Self's
-      access key, and that identity is gone.** Owner's own words:
-      "we can never just take someone's word for it" — and there is
-      no safe alternative to build. Recovering True Self requires an
-      issuer able to independently re-verify "this is genuinely the
-      same returning human," which the interim Phase A issuer (the
-      platform itself) structurally cannot do without either trusting
-      an unverifiable claim (breaking one-human-one-account) or
-      storing a new identifying signal to check against (breaking the
-      privacy design). DUAL_IDENTITY §8 says as much itself — the
-      stable-subject-commitment requirement "goes into KYC-issuer
-      selection criteria now," i.e., it was always understood as
-      depending on the real issuer. **Not a gap to fix — a permanent
-      Phase A stance, revisitable only if a real issuer (Phase 8.6's
-      Identus, or Phase 9) ever makes safe re-verification possible.**
-      The only remedy today: verify fresh as a new soul; old history
-      and Light Score are orphaned forever. **One small, cheap, honest
-      build item this creates:** the credential-display screen should
-      say so plainly, at the moment it matters — "if you lose this,
-      we cannot recover it; there is no support process, no exception"
-      — worth adding whenever a small copy slice is convenient.
+    - **True Self recovery: no mechanism in Phase A — UPGRADED same
+      day, buildable at Phase 8.6.** Lose your Humanity Credential or
+      access key today (interim HMAC issuer), and that identity is
+      gone — no safe alternative exists there, for the reason the
+      owner named: "we can never just take someone's word for it,"
+      and the interim issuer has no independent way to confirm a
+      returning human without either trusting an unverifiable claim
+      or storing new identifying data. **But this was reconsidered
+      the same day**, prompted by the owner asking whether the
+      third-party authenticator (Identus, already part of Phase 8.6)
+      could solve it properly — **yes: real recovery is buildable at
+      testnet grade**, via the stable subject commitment
+      DUAL_IDENTITY §8 already requires (return to the same issuer,
+      re-prove who you are, get reissued a credential deriving to the
+      SAME identifier — every nullifier re-derives, nothing orphaned).
+      This is COOPERATIVE recovery (the soul wants to be recognized),
+      which doesn't need real-world uniqueness enforcement — that
+      harder, different problem is #20/W5 (reputation escape) and
+      stays gated on Phase 9, unaffected by this. Full design:
+      `Chain Integration/TESTNET_RAILS_SPEC.md` §1.5. **Until 8.6
+      ships, the Phase A stance stands as described above, and the
+      credential screen should say so plainly** — "if you lose this,
+      we cannot recover it; there is no support process, no
+      exception" — updating to name the real recovery path once
+      Identus recovery is live.
 
     - **Alias succession: STILL A REAL, BUILDABLE FEATURE — different
       problem, no wall.** Unlike True Self recovery, this never needs
