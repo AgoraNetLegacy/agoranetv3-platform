@@ -6,6 +6,7 @@ import "@fontsource-variable/inter";
 import "./globals.css";
 import { db } from "@/lib/db";
 import { balanceOf } from "@/lib/economy";
+import { activeTermFor } from "@/lib/moderation";
 import { activeFace, sessionFaces, faceFlipPending } from "@/lib/webSession";
 import { returnToHub, switchToFace, signOutSession } from "./actions";
 
@@ -47,9 +48,6 @@ async function FaceBar() {
         {pc.toFixed(2)} PC · {g.toFixed(2)} G
       </span>
       <Link href="/inbox">inbox{unread > 0 ? ` (${unread})` : ""}</Link>
-      <Link href="/souls">souls</Link>
-      <Link href="/moderation">workbench</Link>
-      <Link href="/profile">profile</Link>
       {others.length > 0 && (
         <details className="switch-control">
           <summary>switch face</summary>
@@ -76,6 +74,88 @@ async function FaceBar() {
   );
 }
 
+// The left-sidebar navigation (PRESENTATION_SPEC §1.3, order and labels
+// owner-blessed 2026-07-13): the feature list lives on the left,
+// persistent, collapsible on small screens. The moderation workbench
+// appears only for badge-holders; admin surfaces never appear (none
+// exist). Each door carries its benefit one-liner (§3.2) as a tooltip;
+// the landing pages say it in full.
+async function SideNav() {
+  const face = await activeFace();
+  let showWorkbench = false;
+  if (face) {
+    const [term, offer] = await Promise.all([
+      activeTermFor(db, face.id),
+      db.badgeOffer.findFirst({
+        where: { profileId: face.id, status: "offered", expiresAt: { gt: new Date() } },
+      }),
+    ]);
+    showWorkbench = Boolean(term || offer);
+  }
+  return (
+    <nav className="sidebar" aria-label="The platform">
+      <form action={returnToHub}>
+        <button type="submit" className="navlink navlink-button">
+          🏛️ The Agora
+          <span className="nav-note">the platform dashboard</span>
+        </button>
+      </form>
+      <Link className="navlink" href="/pillars">
+        The Seven Pillars
+      </Link>
+      <Link
+        className="navlink"
+        href="/discussions"
+        title="Say it where it can't be quietly erased."
+      >
+        Discussions
+      </Link>
+      <Link
+        className="navlink"
+        href="/governance"
+        title="Decide together, sealed until it's fair."
+      >
+        Polls &amp; Governance
+      </Link>
+      <Link className="navlink" href="/circles" title="Turn talk into proof you acted.">
+        Circles
+      </Link>
+      <Link
+        className="navlink"
+        href="/pollinator"
+        title="Workshop an idea before you defend it in public."
+      >
+        The Neural Pollinator
+      </Link>
+      <Link
+        className="navlink"
+        href="/souls"
+        title="Find your people; nobody watches you do it."
+      >
+        Fellow Souls &amp; Messages
+      </Link>
+      <div className="navlink nav-group" title="The record nobody can rewrite — including us.">
+        The Public Record
+        <span className="nav-sub">
+          <Link href="/ledger">ledger</Link>
+          <Link href="/transparency">transparency</Link>
+          <Link href="/commons">commons</Link>
+        </span>
+      </div>
+      {face && (
+        <Link className="navlink" href="/profile">
+          This Face&rsquo;s Profile &amp; Settings
+        </Link>
+      )}
+      {showWorkbench && (
+        <Link className="navlink" href="/moderation">
+          Moderation workbench
+        </Link>
+      )}
+    </nav>
+  );
+}
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   // THEME = IDENTITY (PRESENTATION_SPEC §2): the theme follows the FACE,
   // never OS preference — the room's color is a safety signal, so the
@@ -86,26 +166,23 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="en" data-theme={theme}>
       <body className={flip ? "page-shell flip-in" : "page-shell"}>
+        <input type="checkbox" id="nav-open" className="nav-toggle-box" />
         <header className="site">
+          <label htmlFor="nav-open" className="nav-toggle" aria-label="Menu">
+            ☰
+          </label>
           <form action={returnToHub} className="inline">
             <button type="submit" className="linklike brand">
               🏛️ AgoraNet
             </button>
           </form>
-          <form action={returnToHub} className="inline">
-            <button type="submit" className="linklike">
-              Hub
-            </button>
-          </form>
-          <Link href="/feed">Feed</Link>
           <Link href="/search">Search</Link>
-          <Link href="/circles">Circles</Link>
-          <Link href="/pollinator">Pollinator</Link>
-          <Link href="/ledger">Ledger</Link>
-          <Link href="/transparency">Transparency</Link>
           <FaceBar />
         </header>
-        <main>{children}</main>
+        <div className="shell">
+          <SideNav />
+          <main>{children}</main>
+        </div>
       </body>
     </html>
   );

@@ -503,6 +503,21 @@ at the Phase 9 real-money re-review regardless.
      console was never scheduled by BUILD_ORDER — say if you want it
      post-launch.
 
+21. **Phase 8.5 derived rule — the merged dashboard's parking
+    threshold (2026-07-14).** The ratified §1.1 merge (the Agora
+    dashboard IS the platform dashboard) meets the ratified parking
+    rule (§3.3.5: returning to the hub RELEASES locks) at one point
+    the specs never had to reconcile before: does landing on the
+    platform dashboard park your face in the Agora? **Derived answer:
+    NO — the threshold parks nothing.** The alternative would let one
+    face's Agora session block the OTHER face from the homepage
+    itself, contradicting §3.3.5 and making the front door refusable.
+    The Agora's INTERIOR doors (its domain pages, Governance room,
+    discussion threads) park exactly as they always did — the
+    mechanic is untouched; only the top-of-pillar view moved into
+    parking-free hub space. /pillars/agoranet redirects home ("one
+    thing"). Overrule with a sentence if you read §1.1 differently.
+
 16. **Early-platform crowd-size honesty (DUAL_IDENTITY §7.2) — built,
     bless the wording:** below 25 active souls (rail), the Alias
     ceremony says plainly that a small crowd thins anonymity, the

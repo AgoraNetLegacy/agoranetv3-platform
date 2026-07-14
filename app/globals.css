@@ -136,6 +136,70 @@ header.site {
 }
 header.site .brand { font-weight: 700; color: var(--ink); font-family: var(--font-display); }
 
+/* ---- §1.3 the persistent left sidebar: the feature list lives on
+   the left; collapsible on small screens (checkbox toggle — works
+   without JavaScript, like everything else here). ---- */
+.shell { display: flex; align-items: flex-start; }
+.sidebar {
+  flex: 0 0 232px;
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 1.1rem 0.9rem 2rem;
+  border-right: 1px solid var(--line);
+  background: var(--surface-2);
+  min-height: calc(100vh - 53px);
+}
+.shell main { flex: 1; min-width: 0; }
+.navlink {
+  display: block;
+  padding: 0.42rem 0.6rem;
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 550;
+  text-decoration: none;
+}
+.navlink:hover { background: var(--accent-soft); text-decoration: none; }
+.navlink-button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  font-weight: 700;
+}
+.nav-note { display: block; font-size: 0.7rem; color: var(--muted); font-weight: 400; }
+.nav-group { cursor: default; }
+.nav-sub { display: block; font-size: 0.8rem; padding-left: 0.2rem; }
+.nav-sub a { margin-right: 0.55rem; }
+.nav-toggle-box { display: none; }
+.nav-toggle {
+  display: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--ink);
+  padding: 0.35rem 0.7rem;
+  margin: -0.35rem 0;
+  border-radius: var(--radius-sm);
+}
+.nav-toggle:hover { background: var(--accent-soft); }
+@media (max-width: 860px) {
+  .shell { display: block; }
+  .nav-toggle { display: inline-block; }
+  .sidebar {
+    display: none;
+    position: static;
+    max-height: none;
+    min-height: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-toggle-box:checked ~ .shell .sidebar { display: block; }
+}
+
 .face-bar {
   margin-left: auto;
   display: flex;

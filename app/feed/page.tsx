@@ -1,15 +1,15 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
-import { buildFeed, openLens, chamberStorefrontCards } from "@/lib/feed";
-import { markCaughtUp } from "@/app/actions";
+import { ChosenSourcesFeed, LensSection, PollinatorStrip } from "./FeedSections";
 
 export const dynamic = "force-dynamic";
 
 // The feed (FEED_AND_SEARCH_SPEC): what a feed looks like when it
 // optimizes FOR the person. Chosen sources + one open lens; every card
 // says why it's there; the feed ends. No infinite scroll, no
-// variable-reward mechanics, no red-dot economy.
+// variable-reward mechanics, no red-dot economy. Since Phase 8.5 the
+// feed's primary home is the Agora dashboard (/) — this page remains
+// as the full, focused view.
 export default async function FeedPage({
   searchParams,
 }: {
@@ -17,9 +17,6 @@ export default async function FeedPage({
 }) {
   const { m } = await searchParams;
   const face = await activeFace();
-
-  const lens = await openLens(db);
-  const storefronts = await chamberStorefrontCards(db);
 
   if (!face) {
     return (
@@ -30,13 +27,11 @@ export default async function FeedPage({
           the sources <em>you</em> choose — until then, here is the open
           lens everyone sees: same formula, same results, for everyone.
         </p>
-        <LensSection lens={lens} />
-        <PollinatorStrip storefronts={storefronts} />
+        <LensSection />
+        <PollinatorStrip />
       </>
     );
   }
-
-  const { cards, since } = await buildFeed(db, face.id);
 
   return (
     <>
@@ -47,118 +42,9 @@ export default async function FeedPage({
         your behavior to guess. Per-face: your other face has its own.
       </p>
       {m && <div className="notice">{m}</div>}
-
-      {cards.length === 0 ? (
-        <div className="caught-up">
-          <p>
-            <strong>You&rsquo;re caught up.</strong>
-            {since ? ` Nothing new from your sources since ${since.toLocaleString()}.` : " Your sources have no activity yet."}
-          </p>
-          <p className="lore">
-            That&rsquo;s the design, not a failure: the feed ends. Browse
-            the <Link href="/">pillars</Link>, or see what the open lens is
-            carrying below.
-          </p>
-        </div>
-      ) : (
-        <>
-          <ul className="discussions">
-            {cards.map((c) => (
-              <li key={c.discussionId}>
-                <Link href={c.kind === "poll" ? `/polls/${c.discussionId}` : `/d/${c.discussionId}`}>
-                  {c.title}
-                </Link>{" "}
-                {c.kind === "poll" ? (
-                  <span className="badge permanent">Poll</span>
-                ) : c.permanence.startsWith("permanent") ? (
-                  <span className="badge permanent">Permanent record</span>
-                ) : (
-                  <span className="badge locked">Author-deletable</span>
-                )}
-                <div className="meta">
-                  {c.pillarIcon} {c.pillarName}
-                  {c.kind === "discussion"
-                    ? ` · ${c.newPosts} new post${c.newPosts === 1 ? "" : "s"} · ${c.participants} participant${c.participants === 1 ? "" : "s"}`
-                    : ""}{" "}
-                  · {c.lastActivityAt.toLocaleString()}
-                </div>
-                <div className="why-line">{c.whyLine}</div>
-              </li>
-            ))}
-          </ul>
-          <div className="caught-up">
-            <p>
-              <strong>You&rsquo;re caught up</strong> — that was everything
-              from your chosen sources{since ? ` since ${since.toLocaleString()}` : ""}.
-            </p>
-            <form action={markCaughtUp}>
-              <button type="submit">Mark read — next visit starts from now</button>
-            </form>
-          </div>
-        </>
-      )}
-
-      <LensSection lens={lens} />
-      <PollinatorStrip storefronts={storefronts} />
-    </>
-  );
-}
-
-// Chamber storefront cards (FEED §2.3 — arriving with their Phase 7.5
-// host): discovery of new/active PUBLIC chambers. The ordering rule is
-// legible and stated; only the public storefront rides the card.
-function PollinatorStrip({
-  storefronts,
-}: {
-  storefronts: Awaited<ReturnType<typeof chamberStorefrontCards>>;
-}) {
-  if (storefronts.length === 0) return null;
-  return (
-    <>
-      <h3>New in the Pollinator</h3>
-      <ul className="discussions">
-        {storefronts.map((c) => (
-          <li key={c.chamberId}>
-            <Link href={`/pollinator/${c.chamberId}`}>🐝 {c.title}</Link>{" "}
-            <span className="badge permanent">Public chamber</span>
-            <div className="meta">
-              {c.subject.length > 100 ? `${c.subject.slice(0, 100)}…` : c.subject} · by @
-              {c.creatorHandle} · {c.members} soul{c.members === 1 ? "" : "s"} inside
-            </div>
-            <div className="why-line">{c.whyLine}</div>
-          </li>
-        ))}
-      </ul>
-    </>
-  );
-}
-
-function LensSection({ lens }: { lens: Awaited<ReturnType<typeof openLens>> }) {
-  return (
-    <>
-      <h3>Popular now — the open lens</h3>
-      <p className="lore">
-        One stream you didn&rsquo;t hand-pick, ranked by a{" "}
-        <Link href="/feed/formula">published formula</Link> anyone can read:
-        unique contributors weighted highest, plus tips and sourced posts,
-        with recency decay. Views and dwell time are never inputs. Same
-        results for everyone.
-      </p>
-      <ul className="discussions">
-        {lens.map((c) => (
-          <li key={c.discussionId}>
-            <Link href={`/d/${c.discussionId}`}>{c.title}</Link>{" "}
-            <span className="lore">score {c.score.toFixed(1)} = {c.scoreParts}</span>
-            <div className="meta">
-              {c.pillarIcon} {c.pillarName}
-            </div>
-            <div className="why-line">{c.whyLine}</div>
-          </li>
-        ))}
-        {lens.length === 0 && (
-          <li className="lore">Nothing in the lens window yet — quiet platform, honest lens.</li>
-        )}
-      </ul>
+      <ChosenSourcesFeed profileId={face.id} />
+      <LensSection />
+      <PollinatorStrip />
     </>
   );
 }

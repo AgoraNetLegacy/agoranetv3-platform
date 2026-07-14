@@ -1,22 +1,37 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { activateDueAliases } from "@/lib/identity";
+import { closeDuePolls } from "@/lib/polls";
 import { editorialFor } from "@/lib/pillarContent";
-import { faceConstellation } from "@/lib/lightScore";
 import { activeFace } from "@/lib/webSession";
+import { ChosenSourcesFeed, LensSection, PollinatorStrip } from "@/app/feed/FeedSections";
+import { PillarAnatomy, asSortKey } from "@/app/pillars/PillarAnatomy";
 
 export const dynamic = "force-dynamic";
 
-// The hub (DASHBOARD §4): six outer pillar tiles + The Agora styled as
-// the hub-within-the-hub (grid-with-Agora-set-apart — the spec's
-// sanctioned fallback to the radial wheel). Each tile: the pillar's
-// color, icon, Display Name, and one hook line; Classical and Lore names
-// wait inside the pillar (§4.2). The cross-pillar glance for the active
-// face shows per-pillar standing side by side — a constellation, never
-// a sum.
-export default async function Hub() {
-  // Opportunistic cohort release — due Aliases activate on hub traffic.
+// THE PLATFORM DASHBOARD IS THE AGORA DASHBOARD (PRESENTATION_SPEC §1.1,
+// owner-corrected 2026-07-13: one thing, not a home "flavored" like the
+// Agora). It carries: the what-is-this-place framing for first arrivals,
+// the feed (per-persona for signed-in souls; the open lens for readers),
+// the Agora pillar's own anatomy, and doors to everything else. The
+// thesis rendered literally: the six diagnose, The Agora equips.
+//
+// Parking note (derived, flagged in DECISIONS_PENDING): this threshold
+// parks nothing — the hub has always been where locks release (§3.3.5),
+// and a homepage that could be blocked by your other face would break
+// that ratified rule. The Agora's interior doors (domains, governance,
+// threads) park exactly as they always did.
+export default async function AgoraDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string; m?: string }>;
+}) {
+  // Opportunistic jobs ride the highest-traffic page load.
   await activateDueAliases(db);
+  await closeDuePolls(db);
+
+  const { m } = await searchParams;
+  const sort = asSortKey((await searchParams).sort);
 
   const [pillars, face] = await Promise.all([
     db.pillar.findMany({
@@ -25,61 +40,84 @@ export default async function Hub() {
     }),
     activeFace(),
   ]);
-  const constellation = face ? await faceConstellation(db, face.id) : null;
-
   const outer = pillars.filter((p) => !p.isMeta);
   const agora = pillars.find((p) => p.isMeta)!;
-  const agoraEditorial = editorialFor(agora.slug);
+  const editorial = editorialFor(agora.slug);
 
   return (
     <>
-      <h1>The Seven Pillars</h1>
-      <p>
-        Six pillars diagnose; The Agora equips. Read freely; verify to
-        act. Entering a pillar parks your active face there — one face per
-        pillar at a time.
-      </p>
-      <ul className="pillar-grid hub">
-        {outer.map((p) => {
-          const editorial = editorialFor(p.slug);
-          const standing = constellation?.forPillar(p.id);
-          return (
-            <li key={p.id} style={{ borderTop: `4px solid ${p.colorPrimary}` }}>
-              <Link href={`/pillars/${p.slug}`} className="tile-title">
-                {p.icon} <strong>{p.name}</strong>
-              </Link>
-              <div className="hook">{editorial.hookLine}</div>
-              <div className="lore">
-                {p._count.domains} domains · {p._count.discussions} Discussions
-                {standing && standing.points !== 0
-                  ? ` · your standing ${standing.points}`
-                  : ""}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-
-      <div className="agora-tile" style={{ borderColor: agora.colorPrimary }}>
-        <Link href={`/pillars/${agora.slug}`} className="tile-title">
-          {agora.icon} <strong>{agora.name}</strong>
-        </Link>
-        <div className="hook">{agoraEditorial.hookLine}</div>
-        <div className="lore">
-          The meta-pillar: the platform's own structure, legitimacy, and
-          survival — cross-pillar by nature.
-          {constellation?.forPillar(agora.id) &&
-          constellation.forPillar(agora.id)!.points !== 0
-            ? ` Your standing here: ${constellation.forPillar(agora.id)!.points}.`
-            : ""}
-        </div>
+      {/* What is this place — the first arrival's framing (§1.1). */}
+      <div
+        className="why-banner"
+        style={{ borderLeft: `5px solid ${agora.colorPrimary}`, background: agora.colorLight }}
+      >
+        <h1 style={{ marginBottom: "0.1rem" }}>
+          {agora.icon} {agora.name}
+        </h1>
+        <p className="lore" style={{ marginTop: 0 }}>
+          {agora.classicalName} — {agora.loreName}
+        </p>
+        <p className="why-text">
+          A purpose-built civic commons. Six pillars diagnose what's
+          broken; The Agora — this room — holds the tools to fix it
+          together: permanent public discussion, sealed collective
+          decisions, provable action. Reading is free, forever. Acting
+          requires proving you're one real human, once.
+        </p>
+        <p className="lore">{editorial.whyBanner}</p>
       </div>
 
-      <p className="lore" style={{ marginTop: "1.2rem" }}>
-        <Link href="/feed">Your feed</Link> · <Link href="/search">Search</Link> ·{" "}
-        <Link href="/transparency">Transparency dashboard</Link> ·{" "}
-        <Link href="/ledger">The civic ledger</Link>
+      {m && <div className="notice">{m}</div>}
+
+      {/* Doors to the six diagnostic pillars (§1.1: doors to everything
+          else — the full grid lives at /pillars). */}
+      <h3>The six diagnostic pillars</h3>
+      <ul className="pillar-grid">
+        {outer.map((p) => (
+          <li key={p.id} style={{ borderTop: `4px solid ${p.colorPrimary}` }}>
+            <Link href={`/pillars/${p.slug}`}>
+              {p.icon} <strong>{p.name}</strong>
+            </Link>
+            <div className="lore">
+              {p._count.domains} domains · {p._count.discussions} Discussions
+            </div>
+          </li>
+        ))}
+      </ul>
+      <p className="lore">
+        <Link href="/pillars">The Seven Pillars, in full →</Link>
       </p>
+
+      {/* The feed lives here (§1.1): per-persona for the signed-in,
+          the open lens for readers. */}
+      {face ? (
+        <>
+          <h2>Your feed</h2>
+          <p className="lore">
+            Assembled only from sources you chose —{" "}
+            <Link href="/feed/sources">choose what feeds it</Link>. The
+            machine never watches your behavior to guess. Per-face: your
+            other face has its own.
+          </p>
+          <ChosenSourcesFeed profileId={face.id} compactDoor />
+        </>
+      ) : (
+        <>
+          <h2>What the commons is discussing</h2>
+          <LensSection />
+        </>
+      )}
+      <PollinatorStrip />
+
+      {/* The Agora pillar's own anatomy (§1.1): domains, canon threads,
+          its Governance door — this room's substance. */}
+      <h2 style={{ marginTop: "2rem" }}>This room's anatomy</h2>
+      <p className="lore">
+        The Agora is a pillar like the six — with domains, canonical
+        questions, Circles, and a Governance room — pointed at the
+        platform itself: its structure, legitimacy, and survival.
+      </p>
+      <PillarAnatomy slug={agora.slug} sort={sort} sortBasePath="/" />
     </>
   );
 }
