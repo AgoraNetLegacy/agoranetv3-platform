@@ -959,7 +959,31 @@ export async function updateDisplayName(formData: FormData) {
   const face = await requireFace("settings");
   const result = await changeDisplayName(db, { profileId: face.id, displayName });
   revalidatePath("/", "layout");
-  backTo("/profile", result.ok ? "Display name updated (live surfaces only — permanent records keep the name they were written under)." : result.reason);
+  backTo("/settings", result.ok ? "Display name updated (live surfaces only — permanent records keep the name they were written under)." : result.reason);
+}
+
+/** The profile window (Phase 8.5, PRESENTATION_SPEC §5.2): about-me is
+ *  live-surface content — editable anytime, never permanent record. */
+export async function updateProfileBio(formData: FormData) {
+  const face = await requireFace("settings");
+  const bio = String(formData.get("bio") ?? "").slice(0, 2000);
+  const bioPlace = String(formData.get("bioPlace") ?? "").slice(0, 120);
+  await db.profile.update({ where: { id: face.id }, data: { bio, bioPlace } });
+  revalidatePath("/profile");
+  backTo("/profile", "Saved — live surfaces only, never the permanent record.");
+}
+
+/** §5.1 + §2.2: the switch animation is a per-face choice — flip
+ *  (default), crossfade, or instant. By choice, never by detection. */
+export async function setSwitchAnimation(formData: FormData) {
+  const method = String(formData.get("method") ?? "flip");
+  const face = await requireFace("settings");
+  if (!["flip", "crossfade", "instant"].includes(method)) {
+    backTo("/settings", "Unknown animation method.");
+  }
+  await db.profile.update({ where: { id: face.id }, data: { switchAnimation: method } });
+  revalidatePath("/", "layout");
+  backTo("/settings", "Switch animation set for this face.");
 }
 
 // ------------------------------------------------------------------ session

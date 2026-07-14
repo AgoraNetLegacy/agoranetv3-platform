@@ -1,0 +1,112 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
+import { activeFace } from "@/lib/webSession";
+import { getRail } from "@/lib/rails";
+import { updateDisplayName, setSwitchAnimation } from "@/app/actions";
+
+export const dynamic = "force-dynamic";
+
+// Settings, per face (Phase 8.5, PRESENTATION_SPEC §5.1). THE RULE:
+// this page renders for the ACTIVE face only — no surface ever shows
+// two faces' settings together; a shared settings screen would itself
+// be a linkage surface. Switch faces to change the other face's
+// settings; nothing here echoes across.
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ m?: string }>;
+}) {
+  const { m } = await searchParams;
+  const face = await activeFace();
+  if (!face) redirect("/login");
+  const cooldownDays = await getRail(db, "identity.displayNameCooldownDays");
+
+  return (
+    <div className="ceremony">
+      <h2>
+        Settings <span className="lore">— for {face.displayName} @{face.handle} only</span>
+      </h2>
+      <p className="lore">
+        Settings are per-face. Your other face — if you have one — has its
+        own settings page, reachable only by switching. That separation is
+        the design: a shared screen would itself link your faces.
+      </p>
+      {m && <div className="notice">{m}</div>}
+
+      <h3>Display name</h3>
+      <p className="lore">
+        Your <strong>@handle is forever</strong> — the attribution key on
+        every record you sign. Your display name is yours to change (at
+        most once every {cooldownDays} days): live surfaces update;
+        anything in the permanent record keeps the name it was written
+        under.
+      </p>
+      <form action={updateDisplayName}>
+        <label>
+          Display name
+          <input
+            type="text"
+            name="displayName"
+            defaultValue={face.displayName}
+            required
+            maxLength={60}
+          />
+        </label>
+        <button type="submit">Change display name</button>
+      </form>
+
+      <h3>Face-switch animation</h3>
+      <p className="lore">
+        How the room turns when you change faces. The card flip is the
+        default; choose less motion if you prefer — by choice, never by
+        detection.
+      </p>
+      <form action={setSwitchAnimation}>
+        {(
+          [
+            ["flip", "The card flip — the page turns over like a playing card"],
+            ["crossfade", "Crossfade — a quiet dissolve"],
+            ["instant", "Instant — no animation at all"],
+          ] as const
+        ).map(([value, label]) => (
+          <label key={value} style={{ display: "block", margin: "0.3rem 0" }}>
+            <input
+              type="radio"
+              name="method"
+              value={value}
+              defaultChecked={face.switchAnimation === value}
+            />{" "}
+            {label}
+          </label>
+        ))}
+        <button type="submit">Save animation choice</button>
+      </form>
+
+      <h3>Notifications</h3>
+      <p className="lore">
+        The quietest defaults are on for everyone: two tiers (time-sensitive
+        and the quiet inbox), aggregated per space, nothing manufactured to
+        pull you back. There is nothing to configure yet — push delivery
+        arrives as a fast-follow, and its preferences will live here, per
+        face, off by default.
+      </p>
+
+      <h3>This face&rsquo;s other controls</h3>
+      <ul>
+        <li>
+          <Link href="/profile">The profile window</Link> — your about-me,
+          standing, and score log
+        </li>
+        <li>
+          <Link href="/feed/sources">Feed sources</Link> — choose what
+          feeds this face&rsquo;s feed
+        </li>
+        <li>
+          <Link href="/search/history">Search history</Link> — per-face,
+          deletable, never used to rank
+        </li>
+      </ul>
+    </div>
+  );
+}

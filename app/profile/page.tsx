@@ -1,14 +1,18 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
-import { getRail } from "@/lib/rails";
 import { faceConstellation, scoreChangeLog } from "@/lib/lightScore";
-import { updateDisplayName } from "@/app/actions";
+import { ALIAS_DISCLOSURES } from "@/lib/disclosures";
+import { updateProfileBio } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
-// The face's own profile surface. Two-layer naming (2026-07-10): the
-// display name changes here (rate-limited rail); the @handle never does.
+// The face's own profile window (Phase 8.5, PRESENTATION_SPEC §5.2):
+// about-me and optional fields, per face ALWAYS — an Alias bio and a
+// True Self bio never share a database row or a writing surface. Bios
+// are live-surface content (editable), never permanent-record. Display
+// name and other controls moved to /settings (§5.1).
 export default async function ProfilePage({
   searchParams,
 }: {
@@ -17,8 +21,7 @@ export default async function ProfilePage({
   const { m } = await searchParams;
   const face = await activeFace();
   if (!face) redirect("/login");
-  const [cooldownDays, constellation, changes] = await Promise.all([
-    getRail(db, "identity.displayNameCooldownDays"),
+  const [constellation, changes] = await Promise.all([
     faceConstellation(db, face.id),
     scoreChangeLog(db, face.id, 25),
   ]);
@@ -30,29 +33,50 @@ export default async function ProfilePage({
       </h2>
       <p className="lore">
         {face.face === "TRUE_SELF" ? "True Self" : "Alias"} · joined{" "}
-        {face.joinedPeriod}
+        {face.joinedPeriod} ·{" "}
+        <Link href={`/souls/${face.handle}`}>see your public window</Link> ·{" "}
+        <Link href="/settings">settings</Link>
       </p>
       {m && <div className="notice">{m}</div>}
-      <p>
-        Your <strong>@handle is forever</strong> — it is the attribution key
-        on every record you sign, unique across the whole platform, never
-        recycled. Your <strong>display name</strong> is yours to change
-        (at most once every {cooldownDays} days): live surfaces update;
-        anything in the permanent record keeps the name it was written
-        under.
+
+      <h3>About you — this face&rsquo;s window</h3>
+      <p className="lore">
+        Live-surface content: editable anytime, shown on your public soul
+        window, never part of the permanent record.
       </p>
-      <form action={updateDisplayName}>
+      {face.face === "ALIAS" && (
+        <div className="notice">
+          From your hatch ceremony, still true here:{" "}
+          <em>{ALIAS_DISCLOSURES.items[1]}</em>
+        </div>
+      )}
+      <form action={updateProfileBio} className="composer">
         <label>
-          Display name
-          <input
-            type="text"
-            name="displayName"
-            defaultValue={face.displayName}
-            required
-            maxLength={60}
+          About me
+          <textarea
+            name="bio"
+            rows={5}
+            maxLength={2000}
+            defaultValue={face.bio}
+            placeholder="Whatever you want fellow souls to know."
           />
         </label>
-        <button type="submit">Change display name</button>
+        <label>
+          Place (optional)
+          <input
+            type="text"
+            name="bioPlace"
+            maxLength={120}
+            defaultValue={face.bioPlace}
+            placeholder="City or region, if you choose"
+          />
+        </label>
+        <p className="lore">
+          Place yourself on the map, never someone else — name your own
+          city, neighborhood, or nothing at all; other people&rsquo;s
+          information and residential addresses don&rsquo;t belong here.
+        </p>
+        <button type="submit">Save the window</button>
       </form>
 
       <h3>Your standing — the constellation</h3>

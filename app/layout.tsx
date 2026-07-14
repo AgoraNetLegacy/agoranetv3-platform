@@ -163,8 +163,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // the wrong room.
   const [face, flip] = await Promise.all([activeFace(), faceFlipPending()]);
   const theme = !face ? "reader" : face.face === "TRUE_SELF" ? "true-self" : "alias";
+  // §5.1: the switch-animation method is the face's own choice (flip
+  // default; crossfade / instant for less motion — by choice, never
+  // detection). Readers get the default.
+  const flipMethod = face?.switchAnimation ?? "flip";
   return (
-    <html lang="en" data-theme={theme}>
+    <html lang="en" data-theme={theme} data-flip-method={flipMethod}>
       <body className={flip ? "page-shell flip-in" : "page-shell"}>
         <input type="checkbox" id="nav-open" className="nav-toggle-box" />
         <header className="site">

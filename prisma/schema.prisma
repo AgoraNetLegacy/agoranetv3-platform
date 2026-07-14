@@ -63,6 +63,17 @@ model Profile {
   activateAt   DateTime?
   // Coarse join period only — never a precise timestamp (§3.5).
   joinedPeriod String
+  // Phase 8.5, PRESENTATION_SPEC §5.2 — the profile window: about-me is
+  // LIVE-surface content (editable anytime, never permanent record).
+  // Place follows the ratified "place yourself on the map, never
+  // someone else" rule; the Alias composer carries the ceremony's
+  // stylometry warning verbatim.
+  bio          String        @default("")
+  bioPlace     String        @default("")
+  // §5.1 + §2.2: the face-switch animation is a per-face settings
+  // choice — "flip" (default) | "crossfade" | "instant". Motion needs
+  // are served by choice, not detection.
+  switchAnimation String     @default("flip")
   createdAt    DateTime      @default(now())
   gateRequests GateRequest[]
   valuesAnswers ValuesAnswer[]
