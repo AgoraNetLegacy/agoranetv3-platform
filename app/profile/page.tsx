@@ -56,6 +56,9 @@ export default async function ProfilePage({
       </form>
 
       <h3>Your standing — the constellation</h3>
+      <p>
+        <em>Standing you earn, explained to the point.</em>
+      </p>
       <p className="lore">
         Per-pillar, insight-weighted, disagreement-neutral. There is no
         total on purpose: no universal score exists, here or anywhere.

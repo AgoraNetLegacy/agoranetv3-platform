@@ -70,6 +70,9 @@ export default async function PollinatorPage({
   return (
     <>
       <h1>🐝 The Pollinator — the idea incubator</h1>
+      <p>
+        <em>Workshop an idea before you defend it in public.</em>
+      </p>
       <p className="lore">
         A chamber is an enclosed pod dedicated to one idea: break it down
         to first principles, bring knowledge and debate, work it toward

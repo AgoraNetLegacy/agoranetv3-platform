@@ -89,6 +89,9 @@ export default async function CirclesPage({
   return (
     <>
       <h1>⭕ Circles — the action layer</h1>
+      <p>
+        <em>Turn talk into proof you acted.</em>
+      </p>
       <p className="lore">
         Where deliberation becomes provable action: a bounded group owns a
         problem, works it in their room, and logs what actually got done —

@@ -24,6 +24,9 @@ export default async function AliasPage({
   return (
     <div className="ceremony">
       <h2>Hatch an Alias</h2>
+      <p>
+        <em>Say what you can&rsquo;t afford to sign.</em>
+      </p>
       {early && (
         <div className="notice">
           <strong>The platform is young — read this honestly.</strong> An

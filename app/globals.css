@@ -311,6 +311,21 @@ button.linklike.brand { font-weight: 700; color: var(--ink); font-family: var(--
 }
 .door-banner a { color: var(--permanent); text-decoration: underline; }
 
+/* §1.4 the Discussion door: a visible invitation (aqua — never amber,
+   which is reserved for permanence thresholds). Domain cards carry it;
+   domain pages put it at BOTH top and bottom. */
+.discussion-door {
+  display: inline-block;
+  background: var(--accent-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 0.25rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.35rem 0;
+}
+.discussion-door a { text-decoration: none; }
+
 .sort-menu { font-size: 0.85rem; color: var(--muted); margin: 0.75rem 0 1rem; }
 .sort-menu a { margin-right: 0.75rem; }
 .sort-menu a.active { font-weight: 700; text-decoration: underline; }

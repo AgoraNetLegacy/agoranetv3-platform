@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -16,10 +17,14 @@ export default async function LedgerPage() {
   return (
     <>
       <h1>The Civic Ledger</h1>
+      <p>
+        <em>The record nobody can rewrite — including us.</em>
+      </p>
       <p className="lore">
         Append-only, hash-chained from GENESIS, pseudonym-only. {total} events;
-        showing the most recent {events.length}. Raw inspection view — the
-        transparency dashboards arrive in Phase 7.
+        showing the most recent {events.length}. Raw inspection view — for
+        the readable books, see the{" "}
+        <Link href="/transparency">transparency dashboard</Link>.
       </p>
       {events.map((ev) => (
         <div className="post" key={ev.seq}>

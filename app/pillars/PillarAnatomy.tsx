@@ -102,7 +102,11 @@ export async function PillarAnatomy({
     : 0;
   const domainThreads = await db.discussion.findMany({
     where: { pillarId: pillar.id, domainId: { not: null } },
-    select: { id: true, domainId: true, posts: { select: { authorProfileId: true } } },
+    select: {
+      id: true,
+      domainId: true,
+      posts: { select: { authorProfileId: true, authorHandle: true } },
+    },
   });
   const liveThreads = pillar.discussions.length + domainThreads.length;
   const participatedThreads = viewer
@@ -112,7 +116,14 @@ export async function PillarAnatomy({
     : 0;
   const standing = viewer ? await pillarStanding(db, viewer.id, pillar.id) : null;
 
-  const threadByDomain = new Map(domainThreads.map((d) => [d.domainId, d.id]));
+  // §1.4: each domain card carries a visible Discussion door with its
+  // voice count — the conversation stops hiding behind "live thread".
+  const threadByDomain = new Map(
+    domainThreads.map((d) => [
+      d.domainId,
+      { id: d.id, voices: new Set(d.posts.map((p) => p.authorHandle)).size },
+    ])
+  );
 
   // Circles surfaced by recency of ATTESTED action (CIRCLES §6.3).
   const { lastAttestedAt } = await import("@/lib/circles");
@@ -207,8 +218,15 @@ export async function PillarAnatomy({
                 {status?.lastRepairedAt
                   ? ` · last repaired ${status.lastRepairedAt.toLocaleDateString()}`
                   : " · never repaired"}
-                {threadByDomain.get(d.id) ? " · live thread" : ""}
               </div>
+              {threadByDomain.get(d.id) && (
+                <div className="discussion-door">
+                  <Link href={`/d/${threadByDomain.get(d.id)!.id}`}>
+                    Join the Discussion — {threadByDomain.get(d.id)!.voices} voice
+                    {threadByDomain.get(d.id)!.voices === 1 ? "" : "s"}
+                  </Link>
+                </div>
+              )}
             </li>
           );
         })}

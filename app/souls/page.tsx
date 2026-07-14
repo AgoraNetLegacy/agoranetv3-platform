@@ -66,6 +66,9 @@ export default async function SoulsPage({
   return (
     <>
       <h1>Fellow souls & messages</h1>
+      <p>
+        <em>Find your people; nobody watches you do it.</em>
+      </p>
       <p className="lore">
         Good people find each other. Bonds are mutual consent between two
         faces; your graph is yours alone — no public lists, no counts, no

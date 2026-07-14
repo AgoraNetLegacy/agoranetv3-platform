@@ -83,6 +83,16 @@ export default async function DomainPage({
 
       <blockquote className="opening-question">{domain.openingQuestion}</blockquote>
 
+      {/* §1.4: the door at the TOP too — the read-first layout stays,
+          but the conversation stops being basement-only. */}
+      {domain.discussion && (
+        <div className="discussion-door">
+          <Link href={`/d/${domain.discussion.id}`}>
+            Join the Discussion — {participants} voice{participants === 1 ? "" : "s"}
+          </Link>
+        </div>
+      )}
+
       <h3>The Reality</h3>
       <p>{domain.reality}</p>
       {extras.map((e) => (
@@ -235,21 +245,19 @@ export default async function DomainPage({
       {message && <p className="notice">{message}</p>}
 
       <h3>Take it further</h3>
+      {domain.discussion && (
+        <div className="discussion-door">
+          <Link href={`/d/${domain.discussion.id}`}>
+            Join the Discussion — {participants} voice{participants === 1 ? "" : "s"}
+          </Link>
+        </div>
+      )}
       <ul>
-        <li>
-          {domain.discussion ? (
-            <Link href={`/d/${domain.discussion.id}`}>
-              The live Discussion on this domain&rsquo;s question →
-            </Link>
-          ) : (
+        {!domain.discussion && (
+          <li>
             <span className="lore">This domain&rsquo;s thread is not yet open.</span>
-          )}{" "}
-          {participants > 0 && (
-            <span className="lore">
-              ({participants} participant{participants === 1 ? "" : "s"})
-            </span>
-          )}
-        </li>
+          </li>
+        )}
         {viewer && (
           <li>
             <form action={followInFeed} className="inline">
