@@ -622,3 +622,29 @@ hatch an Alias and switch to it (the dark room; the flip). Judge the
 one question the phase exists for: **is it neither bland nor
 confusing?** Rule on it and 8.5 closes; 8.6 — the chain rails — is
 ratified and waiting right behind it.
+
+### Phase 8.5 addendum — the owner's walkthrough + slice 7 (2026-07-14)
+
+The owner walked the build the same day (his own browser, his own
+souls — hatched @bradpitt through the real ceremony). Findings, all
+addressed in commit b9cb2c7: one-time secrets needed a copy control
+(built, with layered clipboard fallbacks); the once-per-browser
+nature of face login was never stated (now stated at both key
+screens and login); no way to know when an Alias activates (the
+key screen now says: try the key — the day it works, it's live —
+and why no notification can ever say so); single-face sessions now
+point at where the switch control will appear. His sequential-
+parking question was answered from the ratified record (the lock
+forbids co-presence, not succession; the cooldown rail — HIS dial,
+currently 0 by his own ruling — governs rapid succession). His
+self-reply scenario was answered from the ratified record (one
+alias ever, fees, score-inert, stylometry self-exposure) and he
+ruled the containment holds: "simpler is better. It stays."
+
+**Owner directive from the walkthrough (spec §4 amended):** clearer
+labelling and front-facing messaging, starting with onboarding —
+the visible seven-step journey + the carried arrival at the Agora
+Dashboard, built as slice 7. **His interim verdict: "ok, so this is
+good enough for now. Both profiles work. Hatching works."** He then
+began his 8.6 §6.5 setup (Blockfrost ✓, Docker ✓, Lace in progress)
+— the formal 8.5 close rides his go for 8.6.
