@@ -1,38 +1,140 @@
+/* =====================================================================
+   AgoraNet design tokens — Phase 8.5 (PRESENTATION_SPEC §2 + §6)
+
+   THEME = IDENTITY. The room you are standing in tells you who you
+   are right now:
+     reader     (signed out / no face)  — the aqua-blue theme
+     true-self                          — white with aqua accents
+     alias                              — dark with the same aqua
+   One brand color threads all three. Theme follows FACE, never OS
+   preference — this is a safety surface (DUAL_IDENTITY §7: the
+   wrong-face error is the self-doxxing error), so the signal always
+   wins and prefers-color-scheme is deliberately not consulted.
+   ===================================================================== */
+
 :root {
-  --ink: #1f2430;
-  --muted: #6b7280;
-  --line: #e5e7eb;
-  --paper: #fbfaf7;
-  --accent: #4c1d95;
+  /* the brand thread */
+  --aqua-deep: #0e7490;
+  --aqua-bright: #2ed3ee;
+  --aqua-wash: #e3f7fb;
+
+  /* type — owner-ruled §6.3: Fraunces (display) + Inter (text), self-hosted */
+  --font-display: "Fraunces Variable", "Fraunces", Georgia, serif;
+  --font-text: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
+
+  /* shape + motion */
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-pill: 999px;
+  --flip-duration: 640ms;
+
+  /* ---- §2.3 cross-theme constants: identical in every room ---------
+     The permanence amber, refusal notices, and the ◆/◇ face chips
+     must read the same on all three themes — some truths outrank
+     identity. Never theme these. */
   --permanent: #92400e;
   --permanent-bg: #fef3c7;
+  --permanent-line: #f3d9a4;
+  --refusal-bg: #fffbeb;
+  --refusal-line: #fbbf24;
+  --refusal-ink: #713f12;
+  --chip-line: #56bdd2;
+  --chip-true-bg: #ffffff;
+  --chip-true-ink: #0f2e38;
+  --chip-alias-bg: #10181c;
+  --chip-alias-ink: #e9f7fb;
+  --chip-reader-bg: #cdeef7;
+  --chip-reader-ink: #0b4c5f;
+}
+
+/* ---- the reader's room: aqua blue — "free to read" made visible ---- */
+html[data-theme="reader"] {
+  --bg: #ddf2f8;
+  --surface: #f4fbfd;
+  --surface-2: #e8f6fa;
+  --ink: #0c3844;
+  --muted: #45707d;
+  --line: #b3dce7;
+  --accent: #0b6076;
+  --accent-soft: #cdeef7;
+  --header-bg: #c9ecf5;
+}
+
+/* ---- the True Self's room: white, aqua accents ---- */
+html[data-theme="true-self"] {
+  --bg: #fafcfd;
+  --surface: #ffffff;
+  --surface-2: #f2f8fa;
+  --ink: #16232a;
+  --muted: #5d7078;
+  --line: #e2e9ec;
+  --accent: #0e7490;
+  --accent-soft: #e3f7fb;
+  --header-bg: #ffffff;
+}
+
+/* ---- the Alias's room: dark, the same aqua ---- */
+html[data-theme="alias"] {
+  --bg: #0c1114;
+  --surface: #141c21;
+  --surface-2: #1a252b;
+  --ink: #e6eef1;
+  --muted: #92a7b0;
+  --line: #263640;
+  --accent: #46d7ef;
+  --accent-soft: #113340;
+  --header-bg: #10181c;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-text);
   color: var(--ink);
-  background: var(--paper);
+  background: var(--bg);
   line-height: 1.55;
 }
+
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 620; letter-spacing: 0.01em; }
 
 main { max-width: 780px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- §2.2 the card flip: the page arrives like a playing card
+   turning over — white side, dark side, one human, one card. The
+   method becomes a per-face settings choice (crossfade / instant)
+   in §5.1; flip is the default. ---- */
+.page-shell.flip-in {
+  animation: card-flip-in var(--flip-duration) cubic-bezier(0.2, 0.7, 0.25, 1);
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+}
+@keyframes card-flip-in {
+  0%   { transform: perspective(1400px) rotateY(88deg); opacity: 0.35; }
+  55%  { opacity: 1; }
+  100% { transform: perspective(1400px) rotateY(0deg); }
+}
+html[data-flip-method="crossfade"] .page-shell.flip-in {
+  animation: crossfade-in 360ms ease-out;
+}
+@keyframes crossfade-in { from { opacity: 0; } to { opacity: 1; } }
+html[data-flip-method="instant"] .page-shell.flip-in { animation: none; }
+
 header.site {
   border-bottom: 1px solid var(--line);
-  background: #fff;
+  background: var(--header-bg);
   padding: 0.6rem 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
 }
-header.site .brand { font-weight: 700; color: var(--ink); }
+header.site .brand { font-weight: 700; color: var(--ink); font-family: var(--font-display); }
 
 .face-bar {
   margin-left: auto;
@@ -43,27 +145,29 @@ header.site .brand { font-weight: 700; color: var(--ink); }
   color: var(--muted);
 }
 
-/* Each face is visually unmistakable (DASHBOARD §3.4): True Self wears
-   violet, the Alias wears teal — tied to the face, never the pillar. */
+/* §2.3: the chips are theme-INVARIANT — the True Self chip is the
+   white card, the Alias chip is the dark card, the reader chip is
+   the blue room, whichever room you're standing in. */
 .face-chip {
   font-weight: 700;
   padding: 0.15rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 0.78rem;
+  border: 1px solid var(--chip-line);
 }
-.face-chip.true-self { background: #ede9fe; color: #4c1d95; border: 1px solid #c4b5fd; }
-.face-chip.alias { background: #ccfbf1; color: #0f766e; border: 1px solid #5eead4; }
-.face-chip.reader { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+.face-chip.true-self { background: var(--chip-true-bg); color: var(--chip-true-ink); }
+.face-chip.alias { background: var(--chip-alias-bg); color: var(--chip-alias-ink); }
+.face-chip.reader { background: var(--chip-reader-bg); color: var(--chip-reader-ink); }
 
 .switch-control summary { cursor: pointer; }
 .switch-panel {
   position: absolute;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.6rem;
   max-width: 280px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
   z-index: 10;
 }
 .switch-panel p { margin: 0 0 0.4rem; font-size: 0.75rem; }
@@ -78,12 +182,12 @@ button.linklike {
   cursor: pointer;
 }
 button.linklike:hover { text-decoration: underline; }
-button.linklike.brand { font-weight: 700; color: var(--ink); }
+button.linklike.brand { font-weight: 700; color: var(--ink); font-family: var(--font-display); }
 
 .ceremony {
   border: 1px solid var(--line);
-  background: #fff;
-  border-radius: 10px;
+  background: var(--surface);
+  border-radius: var(--radius);
   padding: 1.1rem 1.3rem;
   margin: 1rem 0;
 }
@@ -92,9 +196,11 @@ button.linklike.brand { font-weight: 700; color: var(--ink); }
   width: 100%;
   padding: 0.45rem;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font: inherit;
   margin: 0.3rem 0 0.7rem;
+  background: var(--surface);
+  color: var(--ink);
 }
 .secret-box {
   font-family: ui-monospace, monospace;
@@ -106,34 +212,40 @@ button.linklike.brand { font-weight: 700; color: var(--ink); }
   margin: 0.6rem 0;
 }
 .disclosure-list li { margin-bottom: 0.55rem; }
+
+/* refusal / blocked notices: cross-theme constant (§2.3) */
 .blocked-panel {
-  border: 1px solid #fbbf24;
-  background: #fffbeb;
-  border-radius: 10px;
+  border: 1px solid var(--refusal-line);
+  background: var(--refusal-bg);
+  color: var(--refusal-ink);
+  border-radius: var(--radius);
   padding: 1rem 1.2rem;
   margin: 1.2rem 0;
 }
+.blocked-panel a { color: #92400e; text-decoration: underline; }
 
 .badge {
   display: inline-block;
   font-size: 0.72rem;
   font-weight: 600;
   padding: 0.1rem 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   vertical-align: middle;
 }
 .badge.permanent { background: var(--permanent-bg); color: var(--permanent); }
-.badge.locked { background: #e5e7eb; color: #374151; }
+.badge.locked { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
 
+/* the permanence door banner: cross-theme constant (§2.3) */
 .door-banner {
   background: var(--permanent-bg);
   color: var(--permanent);
-  border: 1px solid #f3d9a4;
+  border: 1px solid var(--permanent-line);
   border-radius: 8px;
   padding: 0.6rem 0.9rem;
   font-size: 0.9rem;
   margin: 1rem 0;
 }
+.door-banner a { color: var(--permanent); text-decoration: underline; }
 
 .sort-menu { font-size: 0.85rem; color: var(--muted); margin: 0.75rem 0 1rem; }
 .sort-menu a { margin-right: 0.75rem; }
@@ -143,7 +255,7 @@ button.linklike.brand { font-weight: 700; color: var(--ink); }
 ul.discussions { list-style: none; padding: 0; }
 ul.discussions li {
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--surface);
   border-radius: 8px;
   padding: 0.7rem 0.9rem;
   margin-bottom: 0.5rem;
@@ -166,14 +278,16 @@ form.composer textarea {
   min-height: 5.5rem;
   padding: 0.5rem;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font: inherit;
+  background: var(--surface);
+  color: var(--ink);
 }
 form.composer .composer-badge {
   font-size: 0.78rem;
   color: var(--permanent);
   background: var(--permanent-bg);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 0.35rem 0.6rem;
   margin-bottom: 0.4rem;
   display: block;
@@ -183,8 +297,8 @@ form.composer button { margin-top: 0.4rem; }
 form.inline { display: inline; }
 
 .notice {
-  background: #eef2ff;
-  border: 1px solid #c7d2fe;
+  background: var(--accent-soft);
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.5rem 0.8rem;
   font-size: 0.85rem;
@@ -194,37 +308,41 @@ form.inline { display: inline; }
 .interim-note { font-size: 0.72rem; color: var(--muted); font-style: italic; }
 
 .pillar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.7rem; padding: 0; list-style: none; }
-.pillar-grid li { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 0.8rem; }
+.pillar-grid li { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 0.8rem; }
 .pillar-grid .lore { font-size: 0.78rem; color: var(--muted); }
 
 /* Phase 7 — the platform's face */
 .pillar-grid.hub .tile-title { font-size: 1.05rem; }
 .pillar-grid.hub .hook { font-size: 0.82rem; margin: 0.3rem 0; }
 .agora-tile {
-  border: 2px solid;
+  border: 2px solid var(--accent);
   border-radius: 12px;
-  background: #faf5ff;
+  background: var(--accent-soft);
   padding: 1rem;
   margin-top: 0.9rem;
 }
 .agora-tile .tile-title { font-size: 1.15rem; }
 .agora-tile .hook { font-size: 0.85rem; margin: 0.3rem 0; }
-.why-banner { border-radius: 10px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+/* The Why banner carries the PILLAR's identity colors (colorLight
+   background from data) — always a light wash, so its ink is fixed
+   dark on every theme, like the other cross-theme constants. */
+.why-banner { border-radius: var(--radius); padding: 1rem 1.1rem; margin-bottom: 1rem; color: #22303a; }
+.why-banner a { color: #0b6076; }
 .why-banner .why-text { font-size: 0.95rem; }
 .picture-object .why-text { white-space: pre-wrap; }
 .stat-row { display: flex; gap: 0.7rem; margin: 0.9rem 0 0.3rem; }
 .stat {
   flex: 1;
   border: 1px solid var(--line);
-  background: #fff;
-  border-radius: 10px;
+  background: var(--surface);
+  border-radius: var(--radius);
   padding: 0.6rem 0.8rem;
   text-align: center;
 }
-.stat-number { font-size: 1.3rem; font-weight: 700; }
+.stat-number { font-size: 1.3rem; font-weight: 700; font-family: var(--font-display); }
 .stat-label { font-size: 0.72rem; color: var(--muted); }
 .domain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.7rem; padding: 0; list-style: none; }
-.domain-grid li { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 0.8rem; }
+.domain-grid li { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 0.8rem; }
 .domain-grid .hook { font-size: 0.82rem; margin: 0.3rem 0; font-style: italic; }
 .domain-grid .lore { font-size: 0.75rem; color: var(--muted); }
 .opening-question {
@@ -232,12 +350,12 @@ form.inline { display: inline; }
   margin: 0.8rem 0;
   padding: 0.5rem 0.9rem;
   font-style: italic;
-  background: #f8fafc;
+  background: var(--surface-2);
 }
 .picture-object {
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fffdf5;
+  border-radius: var(--radius);
+  background: var(--surface-2);
   padding: 0.9rem 1rem;
   margin: 1rem 0;
 }
@@ -248,7 +366,7 @@ form.inline { display: inline; }
 .caught-up {
   text-align: center;
   border: 1px dashed var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 1rem;
   margin: 1.2rem 0;
   color: var(--muted);
@@ -256,4 +374,4 @@ form.inline { display: inline; }
 
 table.books { border-collapse: collapse; width: 100%; margin: 0.6rem 0 1rem; font-size: 0.85rem; }
 table.books th, table.books td { border: 1px solid var(--line); padding: 0.35rem 0.6rem; text-align: left; }
-table.books th { background: #f8fafc; }
+table.books th { background: var(--surface-2); }

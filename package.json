@@ -43,6 +43,8 @@
     "check": "npm run db:generate && npm test && npm run db:validate:postgres && tsc --noEmit && npm run build"
   },
   "dependencies": {
+    "@fontsource-variable/fraunces": "^5.2.9",
+    "@fontsource-variable/inter": "^5.2.8",
     "@prisma/client": "5.22.0",
     "next": "15.5.19",
     "react": "18.3.1",

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import "@fontsource-variable/fraunces";
+import "@fontsource-variable/inter";
 import "./globals.css";
 import { db } from "@/lib/db";
 import { balanceOf } from "@/lib/economy";
-import { activeFace, sessionFaces } from "@/lib/webSession";
+import { activeFace, sessionFaces, faceFlipPending } from "@/lib/webSession";
 import { returnToHub, switchToFace, signOutSession } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -74,10 +76,16 @@ async function FaceBar() {
   );
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  // THEME = IDENTITY (PRESENTATION_SPEC §2): the theme follows the FACE,
+  // never OS preference — the room's color is a safety signal, so the
+  // signal always wins. Resolved server-side so no render ever flashes
+  // the wrong room.
+  const [face, flip] = await Promise.all([activeFace(), faceFlipPending()]);
+  const theme = !face ? "reader" : face.face === "TRUE_SELF" ? "true-self" : "alias";
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" data-theme={theme}>
+      <body className={flip ? "page-shell flip-in" : "page-shell"}>
         <header className="site">
           <form action={returnToHub} className="inline">
             <button type="submit" className="linklike brand">

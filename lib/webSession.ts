@@ -10,6 +10,7 @@ import { createSession, getSession } from "./parking";
 
 const SESSION_COOKIE = "agoranet-session";
 const ONE_TIME_COOKIE = "agoranet-once";
+const FLIP_COOKIE = "agoranet-flip";
 
 export async function ensureSessionId(): Promise<string> {
   const jar = await cookies();
@@ -78,4 +79,18 @@ export async function peekOneTimeSecret(): Promise<string | null> {
 export async function clearOneTimeSecret(): Promise<void> {
   const jar = await cookies();
   jar.delete(ONE_TIME_COOKIE);
+}
+
+/** Mark that the next page load is a change of face: the page arrives
+ *  as the card flip (PRESENTATION_SPEC §2.2). Short-lived by design —
+ *  it self-expires so a refresh moments later doesn't replay the turn. */
+export async function markFaceFlip(): Promise<void> {
+  const jar = await cookies();
+  jar.set(FLIP_COOKIE, "1", { httpOnly: true, sameSite: "lax", maxAge: 3 });
+}
+
+/** Is a face change landing on this render? (safe in a layout render) */
+export async function faceFlipPending(): Promise<boolean> {
+  const jar = await cookies();
+  return jar.get(FLIP_COOKIE)?.value === "1";
 }

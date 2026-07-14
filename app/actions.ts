@@ -77,6 +77,7 @@ import {
   setOneTimeSecret,
   clearOneTimeSecret,
   clientAddress,
+  markFaceFlip,
 } from "@/lib/webSession";
 import { enforceRateLimit, type RateLimitPolicyName } from "@/lib/rateLimit";
 import { recordEvent, type AnalyticsEventName } from "@/lib/analytics";
@@ -895,10 +896,12 @@ export async function createTrueSelf(formData: FormData) {
   if (!result.ok) backTo(`/verify/trueself${query}`, result.reason);
   await recordEvent(db, "funnel.trueself", result.profileId);
 
-  // Sign the new face in and make it active.
+  // Sign the new face in and make it active. The world turns from blue
+  // to white here — becoming a participant is visible (§2.4).
   const sessionId = await ensureSessionId();
   await addFace(db, { sessionId, profileId: result.profileId });
   await switchFace(db, { sessionId, fromProfileId: null, toProfileId: result.profileId });
+  await markFaceFlip();
 
   await setOneTimeSecret(result.accessKey);
   redirect(`/verify/key${query}`);
@@ -978,6 +981,7 @@ export async function loginFace(formData: FormData) {
     toProfileId: result.profile.id,
   });
   if (!switched.ok) backTo("/login", switched.reason);
+  await markFaceFlip();
   revalidatePath("/", "layout");
   redirect("/");
 }
@@ -992,6 +996,7 @@ export async function switchToFace(formData: FormData) {
     fromProfileId: session.activeProfileId,
     toProfileId: profileId,
   });
+  if (result.ok) await markFaceFlip();
   revalidatePath("/", "layout");
   backTo("/", result.ok ? undefined : result.reason);
 }
@@ -1027,6 +1032,7 @@ export async function signOutSession() {
   if (session) {
     await db.soulSession.delete({ where: { id: session.id } }).catch(() => {});
   }
+  await markFaceFlip();
   revalidatePath("/", "layout");
   redirect("/");
 }
