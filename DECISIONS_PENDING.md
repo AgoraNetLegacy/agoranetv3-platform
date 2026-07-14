@@ -215,9 +215,47 @@ need from you.)
    sourceId+tier), the rate-limit rail, and the flag/regenerate path.
    Not built yet — this entry is the full spec for when it is.
 
-4. **Declared interests (ONBOARDING Stage 5.5).** Optional per-persona
-   interests + one-time +5 G share bonus — not yet built; the grant
-   rail exists. Say when.
+4. ~~**Declared interests**~~ — **FULLY SPEC'D (2026-07-13), queued
+   for a build slice.** Corpus amended same session
+   (`Onboarding/ONBOARDING_SPEC.md` Stage 5.5, `Feed and Search/
+   FEED_AND_SEARCH_SPEC.md` §2.1). Full design:
+   - **Vocabulary: the platform's own 56 domains**, grouped by their 7
+     pillars — reused, not invented. The same domain tag Circles and
+     Chambers already carry (Phase 7's resolution), so one
+     declaration surfaces matching Discussions, Circles, AND Chambers
+     — one declaration, three content types, zero new tagging system.
+   - **Per-persona, never compared across faces — and a structural
+     non-goal stated explicitly: no interest-similarity/"people like
+     you" surface is EVER built, for any two profiles**, not just a
+     soul's own two faces. Stays single-profile feed tuning, full
+     stop.
+   - **Private by default**, public display an explicit per-profile
+     opt-in — natural home: the per-face profile window
+     (Presentation Backlog #7).
+   - **Used for exactly one thing — that profile's own feed/
+     discovery** (never ads, sale, or marketing — constitutional
+     law). Distinct from and never replacing the values-seed Circle-
+     matchmaking signal (Stage 5) — interests supplement discovery,
+     values alignment stays primary for Circle fit.
+   - **Skippable, and editable anytime afterward** — not locked to
+     the onboarding moment. Declaring/editing later is free (no
+     participation fee) and reuses the existing settings rate-limit
+     family — no new mechanism needed.
+   - **No hard cap on domains declared** — onboarding UI may suggest
+     starting with a few, UX guidance only, never a technical limit.
+   - **One-time +5 uG bonus** (already ratified in
+     `Economics/ECONOMIC_STARTING_DEFAULTS.md` — not a new number)
+     for first declaring at least one interest, **per profile**: a
+     True Self and its later Alias each earn this once, independently
+     — same scope as the values-seed and first-action grants. Pays
+     once per profile, ever; never re-earned by toggling interests.
+   Needs a build slice when scheduled: a `DeclaredInterest` model
+   (per-profile, domainId, public flag — same shape discipline as
+   `ValuesAnswer`), the feed-source matching logic (reusing the
+   existing chosen-sources machinery), and the one-time-bonus check
+   (reusing the existing `grantAlreadyGiven` pattern already used for
+   orientation/first-action grants). Not built yet — this entry is
+   the full spec for when it is.
 
 18. ~~**The Testnet Track**~~ — **OWNER-RATIFIED (2026-07-12): "build
     this up as much as possible without mention of production… fully
