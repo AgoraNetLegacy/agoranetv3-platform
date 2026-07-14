@@ -270,23 +270,68 @@ need from you.)
     (Presentation/PRESENTATION_SPEC.md ·
     Chain Integration/TESTNET_RAILS_SPEC.md).
 
-17. **Key recovery / Alias succession — needs a build slice before
-    PUBLIC launch (surfaced 2026-07-11 reviewing onboarding).** The
-    spec designed recovery (DUAL_IDENTITY §8: True Self recoverable
-    through the issuer; lost Alias = hatch a fee-gated successor,
-    Light Score carrying both ways, lineage visible — you ratified
-    that as "hatching"), but BUILD_ORDER never scheduled it into a
-    phase, so **no recovery UI exists**: today a lost access key or
-    credential has no built remedy. Why the cohort test is fine
-    anyway: in Phase A the issuer is interim, so a tester who loses
-    keys just verifies again as a fresh soul — identity is cheap
-    until real Proof-of-Humanity arrives. Why launch is not fine:
-    with a real issuer, "start over" stops being possible, and the
-    successor-hatch needs revocation machinery (the one-Alias
-    nullifier must be re-spendable after revocation — plumbing
-    exists: handle tombstones already know "hatched"). Recommend
-    scheduling as a small slice after the cohort test. Gates: public
-    launch readiness.
+17. ~~**Key recovery / Alias succession**~~ — **RESOLVED (2026-07-13):
+    split into two genuinely different problems, ratified separately.**
+
+    - **True Self recovery: RATIFIED — no mechanism, permanently, in
+      Phase A. Lose your Humanity Credential, or your True Self's
+      access key, and that identity is gone.** Owner's own words:
+      "we can never just take someone's word for it" — and there is
+      no safe alternative to build. Recovering True Self requires an
+      issuer able to independently re-verify "this is genuinely the
+      same returning human," which the interim Phase A issuer (the
+      platform itself) structurally cannot do without either trusting
+      an unverifiable claim (breaking one-human-one-account) or
+      storing a new identifying signal to check against (breaking the
+      privacy design). DUAL_IDENTITY §8 says as much itself — the
+      stable-subject-commitment requirement "goes into KYC-issuer
+      selection criteria now," i.e., it was always understood as
+      depending on the real issuer. **Not a gap to fix — a permanent
+      Phase A stance, revisitable only if a real issuer (Phase 8.6's
+      Identus, or Phase 9) ever makes safe re-verification possible.**
+      The only remedy today: verify fresh as a new soul; old history
+      and Light Score are orphaned forever. **One small, cheap, honest
+      build item this creates:** the credential-display screen should
+      say so plainly, at the moment it matters — "if you lose this,
+      we cannot recover it; there is no support process, no exception"
+      — worth adding whenever a small copy slice is convenient.
+
+    - **Alias succession: STILL A REAL, BUILDABLE FEATURE — different
+      problem, no wall.** Unlike True Self recovery, this never needs
+      to prove "I'm the same human who already lost their proof" — it
+      only needs the human to present the SAME Humanity Credential
+      they still hold, to revoke an old Alias and hatch its successor
+      under the same nullifier stream (DUAL_IDENTITY §8's ratified
+      "revocation-then-reissue" design). Concrete build shape:
+      - A soul presents their Humanity Credential to a distinct
+        "hatch a successor" ceremony; the platform re-derives the
+        per-human `alias-registration` nullifier and finds it already
+        spent — cryptographic proof this is the same human, no stored
+        Human↔Alias link ever needed.
+      - The old Alias is revoked and its handle tombstoned (reason
+        `"hatched"` — already built); the new Alias links to it via a
+        self-referential pointer, reusing the exact pattern already
+        built for Circle action corrections (`correctionOfId`/
+        `corrections`).
+      - **Light Score never needs a "transfer" event** — the scoring
+        engine walks the succession chain at computation time, so the
+        new Alias's standing naturally includes its predecessor's
+        history. Reuses the existing engine, no new mechanism.
+      - **Lineage stays visible on purpose** ("successor of
+        @old-handle") — DUAL_IDENTITY §8 is explicit that hiding it
+        would be false privacy; only Alias↔True-Self unlinkability is
+        sacred, never Alias↔Alias succession.
+      - **Fee: 50u PC** — already ratified in
+        `Economics/ECONOMIC_STARTING_DEFAULTS.md`, not invented here.
+      - Theft is covered for free: a stolen Alias key and a lost one
+        use the identical ceremony.
+      Needs a build slice when scheduled: the succession ceremony
+      (distinct from ordinary hatching), the self-referential Alias
+      link, and the succession-chain-aware Light Score lookup. Not
+      built yet — buildable independent of Phase 8.6, whenever
+      scheduled. Gates: nothing structural — recommend scheduling this
+      one as its own small slice; it needs nothing else to exist
+      first.
 
 ---
 
