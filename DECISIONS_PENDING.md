@@ -333,6 +333,32 @@ need from you.)
       one as its own small slice; it needs nothing else to exist
       first.
 
+20. **Reputation escape via re-verification — NAMED GAP (owner,
+    2026-07-13), gates public launch.** Surfaced while reviewing key
+    recovery: `Security/ANTI_SYBIL_CONSOLIDATION.md`'s surface #11
+    ("Reputation escape") was verdicted "Covered" on the assumption
+    that real Proof-of-Humanity prevents a human from holding a
+    second True Self. Phase A's interim issuer can't enforce that —
+    it issues on request, no real-world uniqueness check behind it —
+    so today, a soul can tank their Light Score, re-verify, and walk
+    away clean. Owner's words: "we can never just take someone's word
+    for it" — same principle, same wall as key recovery (#17): closing
+    this requires detecting a repeat verification, which means either
+    trusting an unverifiable claim or storing a new identifying
+    signal, and the second one breaks the privacy design this
+    platform exists to protect. **Not fixable in Phase A. Not fixed
+    by Phase 8.6 either** — a self-hosted testnet Identus instance is
+    still the platform deciding to issue, same trust model, better
+    cryptography underneath. **Closes only at Phase 9**, when a real,
+    licensed identity-verification partner sits behind the credential
+    — the audit now carries this as watch-item W5, amended the same
+    day. **Fine for the cohort test** (a small, personally-recruited
+    group — not anonymous strangers at scale). **Gates public
+    launch**, alongside #17. One small, cheap build item: the
+    interim-issuer disclosure (`lib/disclosures.ts`) should name this
+    honestly, alongside the existing unlinkability caveat, whenever a
+    copy pass is convenient.
+
 ---
 
 ## C. The record — defaults already set, yours to overrule (not questions)
