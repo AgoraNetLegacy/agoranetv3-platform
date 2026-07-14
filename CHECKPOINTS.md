@@ -542,3 +542,83 @@ try to verify 6 times fast (meet the wall, read its refusal) →
 `/transparency` (the admin log now shows backup drills) → `/alias`
 (read the early-platform honesty note). Judge: is this a platform
 other humans can touch?
+
+## Phase 8.5 — The Presentation Era ⚙ BUILD SELF-VERIFIED (2026-07-14) — checkpoint is YOUR walkthrough, by design
+
+**The gate this phase answers to is different from every other phase:
+§8 of the ratified spec makes YOUR eyes the checkpoint — "is it
+neither bland nor confusing?" The build half below is complete and
+verified; the phase closes when you walk it.**
+
+**Shipped (five slices, committed in sequence fa336b6 → ace7258):**
+- **THEME = IDENTITY (§2):** a design-token system in globals.css;
+  three rooms — reader (aqua blue: "free to read" made visible),
+  True Self (white), Alias (dark) — keyed to the FACE server-side;
+  prefers-color-scheme deliberately not consulted (the safety signal
+  always wins). §2.3 cross-theme constants pinned: the permanence
+  amber, refusal notices, and the ◆/◇ chips render identically in
+  all three rooms — the True Self chip IS the white card even in the
+  dark room. The card flip (§2.2) fires on every face change,
+  including the §2.4 blue→white verification moment; crossfade and
+  instant ship behind the per-face setting.
+- **The Agora dashboard IS the platform dashboard (§1.1,
+  owner-corrected):** / carries the what-is-this-place framing, the
+  feed (per-persona / open lens), the Agora pillar's full anatomy,
+  and doors to everything else; /pillars/agoranet redirects home.
+  The pillar dashboard body became ONE shared component with two
+  mounts. The blessed left nav (§1.3) is persistent, collapsible
+  small-screen without JavaScript, one-liners as tooltips, workbench
+  only for badge-holders. New findable-by-name indexes: /discussions
+  and /governance; the Seven Pillars grid moved to /pillars.
+- **Doors + one-liners (§1.4 + §3.2):** every domain card and domain
+  page (top AND bottom) carries "Join the Discussion — N voices" in
+  a door style that can never be confused with the amber permanence
+  threshold; all eight blessed one-liners lead their features.
+- **Settings + the profile window (§5.1–5.2):** /settings per-face
+  (the linkage-surface rule stated on the page); display name moved
+  there; switch animation per face; /profile is the window (bio +
+  self-placed place, live-surface never permanent; the Alias
+  composer renders the ceremony's stylometry warning VERBATIM by
+  importing the constant); /souls/[handle] is the public window —
+  nothing on it is new information. Schema: three additive Profile
+  columns in both provider schemas + postgres migration
+  1_profile_window; parity green.
+- **The design pass + icon family (§5.3 + §6.2–6.3):** Fraunces +
+  Inter self-hosted (no font CDN — the no-third-party law); one
+  matched SVG icon family replaced every UI emoji EXCEPT the seven
+  pillar glyphs (owner-ruled: kept as symbols); buttons look decided;
+  stat rows, card hover, type rhythm; the workbench got its
+  at-a-glance term stats.
+
+**Evidence:** 206 tests across 15 files green after every slice
+(mechanics pinned — this phase moved none); `npm run check` exit 0
+(typecheck + dual-schema parity + production build); `db:verify` ALL
+31 CHECKS PASSED; grep-proofs: zero prefers-color-scheme behavior,
+zero production mentions in UI, zero emoji outside pillar glyphs.
+Live browser walkthrough: the reader's blue gate → verification →
+the world turning WHITE with the flip firing (witnessed) → the dark
+room's CSS verified with the True Self chip staying the white card →
+sidebar blessed-order + mobile collapse toggled → /discussions,
+/governance, /pillars, domain doors ("Join the Discussion — 2
+voices"), settings, the profile window saved end-to-end and rendered
+on the public soul window → sign-out flipping the world back to
+blue. One derived rule flagged (DECISIONS_PENDING #21): the merged
+dashboard's threshold parks nothing; the Agora's interior doors park
+exactly as always.
+
+**Environment notes for future sessions:** `npm run check` builds —
+restart the dev server after it (the Phase 7 gotcha, reconfirmed).
+The browser pane can wedge a tab at viewport 0×0 (clicks silently
+miss; resize_window fixes) and only screenshots the top ~1000px of
+long pages — DOM inspection covers the rest; neither is a product
+issue.
+
+**Your checkpoint (§8, whenever you like):** walk it end to end —
+arrive signed out (the blue room), read the front door, verify a
+throwaway soul (watch the world turn white), tour the sidebar's nine
+doors, open a domain and step through its Discussion door, write
+your window in /profile, pick your switch animation in /settings,
+hatch an Alias and switch to it (the dark room; the flip). Judge the
+one question the phase exists for: **is it neither bland nor
+confusing?** Rule on it and 8.5 closes; 8.6 — the chain rails — is
+ratified and waiting right behind it.

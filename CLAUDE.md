@@ -75,13 +75,19 @@ mechanics; those stay behind Phase 9's legal gate, unchanged).
 **BOTH GATES SATISFIED (owner ratifications, 2026-07-13):**
 `Presentation/PRESENTATION_SPEC.md` ratified (all ⭐ calls closed —
 names all kept, glyphs stay symbols, nav + one-liners blessed as
-drafted; fonts remain a build-time pick) and
+drafted; fonts ruled at kickoff: Fraunces + Inter, self-hosted) and
 `Chain Integration/TESTNET_RAILS_SPEC.md` ratified with its scout
 appendix's honesty edits (§7 rulings: presentation fully first · DM
 custody holds at disclosed escrow until Phase 9 · test token =
-PollCoin Demo / dPOLL). **Phase 8.5 is build-ready NOW; 8.6 is
-build-ready behind it** — 8.6 starts only when 8.5's checkpoint
-(the owner's neither-bland-nor-confusing walkthrough) passes.
+PollCoin Demo / dPOLL).
+
+**Phase 8.5 BUILD COMPLETE, self-verified 2026-07-14** (CHECKPOINTS.md
+carries the full record: five slices, 206 tests green throughout,
+db:verify 31/31, spec-conformance pass §1–§7). **The checkpoint
+itself is owner-inherent by the spec's own §8** — his walkthrough,
+one question: neither bland nor confusing? **8.6 starts when he rules
+8.5 closed.** Derived rule flagged: DECISIONS_PENDING #21 (the merged
+dashboard threshold parks nothing; interior doors park unchanged).
 
 **Standing owner rules (2026-07-12):** no production, and no mention
 of production, until the lawyer conversation concludes. The Phase 8
