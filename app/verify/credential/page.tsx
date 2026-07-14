@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { peekOneTimeSecret } from "@/lib/webSession";
 import { VERIFICATION_FRESHNESS } from "@/lib/disclosures";
 import { acknowledgeSecretSaved } from "@/app/actions";
+import { SecretBox } from "@/components/SecretBox";
+import { JourneySteps } from "@/components/JourneySteps";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,7 @@ export default async function CredentialPage({
   const next = `/verify/trueself${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`;
   return (
     <div className="ceremony">
+      <JourneySteps current="credential" />
       <h2>Your Humanity Credential</h2>
       <p>
         This is your credential — the interim stand-in for the wallet
@@ -27,7 +30,7 @@ export default async function CredentialPage({
         and AgoraNet keeps only a one-way hash. You will need it to create
         your True Self now, and your Alias whenever you choose to hatch one.
       </p>
-      <div className="secret-box">{credential}</div>
+      <SecretBox value={credential} />
       <p className="notice">{VERIFICATION_FRESHNESS}</p>
       <form action={acknowledgeSecretSaved}>
         <input type="hidden" name="next" value={next} />

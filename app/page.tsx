@@ -24,13 +24,13 @@ export const dynamic = "force-dynamic";
 export default async function AgoraDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string; m?: string }>;
+  searchParams: Promise<{ sort?: string; m?: string; welcome?: string }>;
 }) {
   // Opportunistic jobs ride the highest-traffic page load.
   await activateDueAliases(db);
   await closeDuePolls(db);
 
-  const { m } = await searchParams;
+  const { m, welcome } = await searchParams;
   const sort = asSortKey((await searchParams).sort);
 
   const [pillars, face] = await Promise.all([
@@ -68,6 +68,41 @@ export default async function AgoraDashboard({
       </div>
 
       {m && <div className="notice">{m}</div>}
+
+      {/* The journey's arrival (owner directive 2026-07-14): the flow
+          carries a new soul HERE, and the first three moves are named
+          instead of implied. Shown once, by the URL the done page sends
+          — never a nag, gone on the next navigation. */}
+      {welcome && face && (
+        <div className="ceremony">
+          <h3 style={{ marginTop: 0 }}>You&rsquo;re in. Three good first moves:</h3>
+          <ol>
+            <li>
+              <strong>Read one Picture.</strong> Every domain states a
+              settled position, plainly — pick a{" "}
+              <Link href="/pillars">pillar that matters to you</Link> and
+              open its first domain.
+            </li>
+            <li>
+              <strong>Say one thing.</strong> Step through any{" "}
+              <Link href="/discussions">Discussion door</Link> — your first
+              post is what your Welcome Grant is for.
+            </li>
+            <li>
+              <strong>Choose what feeds you.</strong>{" "}
+              <Link href="/feed/sources">Pick your sources</Link> — this
+              feed only ever carries what you chose.
+            </li>
+          </ol>
+          <p className="lore" style={{ marginBottom: 0 }}>
+            Whenever you want a second face for the things you can&rsquo;t
+            afford to sign, the Alias ceremony waits at{" "}
+            <Link href="/alias">/alias</Link> — your own schedule, no
+            pressure. And your two codes: wherever you saved them, make
+            sure it&rsquo;s somewhere real.
+          </p>
+        </div>
+      )}
 
       {/* Doors to the six diagnostic pillars (§1.1: doors to everything
           else — the full grid lives at /pillars). */}

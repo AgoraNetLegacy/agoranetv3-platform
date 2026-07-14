@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { peekOneTimeSecret } from "@/lib/webSession";
 import { acknowledgeSecretSaved } from "@/app/actions";
+import { SecretBox } from "@/components/SecretBox";
+import { JourneySteps } from "@/components/JourneySteps";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +20,16 @@ export default async function AccessKeyPage({
   const next = `/verify/consents${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`;
   return (
     <div className="ceremony">
+      <JourneySteps current="key" />
       <h2>Your access key</h2>
       <p>
         This key signs this face in — it is separate from your credential,
         and each face gets its own. <strong>Save it; it is shown exactly
-        once.</strong> You are now signed in on this browser.
+        once.</strong> You are now signed in on this browser — and each
+        face signs in <strong>once per browser, ever</strong>; after that,
+        switching faces is one click in the top bar.
       </p>
-      <div className="secret-box">{accessKey}</div>
+      <SecretBox value={accessKey} />
       <form action={acknowledgeSecretSaved}>
         <input type="hidden" name="next" value={next} />
         <button type="submit">I saved it — continue to consent</button>

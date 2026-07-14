@@ -1,4 +1,5 @@
 import { completeOrientation } from "@/app/actions";
+import { JourneySteps } from "@/components/JourneySteps";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ export default async function TourPage({
   const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
   return (
     <div className="ceremony">
+      <JourneySteps current="tour" />
       <h2>Sixty seconds of orientation</h2>
       <ul>
         <li>

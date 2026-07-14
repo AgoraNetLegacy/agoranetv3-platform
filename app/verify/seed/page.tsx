@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { seedQuestions } from "@/lib/valuesSeed";
 import { submitSeedAnswer } from "@/app/actions";
+import { JourneySteps } from "@/components/JourneySteps";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function SeedPage({
 
   return (
     <div className="ceremony">
+      <JourneySteps current="seed" />
       <h2>The values seed — seven questions, one per pillar</h2>
       <p>
         Your answers seed Circle matchmaking later. They are{" "}

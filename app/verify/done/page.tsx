@@ -21,7 +21,7 @@ export default async function DonePage({
         </p>
       ) : (
         <p>
-          <Link href="/">Step into the Agora →</Link>
+          <Link href="/?welcome=1">Step into the Agora — your dashboard →</Link>
         </p>
       )}
       <p className="interim-note">

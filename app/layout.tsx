@@ -49,6 +49,15 @@ async function FaceBar() {
         {pc.toFixed(2)} PC · {g.toFixed(2)} G
       </span>
       <Link href="/inbox">inbox{unread > 0 ? ` (${unread})` : ""}</Link>
+      {others.length === 0 && (
+        <Link
+          href="/login"
+          className="lore"
+          title="Switching appears here once both faces are signed into this browser — a one-time introduction per face."
+        >
+          switch face? sign your other face in once →
+        </Link>
+      )}
       {others.length > 0 && (
         <details className="switch-control">
           <summary>switch face</summary>

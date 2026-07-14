@@ -1,4 +1,5 @@
 import { createTrueSelf } from "@/app/actions";
+import { JourneySteps } from "@/components/JourneySteps";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function TrueSelfPage({
   const { returnTo, m } = await searchParams;
   return (
     <div className="ceremony">
+      <JourneySteps current="trueself" />
       <h2>Create your True Self</h2>
       <p>
         One per human — enforced blind by the registration nullifier: a

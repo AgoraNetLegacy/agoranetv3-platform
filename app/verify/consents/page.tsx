@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { PERMANENCE_CONSENT, CONSTITUTION_ACK } from "@/lib/disclosures";
 import { acknowledgeConsent } from "@/app/actions";
+import { JourneySteps } from "@/components/JourneySteps";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function ConsentsPage({
   if (!hasPermanence) {
     return (
       <div className="ceremony">
+        <JourneySteps current="consents" />
         <h2>Permanence — read before your first post</h2>
         <p>{PERMANENCE_CONSENT.text}</p>
         <form action={acknowledgeConsent}>
@@ -42,6 +44,7 @@ export default async function ConsentsPage({
 
   return (
     <div className="ceremony">
+      <JourneySteps current="consents" />
       <h2>The Constitution — the rules of this space</h2>
       <p>{CONSTITUTION_ACK.summary}</p>
       <p className="interim-note">

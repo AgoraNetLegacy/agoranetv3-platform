@@ -2,6 +2,7 @@ import { GATE_INTRO } from "@/lib/disclosures";
 import { beginVerification } from "@/app/actions";
 import { db } from "@/lib/db";
 import { recordEvent } from "@/lib/analytics";
+import { JourneySteps } from "@/components/JourneySteps";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function VerifyIntro({
   await recordEvent(db, "funnel.arrival");
   return (
     <div className="ceremony">
+      <JourneySteps current="gate" />
       <h2>The gate</h2>
       <p>{GATE_INTRO.substance}</p>
       <p className="notice">{GATE_INTRO.phaseA}</p>

@@ -299,6 +299,30 @@ button.linklike.brand { font-weight: 700; color: var(--ink); font-family: var(--
   padding: 1.1rem 1.3rem;
   margin: 1rem 0;
 }
+
+/* the visible onboarding journey (owner directive 2026-07-14):
+   where you are, what's done, what's next — at a glance */
+.journey { margin-bottom: 1rem; }
+.journey ol {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0;
+  margin: 0 0 0.3rem;
+}
+.journey li {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.18rem 0.6rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.journey li.done { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.journey li.current { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.journey li.ahead { color: var(--muted); background: var(--surface-2); }
+.journey-next { font-size: 0.8rem; color: var(--muted); margin: 0; font-style: italic; }
 .ceremony h2 { margin-top: 0; }
 .ceremony input[type="text"], .ceremony input[type="password"] {
   width: 100%;
@@ -318,7 +342,24 @@ button.linklike.brand { font-weight: 700; color: var(--ink); font-family: var(--
   border-radius: 8px;
   word-break: break-all;
   margin: 0.6rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
 }
+.secret-box .secret-value { flex: 1; }
+.secret-box .copy-button {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.7rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.secret-box .copy-button:hover { background: rgba(255, 255, 255, 0.16); }
 .disclosure-list li { margin-bottom: 0.55rem; }
 
 /* refusal / blocked notices: cross-theme constant (§2.3) */

@@ -13,7 +13,11 @@ export default async function LoginPage({
       <h2>Sign in a face</h2>
       <p>
         Each face signs in with its own access key — never with your
-        credential, and never through the other face.
+        credential, and never through the other face. Paste it; hand-typing
+        64 characters is nobody&rsquo;s job. <strong>This is a one-time
+        introduction per browser:</strong> once a face is signed in here,
+        switching to it is one click in the top bar, keys never asked
+        again.
       </p>
       {m && <div className="notice">{m}</div>}
       <form action={loginFace}>
