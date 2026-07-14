@@ -169,8 +169,51 @@ need from you.)
    / `chamber.releaseVoteThreshold` rails. Not built yet — this entry
    is the full spec for when it is.
 
-3. **AI summaries (DISCUSSIONS §5).** Spec grants them "their own
-   mini-review" as the first in-house AI surface. Say when.
+3. ~~**AI summaries**~~ — **FULLY SPEC'D (2026-07-13), queued for a
+   build slice.** Corpus amended same session
+   (`Discussion/DISCUSSIONS_SPEC.md` §5, `OPEN_ITEMS_CHECKLIST.md`
+   #40 struck). Full design:
+   - **What gets summarized:** the external content behind a cited
+     source (a study, article, paper someone linked) — NEVER a
+     Discussion thread or a soul's own words. Only already-public
+     material.
+   - **Provider: DeepSeek**, via the owner's own API key (stored
+     locally in `.env` as `DEEPSEEK_API_KEY`, gitignored, never
+     committed) — cheap, capable, OpenAI-compatible API shape. The
+     platform's first outbound call to a third-party AI vendor.
+     **Honest data-egress note:** categorically different from
+     ANALYTICS_SPEC's "no third-party trackers" law, not an
+     exception to it — the request carries only the fetched PUBLIC
+     source text and the requested tier, never a soul/profile/human
+     id or anything from inside the platform.
+   - **Three tiers, renamed for plain language: Basic** (a few
+     sentences), **Informative** (structured overview), **Extensive**
+     (thorough, section-by-section).
+   - **Pipeline:** check cache for (source, tier) → serve free and
+     instantly if present → else fetch the source URL's content
+     (readability-style extraction for articles, text extraction for
+     PDFs) → if fetch fails (paywall, blocked, dead link), fail
+     honestly ("couldn't be retrieved — read it directly"), never
+     fabricate from a bare URL/title → send extracted text to
+     DeepSeek with a tier-specific prompt → cache keyed to
+     (sourceId, tier), forever, shared by every reader.
+   - **Labeling, non-negotiable, verbatim:** "AI-generated assist. May
+     contain errors. Read the source." Never presented as a soul's
+     words, never carries standing.
+   - **Correction: 2 independent flaggers trigger regeneration**
+     (matches the Circle attestation floor) — a badge-holder may
+     annotate instead if regeneration would reproduce the same error.
+     Deliberately NOT routed through the full Flag→ModCase→Tribunal
+     path — nobody's at fault, a machine output was simply wrong.
+   - **Free to the soul, rate-limited instead** (already ratified):
+     new proposed rail `ratelimit.aiSummaryRequest`, default 5 new
+     generations/hour per soul. Reading a cached summary is an
+     unlimited free DB read — the wall only guards triggering a fresh,
+     real API call.
+   Needs a build slice when scheduled: the fetch/extraction step, the
+   DeepSeek call wrapper, a `SourceSummary` model (unique on
+   sourceId+tier), the rate-limit rail, and the flag/regenerate path.
+   Not built yet — this entry is the full spec for when it is.
 
 4. **Declared interests (ONBOARDING Stage 5.5).** Optional per-persona
    interests + one-time +5 G share bonus — not yet built; the grant
