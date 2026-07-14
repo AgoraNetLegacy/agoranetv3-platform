@@ -48,13 +48,29 @@ need from you.)
    marketing mentions tokens**. The compliance memo in the corpus
    `Legal/` folder frames it. Gates: launch comms, Phase 9.
 
-15. **Invite mechanics — your launch-gating call (BUILD_ORDER Phase 8:
-    "invite mechanics if launch is gated").** Nothing is built,
-    deliberately — building an invite system presumes the answer.
-    The cohort test does NOT need this: an unlisted staging URL is the
-    gate (recruit by link). The real decision is public-launch posture:
-    open door vs. invite waves. Works either way with #19 below —
-    referral tracking is not the same as referral gating.
+15. ~~**Invite mechanics — launch-gating call**~~ — **RATIFIED
+    (2026-07-13): open door. No invite-gating gets built.** Worked
+    through live: gating exists to slow a flood, and the owner has
+    neither an existing following nor one incoming — building a lock
+    for a door nobody's rushing solves a problem that doesn't exist.
+    **The real problem named instead: finding people who already
+    understand why the platform needs to exist**, since the owner's
+    own network isn't yet primed to see the problem it solves.
+    Resolution: growth is NOT broad public marketing (owner: "I suck
+    at marketing," no following) and NOT primarily personal
+    network/family (don't yet share the underlying concern) — it's
+    targeted outreach to pockets of people who ALREADY feel the
+    problem: Cardano/Hoskinson-adjacent governance circles, privacy
+    and digital-rights communities, principled X/Facebook leavers,
+    civic-tech and deliberative-democracy circles. The referral bonus
+    (#19) is the mechanism for this specifically — aligned people
+    tend to know other aligned people, which is a better engine here
+    than mass marketing or an unprimed personal network. Separately
+    noted: "share only when presentable" needs no feature at all —
+    the owner simply controls when he posts the link; that's not an
+    invite-gating question. Gates: nothing now. Revisit only if
+    organic growth ever actually threatens to outpace moderation
+    capacity — not expected soon.
 
 19. **The referral bonus — RATIFIED in conversation (2026-07-13),
     queued for a build slice.** Owner-designed, worked through live:
