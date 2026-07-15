@@ -56,6 +56,40 @@ record.)*
 
 ## B. Decisions that wait for PUBLIC launch — nothing here matters for the cohort test
 
+24. **Governance poll discovery at scale — NAMED GAP (owner conversation,
+    2026-07-15), no mechanism designed yet.** Any verified soul may open
+    a governance poll (no badge/role/score gate, just the standard
+    creation fee) — fine at today's volume, untested at hundreds or
+    thousands. Today's only sort is open-before-closed, then
+    newest-first; nothing distinguishes a constitutional-tier vote from
+    a routine one. Corpus-checked: genuinely unaddressed anywhere in the
+    ratified spec set — the one adjacent item (`NOTIFICATIONS_SPEC.md`
+    §8 item 4 / `OPEN_ITEMS_CHECKLIST.md` #54) is about notification
+    *loudness* for important polls, not discovery or ranking.
+    **Explored and ruled out in that conversation:** staking PollCoin
+    to boost a poll's visibility, refundable or not — collides directly
+    with `FEED_AND_SEARCH_SPEC.md` §7's "paid visibility is on the
+    Tokenomics rejected-on-principle list," and separately with the
+    already-ratified "cheap talk" reasoning that killed the original
+    poll-staking idea (`TOKENOMICS_SPEC.md` §6): a refundable stake
+    still lets capital-holding (not permanent cost) buy attention, and
+    costs a bad-faith staker nothing if they're wrong. General PollCoin
+    staking for platform-health reasons (supply reduction, commitment
+    signaling — the real, ratified rationale behind `CUSTODY_SPEC.md`
+    §2's Gratium-only staking design) is a legitimate, SEPARATE idea if
+    the owner ever wants to reopen his own 2026-07-07 "we don't need
+    this for PollCoin" ruling — but it doesn't solve discovery-at-scale
+    either way; coupling any token lock to a *specific* poll's
+    visibility reintroduces the same rejected effect regardless of the
+    lock's other benefits. **Directions still open, none decided:**
+    grouping/filtering by the Constitution's own three amendment
+    classes (an existing, structural stakes signal, invented nothing
+    new); a flat one-per-profile support signal matching how the
+    Neural Pollinator's leaderboard already works (same fee for
+    everyone, no stake-weighting); transparent, non-manipulable
+    participation counts. Gates: nothing now — today's volume doesn't
+    need it. Worth a real pass once poll volume actually grows.
+
 1. **Legal gate check (BUILD_ORDER Phase 4; external track).**
    Internal-only currencies want review-lite, and the non-withdrawable
    Gratium posture should be confirmed with counsel **before any launch
