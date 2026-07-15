@@ -89,16 +89,21 @@ the owner-directed onboarding-journey slice. Derived rule flagged:
 DECISIONS_PENDING #21.
 
 **CURRENT: Phase 8.6 — Testnet Rails** (spec ratified 2026-07-13;
-scout appendix is the working truth). Build order §6.4: (1) Cardano
-rail — Mesh SDK, Lace preprod connect, mint PollCoin Demo (dPOLL)
-under a throwaway policy, anchor one app-ledger hash via tx metadata;
-(2) Identus issuer — self-hosted Cloud Agent, one full
-issue→hold→verify loop (+§1.5 recovery); (3) Midnight nullifier
-contract — Compact on preprod via the dev proof server. NO mainnet,
-no custody, no production anything (§6.6). Owner setup: Blockfrost ✓
-Docker ✓ Lace dev wallet in progress. Secrets stay in gitignored
-.env; testnet mode is ADDITIVE — the Phase A HMAC path is the proven
-fallback, never deleted (§6.1/§6.6).
+scout appendix is the working truth). **Slices 1–2 DONE, self-verified
+2026-07-15 — CHECKPOINTS.md has tx hashes and gotchas:** the Cardano
+rail is LIVE (dPOLL minted on preprod, first civic-ledger anchor
+on-chain, owner wallet connected per-face) and the Identus issuer is
+LIVE (two pinned 2.2.0 agents in infra/identus, full issue→hold→verify
+loop green, §1.5 recovery property PROVEN by nullifier re-derivation).
+**NEXT: slice 3 — the Midnight nullifier contract** (Compact + dev
+proof server; one owner faucet-moment for tDUST), then slice 4 (anchor
+cadence, honest disclosure upgrades, /transparency real-rails note,
+the two §5 demos). NO mainnet, no custody, no production anything
+(§6.6). All chain secrets live ONLY in gitignored .env (Blockfrost
+preprod key, throwaway mint mnemonic, TEST_POLLCOIN_POLICY_ID).
+Testnet mode is ADDITIVE — the Phase A HMAC path stays, never deleted
+(§6.1/§6.6). Restart the dev server after any `npm run check` (builds
+corrupt a live dev server's chunks).
 
 **Standing owner rules (2026-07-12):** no production, and no mention
 of production, until the lawyer conversation concludes. The Phase 8

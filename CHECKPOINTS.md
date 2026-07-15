@@ -648,3 +648,47 @@ Dashboard, built as slice 7. **His interim verdict: "ok, so this is
 good enough for now. Both profiles work. Hatching works."** He then
 began his 8.6 §6.5 setup (Blockfrost ✓, Docker ✓, Lace in progress)
 — the formal 8.5 close rides his go for 8.6.
+
+## Phase 8.6 — Testnet Rails ⚙ IN PROGRESS (slices 1–2 SELF-VERIFIED 2026-07-15)
+
+**Slice 1 — the Cardano rail: LIVE.** The owner's dev wallet
+(tAgoranetv3, preprod, 10,000 faucet tADA) connected through the new
+per-face testnet-rail section in /settings (TestnetWalletLink model —
+mainnet refused at every layer, 4 tests pin it). PollCoin Demo
+(dPOLL, owner-ruled name) minted: 1,000,000 units under throwaway
+policy 70e8fedff8a8cd445705a0884c8b41db20e5005f7cdeef6a7322ad35, tx
+4872f42b1885d6a1ef9c0fd58df011ed4138e8c6d55bef387a42c6ba8d1669c0.
+First civic-ledger anchor: head hash of seq 407 in tx
+ccbdeb986b5ea20d8b634d7e1206080ad9597b350871a675498a6d252a3ef005
+(CIP-20 label 674); seq 407's anchorRef now carries it — the Phase 0
+field's first use. Machinery: lib/chainMint.ts + scripts/chain/
+(mint-dpoll, anchor-ledger), throwaway mint key + Blockfrost preprod
+key in gitignored .env only. Lesson recorded: the owner's Eternl
+testnet stash was on PREVIEW, not preprod — same address format,
+different chains; the faucet resolved it.
+
+**Slice 2 — the Identus issuer: LIVE.** infra/identus/docker-compose:
+two pinned Cloud Agents 2.2.0 (issuer + holder) + prism-node 2.6.0 +
+postgres. scripts/chain/identus-loop.ts runs the complete ceremony:
+published did:prism DIDs → DIDComm connection → registered schema →
+JWT W3C VC issued carrying a STABLE SUBJECT COMMITMENT →
+presentation verified under named schema + trusted-issuer
+constraints. §1.5 RECOVERY PROVEN: same commitment reissued across
+two ceremonies with different holder DIDs re-derives IDENTICAL
+platform nullifiers (run twice, nullifier 080e2a7d… both times).
+Build gotchas recorded for the next session: custom DB names need
+*_DB_APP_USER env; holder DIDs need authentication-purpose keys;
+DIDs must be PUBLISHED or verification fails resolution; match
+holder records by thid or stale runs bleed in; docker compose down
+-v resets the stack clean.
+
+**Evidence:** tests 210/210 after every commit (4 new chain tests);
+db:verify 31/31; commits 0ee2ad3 → 9d4ab44, all pushed.
+
+**Remaining in 8.6:** slice 3 — the Midnight nullifier contract
+(Compact, dev proof server; ONE owner faucet-moment for tDUST; the
+old agoranet-midnight container in Docker is a stale prior-attempt
+fossil — pull fresh pinned images, then remove it). Slice 4 — daily
+anchor cadence, honest disclosure upgrades layer by layer, the
+/transparency "what runs on real rails today" note, and the two §5
+checkpoint demos rehearsed until the owner can give them cold.

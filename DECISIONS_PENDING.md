@@ -503,6 +503,15 @@ at the Phase 9 real-money re-review regardless.
      console was never scheduled by BUILD_ORDER — say if you want it
      post-launch.
 
+22. **Owner homework, low priority — the pre-mint token's facts
+    (2026-07-15).** The owner's REAL minted tokens live in a separate
+    Eternl wallet (untouched by 8.6, per spec §2.2). Next time he's
+    in that wallet anyway: copy the token's POLICY ID (+ supply if
+    visible) and paste it to Claude — it gets filed here so Phase 9's
+    real-token session (whether real PollCoin = that mint or a fresh
+    policy) starts with facts instead of archaeology. Blocks nothing
+    until the lawyer conversation concludes.
+
 21. **Phase 8.5 derived rule — the merged dashboard's parking
     threshold (2026-07-14).** The ratified §1.1 merge (the Agora
     dashboard IS the platform dashboard) meets the ratified parking
