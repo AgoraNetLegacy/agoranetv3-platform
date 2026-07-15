@@ -81,13 +81,24 @@ appendix's honesty edits (§7 rulings: presentation fully first · DM
 custody holds at disclosed escrow until Phase 9 · test token =
 PollCoin Demo / dPOLL).
 
-**Phase 8.5 BUILD COMPLETE, self-verified 2026-07-14** (CHECKPOINTS.md
-carries the full record: five slices, 206 tests green throughout,
-db:verify 31/31, spec-conformance pass §1–§7). **The checkpoint
-itself is owner-inherent by the spec's own §8** — his walkthrough,
-one question: neither bland nor confusing? **8.6 starts when he rules
-8.5 closed.** Derived rule flagged: DECISIONS_PENDING #21 (the merged
-dashboard threshold parks nothing; interior doors park unchanged).
+**Phase 8.5 CLOSED — owner walkthrough passed 2026-07-14** ("good
+enough for now. Both profiles work. Hatching works… begin the
+preparation for our blockchain integration"). Seven slices;
+CHECKPOINTS.md carries the record incl. his walkthrough findings and
+the owner-directed onboarding-journey slice. Derived rule flagged:
+DECISIONS_PENDING #21.
+
+**CURRENT: Phase 8.6 — Testnet Rails** (spec ratified 2026-07-13;
+scout appendix is the working truth). Build order §6.4: (1) Cardano
+rail — Mesh SDK, Lace preprod connect, mint PollCoin Demo (dPOLL)
+under a throwaway policy, anchor one app-ledger hash via tx metadata;
+(2) Identus issuer — self-hosted Cloud Agent, one full
+issue→hold→verify loop (+§1.5 recovery); (3) Midnight nullifier
+contract — Compact on preprod via the dev proof server. NO mainnet,
+no custody, no production anything (§6.6). Owner setup: Blockfrost ✓
+Docker ✓ Lace dev wallet in progress. Secrets stay in gitignored
+.env; testnet mode is ADDITIVE — the Phase A HMAC path is the proven
+fallback, never deleted (§6.1/§6.6).
 
 **Standing owner rules (2026-07-12):** no production, and no mention
 of production, until the lawyer conversation concludes. The Phase 8

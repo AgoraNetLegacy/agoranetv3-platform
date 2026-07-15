@@ -45,6 +45,8 @@
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.2.9",
     "@fontsource-variable/inter": "^5.2.8",
+    "@meshsdk/core": "^1.9.1",
+    "@meshsdk/react": "^2.0.0-beta.2",
     "@prisma/client": "5.22.0",
     "next": "15.5.19",
     "react": "18.3.1",
