@@ -733,7 +733,14 @@ state is not persisted across runs; every cold run pays it again).
 Node's WS needs `globalThis.WebSocket = WebSocket` (ws) for indexer
 subscriptions; RPC-CORE "Normal Closure" chatter at startup is
 benign. Proofs on this machine: deploy 19.8s, spends ~18s each —
-inside the honest 20–60s window.
+inside the honest 20–60s window. ONE SELF-CAUGHT SLIP, fixed the
+same hour: levelPrivateStateProvider writes its store to
+`midnight-level-db/` under cwd (NOT the privateStateStoreName), so
+commit 8f70206 briefly carried the private-state db (holding the
+DEMO subject commitment — testnet-only, no real value); removed from
+git + properly ignored in the follow-up commit, and the demo
+commitment ROTATED in .env. Lesson: verify a provider's on-disk
+paths before trusting a guessed .gitignore entry.
 
 **Remaining in 8.6:** slice 4 — daily anchor cadence, honest
 disclosure upgrades layer by layer (ONLY where the trust claim

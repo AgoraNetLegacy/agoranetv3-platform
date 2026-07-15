@@ -13,5 +13,5 @@ test-results/
 # Midnight (8.6 slice 3) — compiled ZK artifacts + local private-state db
 infra/midnight/contract/build/
 infra/midnight/node_modules/
-infra/midnight/agoranet-nullifier-private-state/
+infra/midnight/midnight-level-db/
 infra/midnight/*.log
