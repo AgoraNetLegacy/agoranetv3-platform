@@ -22,6 +22,9 @@ CREATE TABLE "Profile" (
     "readOnlyUntil" TIMESTAMP(3),
     "activateAt" TIMESTAMP(3),
     "joinedPeriod" TEXT NOT NULL,
+    "bio" TEXT NOT NULL DEFAULT '',
+    "bioPlace" TEXT NOT NULL DEFAULT '',
+    "switchAnimation" TEXT NOT NULL DEFAULT 'flip',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Profile_pkey" PRIMARY KEY ("id")
@@ -1112,3 +1115,17 @@ ALTER TABLE "DmMessage" ADD CONSTRAINT "DmMessage_threadId_fkey" FOREIGN KEY ("t
 -- AddForeignKey
 ALTER TABLE "DmExcerpt" ADD CONSTRAINT "DmExcerpt_threadId_fkey" FOREIGN KEY ("threadId") REFERENCES "DmThread"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+
+-- CreateTable (Phase 8.6, TESTNET_RAILS_SPEC §6.3)
+CREATE TABLE "TestnetWalletLink" (
+    "id" TEXT NOT NULL,
+    "profileId" TEXT NOT NULL,
+    "cardanoAddress" TEXT NOT NULL,
+    "network" TEXT NOT NULL,
+    "connectedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "TestnetWalletLink_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TestnetWalletLink_profileId_key" ON "TestnetWalletLink"("profileId");

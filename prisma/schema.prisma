@@ -23,6 +23,19 @@ generator client {
 // public ledger — db:verify scans every event for them and fails loudly.
 // ------------------------------------------------------------------
 
+// Phase 8.6 (TESTNET_RAILS_SPEC §6.3): which Cardano TESTNET address a
+// face has connected. Per-face, like everything — a wallet link is
+// identity-adjacent, and the two faces' wallets must never share a row.
+// Testnet-only by construction: the recording path refuses mainnet
+// addresses, and nothing here custodies anything.
+model TestnetWalletLink {
+  id             String   @id @default(cuid())
+  profileId      String   @unique
+  cardanoAddress String
+  network        String // "preprod" | "preview" — never "mainnet", enforced at write
+  connectedAt    DateTime @default(now())
+}
+
 model Human {
   id             String    @id @default(cuid())
   // Interim issuer (Phase A): the soul holds the credential secret (their

@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { getRail } from "@/lib/rails";
-import { updateDisplayName, setSwitchAnimation } from "@/app/actions";
+import { updateDisplayName, setSwitchAnimation, submitWalletLink } from "@/app/actions";
+import { cardanoNetwork, walletLinkFor } from "@/lib/chain";
+import { LaceConnect } from "@/components/LaceConnect";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +22,11 @@ export default async function SettingsPage({
   const { m } = await searchParams;
   const face = await activeFace();
   if (!face) redirect("/login");
-  const cooldownDays = await getRail(db, "identity.displayNameCooldownDays");
+  const [cooldownDays, walletLink] = await Promise.all([
+    getRail(db, "identity.displayNameCooldownDays"),
+    walletLinkFor(db, face.id),
+  ]);
+  const network = cardanoNetwork();
 
   return (
     <div className="ceremony">
@@ -91,6 +97,25 @@ export default async function SettingsPage({
         arrives as a fast-follow, and its preferences will live here, per
         face, off by default.
       </p>
+
+      <h3>The testnet rail — connect a wallet</h3>
+      <p className="lore">
+        <strong>Test network only, by design.</strong> Connecting shares
+        one {network} address with the platform — no keys, no custody,
+        nothing of real value anywhere on this rail. Real rails wait
+        behind their own gate. Per-face, like everything: your other
+        face connects its own wallet, or none.
+      </p>
+      {walletLink ? (
+        <p className="lore">
+          Linked to this face: <code>{walletLink.cardanoAddress.slice(0, 24)}…</code>{" "}
+          ({walletLink.network}, since {walletLink.connectedAt.toLocaleDateString()}).
+          Reconnect below to update it.
+        </p>
+      ) : (
+        <p className="lore">No wallet linked to this face yet.</p>
+      )}
+      <LaceConnect network={network} onLink={submitWalletLink} />
 
       <h3>This face&rsquo;s other controls</h3>
       <ul>

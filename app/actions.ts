@@ -973,6 +973,21 @@ export async function updateProfileBio(formData: FormData) {
   backTo("/profile", "Saved — live surfaces only, never the permanent record.");
 }
 
+/** The testnet wallet link (Phase 8.6, TESTNET_RAILS_SPEC §6.3): the
+ *  active face records which TESTNET address it connected. Mainnet is
+ *  refused inside recordWalletLink — addr1… never enters the table. */
+export async function submitWalletLink(formData: FormData) {
+  const face = await requireFace("settings");
+  const { recordWalletLink } = await import("@/lib/chain");
+  const result = await recordWalletLink(db, {
+    profileId: face.id,
+    cardanoAddress: String(formData.get("cardanoAddress") ?? ""),
+    network: String(formData.get("network") ?? ""),
+  });
+  revalidatePath("/settings");
+  backTo("/settings", result.ok ? "Testnet wallet linked to this face." : result.reason);
+}
+
 /** §5.1 + §2.2: the switch animation is a per-face choice — flip
  *  (default), crossfade, or instant. By choice, never by detection. */
 export async function setSwitchAnimation(formData: FormData) {
