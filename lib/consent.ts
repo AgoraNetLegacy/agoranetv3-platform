@@ -22,7 +22,11 @@ export async function recordAck(
   });
 }
 
-/** The two Stage 4 blocking acks required before the first post. */
+/** The two Stage 4 blocking acks required before the first post.
+ *  VERSION-AWARE (fixed 2026-07-15, exposed by the plain-language
+ *  pass): an ack binds to the text it acknowledged — when a consent's
+ *  wording changes, its version bumps and the flow re-presents it,
+ *  exactly as the disclosures module's header always promised. */
 export async function hasPostingConsents(
   db: PrismaClient,
   profileId: string
@@ -30,5 +34,13 @@ export async function hasPostingConsents(
   const acks = await db.consentAck.findMany({
     where: { profileId, kind: { in: ["permanence", "constitution"] } },
   });
-  return acks.length === 2;
+  return (
+    acks.some(
+      (a) => a.kind === "permanence" && a.version === CONSENT_VERSIONS.permanence
+    ) &&
+    acks.some(
+      (a) =>
+        a.kind === "constitution" && a.version === CONSENT_VERSIONS.constitution
+    )
+  );
 }

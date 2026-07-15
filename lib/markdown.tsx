@@ -39,6 +39,8 @@ export function Markdown({ source }: { source: string }) {
   const lines = body.split("\n");
   let paragraph: string[] = [];
   let list: string[] = [];
+  let orderedList: string[] = [];
+  let tableRows: string[][] = [];
   let key = 0;
 
   const flushParagraph = () => {
@@ -60,13 +62,56 @@ export function Markdown({ source }: { source: string }) {
       list = [];
     }
   };
+  const flushOrderedList = () => {
+    if (orderedList.length) {
+      blocks.push(
+        <ol key={key++}>
+          {orderedList.map((item, i) => (
+            <li key={i}>{inline(item, `o${key}-${i}`)}</li>
+          ))}
+        </ol>
+      );
+      orderedList = [];
+    }
+  };
+  const flushTable = () => {
+    if (tableRows.length) {
+      const [head, ...rest] = tableRows;
+      blocks.push(
+        <table key={key++} className="books">
+          <thead>
+            <tr>
+              {head.map((cell, i) => (
+                <th key={i}>{inline(cell, `th${key}-${i}`)}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rest.map((row, r) => (
+              <tr key={r}>
+                {row.map((cell, c) => (
+                  <td key={c}>{inline(cell, `td${key}-${r}-${c}`)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+      tableRows = [];
+    }
+  };
+  const flushAll = () => {
+    flushParagraph();
+    flushList();
+    flushOrderedList();
+    flushTable();
+  };
 
   for (const raw of lines) {
     const line = raw.replace(/\s+$/, "");
     const heading = line.match(/^(#{1,4})\s+(.*)$/);
     if (heading) {
-      flushParagraph();
-      flushList();
+      flushAll();
       const level = heading[1].length;
       const text = inline(heading[2], `h${key}`);
       if (level === 1) blocks.push(<h2 key={key++}>{text}</h2>);
@@ -74,30 +119,58 @@ export function Markdown({ source }: { source: string }) {
       else blocks.push(<h4 key={key++}>{text}</h4>);
       continue;
     }
-    if (/^---+\s*$/.test(line)) {
+    // Pipe tables: header, |---| separator (skipped), then rows.
+    if (/^\s*\|.*\|\s*$/.test(line)) {
       flushParagraph();
       flushList();
+      flushOrderedList();
+      if (!/^\s*\|(\s*:?-+:?\s*\|)+\s*$/.test(line)) {
+        tableRows.push(
+          line
+            .replace(/^\s*\|/, "")
+            .replace(/\|\s*$/, "")
+            .split("|")
+            .map((c) => c.trim())
+        );
+      }
+      continue;
+    }
+    if (/^---+\s*$/.test(line)) {
+      flushAll();
       continue;
     }
     const bullet = line.match(/^\s*-\s+(.*)$/);
     if (bullet) {
       flushParagraph();
+      flushOrderedList();
+      flushTable();
       list.push(bullet[1]);
       continue;
     }
-    if (line.trim() === "") {
+    // Numbered lists: "1. …" items; indented continuations fold in below.
+    const numbered = line.match(/^\s*\d+\.\s+(.*)$/);
+    if (numbered) {
       flushParagraph();
       flushList();
+      flushTable();
+      orderedList.push(numbered[1]);
+      continue;
+    }
+    if (line.trim() === "") {
+      flushAll();
       continue;
     }
     if (list.length && /^\s{2,}/.test(raw)) {
       list[list.length - 1] += " " + line.trim();
       continue;
     }
+    if (orderedList.length && /^\s{2,}/.test(raw)) {
+      orderedList[orderedList.length - 1] += " " + line.trim();
+      continue;
+    }
     paragraph.push(line.trim());
   }
-  flushParagraph();
-  flushList();
+  flushAll();
 
   return <div className="reference-doc">{blocks}</div>;
 }

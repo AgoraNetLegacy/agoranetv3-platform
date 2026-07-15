@@ -23,13 +23,21 @@ export default async function AccessKeyPage({
       <JourneySteps current="key" />
       <h2>Your access key</h2>
       <p>
-        This key signs this face in — it is separate from your credential,
-        and each face gets its own. <strong>Save it; it is shown exactly
-        once.</strong> You are now signed in on this browser — and each
-        face signs in <strong>once per browser, ever</strong>; after that,
-        switching faces is one click in the top bar.
+        <strong>Step 4 of 7 — the second of your two secrets, and the
+        last.</strong> This is not the credential you saved two steps ago
+        — that one proves you&rsquo;re human; this one is simply how this
+        profile signs in. Passport, then house key: the credential opens
+        the big ceremonies, this key opens your everyday door.
       </p>
-      <SecretBox value={accessKey} />
+      <p>
+        <strong>Save it — Copy or Download. It is shown exactly
+        once.</strong> The good news: you rarely need it. You are already
+        signed in on this browser, and each profile signs in{" "}
+        <strong>once per browser, ever</strong> — after that, switching is
+        one click in the top bar. You&rsquo;ll only reach for this key on
+        a new browser or device.
+      </p>
+      <SecretBox value={accessKey} downloadAs="agoranet-access-key.txt" />
       <form action={acknowledgeSecretSaved}>
         <input type="hidden" name="next" value={next} />
         <button type="submit">I saved it — continue to consent</button>

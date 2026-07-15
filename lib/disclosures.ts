@@ -10,8 +10,11 @@
 import { PHASE_A_DISCLOSURE } from "./gate";
 
 export const CONSENT_VERSIONS = {
-  permanence: "v1",
-  constitution: "founding-draft-2026-07-07",
+  // v2 (owner walkthrough, 2026-07-15): plain-language pass — the
+  // consent a person signs must be readable by a person who just
+  // arrived. Version bumps re-present the screens, by design.
+  permanence: "v2",
+  constitution: "founding-draft-2026-07-07-plain-v2",
   // v2 (Phase 8.6 slice 4): the unlinkability item's language upgraded
   // honestly — the cryptographic enforcement now runs on public test
   // rails; the live ceremony's protection is still policy.
@@ -51,35 +54,47 @@ export const VERIFICATION_FRESHNESS =
   "current human. Governance voting requires a more recently confirmed " +
   "credential than ordinary participation.";
 
-/** Stage 4.1 — permanence consent (BLOCKING, before the first post). */
+/** Stage 4.1 — permanence consent (BLOCKING, before the first post).
+ *  Plain-language pass: owner walkthrough finding, 2026-07-15 —
+ *  "canonical" is insider vocabulary; a consent screen is the wrong
+ *  place for jargon. */
 export const PERMANENCE_CONSENT = {
   version: CONSENT_VERSIONS.permanence,
   text:
     "Some spaces on AgoraNet are permanent record. What you post in a " +
-    "permanent space — the canonical question threads, every Governance " +
-    "room — cannot be deleted, by you or by us. A short grace window " +
-    "lets you repair typos, with the edit history visible; then your " +
-    "words lock into the record. Your account can be deleted; your words " +
-    "in permanent spaces cannot. If moderation removes rule-breaking " +
-    "content, a tombstone naming the rule stays in its place — removal " +
-    "is visible, never silent. Every permanent space is labeled at the " +
-    "door and in the composer, so you always know which kind of room " +
-    "you're standing in.",
+    "permanent space — the platform's founding question threads, every " +
+    "Governance room — cannot be deleted, by you or by us. A short " +
+    "grace window lets you repair typos, with the edit history visible; " +
+    "then your words lock into the record. Your account can be deleted; " +
+    "your words in permanent spaces cannot. If moderation removes " +
+    "rule-breaking content, a marker naming the broken rule stays in " +
+    "its place — removal is visible, never silent. Every permanent " +
+    "space is labeled at the door and in the composer, so you always " +
+    "know which kind of room you're standing in.",
 };
 
-/** Stage 4.2 — Constitution acknowledgment (BLOCKING). */
+/** Stage 4.2 — Constitution acknowledgment (BLOCKING).
+ *  Plain-language pass: owner walkthrough findings, 2026-07-15 — no
+ *  jargon in a consent, moderators must be understood as community
+ *  members, and "no rule, no punishment" needed unambiguous phrasing.
+ *  The full text is one click away at /constitution (same finding). */
 export const CONSTITUTION_ACK = {
   version: CONSENT_VERSIONS.constitution,
   summary:
-    "The AgoraNet Constitution sets the rails this platform runs on: " +
-    "seven invariants no vote can casually set aside (the pseudonym-only " +
-    "ledger; one human, two unlinkable faces; no universal score; one " +
-    "profile, one vote — never wealth; reading free, acting verified; " +
-    "records that cannot be quietly rewritten; a community that inherits " +
-    "the platform). Rules are enforced by randomly drawn moderators who " +
-    "must cite a written rule, with appeals to a community Tribunal — " +
-    "no rule, no punishment. By continuing you acknowledge the " +
-    "Constitution as the terms of this space.",
+    "The AgoraNet Constitution sets the rails this platform runs on. " +
+    "Seven promises no vote can casually set aside: the public record " +
+    "only ever shows your chosen name, never who you really are; one " +
+    "human gets two identities — a True Self and an Alias — that can " +
+    "never be connected, even by us; no score ever sums you up as one " +
+    "number; one profile, one vote — money never buys outcomes; reading " +
+    "is always free, acting requires being verified as one real human; " +
+    "records cannot be quietly rewritten; and the community itself " +
+    "inherits the platform's governance over time. Rules are enforced " +
+    "by community members drawn at random for short terms — there are " +
+    "no staff moderators — and nobody can be punished except under a " +
+    "written rule, with every ruling citing the rule it enforces and " +
+    "one appeal to a community Tribunal. By continuing you acknowledge " +
+    "the Constitution as the terms of this space.",
 };
 
 /**

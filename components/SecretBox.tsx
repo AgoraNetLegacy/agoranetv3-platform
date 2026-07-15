@@ -9,9 +9,28 @@ import { useRef, useState } from "react";
 // select-and-execCommand path → select the text and say so plainly,
 // so one keystroke finishes the job. The value still renders exactly
 // once, never touches storage, never rides a URL.
-export function SecretBox({ value }: { value: string }) {
+export function SecretBox({
+  value,
+  downloadAs,
+}: {
+  value: string;
+  /** When set, a Download button saves the secret as this filename —
+   *  one click instead of open-a-doc-and-paste (owner finding,
+   *  2026-07-15: the copy-somewhere ceremony is friction). */
+  downloadAs?: string;
+}) {
   const [state, setState] = useState<"idle" | "copied" | "selected">("idle");
   const spanRef = useRef<HTMLSpanElement>(null);
+
+  function download() {
+    const blob = new Blob([value + "\n"], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = downloadAs ?? "secret.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   function selectValue(): boolean {
     const node = spanRef.current;
@@ -65,6 +84,11 @@ export function SecretBox({ value }: { value: string }) {
             ? "Selected — press ⌘C"
             : "Copy"}
       </button>
+      {downloadAs && (
+        <button type="button" className="copy-button" onClick={download}>
+          Download
+        </button>
+      )}
     </div>
   );
 }

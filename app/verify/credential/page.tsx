@@ -24,13 +24,20 @@ export default async function CredentialPage({
       <JourneySteps current="credential" />
       <h2>Your Humanity Credential</h2>
       <p>
-        This is your credential — the interim stand-in for the wallet
-        credential a real issuer will hold at Phase B.{" "}
-        <strong>Save it somewhere safe. It is shown exactly once</strong>{" "}
-        and AgoraNet keeps only a one-way hash. You will need it to create
-        your True Self now, and your Alias whenever you choose to hatch one.
+        <strong>Step 2 of 7 — the first of two secrets you&rsquo;ll save
+        today.</strong> This one is your proof of being one real human —
+        think of it as a passport. You&rsquo;ll present it at big moments
+        only: creating your True Self in the next step, and creating your
+        Alias if you ever choose to. (The second secret, two steps from
+        now, is different: it&rsquo;s the everyday sign-in key for one
+        profile — a house key, not a passport.)
       </p>
-      <SecretBox value={credential} />
+      <p>
+        <strong>Save it now — Copy or Download. It is shown exactly
+        once.</strong> AgoraNet keeps only a scrambled fingerprint of it,
+        so we can recognize it but never read or resend it.
+      </p>
+      <SecretBox value={credential} downloadAs="agoranet-humanity-credential.txt" />
       <p className="notice">
         <strong>
           If you lose this credential, we cannot recover it — there is no

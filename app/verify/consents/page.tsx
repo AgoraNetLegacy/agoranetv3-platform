@@ -1,7 +1,12 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
-import { PERMANENCE_CONSENT, CONSTITUTION_ACK } from "@/lib/disclosures";
+import {
+  PERMANENCE_CONSENT,
+  CONSTITUTION_ACK,
+  CONSENT_VERSIONS,
+} from "@/lib/disclosures";
 import { acknowledgeConsent } from "@/app/actions";
 import { JourneySteps } from "@/components/JourneySteps";
 
@@ -19,8 +24,13 @@ export default async function ConsentsPage({
   if (!face) redirect("/verify");
 
   const acks = await db.consentAck.findMany({ where: { profileId: face.id } });
-  const hasPermanence = acks.some((a) => a.kind === "permanence");
-  const hasConstitution = acks.some((a) => a.kind === "constitution");
+  // Version-aware: a reworded consent re-presents (its version bumped).
+  const hasPermanence = acks.some(
+    (a) => a.kind === "permanence" && a.version === CONSENT_VERSIONS.permanence
+  );
+  const hasConstitution = acks.some(
+    (a) => a.kind === "constitution" && a.version === CONSENT_VERSIONS.constitution
+  );
   const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
 
   if (hasPermanence && hasConstitution) {
@@ -48,8 +58,10 @@ export default async function ConsentsPage({
       <h2>The Constitution — the rules of this space</h2>
       <p>{CONSTITUTION_ACK.summary}</p>
       <p className="interim-note">
-        The full founding document is part of the public record; this
-        acknowledgment names version {CONSTITUTION_ACK.version}.
+        <Link href="/constitution">Read the full Constitution →</Link>{" "}
+        It is public and free to read, before and after you agree — as is{" "}
+        <Link href="/rules">every written rule</Link>. This acknowledgment
+        names version {CONSTITUTION_ACK.version}.
       </p>
       <form action={acknowledgeConsent}>
         <input type="hidden" name="kind" value="constitution" />

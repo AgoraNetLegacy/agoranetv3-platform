@@ -18,7 +18,10 @@ export default async function AliasKeyPage() {
         linkage channel, so there isn't one; a lost key means hatching a
         successor.
       </p>
-      <SecretBox value={accessKey} />
+      {/* Deliberately the same generic filename as a True Self access
+          key — a download named "alias" would be a small linkage
+          artifact on disk. */}
+      <SecretBox value={accessKey} downloadAs="agoranet-access-key.txt" />
       <p>
         Your Alias will activate at a random moment{" "}
         <strong>within the next few days</strong>, alongside a cohort of

@@ -150,6 +150,8 @@ async function SideNav() {
           <Link href="/ledger">ledger</Link>
           <Link href="/transparency">transparency</Link>
           <Link href="/commons">commons</Link>
+          <Link href="/constitution">constitution</Link>
+          <Link href="/rules">rules</Link>
         </span>
       </div>
       {face && (
