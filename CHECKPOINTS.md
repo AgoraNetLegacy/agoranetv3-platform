@@ -860,5 +860,7 @@ could alter something and then stamp it" — and its answer (each
 stamp closes the past; a post-alteration stamp publicly contradicts
 prior stamps) is now part of the demo script above.
 
-**Remaining in 8.6:** the owner's ruling. He has given both demos;
-the phase closes when he says it does.
+**★ PHASE 8.6 CLOSED — owner ruling, 2026-07-15: "this was great.
+8.6 is done."** Given the same day he gave both demos himself. The
+blockchain threshold that ended v1 and v2 is, in v3, a closed
+checkpoint with public transaction hashes.

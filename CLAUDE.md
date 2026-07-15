@@ -88,32 +88,34 @@ CHECKPOINTS.md carries the record incl. his walkthrough findings and
 the owner-directed onboarding-journey slice. Derived rule flagged:
 DECISIONS_PENDING #21.
 
-**CURRENT: Phase 8.6 — Testnet Rails** (spec ratified 2026-07-13;
-scout appendix is the working truth). **Slices 1–2 DONE, self-verified
-2026-07-15 — CHECKPOINTS.md has tx hashes and gotchas:** the Cardano
-rail is LIVE (dPOLL minted on preprod, first civic-ledger anchor
-on-chain, owner wallet connected per-face) and the Identus issuer is
-LIVE (two pinned 2.2.0 agents in infra/identus, full issue→hold→verify
-loop green, §1.5 recovery property PROVEN by nullifier re-derivation).
-**Slice 3 DONE, self-verified 2026-07-15 — the Midnight nullifier
-contract is LIVE on Preview** (contract + tx ids + hard-won version
-gotchas in CHECKPOINTS.md; the ZK rail: infra/midnight — Compact
-contract, pinned proof-server compose, standalone exercise package;
-the faucet moment happened; every nullifier property proven
-on-chain). **Slice 4 DONE, self-verified 2026-07-15 — the honesty
-layer:** daily anchor cadence live (rail + idempotent chain:anchor
-runner + verify check 27; first cadence anchor on preprod),
-disclosures upgraded ONLY where trust became math (gate, interim
-issuer incl. the W5 no-repeat-detection truth, credential-loss
-warning, alias item — consent bumped phase-a-v2), /transparency
-"what runs on real rails today" live, both §5 demos REHEARSED with
-owner runbooks in CHECKPOINTS.md. **NEXT: the owner gives the two
-demos cold — his §5 checkpoint closes Phase 8.6.** NO mainnet, no custody, no production anything
-(§6.6). All chain secrets live ONLY in gitignored .env (Blockfrost
-preprod key, throwaway mint mnemonic, TEST_POLLCOIN_POLICY_ID).
-Testnet mode is ADDITIVE — the Phase A HMAC path stays, never deleted
-(§6.1/§6.6). Restart the dev server after any `npm run check` (builds
-corrupt a live dev server's chunks).
+**★ PHASE 8.6 CLOSED — owner ruling 2026-07-15 ("this was great.
+8.6 is done."), given the same day he performed BOTH §5 demos from
+his own terminal.** All four slices done; CHECKPOINTS.md carries the
+complete record: tx hashes, the deployed Midnight nullifier contract,
+SDK version gotchas, his walkthrough findings (all fixed
+same-session: /constitution + /rules public pages, de-jargoned
+version-aware consents, self-explaining secret screens with Download,
+the un-hidden values seed), and THE TWO OWNER DEMO RUNBOOKS — read
+those before touching chain code. LIVE on real test rails: dPOLL on
+preprod, the daily anchor cadence (chain:anchor, rail-governed,
+verify check 27), the Identus issuer with §1.5 recovery proven, the
+Midnight nullifier contract enforcing one-per-scope by ZK proof.
+
+**CURRENT: the owner's LEARNING ERA.** The platform is in its full
+testnet showcase form. No build phase is active; the owner schedules
+all further build work — sessions never self-start it. Remaining on
+the shelf: the deployment slice (Vercel+Railway, #14 — prerequisite
+for the Phase 8 cohort checkpoint, the one phase-half still open),
+five fully-spec'd queued slices (DECISIONS_PENDING #19, #2, #3, #4,
+#17), and Phase 9 behind the legal gate. During learning: answer
+from the ratified record, walk him through the real platform, fix
+what his eyes find — one slice, one checkpoint still governs any
+code change. NO mainnet, no custody, no production anything (§6.6);
+no production TALK until the lawyer conversation concludes. All
+chain secrets live ONLY in gitignored .env. Testnet mode is ADDITIVE
+— the Phase A HMAC path stays, never deleted (§6.1/§6.6). Restart
+the dev server after any `npm run check` (builds corrupt a live dev
+server's chunks).
 
 **Standing owner rules (2026-07-12):** no production, and no mention
 of production, until the lawyer conversation concludes. The Phase 8
