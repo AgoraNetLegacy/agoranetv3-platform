@@ -38,11 +38,14 @@ export default async function SeedPage({
         ({done}/7 answered)
       </p>
       {m && <div className="notice">{m}</div>}
+      {/* Unanswered questions stay OPEN (owner finding, 2026-07-15: the
+          old collapse-after-two heuristic read as "you only get two" —
+          a ▶ triangle is not an invitation). Answered ones fold away. */}
       {questions.map((q) => (
-        <details key={q.id} open={!answeredIds.has(q.id) && done < 2}>
+        <details key={q.id} open={!answeredIds.has(q.id)}>
           <summary>
             {q.pillar.icon} <strong>{q.pillar.name}</strong>
-            {answeredIds.has(q.id) ? " ✓" : ""}
+            {answeredIds.has(q.id) ? " ✓" : " — open"}
           </summary>
           <p className="lore">{q.text}</p>
           <form action={submitSeedAnswer} className="composer">

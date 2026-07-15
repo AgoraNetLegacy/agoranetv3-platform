@@ -16,12 +16,13 @@ export default async function TrueSelfPage({
       <JourneySteps current="trueself" />
       <h2>Create your True Self</h2>
       <p>
-        One per human — enforced blind by the registration nullifier: a
-        second attempt fails without the platform ever learning who was
-        refused. Naming has two layers: a <strong>display name</strong>{" "}
-        (free-form — real names welcome, duplicates allowed, changeable)
-        and a unique <strong>@handle</strong> — the attribution key on
-        every record you ever sign, never recycled, never transferred.
+        Every human gets exactly one True Self — and the check that
+        enforces this is blind: it can tell someone is trying twice
+        without ever learning who they are. Naming has two layers: a{" "}
+        <strong>display name</strong> (free-form — real names welcome,
+        duplicates allowed, changeable) and a unique{" "}
+        <strong>@handle</strong> — your permanent signature on every
+        record, never recycled, never transferred.
       </p>
       {m && <div className="notice">{m}</div>}
       <form action={createTrueSelf}>

@@ -17,18 +17,15 @@ need from you.)
 
 ## A. Needs you now
 
-23. **"Face" → "Persona" — your vocabulary ruling (raised by you,
-    2026-07-15 walkthrough).** You asked whether user-facing copy
-    should say "Persona" instead of "face" ("two unlinkable faces"
-    reads cold/strange to newcomers). Recommendation: YES — adopt
-    **Persona** as the user-facing word (True Self and Alias remain
-    the two Personas' names); the specs already say "per-persona
-    feeds/inboxes" throughout, so this aligns copy with the corpus.
-    Scope honesty: it touches dozens of screens (top bar, login, key
-    screens, settings, disclosures, ceremony copy), so it ships as
-    its own small sweep slice after your one-word ratification —
-    not as a quiet find-and-replace. Gates: nothing; the current
-    copy stays coherent until you rule.
+*(Nothing. #23 parked by owner 2026-07-15 — kept below for the
+record.)*
+
+23. ~~**"Face" → "Persona" vocabulary rename**~~ — **PARKED by owner
+    (2026-07-15): "it doesn't fix anything and for now we focus on
+    what's important."** Raised during his walkthrough, recommendation
+    (adopt Persona; specs already say per-persona) stands on file for
+    whenever it's revisited. Touches dozens of screens, so it would be
+    its own sweep slice. Gates: nothing.
 
 14. ~~**Hosting**~~ — **CLOSED (2026-07-13): Vercel + Railway, the
     owner's existing convention across his other projects. Owner

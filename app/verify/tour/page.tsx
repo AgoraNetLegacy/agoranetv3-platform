@@ -23,7 +23,7 @@ export default async function TourPage({
           <strong>Seven pillars.</strong> Six diagnose what's broken —
           Compassion, Hope, Justice, Freedom, Unity, Harmony. The seventh,
           The Agora, examines the platform itself. Each carries seven
-          canonical questions; that's where Discussions live.
+          founding questions; that's where Discussions live.
         </li>
         <li>
           <strong>The parking rule protects you.</strong> One face per
@@ -39,10 +39,10 @@ export default async function TourPage({
         <li>
           <strong>Aliases exist.</strong> When you want a second face —
           for the argument you can't afford professionally, the struggle
-          you won't wear publicly — you hatch it later, on your own
-          schedule, with your credential. It is deliberately not a button
-          in these settings: the ceremony starts from your credential, the
-          way a wallet-side act should.
+          you won't wear publicly — you can create one later, on your own
+          schedule. It's deliberately not a button in settings; when the
+          moment comes, the Alias page will ask for the credential you
+          saved today.
         </li>
         <li>
           <strong>Permanent spaces are labeled at the door</strong> — the

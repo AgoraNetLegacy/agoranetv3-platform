@@ -42,10 +42,11 @@ export default async function AliasPage({
       <p>
         Your second face: for the argument you can't afford professionally,
         the report you can't sign, the struggle you won't wear publicly.
-        One per human, enforced blind. This ceremony starts from your
-        Humanity Credential — not from any logged-in session — so the
-        platform only ever sees a fresh, unattributable registration
-        arrive.
+        Every human gets exactly one — and the check that enforces this is
+        blind: it can tell someone is trying twice without learning who.
+        This ceremony asks for your Humanity Credential — not your
+        signed-in account — so the platform only ever sees a fresh,
+        unattributable registration arrive.
       </p>
       <h3>Read this first — it's the honest part</h3>
       <ol className="disclosure-list">

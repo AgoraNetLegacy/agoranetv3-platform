@@ -830,5 +830,35 @@ this session; identical nullifiers both times.
 5. If the schema-registry 503s, `docker compose down -v && docker
    compose up -d` resets the stack clean (recorded gotcha).
 
-**Remaining in 8.6:** the owner gives both demos cold, then the §5
-checkpoint closes the phase (his ruling).
+### The owner's walkthrough + BOTH §5 DEMOS GIVEN (2026-07-15)
+
+The owner walked the full onboarding with fresh eyes and then gave
+both demos from his own terminal, guided once (the runbooks carry
+everything said; the next run is his alone): the ZK exercise to
+EXERCISE_OK (his spends are Set entries 5–6, txs 0072832021…497cbe
+et al.), the anchor honest-refusal + forced stamp (seq 412 — a head
+that includes his own morning's walkthrough — in tx 266b83cfd2…
+fc313d), and the recovery demo twice (commitment 07ad61d8…, two
+different holder DIDs, identical nullifier da10360e… both runs).
+
+**His findings, all addressed same-session (commits c532ba8 + the
+round-2 commit):** the Constitution and the 22 rules were not
+readable on the platform → /constitution + /rules, public, in the
+Public Record nav, linked from the consent screen; consent texts
+de-jargoned ("canonical" out, moderators = community members, "no
+rule, no punishment" rephrased) with versions bumped and
+hasPostingConsents made version-aware (a latent gap — reworded
+consents never actually re-presented); the two secret screens now
+explain passport-vs-house-key, name their step, and offer one-click
+Download (alias key downloads under the same generic filename — no
+linkage artifact on disk); "enforced blind by the registration
+nullifier" and kin became plain words on both ceremony pages; the
+values seed no longer collapses unanswered questions (read as "you
+only get two"). Vocabulary question face→Persona PARKED by owner
+(DECISIONS_PENDING #23). His sharpest demo question — "the system
+could alter something and then stamp it" — and its answer (each
+stamp closes the past; a post-alteration stamp publicly contradicts
+prior stamps) is now part of the demo script above.
+
+**Remaining in 8.6:** the owner's ruling. He has given both demos;
+the phase closes when he says it does.
