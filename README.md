@@ -6,21 +6,33 @@ protected faces, an economy of assent instead of attention, and a
 constitution that hands the platform to its community on a seven-year
 schedule.
 
-**Status:** Phases 0–7.5 checkpointed; **Phase 8 (Deployment
-Hardening) build half complete, self-verified 2026-07-11** — the
-checkpoint itself (a small real cohort onboarding unaided on staging)
-is the owner's half. Construction began 2026-07-10 against a complete
-ratified specification corpus. `CHECKPOINTS.md` is the authoritative
-per-phase record; `DECISIONS_PENDING.md` is the owner's queue.
+**Status:** Phases 0–8 (build half) checkpointed; **Phase 8.5
+(Presentation Era) and Phase 8.6 (Testnet Rails) CLOSED by owner
+ruling, 2026-07-15** — the platform runs its full showcase form on
+real test-network rails. The Phase 8 cohort checkpoint (a small real
+cohort onboarding unaided on staging) remains the owner's one open
+half, waiting on the deployment slice. Construction began 2026-07-10
+against a complete ratified specification corpus. `CHECKPOINTS.md` is
+the authoritative per-phase record (Phase 8.6's tx hashes, the
+deployed contract address, and both owner demo runbooks live there);
+`DECISIONS_PENDING.md` is the owner's queue.
 
 - Specifications: see `CLAUDE.md` for the corpus location and build law.
 - Construction sequence: BUILD_ORDER phases 0–9.
 - Stack: Next.js · Prisma (SQLite dev · Postgres staging/production —
   dual schemas kept byte-identical by `db:validate:postgres`) ·
-  Cardano + Midnight at Phase 9, behind a legal gate.
+  **Cardano preprod and a Midnight testnet ZK contract, LIVE today**
+  (a real demo token, a daily-anchored civic ledger, a real Identus
+  credential issuer, a public zero-knowledge nullifier contract — all
+  testnet, all disclosed as such; see `/transparency`) · real-money
+  mechanics stay behind Phase 9's legal gate, untouched.
+- Hosting (decided, not yet stood up): Vercel (the app) + Railway
+  (Postgres + the ops jobs, including the daily chain anchor).
 - Operations: `docs/DEPLOYMENT.md` (staging setup),
   `docs/RUNBOOK.md` (backups, drills, the worst day),
-  `docs/LOG_DISCIPLINE_AUDIT.md` (what is never logged, and why).
+  `docs/LOG_DISCIPLINE_AUDIT.md` (what is never logged, and why),
+  `docs/OWNERS_GUIDE.md` (running, understanding, and explaining the
+  platform to someone else — start here if that's your goal).
 
 ## Getting started
 
@@ -55,6 +67,52 @@ your dev database. The interactive version: `npm run dev`, then `/verify`
 — the real onboarding: gate intro, interim issuer, True Self ceremony,
 blocking consents, values seed, and back to what you came to do. Hatch
 an Alias at `/alias` with your credential.
+
+**The testnet chain rails** (Phase 8.6 — optional, needs Docker and
+the chain secrets in `.env`; the app runs fine without them, the
+disclosures just stay honest about what's live):
+
+```bash
+cd infra/identus && docker compose up -d      # the Identus issuer
+cd infra/midnight && docker compose up -d     # the ZK proof server
+npx tsx scripts/chain/identus-loop.ts         # a full issue→hold→verify ceremony
+cd infra/midnight && npm run exercise         # deploy/exercise the nullifier contract
+npm run chain:anchor                          # anchor the ledger head to Cardano preprod
+```
+
+Full runbooks for the two owner-facing chain demos ("come try" and
+"I lost everything" recovery) live in `CHECKPOINTS.md`, under Phase
+8.6's close.
+
+## What exists (Phase 8.5 & 8.6 — the presentation era and the testnet rails)
+
+- **Theme = identity** (`app/globals.css`, `app/layout.tsx`) — three
+  rooms keyed to the active face (reader blue / True Self white /
+  Alias dark), never OS preference; the Agora dashboard IS the
+  platform's home page; the blessed left nav, doors, and one-liners.
+- **The Cardano rail** (`lib/chain.ts`, `lib/chainMint.ts`,
+  `lib/chainAnchor.ts`, `scripts/chain/`) — a per-face testnet wallet
+  link (mainnet refused by construction), PollCoin Demo (dPOLL) minted
+  under a throwaway preprod policy, and a railed daily anchor
+  (`npm run chain:anchor`) witnessing the civic ledger's head hash in
+  a public preprod transaction — `db:verify` check 27 keeps the
+  witness and the record honest against each other.
+- **The Identus issuer** (`infra/identus/`) — a real, self-hosted W3C
+  verifiable-credential issuer; the full issue→hold→verify ceremony
+  runs end to end, and §1.5 recovery is proven: a returning human who
+  re-proves who they are gets the SAME identity back, nothing
+  orphaned.
+- **The Midnight nullifier contract** (`infra/midnight/`) — a Compact
+  contract deployed to Midnight Preview enforcing the gate's
+  one-per-scope law with zero-knowledge proofs, dev-grade and honestly
+  disclosed as such: a spent nullifier is publicly auditable and
+  linkable to no one; a duplicate is refused by the chain itself.
+- **The honesty layer** — every disclosure upgraded ONLY where its
+  trust claim became math (`lib/disclosures.ts`, `lib/gate.ts`); a
+  live "what runs on real rails today" section on `/transparency`;
+  the full Constitution and every written rule now readable on the
+  platform at `/constitution` and `/rules`, linked from a real
+  `/record` front door.
 
 ## What exists (Phases 6–8, in brief — CHECKPOINTS.md has the full record)
 

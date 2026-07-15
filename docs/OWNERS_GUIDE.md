@@ -1,9 +1,12 @@
 # The Owner's Guide — running, understanding, and explaining AgoraNet
 
-Written for Shawn, 2026-07-11, the day the build finished. This is the
-manual for three jobs: **run it on your machine, walk it as a user,
-and explain it to someone else.** No jargon without a definition; no
-step without its full command.
+Written for Shawn, 2026-07-11, the day the Phase 8 build finished.
+**Updated 2026-07-15, the day Phase 8.6 closed** — the blockchain
+threshold that ended v1 and v2 fell, on real (test) rails, and this
+guide's central claims about what's "real vs. simulated" needed to
+change with it (§2). This is the manual for three jobs: **run it on
+your machine, walk it as a user, and explain it to someone else.** No
+jargon without a definition; no step without its full command.
 
 ---
 
@@ -34,22 +37,32 @@ territory. *The six diagnose. The Agora equips. The community inherits.*
 
 ## 2. What's real and what's simulated (say this honestly, always)
 
-| Layer | Today (Phase A) | Later (Phase 9, behind the legal gate) |
-|---|---|---|
-| Identity verification | The platform itself plays the issuer — instant, honest stand-in | Lace ID / Midnight: an independent issuer, cryptographic proof |
-| Unlinkability of your two faces | Operator policy — no database row links them, and we prove it, but you're trusting us | Zero-knowledge math — trusting no one |
-| PollCoin & Gratium | Internal balances — database rows with real double-entry accounting | Real Cardano assets with deposit/withdraw |
-| Wallet | A credential string you save like a password | Lace wallet connection |
-| DM encryption | Real encryption; keys held by the operator in escrow | Keys move to your wallet — we structurally *can't* read |
+**This table changed shape on 2026-07-15.** It used to be two
+columns — today's honest stand-in, and Phase 9's someday-real thing.
+Phase 8.6 added a real middle state: three of the "someday" rows are
+no longer someday. They are live, on public test networks, with
+transaction hashes anyone can check — just not yet wired into the
+LIVE gate every soul actually uses.
+
+| Layer | The live gate (Phase A, what every soul uses today) | Proven on testnet (Phase 8.6, real but not yet load-bearing) | Real money (Phase 9, behind the legal gate) |
+|---|---|---|---|
+| Identity verification | The platform itself plays the issuer — instant, honest stand-in | A real, self-hosted Identus issuer runs the full issue→hold→verify ceremony; §1.5 recovery proven (lose everything, re-prove who you are, get the SAME identity back) | Lace ID when it ships; independent of any platform-operated issuer |
+| Unlinkability of your two faces | Operator policy — no database row links them, and we prove it, but you're trusting us | A public Midnight contract enforces the SAME one-per-scope law with zero-knowledge proofs today — dev-grade proving (20–60s), but the math is real and checkable by anyone | The live gate itself cuts over once proving is consumer-ready |
+| PollCoin & Gratium | Internal balances — database rows with real double-entry accounting | PollCoin Demo (dPOLL) — a real (test) Cardano asset, minted under a throwaway preprod policy, verifiable on a public explorer | Real Cardano assets with deposit/withdraw |
+| The civic ledger's integrity | Hash-chained, `db:verify` re-checks it locally | Anchored daily to a public Cardano preprod transaction — rewriting history now means contradicting a public blockchain's own timestamps, not just our say-so | Same mechanism; real network |
+| Wallet | A credential string you save like a password | A Lace preprod connection exists (`/settings`, per-face, mainnet refused by construction) | Lace wallet connection, real network |
+| DM encryption | Real encryption; keys held by the operator in escrow | Unchanged — DM custody holds at disclosed escrow through 8.6 by owner ruling, re-evaluated after the issuer loop proved out | Keys move to your wallet — we structurally *can't* read |
 
 **The critical point for teaching and selling:** none of this is
-hidden. Every simulated layer is disclosed *in the product, at the
-exact moment it matters* — the gate says "you are trusting us, not
-yet math"; the DM screen says "keys are in escrow"; the Alias ceremony
-says "this is operator policy on a published path to cryptography."
-The trust model isn't a limitation to apologize for — the honesty IS
-the product's signature. You are not selling fake crypto; you are
-selling a platform so honest it labels its own scaffolding.
+hidden. Every layer, at every stage, is disclosed *in the product, at
+the exact moment it matters* — `/transparency`'s own "what runs on
+real rails today" section says exactly this, in the same three-state
+shape, with live links to the token, the latest anchor, and the
+deployed contract. The trust model isn't a limitation to apologize
+for — the honesty IS the product's signature, and now it has
+receipts. You are not selling fake crypto; you are selling a platform
+so honest it labels its own scaffolding, and can already prove the
+parts that stopped being scaffolding.
 
 ## 3. Running it on your machine
 
@@ -170,6 +183,21 @@ npm run demo:tamper      # watch verification FAIL LOUDLY on forged history
 That second command is the best sales demo in the repo: it forges the
 ledger and shows the platform catching itself.
 
+**I. Touch the real chain (new, 2026-07-15 — the actual capstone now).**
+Everything above proves the platform is honest with itself. This step
+proves it to a stranger, on infrastructure neither of you controls.
+Open `/transparency` and scroll to **"What runs on real rails
+today"** — click through to the token and the latest anchor on a
+public Cardano explorer. If the chain services are running locally
+(`docker compose up -d` in `infra/identus` and `infra/midnight`), the
+two full runbooks in `CHECKPOINTS.md` under Phase 8.6's close walk you
+through giving this cold: a zero-knowledge spend clearing and a
+duplicate being refused by the chain itself, and a soul who "lost
+everything" getting their exact same identity back through a real
+credential re-proof. This is the walking demo you can give a stranger,
+an investor, or Charles Hoskinson, with transaction hashes they can
+verify themselves after you've left the room.
+
 ## 5. The demo scripts (each phase's story, self-running)
 
 Each one builds a throwaway database and narrates one subsystem end to
@@ -205,21 +233,32 @@ npm run demo:phase8    # the walls, the counters, the crush, the guard
 - **All numbers are "rails"** — adjustable settings with bounds, not
   hardcoded — and the entire schedule is a TEST schedule that expires
   when real money arrives at Phase 9 with fresh review.
-- **"Is this a crypto project?"** Today, no — the tokens are honest
-  internal points. At Phase 9, behind lawyers, PollCoin becomes a
-  Cardano asset and identity moves to Midnight. The product works
-  identically either way — that was the point of building the gate
-  as an interface.
+- **"Is this a crypto project?"** The honest 2026-07-15 answer, not
+  the old one: on the live gate every soul uses today, no — the
+  tokens are honest internal points. But on testnet, yes, already —
+  PollCoin Demo is a real Cardano asset, a real Identus issuer runs
+  the identity ceremony, and a real zero-knowledge contract enforces
+  the gate's core promise on a public network. At Phase 9, behind
+  lawyers, that testnet proof becomes the live gate's real rail. The
+  product works identically at every stage — that was the point of
+  building the gate as an interface.
 
 ## 7. What is deliberately NOT here yet
 
-- **Phase 9 (everything blockchain):** Cardano assets, Midnight
-  identity, Lace wallet, ZK proofs, Arweave anchoring. Gated on the
-  KYC/legal conversation — item #1 in DECISIONS_PENDING.
+- **Corrected 2026-07-15:** Cardano assets, an Identus identity
+  ceremony, and a ZK-proof contract are NOT future items anymore —
+  they are live on testnet, proven, with the two demo runbooks in
+  `CHECKPOINTS.md` to show them cold. What's genuinely still ahead:
+  **real money, at Phase 9** — mainnet, real PollCoin, real custody,
+  a licensed identity partner replacing the platform-operated
+  Identus issuer, Lace ID when it ships, the live gate actually
+  cutting over to the proven testnet math. All gated on the KYC/legal
+  conversation — item #1 in DECISIONS_PENDING.
 - **Post-launch by decision:** the Tournament of Ideas, Keystone
   stones, push notifications, AI summaries, group DMs, invite
-  mechanics (your call), support-staking UI (the one launch-spec
-  feature not yet built — say when).
+  mechanics (your call), support-staking UI, and (new, 2026-07-15) the
+  Inner Citadel — your own idea, fully specced and deliberately
+  parked (`Inner Citadel/INNER_CITADEL_SPEC.md` in the Desktop corpus).
 - **A mobile app** — ratified target, unscheduled; the web app is
   responsive in the meantime.
 
@@ -232,7 +271,7 @@ npm run demo:phase8    # the walls, the counters, the crush, the guard
 | What shipped, phase by phase | `CHECKPOINTS.md` in the repo — the receipts |
 | Your queue | `DECISIONS_PENDING.md` — section A is the only "now" |
 | Every derived number's justification | `DERIVED_DEFAULTS.md` |
-| Deployment (when you make the Render account) | `docs/DEPLOYMENT.md` |
+| Deployment (Vercel + Railway, both accounts already yours) | `docs/DEPLOYMENT.md` |
 | Disaster manual | `docs/RUNBOOK.md` |
 | Privacy audit (what is never logged) | `docs/LOG_DISCIPLINE_AUDIT.md` |
 | This guide | `docs/OWNERS_GUIDE.md` (+ PDF beside the specs) |

@@ -21,7 +21,7 @@ than Render and needs no new signups.
 | Scheduled jobs (4 jobs) | Backups, drill, crush, prune | docs/RUNBOOK.md §1 |
 | Storage for backup files | BACKUP_DR §3 (owner-ratified posture) | backup script writes there |
 | A scratch Postgres database | The monthly restore drill | drill refuses to run against production |
-| Secret manager for the three platform secrets + DB URLs | Custody discipline | runtime guard checks strength |
+| Secret manager for the three platform secrets + DB URLs + (since Phase 8.6) the testnet chain secrets, if that rail deploys too | Custody discipline | runtime guard checks strength |
 | Proxy that sets `x-forwarded-for` | Rate-limit keying | `TRUST_PROXY=true` declared |
 | **Access-log retention configurable (off or ≤7 days), log drains OFF** | docs/LOG_DISCIPLINE_AUDIT.md #4 — binding | host dashboard; note the setting here when configured |
 | Failure alerts on the ops jobs | A failed drill is a production incident | host dashboard notifications |

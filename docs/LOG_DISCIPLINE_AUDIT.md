@@ -28,6 +28,19 @@ payload allowlists) which runs on every push and every restore drill.
 | 8 | Schema-wide | **No column anywhere stores IP, user-agent, device fingerprint, or geolocation.** Guarded by test against the schema file. | ✅ clean |
 | 9 | One-time secrets | Credentials/access keys travel via httpOnly cookies rendered once — never query strings, which leak into history and host logs (built Phase 2). | ✅ clean (existing) |
 
+**Addendum, 2026-07-15 (not a full re-audit — a targeted check):**
+Phase 8.6 added `scripts/chain/*.ts` and `infra/midnight/exercise.ts`,
+none of which existed when this audit was conducted. Checked directly
+against row #2's finding: `grep` across every chain script for
+`console.*` calls near anything secret-shaped (seed, mnemonic, key,
+password) returns nothing — they print wallet addresses, transaction
+hashes, DIDs, and nullifiers, all either public once submitted or
+intentionally opaque, to the operator's own terminal only, exactly
+like every other operator CLI row #2 already covers. Verdict
+unchanged: still clean, now inventoried by name rather than by
+implication. A full audit re-run remains warranted before any
+production posture change, per this document's own standing rules.
+
 ## 2. The honest finding — session co-residency (vector 4)
 
 `SoulSession`/`SessionFace` is the one place both of a human's faces

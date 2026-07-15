@@ -24,11 +24,11 @@ or off-platform copy** — §4's quarterly drill exists partly to answer
 (`crontab`) of "at these times, run this command" lines. Each line is
 five time fields (minute, hour, day-of-month, month, day-of-week)
 followed by the command. `crontab -e` edits your user's table;
-`crontab -l` lists it. Managed hosts (Render/Railway/Fly — see
-docs/DEPLOYMENT.md) offer the same thing as "cron jobs" or "scheduled
-jobs" in their dashboard, which is what we'll actually use: you paste
-the command and pick the schedule in a UI, and the host runs it in the
-app's environment (env vars already present).
+`crontab -l` lists it. Railway (the decided host — see
+docs/DEPLOYMENT.md, owner-ratified 2026-07-13) offers the same thing
+as "cron jobs" in its dashboard, which is what we'll actually use: you
+paste the command and pick the schedule in a UI, and the host runs it
+in the app's environment (env vars already present).
 
 The platform's schedule (all times UTC):
 
@@ -38,13 +38,16 @@ The platform's schedule (all times UTC):
 | `30 3 * * *` (03:30 daily) | `cd /app && npm run rate-limits:prune` | Deletes expired rate-limit counters (minimal-log discipline). |
 | `0 4 1 * *` (04:00, 1st of month) | `cd /app && npm run db:restore-drill` | The monthly automated restore drill (§4). **A failed drill is a production incident** — the job exits nonzero so the host's failure alert fires; make sure that alert is switched on. |
 | `45 3 * * *` (03:45 daily) | `cd /app && npm run analytics:crush` | The 90-day crush (ANALYTICS §5): raw events past the retention rail become permanent aggregates and are deleted. db:verify check 26 fails if this stops running. |
+| `0 5 * * *` (05:00 daily) | `cd /app && npm run chain:anchor` | **New, Phase 8.6.** The civic ledger's daily anchor: witnesses the current head hash in a public Cardano preprod transaction, rail-governed (`anchor.cadenceHours`) and idempotent — skips cleanly if nothing's moved or the cadence hasn't elapsed. db:verify check 27 keeps the on-chain witness and the internal record honest against each other. |
 
 Required environment for the jobs (beyond the app's own env):
 `BACKUP_DIR` (a path on the region-replicated volume),
 `DRILL_DATABASE_URL` (a scratch Postgres database — never production;
-the drill refuses to run if it matches), and optionally
-`OPERATOR_NAME` when a human runs a job by hand (the admin log
-attributes runs; unattended runs are recorded as `unattended-cron`).
+the drill refuses to run if it matches), `CARDANO_NETWORK` +
+`BLOCKFROST_PROJECT_ID` + `TESTNET_MINT_MNEMONIC` (the anchor job,
+testnet-only, no real value), and optionally `OPERATOR_NAME` when a
+human runs a job by hand (the admin log attributes runs; unattended
+runs are recorded as `unattended-cron`).
 
 Every run lands on the public admin log (`admin.backup.*` events on
 the civic ledger, rendered at `/transparency`) — souls can see that
@@ -114,11 +117,14 @@ First, classify. The three bad days are different days:
 **C. Compromise** (unauthorized access suspected):
 1. Freeze: revoke the deploy tokens and database credentials FIRST,
    then take the app down.
-2. Rotate every secret (the three platform secrets + database + host).
-   Note: rotating `GATE_OPERATOR_SECRET` invalidates Phase A nullifier
-   derivation for NEW acts only (spent nullifiers are stored); rotating
-   `DM_MASTER_SECRET` re-keys DM escrow — both rotations are documented
-   operator acts for the admin log.
+2. Rotate every secret (the three platform secrets + database + host
+   +, since Phase 8.6, the testnet chain secrets — `BLOCKFROST_PROJECT_ID`,
+   `TESTNET_MINT_MNEMONIC`, `MIDNIGHT_DEPLOY_SEED`; low urgency, since
+   all three are testnet-only and hold no real value, but rotate for
+   cleanliness). Note: rotating `GATE_OPERATOR_SECRET` invalidates
+   Phase A nullifier derivation for NEW acts only (spent nullifiers
+   are stored); rotating `DM_MASTER_SECRET` re-keys DM escrow — both
+   rotations are documented operator acts for the admin log.
 3. Preserve evidence (dump current state; keep host logs).
 4. Restore to a KNOWN-GOOD backup from before the intrusion window on
    fresh infrastructure; `db:verify` proves the restored ledger
