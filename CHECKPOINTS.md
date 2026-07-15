@@ -864,3 +864,25 @@ prior stamps) is now part of the demo script above.
 8.6 is done."** Given the same day he gave both demos himself. The
 blockchain threshold that ended v1 and v2 is, in v3, a closed
 checkpoint with public transaction hashes.
+
+### Post-close polish — the Public Record gets a front door (2026-07-15, learning era)
+
+Owner finding, revisiting the rules page after close: "The Public
+Record" read as a clickable nav title but was a dead group label,
+and its five sub-links (ledger/transparency/commons/constitution/
+rules, all added this same day) were cramped into one small row.
+Owner's own call on the fix, offered a quick-patch-vs-landing-page
+choice: **the landing page** — "presents all five with one-line
+descriptions in the platform's door style, and the cramped sub-row
+disappears entirely." Built to match: new `/record` page reuses the
+existing `pillar-grid`/`tile-title`/`hook` pattern from `/pillars`
+verbatim (no new CSS component — one more room in the building, not
+a bolt-on), one door per record surface with a one-liner each. The
+sidebar's dead group label became a real `Link` to `/record`; the
+now-unused `.nav-group`/`.nav-sub` CSS rules were removed rather
+than left orphaned. Browser-verified: the tile grid renders
+correctly and the sidebar link's href resolves to `/record` (a
+known browser-pane click-miss quirk meant confirming via direct
+navigation + href inspection rather than a literal click — both
+checks passed). Tests 212/212, db:verify ALL CHECKS PASSED, `npm
+run check` exit 0.

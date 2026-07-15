@@ -144,16 +144,13 @@ async function SideNav() {
       >
         Fellow Souls &amp; Messages
       </Link>
-      <div className="navlink nav-group" title="The record nobody can rewrite — including us.">
+      <Link
+        className="navlink"
+        href="/record"
+        title="The record nobody can rewrite — including us."
+      >
         The Public Record
-        <span className="nav-sub">
-          <Link href="/ledger">ledger</Link>
-          <Link href="/transparency">transparency</Link>
-          <Link href="/commons">commons</Link>
-          <Link href="/constitution">constitution</Link>
-          <Link href="/rules">rules</Link>
-        </span>
-      </div>
+      </Link>
       {face && (
         <Link className="navlink" href="/profile">
           This Face&rsquo;s Profile &amp; Settings
