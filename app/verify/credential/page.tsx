@@ -31,6 +31,18 @@ export default async function CredentialPage({
         your True Self now, and your Alias whenever you choose to hatch one.
       </p>
       <SecretBox value={credential} />
+      <p className="notice">
+        <strong>
+          If you lose this credential, we cannot recover it — there is no
+          support process, no exception.
+        </strong>{" "}
+        The interim issuer has no safe way to confirm a returning human
+        without trusting an unverifiable claim. Real recovery already
+        works on our test rails: a returning human who re-proves to the
+        real issuer gets their SAME identity back, nothing orphaned. That
+        arrives here with the issuer cutover — until it does, treat this
+        credential as unrecoverable.
+      </p>
       <p className="notice">{VERIFICATION_FRESHNESS}</p>
       <form action={acknowledgeSecretSaved}>
         <input type="hidden" name="next" value={next} />

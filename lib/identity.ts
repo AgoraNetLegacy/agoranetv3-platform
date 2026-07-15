@@ -22,6 +22,7 @@ import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 import { normalizeHandle, handleTaken } from "./handles";
 import { grant } from "./economy";
+import { CONSENT_VERSIONS } from "./disclosures";
 
 function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
@@ -216,7 +217,7 @@ export async function registerAlias(
         data: {
           profileId: created.id,
           kind: "alias-disclosures",
-          version: "phase-a-v1",
+          version: CONSENT_VERSIONS["alias-disclosures"],
         },
       });
       // The hatching grant: a new Alias isn't born traceable-by-poverty

@@ -1791,6 +1791,53 @@ async function main() {
     failures += analyticsProblems;
   }
 
+  // --- 27. Anchor integrity (Phase 8.6 slice 4 — TESTNET_RAILS §3):
+  // every ledger.anchored event must point at a real ledger row whose
+  // anchorRef carries the same external tx — the public witness and the
+  // internal record may never disagree.
+  let anchorProblems = 0;
+  const anchorEvents = events.filter((e) => e.eventType === "ledger.anchored");
+  for (const ev of anchorEvents) {
+    const p = JSON.parse(ev.payload) as {
+      anchoredSeq?: number;
+      headHash?: string;
+      txHash?: string;
+    };
+    if (!p.anchoredSeq || !p.headHash || !p.txHash) {
+      anchorProblems++;
+      console.error(`✗ ANCHOR: event seq ${ev.seq} is missing anchoredSeq/headHash/txHash`);
+      continue;
+    }
+    const anchored = await db.ledgerEvent.findUnique({
+      where: { seq: p.anchoredSeq },
+      select: { entryHash: true, anchorRef: true },
+    });
+    if (!anchored) {
+      anchorProblems++;
+      console.error(`✗ ANCHOR: event seq ${ev.seq} anchors seq ${p.anchoredSeq}, which does not exist`);
+      continue;
+    }
+    if (anchored.entryHash !== p.headHash) {
+      anchorProblems++;
+      console.error(
+        `✗ ANCHOR: event seq ${ev.seq} claims head hash ${p.headHash.slice(0, 16)}… for seq ${p.anchoredSeq}, but that row's hash is ${anchored.entryHash.slice(0, 16)}…`
+      );
+    }
+    if (anchored.anchorRef !== p.txHash) {
+      anchorProblems++;
+      console.error(
+        `✗ ANCHOR: seq ${p.anchoredSeq}'s anchorRef (${anchored.anchorRef ?? "null"}) does not match the anchor event's tx ${p.txHash}`
+      );
+    }
+  }
+  if (anchorProblems === 0) {
+    console.log(
+      `✓ Anchor integrity (${anchorEvents.length} anchor(s) on the ledger, refs and hashes agree)`
+    );
+  } else {
+    failures += anchorProblems;
+  }
+
   if (failures > 0) {
     console.error(`\nVERIFICATION FAILED: ${failures} problem(s).`);
     process.exit(1);

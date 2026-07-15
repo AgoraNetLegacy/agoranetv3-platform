@@ -12,7 +12,10 @@ import { PHASE_A_DISCLOSURE } from "./gate";
 export const CONSENT_VERSIONS = {
   permanence: "v1",
   constitution: "founding-draft-2026-07-07",
-  "alias-disclosures": "phase-a-v1",
+  // v2 (Phase 8.6 slice 4): the unlinkability item's language upgraded
+  // honestly — the cryptographic enforcement now runs on public test
+  // rails; the live ceremony's protection is still policy.
+  "alias-disclosures": "phase-a-v2",
 } as const;
 
 export type ConsentKind = keyof typeof CONSENT_VERSIONS;
@@ -27,10 +30,17 @@ export const GATE_INTRO = {
     "community with no bots. What it costs: a few minutes, and a wallet.",
   phaseA: PHASE_A_DISCLOSURE,
   interimIssuer:
-    "INTERIM (Phase A): the independent issuer isn't wired up yet, so " +
-    "AgoraNet itself plays the issuer's role for now — which means, for " +
-    "now, you are trusting us with that too. This notice comes down when " +
-    "the real issuer (Lace ID / Identus) arrives.",
+    "INTERIM (Phase A): AgoraNet itself still plays the issuer's role " +
+    "for the live gate — for now, you are trusting us with that too. " +
+    "Two honest consequences: a lost credential cannot be recovered on " +
+    "this interim path, and the interim issuer cannot detect a repeat " +
+    "verification — nothing yet stops a soul from re-verifying into a " +
+    "fresh start; a real identity partner closes that, and it gates " +
+    "public launch. The real machinery is no longer a promise: an " +
+    "Identus issuer runs on our test rails today (platform-operated, " +
+    "test network) with the full credential ceremony working and " +
+    "recovery proven. This notice steps down layer by layer as each " +
+    "piece takes over the live path.",
 };
 
 /** Stage 2 — said plainly at verification (owner requirement 2026-07-07). */
@@ -81,8 +91,10 @@ export const ALIAS_DISCLOSURES = {
   items: [
     "What we guarantee: no database row, ledger entry, or public record " +
       "links your Alias to your True Self. During Phase A this is " +
-      "operator policy, honestly disclosed, on a published path to " +
-      "cryptographic enforcement — not yet math.",
+      "operator policy, honestly disclosed — not yet math for the live " +
+      "ceremony. The math itself is now real: a public Midnight testnet " +
+      "contract enforces the same one-per-scope law with zero-knowledge " +
+      "proofs; the ceremony cuts over when proving is consumer-ready.",
     "What we cannot protect you from: your own writing style " +
       "(stylometry is a mature research field), your own timing " +
       "patterns, and self-disclosure. If you say something as your " +

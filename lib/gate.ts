@@ -23,8 +23,11 @@ export const PHASE_A_DISCLOSURE =
   "Unlinkability is currently operator policy, not yet cryptography. " +
   "AgoraNet's gate enforces one-per-scope integrity with an operator-held " +
   "secret: we are structurally honest, but you are trusting us not to " +
-  "look. The cryptographic rail (Midnight/Identus) replaces this trust " +
-  "with math on a published schedule — until then, this notice stays up.";
+  "look. The replacement is no longer hypothetical: a public Midnight " +
+  "testnet contract enforces this same one-per-scope law with " +
+  "zero-knowledge proofs today — anyone can verify it on-chain. The live " +
+  "gate cuts over when proving is consumer-ready; until then, this " +
+  "notice stays up.";
 
 export type GateOutcome = "CLEARED" | "DUPLICATE" | "INVALID";
 

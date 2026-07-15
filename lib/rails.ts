@@ -262,6 +262,13 @@ export const RAIL_DEFAULTS: RailDefault[] = [
   { key: "sentinel.brigadeWindowHours", value: 24, unit: "hours", description: "Sentinel v1 brigade detection window (build-time default)." },
   { key: "notifications.digestCadenceHours", value: 24, unit: "hours", description: "Quiet-inbox digest cadence (spec default: daily)." },
   { key: "notifications.pollClosingSoonHours", value: 6, unit: "hours", description: "How close to a poll's nominal end the closing-soon notification fires (build-time default)." },
+  {
+    key: "anchor.cadenceHours",
+    value: 24,
+    unit: "hours",
+    description:
+      "Civic-ledger anchor cadence (ARWEAVE_RECORDS' ratified daily anchors, at TESTNET_RAILS §3's testnet grade): the head hash is witnessed by a public testnet transaction on this rhythm — when the ledger has moved. The 7-minute heartbeat is the recorded money-era target, not this phase's.",
+  },
   // --- Circle rails (Phase 6 — CIRCLES_SPEC.md; "rails, not rules" is
   // the spec's own Principle 6). Per-Circle dials (attestation
   // threshold, removal bar) take their default AND bounds from here;

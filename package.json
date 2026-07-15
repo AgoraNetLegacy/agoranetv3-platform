@@ -2,7 +2,7 @@
   "name": "agoranetv3-platform",
   "version": "0.1.0",
   "private": true,
-  "description": "AgoraNet v3 — a purpose-built civic commons. Phase 8: deployment hardening.",
+  "description": "AgoraNet v3 \u2014 a purpose-built civic commons. Phase 8: deployment hardening.",
   "scripts": {
     "dev": "next dev",
     "build": "npm run db:generate && next build",
@@ -26,6 +26,7 @@
     "db:restore-drill": "tsx scripts/restore-drill.ts",
     "rate-limits:prune": "tsx scripts/prune-rate-limits.ts",
     "analytics:crush": "tsx scripts/crush-analytics.ts",
+    "chain:anchor": "tsx scripts/chain/anchor-ledger.ts",
     "smoke:staging": "tsx scripts/smoke-staging.ts",
     "demo:phase0": "tsx scripts/demo-phase0.ts",
     "demo:phase1": "tsx scripts/demo-phase1.ts",

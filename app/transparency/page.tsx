@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { getRail } from "@/lib/rails";
+import { anchorStatus } from "@/lib/chainAnchor";
 import {
   computeBooks,
   ensureDailySnapshot,
@@ -79,14 +80,20 @@ export default async function TransparencyPage() {
   const outflows: CategoryTotals = JSON.parse(snapshot.outflows);
   const { issuance } = await computeBooks(db);
 
-  const [snapshots, adminEvents] = await Promise.all([
+  const [snapshots, adminEvents, anchors] = await Promise.all([
     db.treasurySnapshot.findMany({ orderBy: { day: "desc" }, take: 30 }),
     db.ledgerEvent.findMany({
       where: { eventType: { startsWith: "admin." } },
       orderBy: { seq: "desc" },
       take: 50,
     }),
+    anchorStatus(db),
   ]);
+  const dpollPolicy = process.env.TEST_POLLCOIN_POLICY_ID;
+  const midnightContract = process.env.MIDNIGHT_NULLIFIER_CONTRACT;
+  const cardanoNet = process.env.CARDANO_NETWORK ?? "preprod";
+  const midnightNet = process.env.MIDNIGHT_NETWORK ?? "preview";
+  const explorer = `https://${cardanoNet}.cardanoscan.io`;
 
   return (
     <>
@@ -106,6 +113,83 @@ export default async function TransparencyPage() {
         times, and every drill-down reaches current state.{" "}
         <Link href="/transparency/export">Export (CSV) →</Link>
       </p>
+
+      <h3>What runs on real rails today</h3>
+      <p className="lore">
+        Phase 8.6 status, stated plainly: test networks, play money, real
+        machinery. Each line below is either publicly checkable or an
+        honest &ldquo;not yet.&rdquo;
+      </p>
+      <ul className="discussions">
+        <li>
+          <strong>The demo token.</strong> PollCoin Demo (dPOLL) is a real
+          asset on Cardano {cardanoNet} — explicitly test-grade, no value,
+          ever.{" "}
+          {dpollPolicy ? (
+            <a href={`${explorer}/tokenPolicy/${dpollPolicy}`}>
+              Verify the minting policy on a public explorer →
+            </a>
+          ) : (
+            <span className="meta">(not configured in this environment)</span>
+          )}
+        </li>
+        <li>
+          <strong>The ledger anchor.</strong> The{" "}
+          <Link href="/ledger">civic ledger</Link>&rsquo;s head hash is
+          witnessed by a public {cardanoNet} transaction on a{" "}
+          {anchors.cadenceHours}-hour rhythm (a rail) whenever the ledger
+          has moved — after an anchor, silently rewriting history here
+          means beating a public blockchain too.{" "}
+          {anchors.lastAnchor ? (
+            <>
+              Latest: seq {anchors.lastAnchor.anchoredSeq} anchored{" "}
+              {anchors.lastAnchor.at.toLocaleString()} —{" "}
+              <a href={`${explorer}/transaction/${anchors.lastAnchor.txHash}`}>
+                verify the transaction →
+              </a>
+            </>
+          ) : (
+            <span className="meta">
+              No anchor recorded on this database yet — the first cadence
+              run writes it, and it will be linked here.
+            </span>
+          )}
+        </li>
+        <li>
+          <strong>The identity issuer.</strong> A real Identus issuer runs
+          on our test rails: the full issue → hold → verify credential
+          ceremony works, and credential recovery is proven (a returning
+          human gets their SAME identity back). Honest scope: it is
+          platform-operated, on a test network, and the live gate has not
+          cut over to it yet.
+        </li>
+        <li>
+          <strong>The one-per-scope law, as math.</strong> A Midnight{" "}
+          {midnightNet} testnet contract enforces the gate&rsquo;s
+          one-voice-per-scope rule with zero-knowledge proofs — a spent
+          nullifier is publicly auditable, linkable to no one, and a
+          duplicate is refused by the chain itself.{" "}
+          {midnightContract ? (
+            <>
+              Contract address:{" "}
+              <code style={{ wordBreak: "break-all" }}>{midnightContract}</code>{" "}
+              (verifiable via Midnight&rsquo;s public {midnightNet} indexer).
+            </>
+          ) : (
+            <span className="meta">(not configured in this environment)</span>
+          )}{" "}
+          Honest scope: proofs run through a local dev proof server in
+          20–60 seconds — a working demonstration, not yet consumer UX.
+        </li>
+        <li>
+          <strong>What does NOT run on chain today,</strong> so nothing
+          here oversells: the live gate still enforces one-per-scope with
+          an operator-held secret (the Phase A disclosure stays up);
+          PollCoin and Gratium balances are database rows; DM keys are
+          operator-escrowed as disclosed in every thread. Each claim
+          upgrades only when its layer truly lands — never before.
+        </li>
+      </ul>
 
       <h3>Treasury balances</h3>
       <div className="stat-row">

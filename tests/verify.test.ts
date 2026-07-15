@@ -80,4 +80,39 @@ describe("db:verify", () => {
     expect(result.status).toBe(1);
     expect(result.stdout + result.stderr).toContain("LEDGER IDENTITY LEAK");
   }, SUBPROCESS_TIMEOUT);
+
+  it("fails loudly when an anchor's external ref is tampered with (check 27)", async () => {
+    // Fresh database (the previous test leaked on purpose).
+    execSync("npx prisma db push --skip-generate --force-reset", {
+      cwd: REPO_ROOT,
+      env,
+      stdio: "pipe",
+    });
+    const seeded = run("prisma/seed.ts");
+    expect(seeded.status).toBe(0);
+
+    // Record an honest anchor of the current head (lib path, real event).
+    const { PrismaClient } = await import("@prisma/client");
+    const { recordAnchor } = await import("../lib/chainAnchor");
+    const db2 = new PrismaClient({ datasources: { db: { url } } });
+    const head = await db2.ledgerEvent.findFirst({ orderBy: { seq: "desc" } });
+    await recordAnchor(db2, {
+      anchoredSeq: head!.seq,
+      headHash: head!.entryHash,
+      txHash: "txhash-honest-anchor",
+      network: "preprod",
+    });
+    await db2.$disconnect();
+
+    const honest = run("scripts/verify.ts");
+    expect(honest.stdout).toContain("Anchor integrity (1 anchor(s)");
+    expect(honest.status).toBe(0);
+
+    // Tamper the row's external ref: the public witness and the internal
+    // record now disagree — verify must fail loudly.
+    sql(`UPDATE LedgerEvent SET anchorRef = 'txhash-swapped' WHERE seq = ${head!.seq};`);
+    const result = run("scripts/verify.ts");
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain("ANCHOR");
+  }, SUBPROCESS_TIMEOUT);
 });

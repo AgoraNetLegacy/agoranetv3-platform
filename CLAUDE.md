@@ -100,8 +100,15 @@ contract is LIVE on Preview** (contract + tx ids + hard-won version
 gotchas in CHECKPOINTS.md; the ZK rail: infra/midnight — Compact
 contract, pinned proof-server compose, standalone exercise package;
 the faucet moment happened; every nullifier property proven
-on-chain). **NEXT: slice 4** (anchor cadence, honest disclosure
-upgrades, /transparency real-rails note, the two §5 demos). NO mainnet, no custody, no production anything
+on-chain). **Slice 4 DONE, self-verified 2026-07-15 — the honesty
+layer:** daily anchor cadence live (rail + idempotent chain:anchor
+runner + verify check 27; first cadence anchor on preprod),
+disclosures upgraded ONLY where trust became math (gate, interim
+issuer incl. the W5 no-repeat-detection truth, credential-loss
+warning, alias item — consent bumped phase-a-v2), /transparency
+"what runs on real rails today" live, both §5 demos REHEARSED with
+owner runbooks in CHECKPOINTS.md. **NEXT: the owner gives the two
+demos cold — his §5 checkpoint closes Phase 8.6.** NO mainnet, no custody, no production anything
 (§6.6). All chain secrets live ONLY in gitignored .env (Blockfrost
 preprod key, throwaway mint mnemonic, TEST_POLLCOIN_POLICY_ID).
 Testnet mode is ADDITIVE — the Phase A HMAC path stays, never deleted

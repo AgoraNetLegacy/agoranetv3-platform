@@ -742,8 +742,93 @@ git + properly ignored in the follow-up commit, and the demo
 commitment ROTATED in .env. Lesson: verify a provider's on-disk
 paths before trusting a guessed .gitignore entry.
 
-**Remaining in 8.6:** slice 4 — daily anchor cadence, honest
-disclosure upgrades layer by layer (ONLY where the trust claim
-became math), the /transparency "what runs on real rails today"
-note, and the two §5 checkpoint demos rehearsed until the owner can
-give them cold.
+**Slice 4 — the honesty layer: BUILT + REHEARSED (2026-07-15).**
+- **Daily anchor cadence (§3):** lib/chainAnchor.ts (cadence brain,
+  pure DB) + the cadence-aware `npm run chain:anchor` runner —
+  idempotent, joins the ops-job roster Railway will schedule; rail
+  `anchor.cadenceHours` (24h, ARWEAVE_RECORDS' daily cadence); skips
+  when not due OR when the ledger's newest event is its own last
+  anchor (an idle ledger needs no fresh witness); `--force` for the
+  demo. Every anchor writes BOTH sides: the anchored row's anchorRef
+  and a public `ledger.anchored` event. First cadence anchor is LIVE:
+  seq 408 witnessed in preprod tx d2984b22853d230f80b6e1aa217d1a1fe3
+  52b168b775027fae066158f66606a7 (event seq 409); immediate re-run
+  correctly ANCHOR_SKIPped. db:verify check 27 (anchor integrity:
+  event ↔ row ↔ hash agreement) — loud-failure-tested by swapping an
+  anchorRef.
+- **Disclosures upgraded, ONLY where trust became math (§4):**
+  PHASE_A_DISCLOSURE (lib/gate.ts) — the replacement is "no longer
+  hypothetical," names the public Midnight contract, keeps the
+  trust-us claim standing for the live gate. GATE_INTRO.interimIssuer
+  — honest present tense (Identus runs today, platform-operated,
+  testnet), PLUS the two hard truths added: no recovery on the
+  interim path, and repeat-verification is undetectable until a real
+  identity partner (the W5/#20 copy pass, done). Credential screen —
+  the #17 plain-words loss warning added WITH the proven-recovery
+  context. ALIAS_DISCLOSURES item 1 — the math is real on test
+  rails, the live ceremony still policy; consent version bumped
+  phase-a-v2 (identity.ts now reads CONSENT_VERSIONS instead of a
+  hardcoded string). DM escrow disclosure UNTOUCHED — still true.
+- **/transparency "What runs on real rails today" (§4):** live
+  section rendering from env + the ledger: dPOLL policy (explorer
+  link), latest anchor (seq + tx link + cadence), Identus status,
+  Midnight contract address — and the what-does-NOT-run-on-chain
+  list so nothing oversells. Browser-verified rendering with real
+  data, alongside /verify's upgraded notices and the credential
+  screen's new warning.
+- **Evidence:** tests 212/212 (anchor cadence + verify-27 tamper
+  added); db:verify 32/32 incl. the new check on the REAL anchor;
+  `npm run check` exit 0. Environment note reconfirmed: the browser
+  pane can wedge clicks (viewport mismatch — POSTs never reach the
+  server); click by screenshot coordinates when refs miss.
+
+### The two §5 demos — the owner's runbooks (rehearsed 2026-07-15)
+
+**Demo 1 — the walking demo ("come try"):** every step below was
+rehearsed live this session.
+1. Open /transparency → "What runs on real rails today" — the
+   framing card. Click "verify the minting policy" (dPOLL on
+   cardanoscan) and "verify the transaction" (the latest anchor).
+   Two browser tabs of PUBLIC proof, no trust required.
+2. In /settings (True Self face): the testnet wallet link — connect
+   Lace (preprod). Mainnet is refused by construction; say so.
+3. Sign out → the blue room → /verify: read the TWO notices aloud —
+   what is math today, what is still trust, in plain words. Verify a
+   throwaway soul; the credential screen now states loss/recovery
+   honestly. Act once (reply in a canon thread) — the gate clears it.
+4. The ZK law, live: `cd infra/identus && docker compose up -d` (if
+   down), proof server via `cd infra/midnight && docker compose up
+   -d`, then `cd infra/midnight && npm run exercise` — a spend
+   CLEARS (~18s proof, dev-grade by scope — say so), the SAME scope
+   again is REFUSED by the chain, per-human vs per-profile never
+   collide, and the nullifiers re-derive locally from public math.
+5. Anchor the day: `npm run chain:anchor -- --force` from the
+   platform root → paste the printed explorer link — the ledger head
+   that now includes everything just done, witnessed publicly.
+   (Without --force it correctly refuses when not due — also worth
+   showing: the cadence is a rail, not a habit.)
+
+Demo 1's step 4 rehearsed in the exact mode the runbook uses:
+`npm run exercise` JOINED the deployed contract (1.7s, no redeploy)
+and re-proved all four properties on it — CLEARED 18.3s, DUPLICATE
+refused, kinds-never-collide 18.8s, public Set (size 4 after this
+run) matched local re-derivation. EXERCISE_OK, exit 0.
+
+**Demo 2 — "I lost everything" (§1.5 recovery):** rehearsed twice
+this session; identical nullifiers both times.
+1. Frame it: on the interim path, a lost credential is GONE — the
+   credential screen says so. This demo is the real rail answering.
+2. `cd infra/identus && docker compose up -d` (healthy in ~1 min).
+3. First ceremony: `SUBJECT_COMMITMENT=<any 64-hex> npx tsx
+   scripts/chain/identus-loop.ts` — a full issue→hold→verify loop;
+   note the printed alias-registration nullifier.
+4. "Lose" the wallet: run the SAME command again — a brand-new
+   holder DID (a brand-new wallet), the same human re-proved to the
+   issuer. The nullifier prints IDENTICAL. Same handle, same Light
+   Score, nothing orphaned — recovery by mathematics, not by a
+   support ticket.
+5. If the schema-registry 503s, `docker compose down -v && docker
+   compose up -d` resets the stack clean (recorded gotcha).
+
+**Remaining in 8.6:** the owner gives both demos cold, then the §5
+checkpoint closes the phase (his ruling).

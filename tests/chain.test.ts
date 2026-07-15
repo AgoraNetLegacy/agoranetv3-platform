@@ -7,6 +7,8 @@ process.env.CARDANO_NETWORK = "preprod";
 
 import { PrismaClient } from "@prisma/client";
 import { cardanoNetwork, recordWalletLink, walletLinkFor } from "../lib/chain";
+import { anchorStatus, recordAnchor } from "../lib/chainAnchor";
+import { appendEvent } from "../lib/ledger";
 
 const db = new PrismaClient({ datasources: { db: { url } } });
 
@@ -43,6 +45,71 @@ describe("the testnet wallet rail", () => {
       network: "mainnet",
     });
     expect(refused.ok).toBe(false);
+  });
+
+  it("anchor cadence: due when the ledger moves, idle after its own anchor, railed rhythm (§3)", async () => {
+    // The rail is data, seeded like every other number.
+    await db.rail.create({
+      data: {
+        key: "anchor.cadenceHours",
+        value: 24,
+        unit: "hours",
+        boundMin: 6,
+        boundMax: 96,
+        description: "test seed",
+      },
+    });
+
+    // Empty ledger: nothing to witness.
+    let s = await anchorStatus(db);
+    expect(s.due).toBe(false);
+    expect(s.headSeq).toBeNull();
+
+    // First event, never anchored: due immediately.
+    const ev = await appendEvent(db, {
+      actorType: "system",
+      actorId: null,
+      eventType: "test.event",
+      payload: { n: 1 },
+    });
+    s = await anchorStatus(db);
+    expect(s.due).toBe(true);
+    expect(s.headSeq).toBe(ev.seq);
+
+    // Recording an anchor writes BOTH sides of the witness: the row's
+    // anchorRef and a public ledger.anchored event.
+    await recordAnchor(db, {
+      anchoredSeq: ev.seq,
+      headHash: ev.entryHash,
+      txHash: "txhash-test-0001",
+      network: "preprod",
+    });
+    const anchored = await db.ledgerEvent.findUnique({ where: { seq: ev.seq } });
+    expect(anchored?.anchorRef).toBe("txhash-test-0001");
+    s = await anchorStatus(db);
+    expect(s.lastAnchor?.txHash).toBe("txhash-test-0001");
+    // The anchor's own event never re-triggers: an idle ledger whose
+    // newest event is its own last anchor is NOT due, even though the
+    // head moved past the anchored seq.
+    expect(s.due).toBe(false);
+
+    // The ledger moves — but the cadence hasn't elapsed: still not due.
+    await appendEvent(db, {
+      actorType: "system",
+      actorId: null,
+      eventType: "test.event",
+      payload: { n: 2 },
+    });
+    s = await anchorStatus(db);
+    expect(s.due).toBe(false);
+
+    // Backdate the anchor past the cadence: now it's due again.
+    await db.ledgerEvent.updateMany({
+      where: { eventType: "ledger.anchored" },
+      data: { createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000) },
+    });
+    s = await anchorStatus(db);
+    expect(s.due).toBe(true);
   });
 
   it("records a testnet link once per face and updates on reconnect", async () => {
