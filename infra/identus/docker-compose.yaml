@@ -1,0 +1,130 @@
+# AgoraNet Phase 8.6 — the self-hosted Identus issuer (TESTNET_RAILS_SPEC
+# §1.1, §6.2, §6.4 step 2). TWO Cloud Agent instances on one Docker
+# network: the ISSUER (the platform's real credential authority,
+# replacing "the platform plays issuer") and the HOLDER (the app-side
+# agent that keeps a soul's credential until Lace ID ships — the scout's
+# honesty edit #2). They speak DIDComm v2 directly; no mediator needed
+# on one network. Versions pinned per the scout's directive.
+#
+# Derived from the official identus-docker compose
+# (hyperledger-identus/identus @ main, fetched 2026-07-15) — build-time
+# reference only; no ratified document was touched.
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: "pollux_i,connect_i,agent_i,pollux_h,connect_h,agent_h,node_db"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - identus_pg_data:/var/lib/postgresql/data
+      - ./postgres-init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prism-node:
+    image: docker.io/inputoutput/prism-node:2.6.0
+    environment:
+      NODE_PSQL_HOST: db:5432
+    depends_on:
+      db:
+        condition: service_healthy
+
+  issuer-agent:
+    image: docker.io/hyperledgeridentus/identus-cloud-agent:2.2.0
+    ports:
+      - "8085:8085" # issuer REST API (localhost only usage)
+      - "8090:8090" # issuer DIDComm
+    environment:
+      POLLUX_DB_HOST: db
+      POLLUX_DB_PORT: 5432
+      POLLUX_DB_NAME: pollux_i
+      POLLUX_DB_USER: postgres
+      POLLUX_DB_PASSWORD: postgres
+      CONNECT_DB_HOST: db
+      CONNECT_DB_PORT: 5432
+      CONNECT_DB_NAME: connect_i
+      CONNECT_DB_USER: postgres
+      CONNECT_DB_PASSWORD: postgres
+      AGENT_DB_HOST: db
+      AGENT_DB_PORT: 5432
+      AGENT_DB_NAME: agent_i
+      AGENT_DB_USER: postgres
+      AGENT_DB_PASSWORD: postgres
+      PRISM_NODE_HOST: prism-node
+      PRISM_NODE_PORT: 50053
+      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL: http://issuer-agent:8085
+      DIDCOMM_SERVICE_URL: http://issuer-agent:8090
+      REST_SERVICE_URL: http://issuer-agent:8085
+      SECRET_STORAGE_BACKEND: postgres
+      POLLUX_DB_APP_USER: pollux_i-application-user
+      POLLUX_DB_APP_PASSWORD: password
+      CONNECT_DB_APP_USER: connect_i-application-user
+      CONNECT_DB_APP_PASSWORD: password
+      AGENT_DB_APP_USER: agent_i-application-user
+      AGENT_DB_APP_PASSWORD: password
+      DEV_MODE: true
+      API_KEY_ENABLED: false
+    depends_on:
+      db:
+        condition: service_healthy
+      prism-node:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://issuer-agent:8085/_system/health" ]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  holder-agent:
+    image: docker.io/hyperledgeridentus/identus-cloud-agent:2.2.0
+    ports:
+      - "8095:8085" # holder REST API on host 8095
+      - "8091:8090" # holder DIDComm on host 8091
+    environment:
+      POLLUX_DB_HOST: db
+      POLLUX_DB_PORT: 5432
+      POLLUX_DB_NAME: pollux_h
+      POLLUX_DB_USER: postgres
+      POLLUX_DB_PASSWORD: postgres
+      CONNECT_DB_HOST: db
+      CONNECT_DB_PORT: 5432
+      CONNECT_DB_NAME: connect_h
+      CONNECT_DB_USER: postgres
+      CONNECT_DB_PASSWORD: postgres
+      AGENT_DB_HOST: db
+      AGENT_DB_PORT: 5432
+      AGENT_DB_NAME: agent_h
+      AGENT_DB_USER: postgres
+      AGENT_DB_PASSWORD: postgres
+      PRISM_NODE_HOST: prism-node
+      PRISM_NODE_PORT: 50053
+      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL: http://holder-agent:8085
+      DIDCOMM_SERVICE_URL: http://holder-agent:8090
+      REST_SERVICE_URL: http://holder-agent:8085
+      SECRET_STORAGE_BACKEND: postgres
+      POLLUX_DB_APP_USER: pollux_h-application-user
+      POLLUX_DB_APP_PASSWORD: password
+      CONNECT_DB_APP_USER: connect_h-application-user
+      CONNECT_DB_APP_PASSWORD: password
+      AGENT_DB_APP_USER: agent_h-application-user
+      AGENT_DB_APP_PASSWORD: password
+      DEV_MODE: true
+      API_KEY_ENABLED: false
+    depends_on:
+      db:
+        condition: service_healthy
+      prism-node:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://holder-agent:8085/_system/health" ]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  identus_pg_data:
