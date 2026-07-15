@@ -683,12 +683,60 @@ holder records by thid or stale runs bleed in; docker compose down
 -v resets the stack clean.
 
 **Evidence:** tests 210/210 after every commit (4 new chain tests);
-db:verify 31/31; commits 0ee2ad3 → 9d4ab44, all pushed.
+db:verify 31/31; commits 0ee2ad3 → 9d4ab44, all pushed. Slice 3:
+tests 210/210 and db:verify ALL CHECKS PASSED re-run 2026-07-15
+after the Midnight work (app tree untouched by design — the Midnight
+SDK lives in the standalone infra/midnight package, testnet mode
+additive per §6.6).
 
-**Remaining in 8.6:** slice 3 — the Midnight nullifier contract
-(Compact, dev proof server; ONE owner faucet-moment for tDUST; the
-old agoranet-midnight container in Docker is a stale prior-attempt
-fossil — pull fresh pinned images, then remove it). Slice 4 — daily
-anchor cadence, honest disclosure upgrades layer by layer, the
-/transparency "what runs on real rails today" note, and the two §5
-checkpoint demos rehearsed until the owner can give them cold.
+**Slice 3 — the Midnight nullifier contract: LIVE (2026-07-15).**
+The gate's one-per-scope law now holds on a public ZK testnet by
+math. Contract `infra/midnight/contract/nullifier.compact` (Compact
+0.23, toolchain 0.31.1) deployed to Midnight PREVIEW at
+`1479b8b7ab53073b27623d960dd8c5d6fd429b2fafb73349d782fbeb638dd052`,
+exercised end-to-end via the dev proof server (proof-server 8.1.0,
+fresh pinned container `agoranet-midnight-proof`; the prior-attempt
+fossil container and its images REMOVED). Four properties proven
+live on-chain (infra/midnight/exercise.ts, EXERCISE_OK):
+CLEARED — spendPerProfile, tx 00eeacd8e2d0…90a7be, block 1612964
+(17.6s proof); DUPLICATE — the same subject re-trying the same scope
+refused by the ledger-Set member-check, no identity revealed;
+collision guard — the same scope through the per-human door CLEARED
+(distinct kind tag), tx 00a1e9b599a1…5d2318, block 1612967;
+public math — both nullifiers re-derived locally via pureCircuits
+and found in the public Set (size 2). The contract mirrors
+lib/nullifier.ts exactly: persistentHash[domain separator, kind tag,
+scope, secret] vs HMAC(secret, `${scopeKind}:${scope}:${subjectId}`)
+— same fold, same two scope kinds, and the witness (slice 2's stable
+subject commitment, §1.5) rides the proof, never the chain.
+nullifierFor's TS signature is untouched (the Phase 0 promise). The
+owner's faucet moment happened 2026-07-15: 1000 tNIGHT from the
+Nethermind Preview faucet (faucet tx 00cfe20167eb…504e) — everything
+else (dust registration via registerNightUtxosForDustGeneration,
+tDUST accrual, deploy, spends) ran programmatically. Secrets
+(MIDNIGHT_DEPLOY_SEED, MIDNIGHT_SUBJECT_COMMITMENT, contract addr)
+live only in gitignored .env; .env.example carries the shapes.
+
+**Slice 3 build gotchas for the next session:** the SDK still moves
+weekly — compact-js@latest (2.5.3) depends on an UNPUBLISHED
+ledger-v9 alpha (npm 404): pin 2.5.1 (the ledger-v8 line). The
+newest wallet-sdk majors (facade 4.0.1) break the documented API:
+pin example-counter's proven line instead (facade 3.0.0, dust 3.0.0,
+hd 3.0.0, shielded 2.1.0, unshielded 2.1.0) — it coexists fine with
+the matrix-current core (compiler 0.31.1 ↔ compact-runtime 0.16.0 ↔
+midnight-js 4.1.1 ↔ ledger-v8 8.1.0, npm-deduped to one ledger).
+WalletFacade.isSynced requires ALL THREE sub-wallets strictly
+complete; the DUST wallet syncs ~15× slower than shielded and is
+invisible unless you print it — a fresh wallet's first sync is
+~15 min on Preview and looks wedged without a heartbeat (wallet
+state is not persisted across runs; every cold run pays it again).
+Node's WS needs `globalThis.WebSocket = WebSocket` (ws) for indexer
+subscriptions; RPC-CORE "Normal Closure" chatter at startup is
+benign. Proofs on this machine: deploy 19.8s, spends ~18s each —
+inside the honest 20–60s window.
+
+**Remaining in 8.6:** slice 4 — daily anchor cadence, honest
+disclosure upgrades layer by layer (ONLY where the trust claim
+became math), the /transparency "what runs on real rails today"
+note, and the two §5 checkpoint demos rehearsed until the owner can
+give them cold.

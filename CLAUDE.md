@@ -95,10 +95,13 @@ rail is LIVE (dPOLL minted on preprod, first civic-ledger anchor
 on-chain, owner wallet connected per-face) and the Identus issuer is
 LIVE (two pinned 2.2.0 agents in infra/identus, full issue→hold→verify
 loop green, §1.5 recovery property PROVEN by nullifier re-derivation).
-**NEXT: slice 3 — the Midnight nullifier contract** (Compact + dev
-proof server; one owner faucet-moment for tDUST), then slice 4 (anchor
-cadence, honest disclosure upgrades, /transparency real-rails note,
-the two §5 demos). NO mainnet, no custody, no production anything
+**Slice 3 DONE, self-verified 2026-07-15 — the Midnight nullifier
+contract is LIVE on Preview** (contract + tx ids + hard-won version
+gotchas in CHECKPOINTS.md; the ZK rail: infra/midnight — Compact
+contract, pinned proof-server compose, standalone exercise package;
+the faucet moment happened; every nullifier property proven
+on-chain). **NEXT: slice 4** (anchor cadence, honest disclosure
+upgrades, /transparency real-rails note, the two §5 demos). NO mainnet, no custody, no production anything
 (§6.6). All chain secrets live ONLY in gitignored .env (Blockfrost
 preprod key, throwaway mint mnemonic, TEST_POLLCOIN_POLICY_ID).
 Testnet mode is ADDITIVE — the Phase A HMAC path stays, never deleted

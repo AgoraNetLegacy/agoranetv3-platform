@@ -1,0 +1,71 @@
+// The AgoraNet nullifier contract (Phase 8.6 slice 3 —
+// TESTNET_RAILS_SPEC §1.2, §6.4 step 3; DUAL_IDENTITY_MODULE.md Phase B
+// at testnet grade).
+//
+// This is lib/nullifier.ts's Phase B twin, mirrored exactly:
+//
+//   TS (Phase A):  HMAC(operator secret, `${scopeKind}:${scope}:${subjectId}`)
+//   here:          persistentHash([domain separator, kind tag, scope, secret])
+//
+// Same shape, one honest upgrade: the operator secret's role is played by
+// a WITNESS — the credential-derived subject secret (slice 2's stable
+// subject commitment) that stays on the soul's side of the proof and
+// never appears on-chain. The ledger Set is the on-chain twin of the
+// NullifierSpend table's unique index: same subject + same scope ⇒ same
+// nullifier ⇒ the member-check trips — DUPLICATE, with nobody learning
+// who. The two scope kinds are two distinct kind tags folded into the
+// hash, so per-profile and per-human nullifiers can never collide even
+// on identical scope strings — the exact collision guard lib/nullifier.ts
+// documents.
+//
+// The gate INTERFACE is untouched (the Phase 0 promise):
+// nullifierFor(scope, scopeKind, subjectId) keeps its signature; only
+// what feeds it changes when testnet mode is live (§6.3).
+//
+// Scope strings (e.g. "alias-registration", a poll id) arrive as their
+// SHA-256 digest — Compact circuits take fixed-width Bytes<32>, so the
+// caller canonicalizes; the digest step is public, deterministic, and
+// collision-resistant, preserving scope identity exactly.
+
+pragma language_version 0.23;
+import CompactStandardLibrary;
+
+// Every spent nullifier, publicly auditable, linkable to no one.
+export ledger spent: Set<Bytes<32>>;
+
+// The subject secret rides the proof as a witness, never the ledger.
+// Per-profile scopes feed the profile-derived secret; per-human scopes
+// feed the human's stable subject commitment (§1.5) — the caller's
+// private state supplies whichever the scope kind demands, exactly as
+// the gate picks subjectId today (lib/gate.ts).
+witness subjectSecret(): Bytes<32>;
+
+// The two scope kinds, as two doors — mirroring ScopeKind in
+// lib/nullifier.ts. Voting-like acts are per-profile (each face an
+// independent voice); registration ceremonies are per-human (the
+// one-True-Self / one-Alias enforcement itself).
+export circuit spendPerProfile(scope: Bytes<32>): [] {
+  spend(pad(32, "agoranet:kind:per-profile"), scope);
+}
+
+export circuit spendPerHuman(scope: Bytes<32>): [] {
+  spend(pad(32, "agoranet:kind:per-human"), scope);
+}
+
+circuit spend(kindTag: Bytes<32>, scope: Bytes<32>): [] {
+  const nul = nullifierFor(kindTag, scope, subjectSecret());
+  // The member-check IS the one-per-scope enforcement — the on-chain
+  // twin of the unique insert in lib/gate.ts. Disclosure here reveals
+  // only the opaque nullifier, exactly what the ledger already records.
+  assert(!spent.member(disclose(nul)), "DUPLICATE: this subject already acted in this scope");
+  spent.insert(disclose(nul));
+}
+
+// Pure derivation, exported so tests and the exercise script can verify
+// the fold independently: domain separator, kind tag, scope, secret —
+// the same four ingredients lib/nullifier.ts folds into its HMAC input.
+export circuit nullifierFor(kindTag: Bytes<32>, scope: Bytes<32>, secret: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<4, Bytes<32>>>(
+    [pad(32, "agoranet:nullifier:v1"), kindTag, scope, secret]
+  );
+}

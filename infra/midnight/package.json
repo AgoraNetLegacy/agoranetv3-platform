@@ -1,0 +1,31 @@
+{
+  "name": "agoranet-midnight-exercise",
+  "private": true,
+  "description": "Phase 8.6 slice 3 \u2014 deploy + exercise the nullifier Compact contract on Midnight testnet via the local dev proof server (TESTNET_RAILS_SPEC \u00a76.4 step 3). Standalone on purpose: the Midnight SDK never enters the app's dependency tree; testnet mode is additive (\u00a76.6). Versions pinned 2026-07-14 per the official support matrix (compact toolchain 0.31.1 \u2194 compact-runtime 0.16.0 \u2194 midnight-js 4.1.1 \u2194 proof-server 8.1.0).",
+  "type": "module",
+  "scripts": {
+    "compile": "compact compile +0.31.1 contract/nullifier.compact contract/build",
+    "exercise": "tsx exercise.ts"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-js": "2.5.1",
+    "@midnight-ntwrk/compact-runtime": "0.16.0",
+    "@midnight-ntwrk/ledger-v8": "8.1.0",
+    "@midnight-ntwrk/midnight-js": "4.1.1",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
+    "@midnight-ntwrk/wallet-sdk-dust-wallet": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-facade": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-hd": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-shielded": "2.1.0",
+    "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "2.1.0",
+    "rxjs": "^7.8.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  }
+}
