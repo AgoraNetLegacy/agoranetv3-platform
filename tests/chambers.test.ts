@@ -28,6 +28,7 @@ import {
   pendingInvitesFor,
 } from "../lib/chambers";
 import { createPost, upgradePostPermanence } from "../lib/discussions";
+import { createPoll, castVote, closeDuePolls } from "../lib/polls";
 import { balanceOf, tip } from "../lib/economy";
 import {
   chamberBalanceOf,
@@ -1073,6 +1074,233 @@ describe("the funding plan — Tier 0 diligence (FUND_INTEGRITY §3.1)", () => {
   });
 
   it("db:verify passes with funding plans on the books", () => {
+    const result = runVerify();
+    expect(result.status).toBe(0);
+  }, 60_000);
+});
+
+// The binding vote for LARGE releases (NEURAL_POLLINATOR §9.1: "above a
+// size threshold or when contested — a binding stewardship-style poll
+// authorizes it... members vote, auto-executes on passage").
+//
+// Two co-signers are corroboration for a reimbursement. They are not a
+// mandate for the mission's whole purse — which is the entire reason
+// §9.1 has a second door.
+describe("large releases ride a binding vote, not attestation (§9.1)", () => {
+  let bigChamberId: string;
+  let voterAId: string;
+  let voterBId: string;
+
+  beforeAll(async () => {
+    const a = await makeOnboardedSoul(db, { trueSelf: "vote-a", alias: "va-shade" });
+    const b = await makeOnboardedSoul(db, { trueSelf: "vote-b", alias: "vb-shade" });
+    voterAId = a.trueSelfId;
+    voterBId = b.trueSelfId;
+    await topUpForTests(db, creatorId, { pc: 80, g: 80 });
+    const made = await createChamber(db, {
+      profileId: creatorId,
+      title: "Big Ticket Mission",
+      subject: "A mission with a real purse",
+      pitch: "Raising toward something that costs.",
+      whyCare: "Because the fix isn't cheap.",
+      isPublic: true,
+      scaffold: SCAFFOLD,
+    });
+    if (!made.ok) throw new Error(`big chamber: ${made.reason}`);
+    bigChamberId = made.chamberId;
+    await enterChamber(db, { chamberId: bigChamberId, profileId: voterAId });
+    await enterChamber(db, { chamberId: bigChamberId, profileId: voterBId });
+    await declareRaising(db, {
+      chamberId: bigChamberId,
+      profileId: creatorId,
+      raising: true,
+      plan: PLAN,
+    });
+    await db.$transaction((tx) =>
+      creditMissionBalance(tx, {
+        chamberId: bigChamberId,
+        currency: "PC",
+        amount: 200,
+        sourceKind: "donation",
+      })
+    );
+  }, 120_000);
+
+  it("routes a large release to the binding-vote door, and says so at proposal", async () => {
+    const big = await proposeRelease(db, {
+      chamberId: bigChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: voterAId,
+      currency: "PC",
+      amount: 100, // > the 25u serious-stake threshold
+      purpose: "The whole winter buy",
+    });
+    expect(big.ok).toBe(true);
+    if (!big.ok) return;
+    expect(big.authorization).toBe("binding-vote");
+
+    // Which door it must go through is published BEFORE anyone signs or
+    // votes — never chosen after the fact.
+    const event = await db.ledgerEvent.findFirst({
+      where: { eventType: "mission.release-proposed" },
+      orderBy: { seq: "desc" },
+    });
+    expect(JSON.parse(event!.payload).authorization).toBe("binding-vote");
+  });
+
+  it("★ REFUSES to attest a large release onto the cheap path", async () => {
+    const big = await db.missionRelease.findFirstOrThrow({
+      where: { chamberId: bigChamberId, state: "proposed" },
+    });
+    const sneak = await attestRelease(db, {
+      releaseId: big.id,
+      attestorProfileId: voterAId,
+    });
+    expect(sneak.ok).toBe(false);
+    if (!sneak.ok) expect(sneak.reason).toContain("binding vote");
+    // Still unpaid — the cheap path cannot authorize the mission's purse.
+    const after = await db.missionRelease.findUniqueOrThrow({ where: { id: big.id } });
+    expect(after.state).toBe("proposed");
+  });
+
+  it("a routine release still rides attestation — the two doors coexist", async () => {
+    const small = await proposeRelease(db, {
+      chamberId: bigChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: voterBId,
+      currency: "PC",
+      amount: 10,
+      purpose: "Petty cash for totes",
+    });
+    expect(small.ok).toBe(true);
+    if (!small.ok) return;
+    expect(small.authorization).toBe("attestation");
+  });
+
+  it("★ a passed binding vote PAYS on close — no operator step, again", async () => {
+    const big = await db.missionRelease.findFirstOrThrow({
+      where: { chamberId: bigChamberId, state: "proposed", amount: 100 },
+    });
+    const chamberBefore = await chamberBalanceOf(db, bigChamberId, "PC");
+
+    const meta = await db.pillar.findFirstOrThrow({ where: { isMeta: true } });
+    const poll = await createPoll(db, {
+      profileId: creatorId,
+      pillarId: meta.id,
+      title: `Release 100u: ${big.purpose}`,
+      type: "consensus",
+      mode: "pseudonymous",
+      options: ["Adopt", "Decline"],
+      durationHours: 1,
+      consensusThreshold: 0.6,
+      chamber: { chamberId: bigChamberId, action: `release:${big.id}` },
+    });
+    expect(poll.ok).toBe(true);
+    if (!poll.ok) return;
+
+    // Members only — the ballot box sits inside the workshop.
+    const adoptOption = await db.pollOption.findFirstOrThrow({
+      where: { pollId: poll.pollId, position: 1 },
+    });
+    const outsider = await castVote(db, {
+      pollId: poll.pollId,
+      profileId: strangerId,
+      optionIds: [adoptOption.id],
+    });
+    expect(outsider.ok).toBe(false);
+    if (!outsider.ok) expect(outsider.reason).toContain("chamber's members");
+
+    for (const voter of [creatorId, voterAId, voterBId]) {
+      const cast = await castVote(db, {
+        pollId: poll.pollId,
+        profileId: voter,
+        optionIds: [adoptOption.id], // Adopt
+      });
+      expect(cast.ok).toBe(true);
+    }
+
+    // Snapshot AFTER voting: the recipient is also a voter here, and
+    // voting moves their balance (fee out, accrual in). Measuring the
+    // release means measuring only the release.
+    const recipientBefore = await balanceOf(db, voterAId, "PC");
+
+    // Close it: the poll closing IS the payment (§3.7). Time-travel the
+    // ballots first — the candle only counts votes cast before the true
+    // close, and that rule is doing its job here, not getting in the way.
+    await db.ballot.updateMany({
+      where: { pollId: poll.pollId },
+      data: { castAt: new Date(Date.now() - 60_000) },
+    });
+    await db.poll.update({
+      where: { id: poll.pollId },
+      data: { nominalCloseAt: new Date(Date.now() - 1000), trueCloseAt: new Date(Date.now() - 1000) },
+    });
+    await closeDuePolls(db);
+
+    const paid = await db.missionRelease.findUniqueOrThrow({ where: { id: big.id } });
+    expect(paid.state).toBe("released");
+    expect(await chamberBalanceOf(db, bigChamberId, "PC")).toBeCloseTo(chamberBefore - 100, 5);
+    expect(await balanceOf(db, voterAId, "PC")).toBeCloseTo(recipientBefore + 100, 5);
+
+    // Both doors land in the same payment path — the ledger says which
+    // one authorized it.
+    const event = await db.ledgerEvent.findFirst({
+      where: { eventType: "mission.released" },
+      orderBy: { seq: "desc" },
+    });
+    const payload = JSON.parse(event!.payload);
+    expect(payload.releaseRef).toBe(big.id);
+    expect(payload.via).toBe("binding-vote");
+    expect(payload.pollRef).toBe(poll.pollId);
+  }, 60_000);
+
+  it("a vote that passes on Decline adopts nothing", async () => {
+    const rel = await proposeRelease(db, {
+      chamberId: bigChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: voterAId,
+      currency: "PC",
+      amount: 50,
+      purpose: "A spend the chamber doesn't want",
+    });
+    expect(rel.ok).toBe(true);
+    if (!rel.ok) return;
+
+    const meta = await db.pillar.findFirstOrThrow({ where: { isMeta: true } });
+    const poll = await createPoll(db, {
+      profileId: creatorId,
+      pillarId: meta.id,
+      title: "Release 50u?",
+      type: "consensus",
+      mode: "pseudonymous",
+      options: ["Adopt", "Decline"],
+      durationHours: 1,
+      consensusThreshold: 0.6,
+      chamber: { chamberId: bigChamberId, action: `release:${rel.releaseId}` },
+    });
+    if (!poll.ok) return;
+    const declineOption = await db.pollOption.findFirstOrThrow({
+      where: { pollId: poll.pollId, position: 2 },
+    });
+    for (const voter of [creatorId, voterAId, voterBId]) {
+      await castVote(db, { pollId: poll.pollId, profileId: voter, optionIds: [declineOption.id] });
+    }
+    await db.ballot.updateMany({
+      where: { pollId: poll.pollId },
+      data: { castAt: new Date(Date.now() - 60_000) },
+    });
+    await db.poll.update({
+      where: { id: poll.pollId },
+      data: { nominalCloseAt: new Date(Date.now() - 1000), trueCloseAt: new Date(Date.now() - 1000) },
+    });
+    await closeDuePolls(db);
+
+    // The poll "passed" (consensus reached) — on Decline. Nothing moves.
+    const after = await db.missionRelease.findUniqueOrThrow({ where: { id: rel.releaseId } });
+    expect(after.state).toBe("proposed");
+  }, 60_000);
+
+  it("db:verify passes with both release doors exercised", () => {
     const result = runVerify();
     expect(result.status).toBe(0);
   }, 60_000);

@@ -559,13 +559,22 @@ model Poll {
   // Circle-restricted visibility (consumed in Phase 6): scoped to the
   // Circle's membership; ALWAYS per-profile (the §7 sharp rule — the
   // vote scope is per-profile everywhere, so nothing changes here).
-  visibilityScope  String       @default("public") // "public" | "circle"
+  visibilityScope  String       @default("public") // "public" | "circle" | "chamber"
   circleRef        String?
   // A binding stewardship decision (CIRCLES §7): executed at close when
   // the poll passes with "Adopt" leading. "remove-member:{handle}" |
   // "close-circle" | "appoint-founder:{handle}" |
   // "set-attestation-threshold:{n}". Null for ordinary polls.
   circleAction     String?
+  // Chamber-restricted polls (NEURAL_POLLINATOR §9.1): a LARGE mission
+  // release is authorized by "a binding stewardship-style poll... members
+  // vote, auto-executes on passage" — the Circle pattern above, pointed
+  // at a chamber. §9.1 called this "reusing Circle machinery already
+  // built"; the machinery was built for Circles only, so Phase 8.7
+  // Slice 5 extends the same shape rather than inventing a second one.
+  // "release:{missionReleaseId}". Null for ordinary polls.
+  chamberRef       String?
+  chamberAction    String?
   createdAt        DateTime     @default(now())
   nominalCloseAt   DateTime
   // The candle (governance): the TRUE close is drawn randomly within

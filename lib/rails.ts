@@ -503,6 +503,24 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     description:
       "Workshop participation micro-fee, Gratium half.",
   },
+  // --- Mission funding (NEURAL_POLLINATOR §9.1; PHASE_8_7_SPEC Slices
+  // 2-5). "Both numbers are rails, adjustable per chamber within bounds."
+  {
+    key: "chamber.releaseThreshold",
+    value: 2,
+    unit: "members",
+    boundMin: 2,
+    boundMax: 8,
+    description:
+      "Default co-signers required to release mission funds (§9.1). Floor 2 carries CIRCLES' reasoning verbatim — \"attested\" must always mean more than one voice; the proposer's own voice never counts. The CEILING does work Circles never needed: on a Circle log an unreachable threshold merely means nothing gets attested, but on escrow it STRANDS FUNDS (a chamber that set 50 could never release its own money).",
+  },
+  {
+    key: "chamber.releaseBindingVoteThreshold",
+    value: 25,
+    unit: "uPC",
+    description:
+      "Above this, a release is authorized by a binding vote of the chamber rather than by attestation (§9.1). 25u is the platform's established serious-stake magnitude — verified in ECONOMIC_STARTING_DEFAULTS: Circle creation 25u PC, Tribunal appeal deposit 25u PC. Two co-signers are corroboration for a reimbursement; they are not a mandate for the mission's whole purse.",
+  },
   // --- Treasury dashboard (Phase 7 — TREASURY_DASHBOARD §6.2,
   // owner-ratified: daily snapshots; the cadence is itself a rail).
   {

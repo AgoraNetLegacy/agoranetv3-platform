@@ -85,6 +85,11 @@ export async function createPoll(
      *  governance; scope is per-profile like every vote (the sharp
      *  rule holds by construction). */
     circle?: { circleId: string; action?: string };
+    // Chamber-restricted (NEURAL_POLLINATOR §9.1): the binding vote that
+    // authorizes a LARGE mission release. Same shape as `circle` above —
+    // §9.1 asked for "the Circle binding-poll pattern," so it gets that
+    // pattern rather than a parallel one.
+    chamber?: { chamberId: string; action?: string };
   }
 ): Promise<PollResult<{ pollId: string }>> {
   const title = input.title.trim();
@@ -141,6 +146,36 @@ export async function createPoll(
     }
   }
 
+  // Chamber-restricted polls (§9.1): the binding vote for a large
+  // mission release. Members only, never governance — same law as
+  // Circle polls, for the same reason: different rooms, different law.
+  let chamberAction: string | null = null;
+  if (input.chamber) {
+    if (input.isGovernance) {
+      return { ok: false, reason: "Chamber polls are never governance polls — different rooms, different law." };
+    }
+    if (input.circle) {
+      return { ok: false, reason: "A poll belongs to one room: a Circle or a Chamber, never both." };
+    }
+    const chamber = await db.chamber.findUnique({ where: { id: input.chamber.chamberId } });
+    if (!chamber) return { ok: false, reason: "No such chamber." };
+    const member = await db.chamberMember.findFirst({
+      where: { chamberId: chamber.id, profileId: profile.id },
+    });
+    if (!member) {
+      return { ok: false, reason: "Members only — a chamber's decisions belong to the chamber." };
+    }
+    if (input.chamber.action) {
+      // A binding release vote is a consensus poll at the chamber's own
+      // bar, mirroring CIRCLES §7: money decisions are never a plurality
+      // shrug.
+      if (input.type !== "consensus") {
+        return { ok: false, reason: "A binding release is a consensus poll (§9.1, reusing CIRCLES §7)." };
+      }
+      chamberAction = input.chamber.action;
+    }
+  }
+
   const isGovernance = input.isGovernance ?? false;
   // Governance polls are always sealed — no live-tally option, ever.
   const liveTally = isGovernance ? false : (input.liveTally ?? false);
@@ -193,9 +228,11 @@ export async function createPoll(
         mode: input.mode,
         isGovernance,
         liveTally,
-        visibilityScope: input.circle ? "circle" : "public",
+        visibilityScope: input.circle ? "circle" : input.chamber ? "chamber" : "public",
         circleRef: input.circle?.circleId ?? null,
         circleAction,
+        chamberRef: input.chamber?.chamberId ?? null,
+        chamberAction,
         nominalCloseAt,
         trueCloseAt,
         candleSalt,
@@ -315,6 +352,17 @@ export async function castVote(
     const { activeMembership } = await import("./circles");
     if (!(await activeMembership(db, poll.circleRef, profile.id))) {
       return { ok: false, reason: "This poll is restricted to its Circle's members." };
+    }
+  }
+
+  // Chamber-restricted (§9.1): the ballot box sits inside the workshop.
+  // Scope stays per-profile, like everywhere.
+  if (poll.visibilityScope === "chamber" && poll.chamberRef) {
+    const member = await db.chamberMember.findFirst({
+      where: { chamberId: poll.chamberRef, profileId: profile.id },
+    });
+    if (!member) {
+      return { ok: false, reason: "This poll is restricted to its chamber's members." };
     }
   }
 
@@ -496,6 +544,20 @@ export async function closeDuePolls(db: PrismaClient): Promise<number> {
         if (adoptTally === top && adoptTally > 0) {
           const { executeCircleAction } = await import("./circles");
           await executeCircleAction(tx, poll);
+        }
+      }
+
+      // A large mission release rides its binding vote (§9.1: "members
+      // vote, auto-executes on passage"). Same Adopt-must-lead rule as
+      // the Circle path — and the same automaticity as attested release:
+      // the poll closing IS the payment, with no operator step between
+      // (FUND_INTEGRITY §3.7).
+      if (poll.chamberAction && outcome === "passed") {
+        const adoptTally = tallies["1"] ?? 0;
+        const top = Math.max(0, ...Object.values(tallies));
+        if (adoptTally === top && adoptTally > 0) {
+          const { executeChamberAction } = await import("./escrow");
+          await executeChamberAction(tx, poll);
         }
       }
 

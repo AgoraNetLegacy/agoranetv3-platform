@@ -402,6 +402,8 @@ CREATE TABLE "Poll" (
     "visibilityScope" TEXT NOT NULL DEFAULT 'public',
     "circleRef" TEXT,
     "circleAction" TEXT,
+    "chamberRef" TEXT,
+    "chamberAction" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "nominalCloseAt" TIMESTAMP(3) NOT NULL,
     "trueCloseAt" TIMESTAMP(3) NOT NULL,

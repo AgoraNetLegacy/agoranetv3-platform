@@ -40,9 +40,21 @@ import type { DbOrTx, Tx } from "./db";
 import { appendEvent } from "./ledger";
 import { clearGate } from "./gate";
 import { balanceOf } from "./economy";
+import { getRail } from "./rails";
 
 export type EscrowResult =
-  | { ok: true; releaseId: string; released: boolean }
+  | {
+      ok: true;
+      releaseId: string;
+      released: boolean;
+      /**
+       * How this release must be authorized (§9.1). "attestation" is the
+       * routine path; "binding-vote" is required above the size
+       * threshold — two co-signers are corroboration for a
+       * reimbursement, not a mandate for the mission's whole purse.
+       */
+      authorization: "attestation" | "binding-vote";
+    }
   | { ok: false; reason: string };
 
 /** A chamber's mission balance in one currency. */
@@ -403,6 +415,13 @@ export async function proposeRelease(
       },
     });
 
+    // §9.1's size rule, decided at proposal and stated on the record:
+    // routine releases ride attestation; large ones need a binding vote
+    // of the chamber. Two co-signers are corroboration for a
+    // reimbursement — not a mandate for the mission's whole purse.
+    const bindingThreshold = await getRail(tx, "chamber.releaseBindingVoteThreshold");
+    const needsVote = input.amount > bindingThreshold;
+
     // Public from the moment it's proposed: money moving toward a stated
     // purpose is exactly the kind of claim the civic ledger exists for.
     await appendEvent(tx, {
@@ -416,12 +435,132 @@ export async function proposeRelease(
         currency: input.currency,
         purpose: release.purpose,
         toHandle: recipient.handle,
-        threshold: chamber.releaseThreshold,
+        // Which door this release must go through, published before
+        // anyone signs or votes — never chosen after the fact.
+        authorization: needsVote ? "binding-vote" : "attestation",
+        threshold: needsVote ? null : chamber.releaseThreshold,
+        bindingVoteThreshold: bindingThreshold,
       },
     });
 
-    return { ok: true as const, releaseId: release.id, released: false };
+    return {
+      ok: true as const,
+      releaseId: release.id,
+      released: false,
+      authorization: needsVote ? ("binding-vote" as const) : ("attestation" as const),
+    };
   });
+}
+
+/**
+ * Pay a release. THE ONLY PATH MONEY LEAVES A MISSION BY — both routes
+ * (attestation threshold, §9.1 binding vote) land here, so a large
+ * release and a routine one are paid by identical code. Two payment
+ * paths would be two chances to diverge.
+ *
+ * Always called inside the transaction that authorized it: the
+ * authorization IS the payment (FUND_INTEGRITY §3.7). No operator step
+ * exists between them, in either route.
+ */
+async function payRelease(
+  tx: Tx,
+  release: {
+    id: string;
+    chamberId: string;
+    currency: string;
+    amount: number;
+    purpose: string;
+    toProfileId: string;
+    toHandle: string;
+  },
+  authorization: { via: "attestation"; attestorCount: number } | { via: "binding-vote"; pollRef: string }
+): Promise<void> {
+  // Re-check at payment time. The balance was checked when the release
+  // was proposed, but another release may have paid out since.
+  const balance = await chamberBalanceOf(tx, release.chamberId, release.currency as "PC" | "G");
+  if (balance < release.amount) {
+    throw new Error(
+      `Mission balance fell below this release (${balance.toFixed(2)}u < ${release.amount.toFixed(2)}u) — refusing to overdraw.`
+    );
+  }
+
+  await tx.chamberBalance.update({
+    where: { chamberId_currency: { chamberId: release.chamberId, currency: release.currency } },
+    data: { amount: { decrement: release.amount } },
+  });
+  await tx.balance.upsert({
+    where: { profileId_currency: { profileId: release.toProfileId, currency: release.currency } },
+    create: { profileId: release.toProfileId, currency: release.currency, amount: release.amount },
+    update: { amount: { increment: release.amount } },
+  });
+  // NOT a treasury outflow: this is a chamber spending funds held for
+  // its mission, so it carries no budget category (that column is the
+  // treasury's spending guardrail, and conflating them would inflate
+  // every utilization figure with money the treasury never spent).
+  await tx.economyEntry.create({
+    data: {
+      kind: "mission.release",
+      currency: release.currency,
+      amount: release.amount,
+      toProfileId: release.toProfileId,
+      refType: "chamber",
+      refId: release.chamberId,
+    },
+  });
+  await tx.missionRelease.update({
+    where: { id: release.id },
+    data: { state: "released", releasedAt: new Date() },
+  });
+  await appendEvent(tx, {
+    actorType: "system",
+    eventType: "mission.released",
+    payload: {
+      chamberRef: release.chamberId,
+      releaseRef: release.id,
+      amount: release.amount,
+      currency: release.currency,
+      purpose: release.purpose,
+      toHandle: release.toHandle,
+      ...authorization,
+    },
+  });
+}
+
+/**
+ * Execute a passed binding release vote (§9.1: "members vote,
+ * auto-executes on passage"). Called by closeDuePolls inside the close
+ * transaction, only when the consensus passed with Adopt leading —
+ * exactly the Circle stewardship pattern.
+ */
+export async function executeChamberAction(
+  tx: Tx,
+  poll: { id: string; chamberRef: string | null; chamberAction: string | null }
+): Promise<void> {
+  if (!poll.chamberRef || !poll.chamberAction) return;
+  const [kind, arg] = [
+    poll.chamberAction.slice(0, poll.chamberAction.indexOf(":")),
+    poll.chamberAction.slice(poll.chamberAction.indexOf(":") + 1),
+  ];
+  if (kind !== "release" || !arg) return;
+
+  const release = await tx.missionRelease.findUnique({ where: { id: arg } });
+  // A decision can lapse: the release may have been frozen by a ruling
+  // while the vote ran. Frozen wins — due process outranks a vote that
+  // started before the facts were known.
+  if (!release || release.state !== "proposed") {
+    await appendEvent(tx, {
+      actorType: "system",
+      eventType: "mission.decision-lapsed",
+      payload: {
+        chamberRef: poll.chamberRef,
+        pollRef: poll.id,
+        releaseRef: arg,
+        why: !release ? "release gone" : `release already ${release.state}`,
+      },
+    });
+    return;
+  }
+  await payRelease(tx, release, { via: "binding-vote", pollRef: poll.id });
 }
 
 /** Money already spoken for by open proposals — never double-promised. */
@@ -473,6 +612,19 @@ export async function attestRelease(
     // "so 'attested' always means more than one voice").
     return { ok: false, reason: "A proposer cannot attest their own release — attestation means more than one voice." };
   }
+
+  // §9.1's size rule: attestation is the ROUTINE path. Above the
+  // threshold, a binding vote authorizes instead — two co-signers are
+  // corroboration for a reimbursement, not a mandate for the mission's
+  // whole purse. Enforced here as well as at proposal so a rail change
+  // can never strand a large release on the cheap path.
+  const bindingThreshold = await getRail(db, "chamber.releaseBindingVoteThreshold");
+  if (release.amount > bindingThreshold) {
+    return {
+      ok: false,
+      reason: `Releases above ${bindingThreshold}u are authorized by a binding vote of the chamber, not by attestation (§9.1).`,
+    };
+  }
   if (release.attestations.some((a) => a.attestorProfileId === input.attestorProfileId)) {
     return { ok: false, reason: "You have already attested this release." };
   }
@@ -506,66 +658,21 @@ export async function attestRelease(
     // The threshold: the proposer's own voice never counts toward it —
     // attestation is corroboration, not self-assertion.
     if (count < release.chamber.releaseThreshold) {
-      return { ok: true as const, releaseId: release.id, released: false };
+      return {
+        ok: true as const,
+        releaseId: release.id,
+        released: false,
+        authorization: "attestation" as const,
+      };
     }
 
-    // Re-check the balance at payment time. It was checked at proposal,
-    // but another release may have paid out since.
-    const balance = await chamberBalanceOf(tx, release.chamberId, release.currency as "PC" | "G");
-    if (balance < release.amount) {
-      throw new Error(
-        `Mission balance fell below this release (${balance.toFixed(2)}u < ${release.amount.toFixed(2)}u) — refusing to overdraw.`
-      );
-    }
-
-    await tx.chamberBalance.update({
-      where: {
-        chamberId_currency: { chamberId: release.chamberId, currency: release.currency },
-      },
-      data: { amount: { decrement: release.amount } },
-    });
-    await tx.balance.upsert({
-      where: {
-        profileId_currency: { profileId: release.toProfileId, currency: release.currency },
-      },
-      create: { profileId: release.toProfileId, currency: release.currency, amount: release.amount },
-      update: { amount: { increment: release.amount } },
-    });
-    // The mission's own ledger of money moved. NOT an EconomyEntry
-    // outflow: this is not the treasury spending — it is a chamber
-    // spending funds held on behalf of its mission, so it carries no
-    // budget category (that would corrupt the treasury's utilization
-    // figures) and must not trip db:verify's budgeted-categories check.
-    await tx.economyEntry.create({
-      data: {
-        kind: "mission.release",
-        currency: release.currency,
-        amount: release.amount,
-        toProfileId: release.toProfileId,
-        refType: "chamber",
-        refId: release.chamberId,
-      },
-    });
-    await tx.missionRelease.update({
-      where: { id: release.id },
-      data: { state: "released", releasedAt: new Date() },
-    });
-
-    await appendEvent(tx, {
-      actorType: "system",
-      eventType: "mission.released",
-      payload: {
-        chamberRef: release.chamberId,
-        releaseRef: release.id,
-        amount: release.amount,
-        currency: release.currency,
-        purpose: release.purpose,
-        toHandle: release.toHandle,
-        attestorCount: count,
-      },
-    });
-
-    return { ok: true as const, releaseId: release.id, released: true };
+    await payRelease(tx, release, { via: "attestation", attestorCount: count });
+    return {
+      ok: true as const,
+      releaseId: release.id,
+      released: true,
+      authorization: "attestation" as const,
+    };
   });
 }
 

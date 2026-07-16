@@ -1053,3 +1053,83 @@ Typecheck clean.
 donate PollCoin toward a chamber's declared mission; genuine transfers,
 no auto-return). The escrow already accepts the money; Slice 3 is the
 intake plus its surface.
+
+### Slices 3–5 — donations, the funding plan, and the second door ✅ SELF-VERIFIED (2026-07-16)
+
+**Slice 3 — donations (§9.1).** Souls donate PollCoin toward a chamber's
+declared mission, straight from the internal balance. **A genuine
+transfer, no auto-return** — the mechanic exists *because* the owner
+killed its predecessor for the opposite property: auto-returned poll
+support-staking was "cheap talk, a costless signal carries no
+information" (POLLS §4.8, retired). So the tests prove the cost is real:
+the donor's balance drops for good, and withdrawing the raising
+declaration stops NEW donations while never clawing back given money — a
+chamber that could un-declare its way out of accountability would make
+"no auto-return" a lie. Gate-cleared like every write (rule 3). Two
+inferences flagged in DECISIONS_PENDING #18 (who may declare; no fee on
+giving), plus one deliberate omission: donations don't accrue, because
+TOKENOMICS §4 doesn't name them and give→accrue→give is a loop worth
+auditing before it exists.
+
+**Slice 4 — the funding plan (FUND_INTEGRITY §3.1, Tier 0).** A chamber
+cannot ask for money without answering three things: who is funded, how a
+donor can check that, what the money buys. **Tier 0 isn't a gate bolted
+onto Chambers — it IS what a Chamber already is**; the scaffold and the
+public workshop are the dissection, and these three only point that
+machinery at money. Plans are revisable (the workshop's job is making the
+creator fill the gaps the community finds), but `ChamberFundingRevision`
+keeps **every** version from v1: souls donate against a specific plan, so
+silent post-hoc edits would be a bait-and-switch with no evidence left.
+The history makes that impossible rather than merely forbidden.
+
+**Slice 5 — the second door (§9.1's binding vote).** *"Above a size
+threshold... a binding stewardship-style poll authorizes it — members
+vote, auto-executes on passage."* Two co-signers are corroboration for a
+reimbursement; they are **not** a mandate for the mission's whole purse.
+- **§9.1 called this "reusing Circle machinery already built" — it
+  wasn't.** Polls knew only Circles. Slice 5 extends the same shape
+  (`Poll.chamberRef` / `chamberAction`, `visibilityScope: "chamber"`,
+  member-restricted ballots, execute-at-close) rather than inventing a
+  parallel one, which is what §9.1 actually asked for.
+- **One payment path.** Both doors land in `payRelease()` — two payment
+  paths would be two chances to diverge. The ledger records which door
+  authorized it (`via: "attestation" | "binding-vote"`).
+- The route is decided and **published at proposal**, never chosen after
+  the fact; attesting a large release is refused outright, at both
+  proposal and attestation, so a rail change can't strand one on the
+  cheap path.
+- A vote can **lapse**: if a ruling froze the release while the vote ran,
+  frozen wins — due process outranks a vote that started before the facts
+  were known.
+- Rails: `chamber.releaseThreshold` (2, [2,8]) and
+  `chamber.releaseBindingVoteThreshold` (25u — verified against
+  ECONOMIC_STARTING_DEFAULTS: Circle creation and appeal deposit are both
+  25u).
+
+**★ Two divergences the specs carry, recorded not silently resolved:**
+1. **FUND_INTEGRITY §3.3 vs §9.1 at the same 25u threshold.** §3.3
+   (draft) says a large request must be *staged into ≥2 tranches*; §9.1
+   (ratified 2026-07-13) says it needs a *binding vote*. **§9.1 is
+   ratified law and won.** §3.3's staging is designed for endowment
+   distributions, which don't exist and are unratified.
+2. **The rail already had an 8.** `circle.attestationThreshold` ships
+   `boundMax: 8` in code, while Appendix A reads "floor 2" with no
+   ceiling. So §9.1's "matching the ratified Circle attestation numbers"
+   matched the *built rail*, not the Constitution. The correction stands
+   (Appendix A is the ratified source), but the 8 wasn't invented from
+   nothing.
+
+**★ The tests caught two more of my own errors, not the code's:** I
+closed polls without time-travelling the ballots, so the candle correctly
+counted every vote as late (`no-consensus`) — the rule working, not
+failing. And I snapshotted the recipient's balance before they cast their
+own vote, which moved it by 0.75 (fee out, accrual in).
+
+**Evidence:** tests **248/248** (18 new across the three slices).
+db:verify ALL CHECKS PASSED. Postgres schema valid and model-identical.
+Typecheck clean.
+
+**NEXT:** Slice 6 (Tier 4 — Fund Auditors, Sentinel extension,
+transparency category) and Slice 7 (the demo runbook). Still open:
+DECISIONS_PENDING #17 (the freeze trigger — mechanism built, wire absent
+by design) and #18.
