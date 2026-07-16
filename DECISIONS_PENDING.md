@@ -612,3 +612,30 @@ at the Phase 9 real-money re-review regardless.
     automatically, and the freeze function is tested directly. This is
     the last wire, and it wants your call — or a spec amendment naming
     the rule.
+
+18. **Two inferences in mission donations — built the narrow way, bless
+    or overrule (Phase 8.7 Slice 3, 2026-07-16).** §9.1 is thin on both;
+    neither blocks anything, and both are reversible in a sentence.
+
+    **(a) Only the creator may declare a chamber is raising.** §9.1 says
+    "a Chamber may optionally declare it's raising" without naming who.
+    The creator is the reading consistent with §4.1 (they author the
+    scaffold and the storefront), and it's the narrow choice —
+    *widening later is a decision; un-widening is a migration.* If
+    members should be able to declare, say so.
+
+    **(b) No fee on donating.** Chamber creation and workshop posts
+    carry the dual-token fee; §9.1 says nothing about a fee on the
+    donation itself, so none was added. The argument for keeping it
+    free: a fee on giving is a tax on generosity, and the
+    participation-cost rule exists to price *participation*, not
+    charity. The argument against: every other write action costs, and
+    free actions are spam surfaces (though a donation costs the donor
+    real PollCoin by construction, which is its own friction — spamming
+    donations means giving your money away).
+
+    **Also recorded, deliberately NOT built:** donations do not accrue
+    PollCoin. `tip()` accrues because TOKENOMICS §4 names tips as a
+    participation action; donations are not on that list. Adding accrual
+    to giving-money would also invent a loop worth auditing (give →
+    accrue → give), so it stays off until the spec says otherwise.

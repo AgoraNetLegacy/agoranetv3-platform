@@ -35,6 +35,8 @@ import {
   proposeRelease,
   attestRelease,
   freezeChamberReleases,
+  declareRaising,
+  donateToMission,
 } from "../lib/escrow";
 import { faceConstellation } from "../lib/lightScore";
 import { buildFeed, openLens, chamberStorefrontCards } from "../lib/feed";
@@ -793,6 +795,139 @@ describe("mission escrow — holding, attested release, and the freeze", () => {
   });
 
   it("db:verify still passes with escrow state on the books", () => {
+    const result = runVerify();
+    expect(result.status).toBe(0);
+  }, 60_000);
+});
+
+// Mission funding donations (NEURAL_POLLINATOR §9.1; PHASE_8_7_SPEC
+// Slice 3). The mechanic that replaced auto-returned poll
+// support-staking, killed by the owner's own critique: "auto-returned
+// staking is cheap talk, a costless signal carries no information."
+// Everything here tests that donations COST — because that's the point.
+describe("mission donations — genuine transfers, no auto-return (§9.1)", () => {
+  let fundedChamberId: string;
+  let donorId: string;
+
+  beforeAll(async () => {
+    const d = await makeOnboardedSoul(db, { trueSelf: "mission-donor", alias: "md-shade" });
+    donorId = d.trueSelfId;
+    // The creator has spent their PollCoin on earlier chambers in this
+    // file; top up through the accounted test faucet so conservation
+    // still holds (never a raw balance write — db:verify would catch it).
+    await topUpForTests(db, creatorId, { pc: 60, g: 60 });
+    const made = await createChamber(db, {
+      profileId: creatorId,
+      title: "Winter Coat Drive",
+      subject: "A funded coat drive",
+      pitch: "Raising toward a stated mission.",
+      whyCare: "Cold neighbors, solvable now.",
+      isPublic: true,
+      scaffold: SCAFFOLD,
+    });
+    if (!made.ok) throw new Error(`funded chamber: ${made.reason}`);
+    fundedChamberId = made.chamberId;
+  }, 60_000);
+
+  it("refuses donations until the chamber declares it's raising", async () => {
+    const result = await donateToMission(db, {
+      chamberId: fundedChamberId,
+      profileId: donorId,
+      amount: 5,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain("isn't raising");
+  });
+
+  it("only the creator may declare the mission is raising", async () => {
+    const notCreator = await declareRaising(db, {
+      chamberId: fundedChamberId,
+      profileId: donorId,
+      raising: true,
+    });
+    expect(notCreator.ok).toBe(false);
+    if (!notCreator.ok) expect(notCreator.reason).toContain("creator");
+
+    const declared = await declareRaising(db, {
+      chamberId: fundedChamberId,
+      profileId: creatorId,
+      raising: true,
+    });
+    expect(declared.ok).toBe(true);
+  });
+
+  it("★ a donation actually COSTS — the money leaves the donor for good", async () => {
+    const donorBefore = await balanceOf(db, donorId, "PC");
+    const result = await donateToMission(db, {
+      chamberId: fundedChamberId,
+      profileId: donorId,
+      amount: 8,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.balance).toBeCloseTo(8, 5);
+
+    // Gone from the donor — no auto-return, no escrow-back-to-me. It
+    // returns only if the chamber's own members release it.
+    expect(await balanceOf(db, donorId, "PC")).toBeCloseTo(donorBefore - 8, 5);
+    expect(await chamberBalanceOf(db, fundedChamberId, "PC")).toBeCloseTo(8, 5);
+
+    const entry = await db.economyEntry.findFirst({
+      where: { kind: "mission.donation", fromProfileId: donorId },
+    });
+    expect(entry?.refId).toBe(fundedChamberId);
+    // Never a treasury flow in either direction — so no budget category,
+    // which is the Constitution's TREASURY spending guardrail.
+    expect(entry?.toTreasury).toBe(false);
+    expect(entry?.fromTreasury).toBe(false);
+    expect(entry?.budgetCategory).toBeNull();
+  });
+
+  it("refuses a donation the donor cannot afford", async () => {
+    const balance = await balanceOf(db, donorId, "PC");
+    const result = await donateToMission(db, {
+      chamberId: fundedChamberId,
+      profileId: donorId,
+      amount: balance + 100,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain("not a gesture");
+  });
+
+  it("withdrawing the declaration stops new donations but never claws back given money", async () => {
+    const held = await chamberBalanceOf(db, fundedChamberId, "PC");
+    expect(held).toBeGreaterThan(0);
+
+    const withdrawn = await declareRaising(db, {
+      chamberId: fundedChamberId,
+      profileId: creatorId,
+      raising: false,
+    });
+    expect(withdrawn.ok).toBe(true);
+
+    const blocked = await donateToMission(db, {
+      chamberId: fundedChamberId,
+      profileId: donorId,
+      amount: 1,
+    });
+    expect(blocked.ok).toBe(false);
+
+    // A chamber that could un-declare its way out of accountability
+    // would make "genuine transfer, no auto-return" a lie.
+    expect(await chamberBalanceOf(db, fundedChamberId, "PC")).toBeCloseTo(held, 5);
+  });
+
+  it("the giving is on the public record", async () => {
+    const event = await db.ledgerEvent.findFirst({
+      where: { eventType: "mission.donated" },
+      orderBy: { seq: "desc" },
+    });
+    expect(event).not.toBeNull();
+    const payload = JSON.parse(event!.payload);
+    expect(payload.chamberRef).toBe(fundedChamberId);
+    expect(payload.amount).toBe(8);
+  });
+
+  it("db:verify passes with donations on the books", () => {
     const result = runVerify();
     expect(result.status).toBe(0);
   }, 60_000);

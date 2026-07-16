@@ -89,6 +89,14 @@ export const KIND_CATEGORIES: Record<string, KindInfo> = {
     category: "Mission releases (chamber funds, attested — treasury is not a party)",
     direction: "issuance",
   },
+  // A soul donating toward a chamber's declared mission (§9.1) — a
+  // genuine transfer, no auto-return. Soul → chamber; the treasury is
+  // not a party in either direction, so it carries no budget category
+  // and never touches a treasury figure on this page.
+  "mission.donation": {
+    category: "Mission donations (soul to chamber — treasury is not a party)",
+    direction: "issuance",
+  },
 };
 
 export function kindInfo(kind: string): KindInfo {

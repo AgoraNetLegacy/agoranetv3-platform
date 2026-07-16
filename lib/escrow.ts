@@ -34,10 +34,12 @@
 // legitimate." Fund Integrity raises the cost of lying. It does not make
 // lying impossible, and the UI must never imply otherwise.
 
+import { randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
 import { appendEvent } from "./ledger";
-import { getRail } from "./rails";
+import { clearGate } from "./gate";
+import { balanceOf } from "./economy";
 
 export type EscrowResult =
   | { ok: true; releaseId: string; released: boolean }
@@ -77,6 +79,143 @@ export async function creditMissionBalance(
     where: { chamberId_currency: { chamberId: input.chamberId, currency: input.currency } },
     create: { chamberId: input.chamberId, currency: input.currency, amount: input.amount },
     update: { amount: { increment: input.amount } },
+  });
+}
+
+/**
+ * Declare (or withdraw) that a chamber is raising toward its mission
+ * (§9.1: "A Chamber may optionally declare it's raising PollCoin toward
+ * its stated mission").
+ *
+ * Creator-only. §9.1 says "a Chamber may declare" without naming who —
+ * the creator is the reading consistent with the rest of the spec (they
+ * author the scaffold and the storefront, §4.1), and it is the narrow
+ * choice: widening later is a decision, un-widening is a migration.
+ * Flagged as inference in DECISIONS_PENDING rather than passed off as
+ * ratified.
+ *
+ * Withdrawing only stops new donations. It never touches money already
+ * given: §9.1's donations are "genuine transfers — real cost, no
+ * auto-return," and a chamber that could un-declare its way out of
+ * accountability would make that sentence a lie.
+ */
+export async function declareRaising(
+  db: PrismaClient,
+  input: { chamberId: string; profileId: string; raising: boolean }
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const chamber = await db.chamber.findUnique({ where: { id: input.chamberId } });
+  if (!chamber) return { ok: false, reason: "No such chamber." };
+  if (chamber.creatorProfileId !== input.profileId) {
+    return { ok: false, reason: "Only the chamber's creator may declare its mission funding." };
+  }
+  await db.$transaction(async (tx) => {
+    await tx.chamber.update({
+      where: { id: input.chamberId },
+      data: { raisingForMission: input.raising },
+    });
+    await appendEvent(tx, {
+      actorType: "soul",
+      actorId: chamber.creatorHandle,
+      eventType: input.raising ? "mission.raising-declared" : "mission.raising-withdrawn",
+      payload: { chamberRef: input.chamberId, handle: chamber.creatorHandle },
+    });
+  });
+  return { ok: true };
+}
+
+/**
+ * Donate PollCoin toward a chamber's declared mission (§9.1).
+ *
+ * **A genuine transfer — real cost, no auto-return.** This mechanic
+ * exists because the owner killed its predecessor for the opposite
+ * property: auto-returned poll support-staking was "cheap talk, a
+ * costless signal carries no information" (POLLS §4.8, retired). The
+ * money is gone from the donor the moment it lands, and it comes back
+ * only if the chamber's own members release it back — which is the
+ * whole point.
+ *
+ * PollCoin only, per §9.1. Straight from the internal balance: no
+ * wallet, no chain call, same architecture as every other internal fee.
+ */
+export async function donateToMission(
+  db: PrismaClient,
+  input: { chamberId: string; profileId: string; amount: number }
+): Promise<{ ok: true; balance: number } | { ok: false; reason: string }> {
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    return { ok: false, reason: "A donation must be a positive amount." };
+  }
+
+  const chamber = await db.chamber.findUnique({ where: { id: input.chamberId } });
+  if (!chamber) return { ok: false, reason: "No such chamber." };
+  if (!chamber.raisingForMission) {
+    return { ok: false, reason: "This chamber isn't raising toward its mission." };
+  }
+
+  const profile = await db.profile.findUnique({ where: { id: input.profileId } });
+  if (!profile || profile.status !== "active") {
+    return { ok: false, reason: "No active face." };
+  }
+
+  // Every write action clears the gate — no exceptions, even where
+  // bypassing would be easy (CLAUDE.md rule 3). Per-donation scope: a
+  // soul may give more than once.
+  const gate = await clearGate(db, {
+    profileId: profile.id,
+    scope: `mission-donate:${randomUUID()}`,
+    scopeKind: "per-profile",
+  });
+  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
+
+  return await db.$transaction(async (tx) => {
+    const balance = await balanceOf(tx, profile.id, "PC");
+    if (balance < input.amount) {
+      return {
+        ok: false as const,
+        reason: `Insufficient PollCoin (${balance.toFixed(2)}u of ${input.amount}u) — a donation is a real transfer, not a gesture.`,
+      };
+    }
+
+    await tx.balance.update({
+      where: { profileId_currency: { profileId: profile.id, currency: "PC" } },
+      data: { amount: { decrement: input.amount } },
+    });
+    await creditMissionBalance(tx, {
+      chamberId: input.chamberId,
+      currency: "PC",
+      amount: input.amount,
+      sourceKind: "donation",
+    });
+    // Donor→chamber. NOT a treasury flow in either direction: the
+    // treasury neither receives it nor spends it, so it carries no
+    // budget category (that column is the Constitution's spending
+    // guardrail, and this is not the treasury spending).
+    await tx.economyEntry.create({
+      data: {
+        kind: "mission.donation",
+        currency: "PC",
+        amount: input.amount,
+        fromProfileId: profile.id,
+        refType: "chamber",
+        refId: input.chamberId,
+      },
+    });
+
+    // Public at the moment of giving. The chamber's funding is part of
+    // its public storefront story — a mission asking for money answers
+    // for what it raised, permanently.
+    await appendEvent(tx, {
+      actorType: "soul",
+      actorId: profile.handle,
+      eventType: "mission.donated",
+      payload: {
+        chamberRef: input.chamberId,
+        handle: profile.handle,
+        amount: input.amount,
+        currency: "PC",
+      },
+    });
+
+    return { ok: true as const, balance: await chamberBalanceOf(tx, input.chamberId, "PC") };
   });
 }
 
