@@ -575,3 +575,40 @@ at the Phase 9 real-money re-review regardless.
     records are still unlinkable, and the note lifts itself as the
     commons grows. §7.2's own directive, surfaced at the exact moment
     it matters. Never blocks hatching.
+
+17. **★ The freeze has a mechanism but no trigger — TWO spec silences,
+    flagged not invented (Phase 8.7 Slice 2, 2026-07-16).**
+    `FUND_INTEGRITY_SPEC` §3.4 calls the freeze "the module's real
+    teeth": an upheld Tribunal ruling of misuse halts every unreleased
+    tranche. Built and tested: `escrow.freezeChamberReleases()`, taking
+    a `tx` so it can execute inside the ruling's own transaction —
+    automatic, never an operator action, per §3.7. **It is deliberately
+    NOT wired to `lib/moderation.ts`, because the spec never says how
+    the case starts, and two questions are genuinely unanswered:**
+
+    **(a) A release cannot be flagged at all today.** `Flag` accepts
+    `postId` XOR `dmExcerptId` — a release is neither. Flagging a
+    fraudulent release needs a third evidence type
+    (`Flag.releaseId`), which touches the moderation case file, the
+    triangle of blindness, and the workbench. Not a line of code — a
+    design decision.
+
+    **(b) Which rule is "misuse"?** The spec says "a ruling of misuse"
+    and never names a rule. The rulebook's candidates, none exact:
+    **R3.4 Fraud & phishing** ("attempts to steal credentials, *funds*,
+    or identities") is the closest and probably right; **R2.7
+    Attested-action fraud** is the perfect analogue but says "*Circle*
+    action" — mission releases reuse that same attestation primitive
+    pointed at money, so R2.7 arguably wants widening; **R1.3 Mechanic
+    misuse** already names "meaningless attestation marks."
+
+    Wiring the freeze to the wrong rule would either under-trigger
+    (fraud walks) or over-trigger (**a rude comment in a chamber's
+    workshop freezes its funding** — the failure mode to avoid). And
+    the trigger must be narrow *by rule*, since any upheld ruling
+    against a chamber member is not misuse of its money.
+
+    **Nothing is blocked:** the escrow works, releases pay
+    automatically, and the freeze function is tested directly. This is
+    the last wire, and it wants your call — or a spec amendment naming
+    the rule.

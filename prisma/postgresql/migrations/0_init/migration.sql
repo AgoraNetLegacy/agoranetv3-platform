@@ -86,6 +86,46 @@ CREATE TABLE "BudgetCategory" (
 );
 
 -- CreateTable
+CREATE TABLE "ChamberBalance" (
+    "chamberId" TEXT NOT NULL,
+    "currency" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+
+    CONSTRAINT "ChamberBalance_pkey" PRIMARY KEY ("chamberId","currency")
+);
+
+-- CreateTable
+CREATE TABLE "MissionRelease" (
+    "id" TEXT NOT NULL,
+    "chamberId" TEXT NOT NULL,
+    "currency" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "purpose" TEXT NOT NULL,
+    "toProfileId" TEXT NOT NULL,
+    "toHandle" TEXT NOT NULL,
+    "proposerProfileId" TEXT NOT NULL,
+    "proposerHandle" TEXT NOT NULL,
+    "state" TEXT NOT NULL DEFAULT 'proposed',
+    "releasedAt" TIMESTAMP(3),
+    "frozenAt" TIMESTAMP(3),
+    "frozenByRulingId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "MissionRelease_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ReleaseAttestation" (
+    "id" TEXT NOT NULL,
+    "releaseId" TEXT NOT NULL,
+    "attestorProfileId" TEXT NOT NULL,
+    "attestorHandle" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ReleaseAttestation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Tip" (
     "id" TEXT NOT NULL,
     "postId" TEXT NOT NULL,
@@ -334,6 +374,8 @@ CREATE TABLE "Poll" (
     "pillarId" TEXT NOT NULL,
     "creatorProfileId" TEXT NOT NULL,
     "creatorHandle" TEXT NOT NULL,
+    "raisingForMission" BOOLEAN NOT NULL DEFAULT false,
+    "releaseThreshold" INTEGER NOT NULL DEFAULT 2,
     "title" TEXT NOT NULL,
     "description" TEXT,
     "type" TEXT NOT NULL,
@@ -1144,3 +1186,18 @@ CREATE UNIQUE INDEX "TestnetWalletLink_profileId_key" ON "TestnetWalletLink"("pr
 
 -- AddForeignKey
 ALTER TABLE "EconomyEntry" ADD CONSTRAINT "EconomyEntry_budgetCategory_fkey" FOREIGN KEY ("budgetCategory") REFERENCES "BudgetCategory"("name") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- CreateIndex
+CREATE INDEX "MissionRelease_chamberId_state_idx" ON "MissionRelease"("chamberId", "state");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ReleaseAttestation_releaseId_attestorProfileId_key" ON "ReleaseAttestation"("releaseId", "attestorProfileId");
+
+-- AddForeignKey
+ALTER TABLE "ChamberBalance" ADD CONSTRAINT "ChamberBalance_chamberId_fkey" FOREIGN KEY ("chamberId") REFERENCES "Chamber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MissionRelease" ADD CONSTRAINT "MissionRelease_chamberId_fkey" FOREIGN KEY ("chamberId") REFERENCES "Chamber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ReleaseAttestation" ADD CONSTRAINT "ReleaseAttestation_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

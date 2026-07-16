@@ -975,3 +975,81 @@ Open before Slice 2: PHASE_8_7 §8 Q6 — Appendix A's Circle attestation
 dial reads "floor 2" with **no upper bound**, while POLLINATOR §9.1
 asserts `[2,8]` and miscredits it to Appendix A. Needs an owner ruling
 or a corrected citation.
+
+### Slice 2 — The escrow primitive ✅ SELF-VERIFIED (2026-07-16)
+
+Money held on behalf of a stated mission, released only when verified
+humans co-sign that the spend is legitimate. `lib/escrow.ts` +
+`ChamberBalance` / `MissionRelease` / `ReleaseAttestation`.
+
+**Chambers, never Circles** (owner ruling, 2026-07-16). `CIRCLES_SPEC`
+Principle 4 is a ratified hard scope guard — *"Circles list pledges;
+they never hold funds... the action layer does not quietly become a
+treasury."* An earlier draft of the endowment spec recommended Circles;
+the owner's ruling corrected it and **avoided a spec amendment** rather
+than requiring one, because `NEURAL_POLLINATOR` §9.1 already gives
+Chambers a per-chamber balance. Never add a balance to a Circle.
+
+**Source-agnostic by construction.** The escrow does not know whether
+its balance came from donations (§9.1 — Slice 3, the only source 8.7
+ships), an endowment distribution (unratified, Phase-9-real), or a
+bounty (§6.2, greenlit). `creditMissionBalance(sourceKind)` exists so
+those arrive as adapters, never rewrites.
+
+**Release and freeze are AUTOMATIC (FUND_INTEGRITY §3.7).** Reaching the
+threshold pays out **in the same transaction that latches the final
+attestation** — `attestRelease` both attests and pays, deliberately:
+splitting them would create the discretionary gap the spec forbids.
+`freezeChamberReleases(tx, …)` takes a `tx` so it executes inside the
+ruling's own transaction. No operator step exists to withhold a valid
+release, and none to freeze funds someone doesn't want paid — **both
+directions matter**, and the withholding half was unaudited until §3.7
+named it. The guarantee is the ABSENCE of the path (ADMIN_OPS §1).
+
+**Guards that earned their place:**
+- **No self-attestation.** The proposer's voice never counts toward the
+  threshold — CIRCLES_SPEC's reason verbatim: a floor of 2 exists "so
+  'attested' always means more than one voice."
+- **Open proposals commit the balance.** Two releases that each fit but
+  together overdraw would otherwise both reach threshold and pay.
+- **Balance re-checked at payment time**, not just at proposal.
+- **Purpose frozen at proposal** — the claim being attested must not
+  move after signatures land on it.
+
+**★ The tests caught MY misunderstanding, not a code bug.** I wrote the
+first tests assuming threshold 2 = proposer + 1 co-signer. It is **2
+co-signers** — the Circle rule carried over exactly (the author is
+separate; the threshold counts attestations). So a release needs **three
+distinct humans**. The code was right; the test was wrong. Rewritten
+with a dedicated mission chamber and 3 members so no other test's open
+proposals can pollute a balance assertion.
+
+**An existing check caught the rest:** `mission.release` tripped
+verify's UNCATEGORIZED FLOW guard until mapped in `lib/transparency.ts`
+— classed as *"chamber funds, attested — treasury is not a party"* and
+deliberately **not** a treasury outflow: it carries no budget category,
+because conflating the two would inflate every utilization figure with
+money the treasury never spent. The hardening suite also caught schema
+drift (the two schemas must be byte-identical) and the missing
+consolidated-migration tables.
+
+**⚠ THE FREEZE HAS NO TRIGGER YET — flagged, not invented
+(DECISIONS_PENDING #17).** §3.4 assumes "an upheld Tribunal ruling of
+misuse" but never says how the case starts, and two things are
+genuinely unanswered: **(a)** a release cannot be flagged at all — `Flag`
+accepts `postId` XOR `dmExcerptId`, and a release is neither; **(b)**
+which rule is "misuse" (R3.4 Fraud is closest; R2.7 Attested-action
+fraud is the perfect analogue but says "*Circle* action"). Wiring it
+wrong either lets fraud walk or **freezes a chamber's funding over a
+rude comment**. CLAUDE.md rule 1 governs: where the specs are silent,
+flag. The mechanism is built and tested directly; the last wire wants
+an owner ruling.
+
+**Evidence:** tests **230/230** (11 new). db:verify ALL CHECKS PASSED.
+`npm run db:validate:postgres` — schema valid and model-identical.
+Typecheck clean.
+
+**NEXT:** Slice 3 — Chamber Mission Funding donations (§9.1: souls
+donate PollCoin toward a chamber's declared mission; genuine transfers,
+no auto-return). The escrow already accepts the money; Slice 3 is the
+intake plus its surface.

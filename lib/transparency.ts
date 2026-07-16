@@ -77,6 +77,18 @@ export const KIND_CATEGORIES: Record<string, KindInfo> = {
   "accrual.streak": { category: "Participation accrual (issuance)", direction: "issuance" },
   // Profile→profile flows the treasury only brushes (the cut is above).
   tip: { category: "Tips (soul to soul — treasury takes only the cut)", direction: "issuance" },
+  // Mission escrow (NEURAL_POLLINATOR §9.1; PHASE_8_7_SPEC Slice 2). A
+  // chamber paying out funds held for its own stated mission — the
+  // treasury is not a party. Classed with the other flows the treasury
+  // only brushes: it must appear (no dark corners, per this page's whole
+  // premise), but it is emphatically NOT a treasury outflow, so it
+  // carries no budget category and never counts against a budget.
+  // Conflating the two would inflate every utilization figure here with
+  // money the treasury never spent.
+  "mission.release": {
+    category: "Mission releases (chamber funds, attested — treasury is not a party)",
+    direction: "issuance",
+  },
 };
 
 export function kindInfo(kind: string): KindInfo {

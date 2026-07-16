@@ -29,6 +29,13 @@ import {
 } from "../lib/chambers";
 import { createPost, upgradePostPermanence } from "../lib/discussions";
 import { balanceOf, tip } from "../lib/economy";
+import {
+  chamberBalanceOf,
+  creditMissionBalance,
+  proposeRelease,
+  attestRelease,
+  freezeChamberReleases,
+} from "../lib/escrow";
 import { faceConstellation } from "../lib/lightScore";
 import { buildFeed, openLens, chamberStorefrontCards } from "../lib/feed";
 import { search } from "../lib/search";
@@ -491,6 +498,301 @@ describe("db:verify — the enclosure fails loudly", () => {
   }, 60_000);
 
   it("passes again once the tampering is reverted", () => {
+    const result = runVerify();
+    expect(result.status).toBe(0);
+  }, 60_000);
+});
+
+
+// ─────────────────────────────────────────────────────────────────────
+// Mission escrow (NEURAL_POLLINATOR §9.1; PHASE_8_7_SPEC §3 Slice 2).
+//
+// Money held on behalf of a stated mission, released only when verified
+// humans co-sign the spend is legitimate. Recipients are CHAMBERS, never
+// Circles — CIRCLES_SPEC Principle 4 forbids Circle custody ("the action
+// layer does not quietly become a treasury"), and Chambers already have
+// a ratified per-chamber balance (§9.1).
+//
+// THE THRESHOLD COUNTS CO-SIGNERS, NOT TOTAL VOICES — the Circle rule
+// carried over exactly (CIRCLES_SPEC §6.1: the author is separate; the
+// threshold counts attestations). So a default of 2 means the proposer
+// plus TWO other members: three distinct humans before money moves.
+// Its own dedicated chamber below, so open proposals from other tests
+// can never pollute a balance assertion.
+// ─────────────────────────────────────────────────────────────────────
+describe("mission escrow — holding, attested release, and the freeze", () => {
+  let missionChamberId: string;
+  let attestorAId: string;
+  let attestorBId: string;
+  let outsiderId: string;
+
+  beforeAll(async () => {
+    const a = await makeOnboardedSoul(db, { trueSelf: "mission-a", alias: "ma-shade" });
+    const b = await makeOnboardedSoul(db, { trueSelf: "mission-b", alias: "mb-shade" });
+    const o = await makeOnboardedSoul(db, { trueSelf: "mission-out", alias: "mo-shade" });
+    attestorAId = a.trueSelfId;
+    attestorBId = b.trueSelfId;
+    outsiderId = o.trueSelfId;
+
+    const made = await createChamber(db, {
+      profileId: creatorId,
+      title: "Kelowna Food Security",
+      subject: "A funded surplus-rescue route",
+      pitch: "The mission raises toward its own stated purpose.",
+      whyCare: "Wasted food, hungry neighbors, and the fix is logistics.",
+      isPublic: true,
+      scaffold: SCAFFOLD,
+    });
+    if (!made.ok) throw new Error(`mission chamber: ${made.reason}`);
+    missionChamberId = made.chamberId;
+
+    await enterChamber(db, { chamberId: missionChamberId, profileId: attestorAId });
+    await enterChamber(db, { chamberId: missionChamberId, profileId: attestorBId });
+    await db.chamber.update({
+      where: { id: missionChamberId },
+      data: { raisingForMission: true },
+    });
+    // Slice 2 owns holding and release, and is deliberately ignorant of
+    // where the balance came from — donations (souls → chamber) are
+    // Slice 3's adapter.
+    await db.$transaction((tx) =>
+      creditMissionBalance(tx, {
+        chamberId: missionChamberId,
+        currency: "PC",
+        amount: 100,
+        sourceKind: "donation",
+      })
+    );
+  }, 120_000);
+
+  it("holds a per-chamber balance, shaped like the treasury's (§9.1)", async () => {
+    expect(await chamberBalanceOf(db, missionChamberId, "PC")).toBeCloseTo(100, 5);
+  });
+
+  it("refuses a release proposed by a non-member", async () => {
+    const result = await proposeRelease(db, {
+      chamberId: missionChamberId,
+      proposerProfileId: outsiderId,
+      toProfileId: attestorAId,
+      currency: "PC",
+      amount: 10,
+      purpose: "Reimburse the venue deposit",
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain("members");
+  });
+
+  it("refuses a release the mission cannot cover", async () => {
+    const result = await proposeRelease(db, {
+      chamberId: missionChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: attestorAId,
+      currency: "PC",
+      amount: 500,
+      purpose: "More than we hold",
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain("not enough");
+  });
+
+  it("refuses a release with no stated purpose — the purpose IS the claim attested", async () => {
+    const result = await proposeRelease(db, {
+      chamberId: missionChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: attestorAId,
+      currency: "PC",
+      amount: 10,
+      purpose: "   ",
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain("what it's for");
+  });
+
+  it("REFUSES self-attestation — 'attested' must mean more than one voice", async () => {
+    const proposed = await proposeRelease(db, {
+      chamberId: missionChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: attestorAId,
+      currency: "PC",
+      amount: 5,
+      purpose: "Printing costs",
+    });
+    expect(proposed.ok).toBe(true);
+    if (!proposed.ok) return;
+    const self = await attestRelease(db, {
+      releaseId: proposed.releaseId,
+      attestorProfileId: creatorId,
+    });
+    expect(self.ok).toBe(false);
+    if (!self.ok) expect(self.reason).toContain("more than one voice");
+    await db.missionRelease.delete({ where: { id: proposed.releaseId } });
+  });
+
+  it("holds at one co-signer: below threshold, nothing moves", async () => {
+    const before = await chamberBalanceOf(db, missionChamberId, "PC");
+    const proposed = await proposeRelease(db, {
+      chamberId: missionChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: attestorAId,
+      currency: "PC",
+      amount: 10,
+      purpose: "Cold-chain totes",
+    });
+    expect(proposed.ok).toBe(true);
+    if (!proposed.ok) return;
+
+    const first = await attestRelease(db, {
+      releaseId: proposed.releaseId,
+      attestorProfileId: attestorAId,
+    });
+    expect(first.ok).toBe(true);
+    // One co-signer, threshold 2 — proposer + one is not corroboration.
+    if (first.ok) expect(first.released).toBe(false);
+    expect(await chamberBalanceOf(db, missionChamberId, "PC")).toBeCloseTo(before, 5);
+
+    const dup = await attestRelease(db, {
+      releaseId: proposed.releaseId,
+      attestorProfileId: attestorAId,
+    });
+    expect(dup.ok).toBe(false);
+    if (!dup.ok) expect(dup.reason).toContain("already attested");
+    await db.releaseAttestation.deleteMany({ where: { releaseId: proposed.releaseId } });
+    await db.missionRelease.delete({ where: { id: proposed.releaseId } });
+  });
+
+  it("★ pays AUTOMATICALLY at the threshold — no operator step exists (§3.7)", async () => {
+    const chamberBefore = await chamberBalanceOf(db, missionChamberId, "PC");
+    const recipientBefore = await balanceOf(db, attestorAId, "PC");
+
+    const proposed = await proposeRelease(db, {
+      chamberId: missionChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: attestorAId,
+      currency: "PC",
+      amount: 12,
+      purpose: "Bulk food purchase for the drive",
+    });
+    expect(proposed.ok).toBe(true);
+    if (!proposed.ok) return;
+
+    await attestRelease(db, { releaseId: proposed.releaseId, attestorProfileId: attestorAId });
+    // The SECOND co-signature meets the threshold — and the very call
+    // that latches it pays. There is no separate execute for anyone to
+    // withhold; that absence IS the guarantee.
+    const second = await attestRelease(db, {
+      releaseId: proposed.releaseId,
+      attestorProfileId: attestorBId,
+    });
+    expect(second.ok).toBe(true);
+    if (second.ok) expect(second.released).toBe(true);
+
+    expect(await chamberBalanceOf(db, missionChamberId, "PC")).toBeCloseTo(chamberBefore - 12, 5);
+    expect(await balanceOf(db, attestorAId, "PC")).toBeCloseTo(recipientBefore + 12, 5);
+
+    const release = await db.missionRelease.findUniqueOrThrow({
+      where: { id: proposed.releaseId },
+    });
+    expect(release.state).toBe("released");
+    expect(release.releasedAt).not.toBeNull();
+
+    const event = await db.ledgerEvent.findFirst({
+      where: { eventType: "mission.released" },
+      orderBy: { seq: "desc" },
+    });
+    expect(event).not.toBeNull();
+    expect(JSON.parse(event!.payload).releaseRef).toBe(proposed.releaseId);
+  });
+
+  it("never double-promises: open proposals commit the balance", async () => {
+    // Two proposals that each fit the balance but together exceed it
+    // would otherwise both reach threshold and overdraw the mission.
+    const available = await chamberBalanceOf(db, missionChamberId, "PC");
+    const first = await proposeRelease(db, {
+      chamberId: missionChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: attestorAId,
+      currency: "PC",
+      amount: available - 1,
+      purpose: "Nearly everything",
+    });
+    expect(first.ok).toBe(true);
+
+    const second = await proposeRelease(db, {
+      chamberId: missionChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: attestorAId,
+      currency: "PC",
+      amount: available - 1,
+      purpose: "Nearly everything, again",
+    });
+    expect(second.ok).toBe(false);
+    if (!second.ok) expect(second.reason).toContain("already committed");
+
+    if (first.ok) await db.missionRelease.delete({ where: { id: first.releaseId } });
+  });
+
+  it("★ freezes every unreleased proposal on a ruling — the real teeth (§3.4)", async () => {
+    const releasedBefore = await db.missionRelease.count({
+      where: { chamberId: missionChamberId, state: "released" },
+    });
+
+    const a = await proposeRelease(db, {
+      chamberId: missionChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: attestorAId,
+      currency: "PC",
+      amount: 3,
+      purpose: "Pending one",
+    });
+    const b = await proposeRelease(db, {
+      chamberId: missionChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: attestorBId,
+      currency: "PC",
+      amount: 4,
+      purpose: "Pending two",
+    });
+    expect(a.ok && b.ok).toBe(true);
+
+    const frozen = await db.$transaction((tx) =>
+      freezeChamberReleases(tx, {
+        chamberId: missionChamberId,
+        rulingId: "ruling-test-misuse",
+      })
+    );
+    expect(frozen).toBe(2);
+
+    const all = await db.missionRelease.findMany({
+      where: { chamberId: missionChamberId, state: "frozen" },
+    });
+    expect(all.length).toBe(2);
+    // A frozen release always cites its due process — never a quiet
+    // decision someone made.
+    expect(all.every((r) => r.frozenByRulingId === "ruling-test-misuse")).toBe(true);
+
+    // You cannot claw back what is spent; the already-paid release stays
+    // paid. Freeze stops what has NOT moved — that is the whole claim,
+    // and the spec says so plainly rather than overselling it.
+    const releasedAfter = await db.missionRelease.count({
+      where: { chamberId: missionChamberId, state: "released" },
+    });
+    expect(releasedAfter).toBe(releasedBefore);
+    expect(releasedAfter).toBeGreaterThan(0);
+  });
+
+  it("a frozen release cannot be attested back to life", async () => {
+    const frozen = await db.missionRelease.findFirstOrThrow({
+      where: { chamberId: missionChamberId, state: "frozen" },
+    });
+    const result = await attestRelease(db, {
+      releaseId: frozen.id,
+      attestorProfileId: attestorAId,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain("frozen");
+  });
+
+  it("db:verify still passes with escrow state on the books", () => {
     const result = runVerify();
     expect(result.status).toBe(0);
   }, 60_000);

@@ -1053,10 +1053,111 @@ model Chamber {
   createdAt      DateTime @default(now())
   lastActivityAt DateTime @default(now())
 
+  // Mission funding (NEURAL_POLLINATOR §9.1, owner-designed 2026-07-13).
+  // A Chamber may declare it's raising toward its stated mission — it
+  // already IS a stated mission (the scaffold, the storefront's "why
+  // should people care"), which is what makes it the right container for
+  // a real financial stake, unlike a poll's bare yes/no.
+  //
+  // Chambers may hold funds; CIRCLES may not — CIRCLES_SPEC Principle 4
+  // is a hard scope guard ("the action layer does not quietly become a
+  // treasury"). This is why funding routes here (owner ruling,
+  // 2026-07-16). Never add a balance to a Circle.
+  raisingForMission Boolean @default(false)
+  // §9.1: "Both numbers are rails, adjustable per chamber within
+  // bounds." This dial is THIS chamber's own (bounds [2,8] per §9.1) —
+  // NOT Appendix A's Circle attestation dial, which is floor-2 with no
+  // ceiling and governs action logs, never money. The shared default of
+  // 2 carries CIRCLES_SPEC's reasoning verbatim: a floor of 2 exists so
+  // "attested" always means more than one voice. The CEILING is this
+  // dial's own, doing work Circles never needed — on a Circle log an
+  // unreachable threshold just means nothing gets attested, but on
+  // escrow it STRANDS FUNDS (a chamber that set 50 could never release
+  // its own money).
+  releaseThreshold Int @default(2)
+
   members           ChamberMember[]
   invites           ChamberInvite[]
   scaffoldRevisions ChamberScaffoldRevision[]
   discussions       Discussion[]
+  balances          ChamberBalance[]
+  releases          MissionRelease[]
+}
+
+// The per-chamber mission balance (§9.1: "Raised funds accumulate in a
+// per-chamber balance — the same architectural shape as the
+// platform-wide TreasuryBalance, scoped to one chamber"). Deliberately
+// mirrors TreasuryBalance's shape, for the same reason: a balance is
+// always the sum of its entries, and db:verify re-derives it.
+model ChamberBalance {
+  chamberId String
+  chamber   Chamber @relation(fields: [chamberId], references: [id])
+  currency  String // "PC" | "G"
+  amount    Float   @default(0)
+
+  @@id([chamberId, currency])
+}
+
+// A release request (§9.1: "the chamber logs 'releasing Y PollCoin for
+// Z'; members attest it's legitimate"). The escrow's heart, and
+// deliberately source-agnostic: it does not care whether the balance
+// behind it came from donations, an endowment distribution, or a
+// bounty. That way a new source arrives as an adapter, never a rewrite.
+//
+// Release and freeze are AUTOMATIC (FUND_INTEGRITY §3.7): reaching the
+// threshold executes the transfer in the same transaction that latches
+// the attestation, and an upheld Tribunal ruling freezes in the ruling's
+// own transaction. There is no operator "execute" step to withhold a
+// valid release, and none to freeze funds someone simply doesn't want
+// paid. The guarantee is the ABSENCE of that code path — the same shape
+// as ADMIN_OPS §1's allowlist.
+model MissionRelease {
+  id        String  @id @default(cuid())
+  chamberId String
+  chamber   Chamber @relation(fields: [chamberId], references: [id])
+  currency  String // "PC" | "G"
+  amount    Float
+  // "for Z" — what this money is for, stated at proposal. Above the
+  // Tier-0 threshold this is a milestone from the funding Chamber's
+  // spend breakdown (FUND_INTEGRITY §3.1/§3.3); below it, a plain
+  // purpose. Frozen at proposal either way — the claim being attested
+  // must not move after signatures land on it.
+  purpose   String
+  // Who receives. Individual profiles, never a Circle (Principle 4).
+  toProfileId String
+  toHandle    String // public attribution, like Attestation's
+  proposerProfileId String // operator space
+  proposerHandle    String
+  // "proposed" → "released" (threshold met, paid, automatic)
+  //            → "frozen"   (upheld Tribunal ruling, automatic)
+  state       String   @default("proposed")
+  releasedAt  DateTime?
+  frozenAt    DateTime?
+  // The ruling that froze it — the freeze's public justification, so a
+  // frozen release always cites its due process rather than a decision
+  // someone made quietly.
+  frozenByRulingId String?
+  createdAt   DateTime @default(now())
+
+  attestations ReleaseAttestation[]
+
+  @@index([chamberId, state])
+}
+
+// A co-signature on a release: N verified humans publicly staking their
+// pseudonymous reputations that this spend is legitimate. A direct reuse
+// of the Attestation shape (Circle action logs) pointed at money — same
+// primitive, same honesty. What it proves is narrow and still valuable:
+// members vouched, permanently — never "the platform verified this."
+model ReleaseAttestation {
+  id                String         @id @default(cuid())
+  releaseId         String
+  release           MissionRelease @relation(fields: [releaseId], references: [id])
+  attestorProfileId String // operator space
+  attestorHandle    String // public — attestors are visible by design
+  createdAt         DateTime       @default(now())
+
+  @@unique([releaseId, attestorProfileId])
 }
 
 // Prior scaffold versions, kept on every creator edit — the history is
