@@ -1133,3 +1133,86 @@ Typecheck clean.
 transparency category) and Slice 7 (the demo runbook). Still open:
 DECISIONS_PENDING #17 (the freeze trigger — mechanism built, wire absent
 by design) and #18.
+
+### Slices 6–7 — the audit tier and THE OWNER'S DEMO RUNBOOK ✅ SELF-VERIFIED (2026-07-16)
+
+**Slice 6 — Fund Auditors** (details in the commit; the two properties
+that matter: **paid per case, never per finding** — clean and concern
+earn identically, because an auditor paid for finding problems will find
+problems; and **a finding is a signal, never a penalty** — an auditor who
+could freeze money would be an operator with extra steps). Sentinel's
+mission watch flags self-dealing *patterns*, never a single
+reimbursement, and says on its face that it is "a question, not an
+accusation." Numbers are build-time defaults, flagged (#19).
+
+---
+
+## ★ THE OWNER'S RUNBOOK — Phase 8.7 demo
+
+**One command, ten steps, ~15 seconds. Run it from your own terminal.**
+
+```
+cd /Users/shawn/Documents/Claude/Projects/Agoranetv3/platform
+npm run db:seed        # only if the rails are stale — it's idempotent
+npm run demo:phase8.7
+```
+
+**What you are showing, in one sentence:** *our treasury's spending half
+is one auditable mechanism, and the first thing we pointed it at was the
+hardest case — money leaving toward a stated purpose.*
+
+**The four moments to slow down on:**
+
+1. **Step 1 — the guardrail that had no code.** The Constitution has
+   said "the treasury MUST NOT spend outside budgeted categories" since
+   2026-07-07, and the Treasury Dashboard spec promised it was "rendered
+   structurally." It wasn't. There was no category model, no field, and
+   no shared door. **This phase made a constitutional guardrail true for
+   the first time** — and the check caught a fourth treasury outflow the
+   audit had missed on its first run.
+
+2. **Step 5 — the money moves in the same instant as the second
+   signature.** Not "then an admin approves." There is no approve step.
+   The code path does not exist — for anyone, including you. Say the
+   sentence that makes it land: *an operator who can silently sit on
+   approved money is as much a capture vector as one who can steal it,
+   and nobody audits for that one.*
+
+3. **Step 7 — the honest limit, stated out loud.** You **cannot** claw
+   back what is spent. Freeze stops what has not moved. Overselling this
+   is the easiest lie in the demo, and refusing to tell it is worth more
+   than the feature.
+
+4. **Step 10 — the punchline.** Every event above sits on a ledger whose
+   head hash is witnessed by a public Cardano preprod transaction. The
+   demo prints the tx. **A reader can verify it against a chain you do
+   not control.** Then the real point: *none of this was invented for
+   fund integrity. Chambers, attestation, polls, the Tribunal, Sentinel,
+   the ledger, the anchor — all of it already ran. This is composition.
+   That's the claim that can't be faked, and it's why three attempts
+   mattered.*
+
+**If asked "is the money real?" — no, and say so first.** Internal points
+with no value. The mechanism is what's real; Phase 9 changes the value,
+not the machinery. Same posture as the interim issuer at 8.6.
+
+**If asked "so you can guarantee the money is well spent?" — no.**
+Attestation proves N verified humans staked their names, permanently. It
+never proves the platform verified the spend. Fund Integrity raises the
+cost of lying; it does not make lying impossible. That sentence is in
+the product, not just the runbook.
+
+**Known gap, if it comes up (DECISIONS_PENDING #17):** the freeze
+mechanism is built and tested, but has no *trigger* — a release cannot
+be flagged today (Flag takes postId XOR dmExcerptId), and the spec never
+names which rule is "misuse." Wiring it wrong would either let fraud walk
+or freeze a chamber's funding over a rude comment. It waits for a ruling
+rather than a guess.
+
+**Evidence:** tests **255/255**. db:verify ALL CHECKS PASSED. Postgres
+schema valid and model-identical. `npm run check` exit 0. Demo verified
+end-to-end on the dev database, closing on a real preprod anchor tx.
+
+**PHASE 8.7 BUILD-HALF COMPLETE — the checkpoint is YOUR run of the
+runbook above.** Open for your ruling: #17 (freeze trigger), #18
+(donation inferences), #19 (auditor numbers).
