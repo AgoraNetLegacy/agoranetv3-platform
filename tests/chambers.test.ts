@@ -37,6 +37,7 @@ import {
   freezeChamberReleases,
   declareRaising,
   donateToMission,
+  reviseFundingPlan,
 } from "../lib/escrow";
 import { faceConstellation } from "../lib/lightScore";
 import { buildFeed, openLens, chamberStorefrontCards } from "../lib/feed";
@@ -65,6 +66,14 @@ const SCAFFOLD = {
   solving: "Neighborhood food waste: edible surplus goes to landfill.",
   needToKnow: "Local health rules, who already gleans, cold-chain basics.",
   success: "A weekly surplus-to-pantry route running without us.",
+};
+
+// The funding plan (FUND_INTEGRITY §3.1, Tier 0): the three answers a
+// chamber owes before it may ask anyone for money.
+const PLAN = {
+  recipient: "The chamber's own members, reimbursed for costs they front.",
+  evidence: "Receipts posted to the workshop; our attested action log is public.",
+  breakdown: "40u coats · 30u transport · 30u storage totes.",
 };
 
 beforeAll(async () => {
@@ -844,6 +853,7 @@ describe("mission donations — genuine transfers, no auto-return (§9.1)", () =
       chamberId: fundedChamberId,
       profileId: donorId,
       raising: true,
+      plan: PLAN,
     });
     expect(notCreator.ok).toBe(false);
     if (!notCreator.ok) expect(notCreator.reason).toContain("creator");
@@ -852,6 +862,7 @@ describe("mission donations — genuine transfers, no auto-return (§9.1)", () =
       chamberId: fundedChamberId,
       profileId: creatorId,
       raising: true,
+      plan: PLAN,
     });
     expect(declared.ok).toBe(true);
   });
@@ -928,6 +939,140 @@ describe("mission donations — genuine transfers, no auto-return (§9.1)", () =
   });
 
   it("db:verify passes with donations on the books", () => {
+    const result = runVerify();
+    expect(result.status).toBe(0);
+  }, 60_000);
+});
+
+// The funding plan (FUND_INTEGRITY §3.1 — Tier 0, "procurement due
+// diligence"). Tier 0 is not a gate bolted onto Chambers; it IS what a
+// Chamber already is — the scaffold and the public workshop are the
+// dissection. These three fields only point that machinery at money.
+describe("the funding plan — Tier 0 diligence (FUND_INTEGRITY §3.1)", () => {
+  let planChamberId: string;
+  let planDonorId: string;
+
+  beforeAll(async () => {
+    const d = await makeOnboardedSoul(db, { trueSelf: "plan-donor", alias: "pd-shade" });
+    planDonorId = d.trueSelfId;
+    await topUpForTests(db, creatorId, { pc: 60, g: 60 });
+    const made = await createChamber(db, {
+      profileId: creatorId,
+      title: "Community Fridge",
+      subject: "A funded community fridge",
+      pitch: "Raising toward a stated mission.",
+      whyCare: "Food access, block by block.",
+      isPublic: true,
+      scaffold: SCAFFOLD,
+    });
+    if (!made.ok) throw new Error(`plan chamber: ${made.reason}`);
+    planChamberId = made.chamberId;
+  }, 60_000);
+
+  it("★ refuses to raise without answering all three — no plan, no money", async () => {
+    const noPlan = await declareRaising(db, {
+      chamberId: planChamberId,
+      profileId: creatorId,
+      raising: true,
+    });
+    expect(noPlan.ok).toBe(false);
+    if (!noPlan.ok) expect(noPlan.reason).toContain("who is funded");
+
+    const partial = await declareRaising(db, {
+      chamberId: planChamberId,
+      profileId: creatorId,
+      raising: true,
+      plan: { ...PLAN, breakdown: "   " },
+    });
+    expect(partial.ok).toBe(false);
+
+    // Refused means it never started raising — so nobody can donate.
+    const chamber = await db.chamber.findUniqueOrThrow({ where: { id: planChamberId } });
+    expect(chamber.raisingForMission).toBe(false);
+    const blocked = await donateToMission(db, {
+      chamberId: planChamberId,
+      profileId: planDonorId,
+      amount: 5,
+    });
+    expect(blocked.ok).toBe(false);
+  });
+
+  it("declaring stores the plan and starts its history at v1", async () => {
+    const declared = await declareRaising(db, {
+      chamberId: planChamberId,
+      profileId: creatorId,
+      raising: true,
+      plan: PLAN,
+    });
+    expect(declared.ok).toBe(true);
+
+    const chamber = await db.chamber.findUniqueOrThrow({ where: { id: planChamberId } });
+    expect(chamber.fundingRecipient).toBe(PLAN.recipient);
+    expect(chamber.fundingEvidence).toBe(PLAN.evidence);
+    expect(chamber.fundingBreakdown).toBe(PLAN.breakdown);
+    expect(chamber.raisingDeclaredAt).not.toBeNull();
+
+    // v1 exists from the first moment — the history records what souls
+    // donated against, not only what changed later.
+    const revisions = await db.chamberFundingRevision.findMany({
+      where: { chamberId: planChamberId },
+    });
+    expect(revisions.length).toBe(1);
+    expect(revisions[0].breakdown).toBe(PLAN.breakdown);
+  });
+
+  it("★ a revised plan keeps every version — donors gave against a specific one", async () => {
+    await donateToMission(db, {
+      chamberId: planChamberId,
+      profileId: planDonorId,
+      amount: 6,
+    });
+
+    const revised = await reviseFundingPlan(db, {
+      chamberId: planChamberId,
+      profileId: creatorId,
+      recipient: PLAN.recipient,
+      evidence: "Receipts posted to the workshop; plus the pantry's own confirmation.",
+      breakdown: "50u coats · 30u transport · 20u storage totes.",
+    });
+    expect(revised.ok).toBe(true);
+
+    // The plan sharpened — that's the workshop working. But the version
+    // the donor gave against survives, so a silent bait-and-switch is
+    // impossible rather than merely forbidden.
+    const revisions = await db.chamberFundingRevision.findMany({
+      where: { chamberId: planChamberId },
+      orderBy: { editedAt: "asc" },
+    });
+    expect(revisions.length).toBe(2);
+    expect(revisions[0].breakdown).toBe(PLAN.breakdown);
+    expect(revisions[1].breakdown).toContain("50u coats");
+
+    const chamber = await db.chamber.findUniqueOrThrow({ where: { id: planChamberId } });
+    expect(chamber.fundingBreakdown).toContain("50u coats");
+
+    // And the change is public — a donor deserves to see it.
+    const event = await db.ledgerEvent.findFirst({
+      where: { eventType: "mission.plan-revised" },
+      orderBy: { seq: "desc" },
+    });
+    expect(event).not.toBeNull();
+    expect(JSON.parse(event!.payload).chamberRef).toBe(planChamberId);
+  });
+
+  it("only the creator sharpens the plan", async () => {
+    const notCreator = await reviseFundingPlan(db, {
+      chamberId: planChamberId,
+      profileId: planDonorId,
+      recipient: "Me, actually",
+      evidence: "Trust me",
+      breakdown: "100u me",
+    });
+    expect(notCreator.ok).toBe(false);
+    if (!notCreator.ok) expect(notCreator.reason).toContain("creator");
+  });
+
+  it("db:verify passes with funding plans on the books", () => {
     const result = runVerify();
     expect(result.status).toBe(0);
   }, 60_000);

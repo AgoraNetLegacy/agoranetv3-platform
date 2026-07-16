@@ -86,6 +86,18 @@ CREATE TABLE "BudgetCategory" (
 );
 
 -- CreateTable
+CREATE TABLE "ChamberFundingRevision" (
+    "id" TEXT NOT NULL,
+    "chamberId" TEXT NOT NULL,
+    "recipient" TEXT NOT NULL,
+    "evidence" TEXT NOT NULL,
+    "breakdown" TEXT NOT NULL,
+    "editedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ChamberFundingRevision_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "ChamberBalance" (
     "chamberId" TEXT NOT NULL,
     "currency" TEXT NOT NULL,
@@ -375,6 +387,10 @@ CREATE TABLE "Poll" (
     "creatorProfileId" TEXT NOT NULL,
     "creatorHandle" TEXT NOT NULL,
     "raisingForMission" BOOLEAN NOT NULL DEFAULT false,
+    "fundingRecipient" TEXT,
+    "fundingEvidence" TEXT,
+    "fundingBreakdown" TEXT,
+    "raisingDeclaredAt" TIMESTAMP(3),
     "releaseThreshold" INTEGER NOT NULL DEFAULT 2,
     "title" TEXT NOT NULL,
     "description" TEXT,
@@ -1201,3 +1217,6 @@ ALTER TABLE "MissionRelease" ADD CONSTRAINT "MissionRelease_chamberId_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "ReleaseAttestation" ADD CONSTRAINT "ReleaseAttestation_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ChamberFundingRevision" ADD CONSTRAINT "ChamberFundingRevision_chamberId_fkey" FOREIGN KEY ("chamberId") REFERENCES "Chamber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

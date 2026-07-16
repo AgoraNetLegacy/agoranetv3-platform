@@ -101,23 +101,139 @@ export async function creditMissionBalance(
  */
 export async function declareRaising(
   db: PrismaClient,
-  input: { chamberId: string; profileId: string; raising: boolean }
+  input: {
+    chamberId: string;
+    profileId: string;
+    raising: boolean;
+    // The funding plan (FUND_INTEGRITY §3.1, Tier 0). Required to start
+    // raising; ignored when withdrawing.
+    plan?: { recipient: string; evidence: string; breakdown: string };
+  }
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
   const chamber = await db.chamber.findUnique({ where: { id: input.chamberId } });
   if (!chamber) return { ok: false, reason: "No such chamber." };
   if (chamber.creatorProfileId !== input.profileId) {
     return { ok: false, reason: "Only the chamber's creator may declare its mission funding." };
   }
+
+  // Tier 0: a chamber cannot ask for money without saying who's funded,
+  // how a donor can check that, and what the money buys. This is the
+  // whole diligence gate, and it costs the creator three answers rather
+  // than a committee's approval — scrutiny, not permission.
+  let plan: { recipient: string; evidence: string; breakdown: string } | null = null;
+  if (input.raising) {
+    const recipient = input.plan?.recipient?.trim() ?? "";
+    const evidence = input.plan?.evidence?.trim() ?? "";
+    const breakdown = input.plan?.breakdown?.trim() ?? "";
+    if (!recipient || !evidence || !breakdown) {
+      return {
+        ok: false,
+        reason:
+          "A mission asking for money answers three things first: who is funded, how anyone can check that claim, and what the money buys, itemized. Souls donate against this plan — it can't be blank.",
+      };
+    }
+    plan = { recipient, evidence, breakdown };
+  }
+
   await db.$transaction(async (tx) => {
     await tx.chamber.update({
       where: { id: input.chamberId },
-      data: { raisingForMission: input.raising },
+      data: input.raising
+        ? {
+            raisingForMission: true,
+            fundingRecipient: plan!.recipient,
+            fundingEvidence: plan!.evidence,
+            fundingBreakdown: plan!.breakdown,
+            raisingDeclaredAt: new Date(),
+          }
+        : { raisingForMission: false },
     });
+    if (input.raising) {
+      // The plan as donated-against, from the first moment — so the
+      // history starts at v1 rather than only recording later edits.
+      await tx.chamberFundingRevision.create({
+        data: {
+          chamberId: input.chamberId,
+          recipient: plan!.recipient,
+          evidence: plan!.evidence,
+          breakdown: plan!.breakdown,
+        },
+      });
+    }
     await appendEvent(tx, {
       actorType: "soul",
       actorId: chamber.creatorHandle,
       eventType: input.raising ? "mission.raising-declared" : "mission.raising-withdrawn",
       payload: { chamberRef: input.chamberId, handle: chamber.creatorHandle },
+    });
+  });
+  return { ok: true };
+}
+
+/**
+ * Revise the funding plan (FUND_INTEGRITY §3.1: the workshop's whole job
+ * is making the creator fill the gaps the community finds).
+ *
+ * Revisable on purpose — a plan that survived dissection is better than
+ * the one that entered. But every version is kept, because souls donated
+ * against a specific plan: silent edits after the money arrived would be
+ * a bait-and-switch, and the history is what makes that impossible
+ * rather than merely forbidden.
+ *
+ * Creator-only, matching `editScaffold` ("the creator's framing — only
+ * they sharpen it").
+ */
+export async function reviseFundingPlan(
+  db: PrismaClient,
+  input: {
+    chamberId: string;
+    profileId: string;
+    recipient: string;
+    evidence: string;
+    breakdown: string;
+  }
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const chamber = await db.chamber.findUnique({ where: { id: input.chamberId } });
+  if (!chamber) return { ok: false, reason: "No such chamber." };
+  if (chamber.creatorProfileId !== input.profileId) {
+    return { ok: false, reason: "The funding plan is the creator's to sharpen." };
+  }
+  if (!chamber.raisingForMission) {
+    return { ok: false, reason: "This chamber isn't raising toward its mission." };
+  }
+  const recipient = input.recipient.trim();
+  const evidence = input.evidence.trim();
+  const breakdown = input.breakdown.trim();
+  if (!recipient || !evidence || !breakdown) {
+    return {
+      ok: false,
+      reason: "A funding plan answers all three: who is funded, how to check it, what it buys.",
+    };
+  }
+
+  await db.$transaction(async (tx) => {
+    await tx.chamberFundingRevision.create({
+      data: { chamberId: input.chamberId, recipient, evidence, breakdown },
+    });
+    await tx.chamber.update({
+      where: { id: input.chamberId },
+      data: {
+        fundingRecipient: recipient,
+        fundingEvidence: evidence,
+        fundingBreakdown: breakdown,
+      },
+    });
+    // Public: a funding plan changing after souls gave against it is
+    // exactly the event a donor deserves to see.
+    await appendEvent(tx, {
+      actorType: "soul",
+      actorId: chamber.creatorHandle,
+      eventType: "mission.plan-revised",
+      payload: {
+        chamberRef: input.chamberId,
+        handle: chamber.creatorHandle,
+        revision: await tx.chamberFundingRevision.count({ where: { chamberId: input.chamberId } }),
+      },
     });
   });
   return { ok: true };

@@ -1064,6 +1064,25 @@ model Chamber {
   // treasury"). This is why funding routes here (owner ruling,
   // 2026-07-16). Never add a balance to a Circle.
   raisingForMission Boolean @default(false)
+  // THE FUNDING PLAN (FUND_INTEGRITY §3.1, Tier 0 — "procurement due
+  // diligence"). A chamber cannot ask for money without answering these
+  // three, and they are first-class fields for the same reason the
+  // scaffold is: a plan buried in a post is a plan nobody can hold you
+  // to.
+  //
+  // Tier 0 is not a gate bolted on here — it is what a Chamber ALREADY
+  // IS. The scaffold and the public workshop are the dissection; these
+  // three only point that existing machinery at money. That is why
+  // funding routes through Chambers and nothing else (owner ruling,
+  // 2026-07-16).
+  //
+  // Null until the chamber declares it's raising; required at that
+  // moment, and revisable after with visible history — see
+  // ChamberFundingRevision for why the history is not optional.
+  fundingRecipient  String? // who is funded, in what capacity
+  fundingEvidence   String? // how a donor can check that claim
+  fundingBreakdown  String? // itemized spend — becomes the release plan
+  raisingDeclaredAt DateTime?
   // §9.1: "Both numbers are rails, adjustable per chamber within
   // bounds." This dial is THIS chamber's own (bounds [2,8] per §9.1) —
   // NOT Appendix A's Circle attestation dial, which is floor-2 with no
@@ -1082,6 +1101,26 @@ model Chamber {
   discussions       Discussion[]
   balances          ChamberBalance[]
   releases          MissionRelease[]
+  fundingRevisions  ChamberFundingRevision[]
+}
+
+// Every prior version of the funding plan, kept on every edit.
+//
+// The scaffold keeps history so participants can watch an idea sharpen.
+// The funding plan keeps history for a harder reason: **souls donate
+// against this plan.** If it could change silently after the money
+// arrived, "here's what we'll do with it" would be a bait-and-switch
+// with no evidence left behind. Donors can always see what they gave
+// against — that is what makes §9.1's "genuine transfer, no auto-return"
+// a fair bargain rather than a trap.
+model ChamberFundingRevision {
+  id         String   @id @default(cuid())
+  chamberId  String
+  chamber    Chamber  @relation(fields: [chamberId], references: [id])
+  recipient  String
+  evidence   String
+  breakdown  String
+  editedAt   DateTime @default(now())
 }
 
 // The per-chamber mission balance (§9.1: "Raised funds accumulate in a
