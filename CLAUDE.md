@@ -101,6 +101,38 @@ preprod, the daily anchor cadence (chain:anchor, rail-governed,
 verify check 27), the Identus issuer with §1.5 recovery proven, the
 Midnight nullifier contract enforcing one-per-scope by ZK proof.
 
+**★ PHASE 8.7 — THE TREASURY'S OTHER HALF: BUILD-HALF COMPLETE
+(2026-07-16), awaiting the owner's demo run.** He scheduled it the same
+day he said "I am done building," on his own argument: Fund Integrity's
+components ALL already run, so a working demo proves *integration* — the
+real moat — better than presentation polish would. Seven slices, all
+self-verified; CHECKPOINTS.md carries the record and **THE OWNER'S
+RUNBOOK** (`npm run demo:phase8.7`, ten steps, ~15s, ends on a real
+preprod anchor tx). Specs: `Fund Integrity/` (PHASE_8_7_SPEC +
+FUND_INTEGRITY_SPEC + COMMUNITY_ENDOWMENT_SPEC). Internal points only —
+**no legal gate** (§9.1: "No legal gate applies").
+
+What it built: budget categories + `payFromTreasury` (**a constitutional
+guardrail made true for the first time** — the category rule had NO code
+behind it; the new db:verify check caught a 4th outflow the audit missed),
+source-agnostic escrow with automatic release/freeze (no operator step
+exists — the guarantee is the ABSENCE of the path), §9.1 donations and
+its binding-vote second door, Tier 0's funding plan, and Fund Auditors
+(paid per case, NEVER per finding).
+
+**Owner rulings that shaped it:** recipients are **CHAMBERS, never
+Circles** (Principle 4 forbids Circle custody; §9.1 already gives
+Chambers a balance — so his ruling avoided a spec amendment rather than
+needing one); **the Tournament IS the formula** for discretionary
+funding; the endowment is spec-only, gated on Legal #10.
+
+**OPEN, awaiting his ruling:** DECISIONS_PENDING **#17** (the freeze has
+a mechanism but no trigger — a release can't be flagged at all, and the
+spec never names which rule is "misuse"; wiring it wrong lets fraud walk
+or freezes funding over a rude comment), **#18** (donation inferences),
+**#19** (auditor numbers — the Phase C session couldn't size a role that
+didn't exist yet).
+
 **CURRENT: the owner's LEARNING ERA.** The platform is in its full
 testnet showcase form. No build phase is active; the owner schedules
 all further build work — sessions never self-start it. Remaining on
