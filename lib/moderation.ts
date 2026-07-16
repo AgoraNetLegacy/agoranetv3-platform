@@ -15,7 +15,8 @@ import type { Tx } from "./db";
 import { clearGate } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
-import { chargeToTreasury, grant } from "./economy";
+import { chargeToTreasury, grant, payFromTreasury } from "./economy";
+import { BUDGET_MODERATION_REWARDS, BUDGET_TRIBUNAL_STIPENDS } from "./budget";
 import { notify } from "./notifications";
 import { contentHash } from "./discussions";
 
@@ -647,26 +648,19 @@ export async function resolveCase(
     for (const flag of modCase.flags) {
       const refund = flag.depositHeld > 0 && !input.badFaith;
       if (refund) {
-        await tx.treasuryBalance.update({
-          where: { currency: "PC" },
-          data: { amount: { decrement: flag.depositHeld } },
+        // Through the one door (economy.payFromTreasury) — a refund is
+        // still the treasury spending, so it carries its category like
+        // any other outflow.
+        const paid = await payFromTreasury(tx, {
+          profileId: flag.reporterProfileId,
+          currency: "PC",
+          amount: flag.depositHeld,
+          kind: "refund.flag",
+          budgetCategory: BUDGET_MODERATION_REWARDS,
+          refType: "flag",
+          refId: flag.id,
         });
-        await tx.balance.upsert({
-          where: { profileId_currency: { profileId: flag.reporterProfileId, currency: "PC" } },
-          create: { profileId: flag.reporterProfileId, currency: "PC", amount: flag.depositHeld },
-          update: { amount: { increment: flag.depositHeld } },
-        });
-        await tx.economyEntry.create({
-          data: {
-            kind: "refund.flag",
-            currency: "PC",
-            amount: flag.depositHeld,
-            fromTreasury: true,
-            toProfileId: flag.reporterProfileId,
-            refType: "flag",
-            refId: flag.id,
-          },
-        });
+        if (!paid.ok) throw new Error(`Flag refund refused: ${paid.reason}`);
       }
       await tx.flag.update({
         where: { id: flag.id },
@@ -720,27 +714,16 @@ export async function resolveCase(
       const agreementRate = total > 0 ? agreed / total : 0.5;
       const reward =
         Math.round(caseRewardG * ratingMultiplier(agreementRate, multiplierMax) * 100) / 100;
-      await tx.treasuryBalance.upsert({
-        where: { currency: "G" },
-        create: { currency: "G", amount: -reward },
-        update: { amount: { decrement: reward } },
+      const paidReward = await payFromTreasury(tx, {
+        profileId: ruling.moderatorProfileId,
+        currency: "G",
+        amount: reward,
+        kind: "reward.moderation",
+        budgetCategory: BUDGET_MODERATION_REWARDS,
+        refType: "case",
+        refId: modCase.id,
       });
-      await tx.balance.upsert({
-        where: { profileId_currency: { profileId: ruling.moderatorProfileId, currency: "G" } },
-        create: { profileId: ruling.moderatorProfileId, currency: "G", amount: reward },
-        update: { amount: { increment: reward } },
-      });
-      await tx.economyEntry.create({
-        data: {
-          kind: "reward.moderation",
-          currency: "G",
-          amount: reward,
-          fromTreasury: true,
-          toProfileId: ruling.moderatorProfileId,
-          refType: "case",
-          refId: modCase.id,
-        },
-      });
+      if (!paidReward.ok) throw new Error(`Badge reward refused: ${paidReward.reason}`);
       const term = await tx.badgeTerm.findFirst({
         where: { profileId: ruling.moderatorProfileId },
         orderBy: { startedAt: "desc" },
@@ -937,25 +920,19 @@ export async function settleAppeal(db: PrismaClient, appealCaseId: string): Prom
       where: { kind: "deposit.appeal", refId: original.id },
     });
     if (changed && depositEntry) {
-      await tx.treasuryBalance.update({
-        where: { currency: "PC" },
-        data: { amount: { decrement: depositEntry.amount } },
+      // The appeal deposit returns when the Tribunal changes the ruling
+      // (POLLS §8). Through the one door — a refund is the treasury
+      // spending, and it carries its category like every other outflow.
+      const refunded = await payFromTreasury(tx, {
+        profileId: depositEntry.fromProfileId!,
+        currency: "PC",
+        amount: depositEntry.amount,
+        kind: "refund.appeal",
+        budgetCategory: BUDGET_TRIBUNAL_STIPENDS,
+        refType: "case",
+        refId: original.id,
       });
-      await tx.balance.update({
-        where: { profileId_currency: { profileId: depositEntry.fromProfileId!, currency: "PC" } },
-        data: { amount: { increment: depositEntry.amount } },
-      });
-      await tx.economyEntry.create({
-        data: {
-          kind: "refund.appeal",
-          currency: "PC",
-          amount: depositEntry.amount,
-          fromTreasury: true,
-          toProfileId: depositEntry.fromProfileId,
-          refType: "case",
-          refId: original.id,
-        },
-      });
+      if (!refunded.ok) throw new Error(`Appeal refund refused: ${refunded.reason}`);
     }
     // Original upheld, appeal says otherwise → restore and unwind.
     // (DM cases have no content to restore; the personal consequences
@@ -1013,26 +990,16 @@ export async function seatTribunal(db: PrismaClient): Promise<void> {
           termEnd: new Date(now.getTime() + termDays * 86_400_000),
         },
       });
-      // Treasury-paid stipend per term (service is compensated, never charged).
-      await tx.treasuryBalance.upsert({
-        where: { currency: "G" },
-        create: { currency: "G", amount: -stipendG },
-        update: { amount: { decrement: stipendG } },
+      // Treasury-paid stipend per term (service is compensated, never
+      // charged) — through the one door, carrying its category.
+      const paidStipend = await payFromTreasury(tx, {
+        profileId: candidate.profileId,
+        currency: "G",
+        amount: stipendG,
+        kind: "stipend.tribunal",
+        budgetCategory: BUDGET_TRIBUNAL_STIPENDS,
       });
-      await tx.balance.upsert({
-        where: { profileId_currency: { profileId: candidate.profileId, currency: "G" } },
-        create: { profileId: candidate.profileId, currency: "G", amount: stipendG },
-        update: { amount: { increment: stipendG } },
-      });
-      await tx.economyEntry.create({
-        data: {
-          kind: "stipend.tribunal",
-          currency: "G",
-          amount: stipendG,
-          fromTreasury: true,
-          toProfileId: candidate.profileId,
-        },
-      });
+      if (!paidStipend.ok) throw new Error(`Tribunal stipend refused: ${paidStipend.reason}`);
     });
   }
 }

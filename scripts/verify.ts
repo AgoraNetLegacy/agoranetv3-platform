@@ -1838,6 +1838,70 @@ async function main() {
     failures += anchorProblems;
   }
 
+  // --- 33. The budgeted-categories must-guardrail (PHASE_8_7_SPEC §3,
+  // Slice 1). PLATFORM_CONSTITUTION Appendix A: "The treasury MUST NOT
+  // spend outside budgeted categories." TREASURY_DASHBOARD §1.3 promises
+  // it is "rendered structurally: an outflow without a budget category
+  // cannot exist." This check is what makes that sentence true — the
+  // rule is enforced in economy.payFromTreasury(), and pinned here so a
+  // future call site that hand-rolls an outflow fails loudly instead of
+  // silently reopening the hole.
+  const outflows = await db.economyEntry.findMany({ where: { fromTreasury: true } });
+  const categories = await db.budgetCategory.findMany();
+  const categoryNames = new Set(categories.map((c) => c.name));
+  const activeNames = new Set(categories.filter((c) => c.active).map((c) => c.name));
+  let budgetProblems = 0;
+
+  for (const entry of outflows) {
+    if (!entry.budgetCategory) {
+      console.error(
+        `✗ Treasury outflow with NO budget category: ${entry.kind} ${entry.amount}${entry.currency} (entry ${entry.id}) — the Constitution's must-guardrail says this cannot exist.`
+      );
+      budgetProblems++;
+      continue;
+    }
+    if (!categoryNames.has(entry.budgetCategory)) {
+      console.error(
+        `✗ Treasury outflow cites an unknown budget category "${entry.budgetCategory}": ${entry.kind} (entry ${entry.id}).`
+      );
+      budgetProblems++;
+    }
+  }
+
+  // The inverse leak: only outflows may carry a category. An inflow or an
+  // issuance grant wearing one would corrupt every budget-utilization
+  // figure the transparency dashboard derives from this column.
+  const miscategorized = await db.economyEntry.findMany({
+    where: { fromTreasury: false, NOT: { budgetCategory: null } },
+  });
+  for (const entry of miscategorized) {
+    console.error(
+      `✗ Non-outflow carries a budget category: ${entry.kind} → "${entry.budgetCategory}" (entry ${entry.id}). Only treasury spending is budgeted.`
+    );
+    budgetProblems++;
+  }
+
+  // The three TOKENOMICS §3 outflows must exist as categories — if a
+  // deploy loses them, payFromTreasury starts refusing moderation
+  // rewards, and the moderators simply stop being paid. Fail here, loudly
+  // and early, rather than in a badge holder's silent missing stipend.
+  for (const required of ["moderation-rewards", "tribunal-stipends", "platform-operations"]) {
+    if (!activeNames.has(required)) {
+      console.error(
+        `✗ Ratified budget category missing or inactive: "${required}" (TOKENOMICS §3's treasury loop names it).`
+      );
+      budgetProblems++;
+    }
+  }
+
+  if (budgetProblems === 0) {
+    console.log(
+      `✓ Budgeted-categories guardrail (${outflows.length} outflow(s), all categorized; ${categories.length} categor(ies) seeded; no inflow miscategorized)`
+    );
+  } else {
+    failures += budgetProblems;
+  }
+
   if (failures > 0) {
     console.error(`\nVERIFICATION FAILED: ${failures} problem(s).`);
     process.exit(1);

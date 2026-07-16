@@ -68,9 +68,21 @@ CREATE TABLE "EconomyEntry" (
     "toTreasury" BOOLEAN NOT NULL DEFAULT false,
     "refType" TEXT,
     "refId" TEXT,
+    "budgetCategory" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "EconomyEntry_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BudgetCategory" (
+    "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "cap" DOUBLE PRECISION,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "BudgetCategory_pkey" PRIMARY KEY ("name")
 );
 
 -- CreateTable
@@ -1129,3 +1141,6 @@ CREATE TABLE "TestnetWalletLink" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "TestnetWalletLink_profileId_key" ON "TestnetWalletLink"("profileId");
+
+-- AddForeignKey
+ALTER TABLE "EconomyEntry" ADD CONSTRAINT "EconomyEntry_budgetCategory_fkey" FOREIGN KEY ("budgetCategory") REFERENCES "BudgetCategory"("name") ON DELETE SET NULL ON UPDATE CASCADE;

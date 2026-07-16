@@ -7,7 +7,7 @@ process.env.DATABASE_URL = url;
 process.env.GATE_OPERATOR_SECRET = "test-secret-for-economy-tests";
 
 import { PrismaClient } from "@prisma/client";
-import { balanceOf, tip, tipStats } from "../lib/economy";
+import { balanceOf, tip, tipStats, payFromTreasury } from "../lib/economy";
 import { createPost, upgradePostPermanence, createPollDiscussion } from "../lib/discussions";
 import { createPoll, castVote } from "../lib/polls";
 import { saveSeedAnswer, seedQuestions } from "../lib/valuesSeed";
@@ -302,5 +302,139 @@ describe("db:verify conservation", () => {
       where: { profileId_currency: { profileId: trueSelfId, currency: "PC" } },
       data: { amount: { decrement: 1000 } },
     });
+  });
+});
+
+// PHASE_8_7_SPEC §3, Slice 1. The Constitution's Appendix A carries a
+// must-guardrail — "the treasury MUST NOT spend outside budgeted
+// categories" — and TREASURY_DASHBOARD §1.3 promises it is "rendered
+// structurally: an outflow without a budget category cannot exist."
+// These tests are what make those two sentences true rather than
+// aspirational.
+describe("the budgeted-categories must-guardrail (Constitution, Appendix A)", () => {
+  it("seeds exactly the three outflows TOKENOMICS §3's treasury loop names", async () => {
+    const categories = await db.budgetCategory.findMany({ orderBy: { name: "asc" } });
+    expect(categories.map((c) => c.name)).toEqual([
+      "moderation-rewards",
+      "platform-operations",
+      "tribunal-stipends",
+    ]);
+    // Uncapped by design: these are service categories whose amounts are
+    // already rail-governed per-action. Promoting cap ceilings to Class 2
+    // is FUND_INTEGRITY_SPEC §3.6's unratified proposal, not this phase's.
+    expect(categories.every((c) => c.cap === null)).toBe(true);
+    expect(categories.every((c) => c.active)).toBe(true);
+  });
+
+  it("pays through the one door and stamps the category on the entry", async () => {
+    const before = await balanceOf(db, trueSelfId, "G");
+    const result = await db.$transaction((tx) =>
+      payFromTreasury(tx, {
+        profileId: trueSelfId,
+        currency: "G",
+        amount: 3,
+        kind: "reward.moderation",
+        budgetCategory: "moderation-rewards",
+      })
+    );
+    expect(result.ok).toBe(true);
+    expect(await balanceOf(db, trueSelfId, "G")).toBeCloseTo(before + 3, 5);
+
+    const entry = await db.economyEntry.findFirst({
+      where: { kind: "reward.moderation", toProfileId: trueSelfId },
+      orderBy: { createdAt: "desc" },
+    });
+    expect(entry?.fromTreasury).toBe(true);
+    expect(entry?.budgetCategory).toBe("moderation-rewards");
+  });
+
+  it("REFUSES an outflow with no such category — the guardrail, structurally", async () => {
+    const before = await balanceOf(db, trueSelfId, "G");
+    const result = await db.$transaction((tx) =>
+      payFromTreasury(tx, {
+        profileId: trueSelfId,
+        currency: "G",
+        amount: 5,
+        kind: "reward.moderation",
+        budgetCategory: "slush-fund",
+      })
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain("budgeted categories");
+    // Refused means nothing moved — not a warning, not a log line.
+    expect(await balanceOf(db, trueSelfId, "G")).toBeCloseTo(before, 5);
+    expect(await db.economyEntry.count({ where: { budgetCategory: "slush-fund" } })).toBe(0);
+  });
+
+  it("REFUSES an outflow against a deactivated category", async () => {
+    await db.budgetCategory.create({
+      data: { name: "retired-category", description: "deactivated by governance", active: false },
+    });
+    const result = await db.$transaction((tx) =>
+      payFromTreasury(tx, {
+        profileId: trueSelfId,
+        currency: "G",
+        amount: 5,
+        kind: "reward.moderation",
+        budgetCategory: "retired-category",
+      })
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain("inactive");
+    await db.budgetCategory.delete({ where: { name: "retired-category" } });
+  });
+
+  it("fails loudly if an outflow ever lands without a category", async () => {
+    // Simulates precisely what this slice existed to prevent: a future
+    // call site hand-rolling an outflow instead of using the one door.
+    const smuggled = await db.economyEntry.create({
+      data: {
+        kind: "reward.moderation",
+        currency: "G",
+        amount: 99,
+        fromTreasury: true,
+        toProfileId: trueSelfId,
+      },
+    });
+    const result = runVerify();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain("Treasury outflow with NO budget category");
+    await db.economyEntry.delete({ where: { id: smuggled.id } });
+  });
+
+  it("fails loudly if a ratified category goes missing", async () => {
+    // A deploy that loses this category doesn't crash — payFromTreasury
+    // starts refusing, and moderators quietly stop being paid. Verify is
+    // where that surfaces, early and loudly.
+    await db.budgetCategory.update({
+      where: { name: "tribunal-stipends" },
+      data: { active: false },
+    });
+    const result = runVerify();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain("Ratified budget category missing or inactive");
+    await db.budgetCategory.update({
+      where: { name: "tribunal-stipends" },
+      data: { active: true },
+    });
+  });
+
+  it("fails loudly if an inflow is miscategorized as budgeted spending", async () => {
+    // The inverse leak: a fee wearing a category would corrupt every
+    // budget-utilization figure the transparency dashboard derives.
+    const smuggled = await db.economyEntry.create({
+      data: {
+        kind: "fee.reply",
+        currency: "PC",
+        amount: 1,
+        fromProfileId: trueSelfId,
+        toTreasury: true,
+        budgetCategory: "platform-operations",
+      },
+    });
+    const result = runVerify();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain("Non-outflow carries a budget category");
+    await db.economyEntry.delete({ where: { id: smuggled.id } });
   });
 });

@@ -80,6 +80,85 @@ export async function chargeToTreasury(
   return { ok: true };
 }
 
+/**
+ * The single door money leaves the treasury by (PHASE_8_7_SPEC §3,
+ * Slice 1).
+ *
+ * The Constitution's Appendix A carries a must-guardrail — "the treasury
+ * MUST NOT spend outside budgeted categories" — and TREASURY_DASHBOARD
+ * §1.3 promises it is "rendered structurally: an outflow without a
+ * budget category cannot exist." Until this function existed that was an
+ * unbuilt promise: outflows were hand-rolled at each call site, so there
+ * was no single place the rule could bind. Now there is exactly one.
+ *
+ * The enforcement lives HERE rather than at the admin console on
+ * purpose. A console check guards the surfaces we remembered to guard;
+ * a primitive that refuses guards the ones a future session forgets.
+ * That is the same reasoning as ADMIN_OPS §1's allowlist: the safety is
+ * the absence of a path, not the presence of a check.
+ *
+ * Refuses (never throws — callers get a reason) when the category is
+ * missing, unknown, or inactive. Category caps are NOT enforced yet:
+ * the three shipped categories are uncapped by design (their amounts are
+ * already rail-governed per-action), and FUND_INTEGRITY_SPEC §3.6's
+ * proposal to promote cap ceilings to Class 2 is not ratified. The
+ * column exists; the rule does not. Flagged, not invented.
+ */
+export async function payFromTreasury(
+  tx: Tx,
+  input: {
+    profileId: string;
+    currency: Currency;
+    amount: number;
+    kind: string;
+    budgetCategory: string;
+    refType?: string;
+    refId?: string;
+  }
+): Promise<EconomyResult> {
+  if (input.amount <= 0) return { ok: true };
+
+  const category = await tx.budgetCategory.findUnique({
+    where: { name: input.budgetCategory },
+  });
+  if (!category) {
+    return {
+      ok: false,
+      reason: `No budget category "${input.budgetCategory}" — the treasury may not spend outside budgeted categories (Constitution, Appendix A).`,
+    };
+  }
+  if (!category.active) {
+    return {
+      ok: false,
+      reason: `Budget category "${input.budgetCategory}" is inactive — the treasury may not spend outside active budgeted categories (Constitution, Appendix A).`,
+    };
+  }
+
+  await ensureBalance(tx, input.profileId, input.currency);
+  await tx.treasuryBalance.upsert({
+    where: { currency: input.currency },
+    create: { currency: input.currency, amount: -input.amount },
+    update: { amount: { decrement: input.amount } },
+  });
+  await tx.balance.update({
+    where: { profileId_currency: { profileId: input.profileId, currency: input.currency } },
+    data: { amount: { increment: input.amount } },
+  });
+  await tx.economyEntry.create({
+    data: {
+      kind: input.kind,
+      currency: input.currency,
+      amount: input.amount,
+      fromTreasury: true,
+      toProfileId: input.profileId,
+      budgetCategory: category.name,
+      refType: input.refType,
+      refId: input.refId,
+    },
+  });
+  return { ok: true };
+}
+
 /** Mint a grant from issuance to a profile (Welcome Grant milestones). */
 export async function grant(
   tx: Tx,

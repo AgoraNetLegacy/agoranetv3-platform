@@ -886,3 +886,92 @@ known browser-pane click-miss quirk meant confirming via direct
 navigation + href inspection rather than a literal click — both
 checks passed). Tests 212/212, db:verify ALL CHECKS PASSED, `npm
 run check` exit 0.
+
+---
+
+## Phase 8.7 — The Treasury's Other Half ⚙ IN PROGRESS (Slice 1 SELF-VERIFIED 2026-07-16)
+
+**The phase the owner scheduled 2026-07-16**, reversing his own "I am
+done building" — on the argument that Fund Integrity's components all
+already run, so a working demo proves *integration* (the real moat)
+better than presentation polish would. Spec:
+`Fund Integrity/PHASE_8_7_SPEC.md` (+ `FUND_INTEGRITY_SPEC.md` policy,
+`COMMUNITY_ENDOWMENT_SPEC.md` source). `BUILD_ORDER.md` carries the
+phase between 8.6 and 9. Internal points only — **no legal gate**
+(NEURAL_POLLINATOR §9.1: "No legal gate applies").
+
+### Slice 1 — Budget categories + the outflow primitive ✅ SELF-VERIFIED
+
+**Why this slice is the keystone.** A repo audit found that
+`PLATFORM_CONSTITUTION` Appendix A's must-guardrail — *"the treasury
+MUST NOT spend outside budgeted categories"* — and
+`TREASURY_DASHBOARD_SPEC` §1.3's promise that it is *"rendered
+structurally: an outflow without a budget category cannot exist"* were
+**law with no code behind them**. There was no category model, no field,
+no enforcement, and no `payFromTreasury` — every outflow was hand-rolled
+at its call site, so there was nowhere for the rule to bind. **This
+slice makes a constitutional guardrail true for the first time**, and it
+is the precondition for bounties (TOKENOMICS §6.2) and Circle projects
+(§6.4) alike — worth building even if Fund Integrity were abandoned.
+
+**Built:**
+- `lib/budget.ts` — the three categories TOKENOMICS §3's treasury loop
+  already names (`moderation-rewards`, `tribunal-stipends`,
+  `platform-operations`), seeded as data. Nothing invented: **"cause
+  funding" is deliberately absent** — the treasury has no such purpose
+  in the ratified economics, and Fund Integrity's source is the
+  Community Endowment, a pool *beside* the treasury. `seedBudgetCategories`
+  is idempotent and **never touches `active`** — deactivation is a
+  governance decision a redeploy must not quietly undo.
+- `BudgetCategory` model + `EconomyEntry.budgetCategory` (both schemas,
+  SQLite and Postgres, kept in parity; the consolidated `0_init`
+  migration gained the table + FK).
+- `economy.payFromTreasury()` — **the single door money leaves by.**
+  Refuses (never throws) on a missing, unknown, or inactive category.
+  Enforcement lives in the primitive rather than at the admin console
+  deliberately: a console check guards the surfaces we remembered; a
+  primitive that refuses guards the ones a future session forgets. Same
+  reasoning as ADMIN_OPS §1's allowlist — safety is the *absence of a
+  path*, not the presence of a check.
+- **Four** outflows refactored onto it — and the fourth is the story
+  below.
+- **db:verify check 33:** every outflow categorized · no unknown
+  category · no *inflow* miscategorized (the inverse leak would corrupt
+  every budget-utilization figure the dashboard derives) · the three
+  ratified categories present and active (a deploy that loses them
+  doesn't crash — moderators just quietly stop being paid; this fails
+  loudly instead).
+
+**★ The check earned its keep on day one.** My code audit found three
+outflows (flag refund, badge reward, Tribunal stipend). Check 33
+immediately failed on a **fourth I had missed** — `refund.appeal`
+(`moderation.ts:933`), the Tribunal appeal-deposit return. A grep sweep
+for `fromTreasury: true` confirmed no fifth exists. That is precisely
+the failure mode this slice was built to make impossible, catching a
+real instance of itself before it shipped.
+
+**Deliberately NOT built (flagged, not invented — CLAUDE.md rule 1):**
+category **caps** are not enforced. The column exists so the guardrail
+has somewhere to land without a later migration; the three shipped
+categories are uncapped by design (their amounts are already
+rail-governed per-action). Promoting cap ceilings to Class 2 is
+`FUND_INTEGRITY_SPEC` §3.6's *unratified constitutional proposal* — this
+phase does not pre-empt it.
+
+**Evidence:** tests **219/219** (7 new: seeded-set shape · pays-and-
+stamps · **refuses unknown category** · **refuses inactive category** ·
+fails loudly on an uncategorized outflow · fails loudly on a missing
+ratified category · fails loudly on a miscategorized inflow — every
+guardrail proven to *fail*, not just to pass). `npx tsc --noEmit` clean.
+db:verify **ALL CHECKS PASSED** (33 checks). Browser: `/transparency`
+renders clean, no server errors — its kind→display map is independent of
+the new constitutional column, so the two coexist without collision.
+
+**NEXT:** Slice 2 — the source-agnostic escrow primitive (tranche
+schedules, release on attestation threshold reusing the `Attestation`
+shape at `schema.prisma:927`, freeze on upheld Tribunal ruling, both
+**automatic** with no operator discretion step per FUND_INTEGRITY §3.7).
+Open before Slice 2: PHASE_8_7 §8 Q6 — Appendix A's Circle attestation
+dial reads "floor 2" with **no upper bound**, while POLLINATOR §9.1
+asserts `[2,8]` and miscredits it to Appendix A. Needs an owner ruling
+or a corrected citation.
