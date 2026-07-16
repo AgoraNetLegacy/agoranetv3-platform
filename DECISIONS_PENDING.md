@@ -639,3 +639,28 @@ at the Phase 9 real-money re-review regardless.
     participation action; donations are not on that list. Adding accrual
     to giving-money would also invent a loop worth auditing (give →
     accrue → give), so it stays off until the spec says otherwise.
+
+19. **Fund Auditor numbers — build-time defaults, nobody sized this role
+    (Phase 8.7 Slice 6, 2026-07-16).** The Phase C numbers session
+    (2026-07-09) couldn't size Fund Auditors because they didn't exist
+    until 2026-07-16. Derived from the nearest ratified anchors and
+    flagged rather than presented as settled:
+    - **`fundAudit.samplePercent` = 25%** — sampling, not census.
+      Auditing every release costs more than it protects, and the
+      deterrent lives in *unpredictability*: a chamber can't know which
+      release gets read, so the honest posture is to expect all of them
+      might. No anchor existed; 25% is a guess with a rationale.
+    - **`fundAudit.caseRewardG` = 5uG** — the badge case-reward
+      magnitude, since it's the same kind of work (civic service the
+      treasury funds). **Per case, never per finding** — that part is
+      design, not a number, and shouldn't move.
+    - **`fundAudit.offerWindowHours` = 12h** — mirrors the badge
+      offer-accept window exactly.
+    - **`sentinel.selfDealReleaseThreshold` = 3 releases / 24h** — ONE
+      self-reimbursement is ordinary and must stay allowed (forbidding
+      it would push real spending off the record where nobody can see
+      it); a pattern is a question worth asking in public. 3 is a guess.
+
+    None of these are load-bearing for correctness — they're dials. But
+    they're *my* dials, not yours, and they'd benefit from a numbers
+    sitting once there's real usage to look at.

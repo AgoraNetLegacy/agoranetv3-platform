@@ -39,7 +39,13 @@ import {
   declareRaising,
   donateToMission,
   reviseFundingPlan,
+  sentinelMissionSweep,
 } from "../lib/escrow";
+import {
+  offerFundAudits,
+  acceptFundAudit,
+  completeFundAudit,
+} from "../lib/fundAudit";
 import { faceConstellation } from "../lib/lightScore";
 import { buildFeed, openLens, chamberStorefrontCards } from "../lib/feed";
 import { search } from "../lib/search";
@@ -1301,6 +1307,218 @@ describe("large releases ride a binding vote, not attestation (§9.1)", () => {
   }, 60_000);
 
   it("db:verify passes with both release doors exercised", () => {
+    const result = runVerify();
+    expect(result.status).toBe(0);
+  }, 60_000);
+});
+
+// Fund Auditors — Tier 4 (FUND_INTEGRITY §3.5). The answer to "who
+// watches the watchers" only works if the watcher cannot punish, and
+// cannot profit from finding fault. Both properties are tested here,
+// because both are the whole point.
+describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () => {
+  let auditChamberId: string;
+  let auditorId: string;
+  let memberId: string;
+  let releaseId: string;
+
+  beforeAll(async () => {
+    // An auditor must be a proven badge-completer — someone the platform
+    // has already watched do real service.
+    const aud = await makeOnboardedSoul(db, { trueSelf: "fund-auditor", alias: "fa-shade" });
+    auditorId = aud.trueSelfId;
+    const offer = await db.badgeOffer.create({
+      data: {
+        profileId: auditorId,
+        expiresAt: new Date(Date.now() + 86_400_000),
+        status: "equipped",
+      },
+    });
+    await db.badgeTerm.create({
+      data: {
+        offerId: offer.id,
+        profileId: auditorId,
+        endsAt: new Date(Date.now() + 86_400_000),
+        casesCompleted: 3,
+      },
+    });
+
+    const m = await makeOnboardedSoul(db, { trueSelf: "audit-member", alias: "am-shade" });
+    memberId = m.trueSelfId;
+    await topUpForTests(db, creatorId, { pc: 80, g: 80 });
+    const made = await createChamber(db, {
+      profileId: creatorId,
+      title: "Audited Mission",
+      subject: "A mission whose money gets read",
+      pitch: "Raising, and expecting to be checked.",
+      whyCare: "Because money deserves eyes.",
+      isPublic: true,
+      scaffold: SCAFFOLD,
+    });
+    if (!made.ok) throw new Error(`audit chamber: ${made.reason}`);
+    auditChamberId = made.chamberId;
+    await enterChamber(db, { chamberId: auditChamberId, profileId: memberId });
+    await enterChamber(db, { chamberId: auditChamberId, profileId: workerId });
+    await db.$transaction((tx) =>
+      creditMissionBalance(tx, {
+        chamberId: auditChamberId,
+        currency: "PC",
+        amount: 50,
+        sourceKind: "donation",
+      })
+    );
+    const rel = await proposeRelease(db, {
+      chamberId: auditChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: memberId,
+      currency: "PC",
+      amount: 8,
+      purpose: "Tarps and rope",
+    });
+    if (!rel.ok) throw new Error(`release: ${rel.reason}`);
+    releaseId = rel.releaseId;
+    await attestRelease(db, { releaseId, attestorProfileId: memberId });
+    await attestRelease(db, { releaseId, attestorProfileId: workerId });
+  }, 120_000);
+
+  it("draws auditors by lot over released money, excluding anyone party to it", async () => {
+    // Sample everything for the test — the rail is the dial, not the law.
+    await db.rail.update({ where: { key: "fundAudit.samplePercent" }, data: { value: 100 } });
+    const offered = await offerFundAudits(db);
+    expect(offered).toBeGreaterThan(0);
+
+    const audit = await db.fundAudit.findFirstOrThrow({ where: { releaseId } });
+    // Conflict exclusion: never the proposer, the recipient, or a member
+    // of the chamber. An auditor auditing their own mission is not an
+    // audit.
+    expect([creatorId, memberId, workerId]).not.toContain(audit.auditorProfileId);
+    expect(audit.auditorProfileId).toBe(auditorId);
+
+    // The offer is public — but never names the auditor. An auditor
+    // whose identity is known before they rule can be lobbied.
+    const event = await db.ledgerEvent.findFirst({
+      where: { eventType: "fund-audit.offered" },
+      orderBy: { seq: "desc" },
+    });
+    expect(event).not.toBeNull();
+    expect(event!.payload).not.toContain(auditorId);
+    expect(event!.payload).toContain(releaseId);
+  }, 60_000);
+
+  it("an audit drawn for someone else can't be taken", async () => {
+    const audit = await db.fundAudit.findFirstOrThrow({ where: { releaseId } });
+    const notYours = await acceptFundAudit(db, { auditId: audit.id, profileId: creatorId });
+    expect(notYours.ok).toBe(false);
+    if (!notYours.ok) expect(notYours.reason).toContain("drawn for someone else");
+  });
+
+  it("a finding needs its reasoning — an unexplained verdict is not an audit", async () => {
+    const audit = await db.fundAudit.findFirstOrThrow({ where: { releaseId } });
+    await acceptFundAudit(db, { auditId: audit.id, profileId: auditorId });
+    const blank = await completeFundAudit(db, {
+      auditId: audit.id,
+      profileId: auditorId,
+      finding: "clean",
+      note: "   ",
+    });
+    expect(blank.ok).toBe(false);
+    if (!blank.ok) expect(blank.reason).toContain("reasoning");
+  });
+
+  it("★ pays PER CASE, never per finding — clean and concern earn identically", async () => {
+    const audit = await db.fundAudit.findFirstOrThrow({ where: { releaseId } });
+    const before = await balanceOf(db, auditorId, "G");
+    const done = await completeFundAudit(db, {
+      auditId: audit.id,
+      profileId: auditorId,
+      finding: "clean",
+      note: "Receipts match the stated purpose; attestors are unrelated to the recipient.",
+    });
+    expect(done.ok).toBe(true);
+
+    const reward = (await db.rail.findUniqueOrThrow({ where: { key: "fundAudit.caseRewardG" } })).value;
+    expect(await balanceOf(db, auditorId, "G")).toBeCloseTo(before + reward, 5);
+
+    // The pay is for LOOKING. An auditor paid for finding problems will
+    // find problems — so a clean verdict earns exactly what a concern
+    // does, and that is the whole anti-incentive.
+    const row = await db.fundAudit.findUniqueOrThrow({ where: { id: audit.id } });
+    expect(row.finding).toBe("clean");
+    expect(row.gratiumEarned).toBeCloseTo(reward, 5);
+
+    // Rides the moderation-rewards budget: same kind of spending — the
+    // treasury paying souls for civic service.
+    const entry = await db.economyEntry.findFirstOrThrow({
+      where: { kind: "reward.fund-audit", toProfileId: auditorId },
+    });
+    expect(entry.budgetCategory).toBe("moderation-rewards");
+    expect(entry.fromTreasury).toBe(true);
+  }, 60_000);
+
+  it("★ a finding is a SIGNAL, not a penalty — and says so on the record", async () => {
+    const event = await db.ledgerEvent.findFirst({
+      where: { eventType: "fund-audit.completed" },
+      orderBy: { seq: "desc" },
+    });
+    expect(event).not.toBeNull();
+    const payload = JSON.parse(event!.payload);
+    expect(payload.finding).toBe("clean");
+    expect(payload.consequence).toBe("none");
+
+    // The release is untouched by the audit — an auditor who could move
+    // money would be an operator with extra steps.
+    const release = await db.missionRelease.findUniqueOrThrow({ where: { id: releaseId } });
+    expect(release.state).toBe("released");
+  });
+
+  it("Sentinel flags a self-dealing PATTERN — never a single reimbursement", async () => {
+    // One member reimbursing themselves is the most ordinary use of a
+    // mission's money. Forbidding it would push real spending off the
+    // record; Sentinel watches instead.
+    await db.rail.update({ where: { key: "sentinel.selfDealReleaseThreshold" }, data: { value: 2 } });
+
+    const before = await sentinelMissionSweep(db);
+    expect(before).toBe(0); // no self-directed releases yet
+
+    for (const purpose of ["Self reimbursement one", "Self reimbursement two"]) {
+      const rel = await proposeRelease(db, {
+        chamberId: auditChamberId,
+        proposerProfileId: memberId,
+        toProfileId: memberId, // to themselves — allowed, and watched
+        currency: "PC",
+        amount: 2,
+        purpose,
+      });
+      if (!rel.ok) throw new Error(rel.reason);
+      await attestRelease(db, { releaseId: rel.releaseId, attestorProfileId: creatorId });
+      await attestRelease(db, { releaseId: rel.releaseId, attestorProfileId: workerId });
+    }
+
+    const flagged = await sentinelMissionSweep(db);
+    expect(flagged).toBe(1);
+
+    const event = await db.ledgerEvent.findFirst({
+      where: { eventType: "sentinel.mission-pattern" },
+      orderBy: { seq: "desc" },
+    });
+    const payload = JSON.parse(event!.payload);
+    expect(payload.pattern).toBe("self-directed-releases");
+    expect(payload.consequence).toContain("never punish");
+    // A machine flag that reads like a verdict IS a verdict — so it says
+    // plainly that this is a question, not an accusation.
+    expect(payload.note).toContain("not an accusation");
+
+    // Anomalies never punish: the releases stand.
+    const stillPaid = await db.missionRelease.count({
+      where: { chamberId: auditChamberId, state: "released" },
+    });
+    expect(stillPaid).toBe(3);
+
+    // And it doesn't re-flag the same pattern on every sweep.
+    expect(await sentinelMissionSweep(db)).toBe(0);
+  }, 60_000);
+
+  it("db:verify passes with audits and machine flags on the books", () => {
     const result = runVerify();
     expect(result.status).toBe(0);
   }, 60_000);

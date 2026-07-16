@@ -86,6 +86,22 @@ CREATE TABLE "BudgetCategory" (
 );
 
 -- CreateTable
+CREATE TABLE "FundAudit" (
+    "id" TEXT NOT NULL,
+    "releaseId" TEXT NOT NULL,
+    "auditorProfileId" TEXT NOT NULL,
+    "offeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'offered',
+    "finding" TEXT,
+    "note" TEXT,
+    "completedAt" TIMESTAMP(3),
+    "gratiumEarned" DOUBLE PRECISION NOT NULL DEFAULT 0,
+
+    CONSTRAINT "FundAudit_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "ChamberFundingRevision" (
     "id" TEXT NOT NULL,
     "chamberId" TEXT NOT NULL,
@@ -1222,3 +1238,12 @@ ALTER TABLE "ReleaseAttestation" ADD CONSTRAINT "ReleaseAttestation_releaseId_fk
 
 -- AddForeignKey
 ALTER TABLE "ChamberFundingRevision" ADD CONSTRAINT "ChamberFundingRevision_chamberId_fkey" FOREIGN KEY ("chamberId") REFERENCES "Chamber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- CreateIndex
+CREATE UNIQUE INDEX "FundAudit_releaseId_auditorProfileId_key" ON "FundAudit"("releaseId", "auditorProfileId");
+
+-- CreateIndex
+CREATE INDEX "FundAudit_status_idx" ON "FundAudit"("status");
+
+-- AddForeignKey
+ALTER TABLE "FundAudit" ADD CONSTRAINT "FundAudit_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

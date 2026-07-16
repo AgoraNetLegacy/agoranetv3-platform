@@ -260,6 +260,7 @@ export const RAIL_DEFAULTS: RailDefault[] = [
   { key: "tribunal.appealDepositPc", value: 25, unit: "uPC", description: "Appeal deposit — refunded if the ruling changes, forfeited if baseless (ECONOMIC §2)." },
   { key: "sentinel.brigadeFlagThreshold", value: 5, unit: "flags", description: "Sentinel v1 brigade threshold — derived: 5 deposits = 25u collective stake = the appeal-deposit magnitude staked against one item in one day-cycle." },
   { key: "sentinel.brigadeWindowHours", value: 24, unit: "hours", description: "Sentinel v1 brigade detection window (build-time default)." },
+  { key: "sentinel.selfDealReleaseThreshold", value: 3, unit: "actions", description: "Sentinel's mission watch (FUND_INTEGRITY §3.5): self-directed mission releases within the window before the pattern is machine-flagged. ONE is ordinary — reimbursing a member who fronted costs is the most common legitimate use of a mission's money, and forbidding it would push real spending off the record. A PATTERN is a question worth asking in public. Never punishes; anomalies bundle, they don't convict. BUILD-TIME DEFAULT (DECISIONS_PENDING #19)." },
   { key: "notifications.digestCadenceHours", value: 24, unit: "hours", description: "Quiet-inbox digest cadence (spec default: daily)." },
   { key: "notifications.pollClosingSoonHours", value: 6, unit: "hours", description: "How close to a poll's nominal end the closing-soon notification fires (build-time default)." },
   {
@@ -520,6 +521,34 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     unit: "uPC",
     description:
       "Above this, a release is authorized by a binding vote of the chamber rather than by attestation (§9.1). 25u is the platform's established serious-stake magnitude — verified in ECONOMIC_STARTING_DEFAULTS: Circle creation 25u PC, Tribunal appeal deposit 25u PC. Two co-signers are corroboration for a reimbursement; they are not a mandate for the mission's whole purse.",
+  },
+  // --- Fund Auditors (FUND_INTEGRITY §3.5, Tier 4). Build-time
+  // defaults, FLAGGED to the owner (DECISIONS_PENDING #19) — the numbers
+  // session never sized this role, because it didn't exist yet.
+  {
+    key: "fundAudit.samplePercent",
+    value: 25,
+    unit: "percent",
+    boundMin: 0,
+    boundMax: 100,
+    description:
+      "Share of released mission money drawn for after-the-fact audit. Sampling, not census: auditing everything costs more than it protects, and the deterrent lives in unpredictability — a chamber cannot know which release gets read, so the honest answer is to expect all of them might. BUILD-TIME DEFAULT (DECISIONS_PENDING #19).",
+  },
+  {
+    key: "fundAudit.offerWindowHours",
+    value: 12,
+    unit: "hours",
+    boundMin: 6,
+    boundMax: 48,
+    description:
+      "How long a drawn audit waits before it passes on its own — mirrors the badge offer-accept window (moderation.offerWindowHours). Service is opt-in; silence is a valid answer and costs nothing.",
+  },
+  {
+    key: "fundAudit.caseRewardG",
+    value: 5,
+    unit: "uG",
+    description:
+      "Per completed audit — PER CASE, NEVER PER FINDING. 'clean' and 'concern' pay identically, by design: an auditor who profits from concerns manufactures concerns. Derived from the badge case reward's magnitude (same kind of work: civic service the treasury funds). BUILD-TIME DEFAULT (DECISIONS_PENDING #19).",
   },
   // --- Treasury dashboard (Phase 7 — TREASURY_DASHBOARD §6.2,
   // owner-ratified: daily snapshots; the cadence is itself a rail).

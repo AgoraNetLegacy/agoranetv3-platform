@@ -1122,6 +1122,41 @@ model Chamber {
 // with no evidence left behind. Donors can always see what they gave
 // against — that is what makes §9.1's "genuine transfer, no auto-return"
 // a fair bargain rather than a trap.
+// Fund Auditors (FUND_INTEGRITY §3.5, Tier 4 — the minimal seed of
+// Human Links' Auditor role, pulled forward from parked scope by owner
+// ruling 2026-07-16).
+//
+// BADGE-SHAPED, NOT TRIBUNAL-SHAPED (owner decision): auditing released
+// money is periodic sampling, not reactive adjudication — that is badge
+// work. Drawn by lot per sampling round, short term, and **paid per
+// case, NEVER per finding**: an auditor paid for finding problems will
+// find problems. The pay is for looking.
+//
+// An audit ANSWERS "who watches the watchers" only if it cannot itself
+// punish. A finding is a public signal, never a penalty: consequences
+// travel the same due-process road as everything else (a ruling), which
+// is the same discipline Sentinel already follows — "anomalies never
+// punish."
+model FundAudit {
+  id            String   @id @default(cuid())
+  releaseId     String
+  release       MissionRelease @relation(fields: [releaseId], references: [id])
+  auditorProfileId String // per-profile, never per-human (§2.1)
+  offeredAt     DateTime @default(now())
+  expiresAt     DateTime // unanswered passes automatically, like a badge offer
+  // "offered" | "accepted" | "passed" | "expired" | "completed"
+  status        String   @default("offered")
+  // "clean" | "concern" — recorded only on completion. Both pay the
+  // same, deliberately.
+  finding       String?
+  note          String?
+  completedAt   DateTime?
+  gratiumEarned Float    @default(0)
+
+  @@unique([releaseId, auditorProfileId])
+  @@index([status])
+}
+
 model ChamberFundingRevision {
   id         String   @id @default(cuid())
   chamberId  String
@@ -1188,6 +1223,7 @@ model MissionRelease {
   createdAt   DateTime @default(now())
 
   attestations ReleaseAttestation[]
+  audits       FundAudit[]
 
   @@index([chamberId, state])
 }

@@ -716,6 +716,83 @@ export async function freezeChamberReleases(
   return open.length;
 }
 
+/**
+ * Sentinel's mission watch (FUND_INTEGRITY §3.5; the same pattern-watch
+ * machinery, a new data source).
+ *
+ * Watches for **self-dealing**: a member proposing money to themselves.
+ * Note this is NOT forbidden and must not be — reimbursing a member who
+ * fronted costs is the single most ordinary use of a mission's money,
+ * and banning it would push real spending off the record where nobody
+ * can see it. So the design allows it and *watches* it, which is exactly
+ * what Sentinel is for.
+ *
+ * **Anomalies never punish** (ANTI_SYBIL's rule, carried over verbatim).
+ * This writes a public, machine-flagged event and stops. It cannot
+ * freeze, deduct, or block — a detector that punishes is an operator
+ * without due process.
+ *
+ * ⚠ Today the signal has nowhere to escalate: there is no case for a
+ * release (DECISIONS_PENDING #17). The pattern still becomes publicly
+ * visible, which is worth something on its own — and when #17 resolves,
+ * this is where the case would open.
+ */
+export async function sentinelMissionSweep(db: PrismaClient): Promise<number> {
+  const [threshold, windowHours] = await Promise.all([
+    getRail(db, "sentinel.selfDealReleaseThreshold"),
+    getRail(db, "sentinel.brigadeWindowHours"),
+  ]);
+  const since = new Date(Date.now() - windowHours * 3_600_000);
+
+  const recent = await db.missionRelease.findMany({
+    where: { state: "released", releasedAt: { gte: since } },
+  });
+
+  // Count self-directed releases per chamber in the window. One is
+  // ordinary; a pattern is a question worth asking in public.
+  const byChamber = new Map<string, typeof recent>();
+  for (const r of recent) {
+    if (r.proposerProfileId !== r.toProfileId) continue;
+    const list = byChamber.get(r.chamberId) ?? [];
+    list.push(r);
+    byChamber.set(r.chamberId, list);
+  }
+
+  let flagged = 0;
+  for (const [chamberId, releases] of byChamber) {
+    if (releases.length < threshold) continue;
+
+    // Don't re-flag the same pattern every sweep.
+    const already = await db.ledgerEvent.findFirst({
+      where: {
+        eventType: "sentinel.mission-pattern",
+        createdAt: { gte: since },
+        payload: { contains: `"chamberRef":"${chamberId}"` },
+      },
+    });
+    if (already) continue;
+
+    await db.$transaction(async (tx) => {
+      await appendEvent(tx, {
+        actorType: "system",
+        eventType: "sentinel.mission-pattern",
+        payload: {
+          chamberRef: chamberId,
+          pattern: "self-directed-releases",
+          count: releases.length,
+          windowHours,
+          // Say what this is and is not, on the record. A machine flag
+          // that reads like a verdict is a verdict.
+          note: "Machine-flagged pattern, not a finding: members releasing mission funds to themselves. Reimbursement is legitimate and expected — this is a question, not an accusation.",
+          consequence: "none — anomalies never punish",
+        },
+      });
+    });
+    flagged++;
+  }
+  return flagged;
+}
+
 /** The mission's public money story: held, committed, paid, frozen. */
 export async function missionFundingSummary(db: DbOrTx, chamberId: string) {
   const [balances, releases] = await Promise.all([

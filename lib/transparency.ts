@@ -64,6 +64,16 @@ export const KIND_CATEGORIES: Record<string, KindInfo> = {
   },
   "refund.flag": { category: "Deposit refunds", direction: "outflow" },
   "refund.appeal": { category: "Deposit refunds", direction: "outflow" },
+  // Fund Auditors (FUND_INTEGRITY §3.5) — civic service the treasury
+  // funds, like moderation. Aggregate-only for the same reason badge
+  // rewards are: publishing per-recipient pay would out the auditors,
+  // and an auditor whose identity is known is an auditor who can be
+  // lobbied (MODERATION §3's anonymity, same logic).
+  "reward.fund-audit": {
+    category: "Fund audit rewards",
+    direction: "outflow",
+    aggregateOnly: true,
+  },
   // Issuance — the internal era's faucet, accounted honestly (grants
   // mint from issuance, not the treasury; shown in their own section so
   // the money story has no dark corners).
