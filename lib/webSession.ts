@@ -12,6 +12,11 @@ const SESSION_COOKIE = "agoranet-session";
 const ONE_TIME_COOKIE = "agoranet-once";
 const FLIP_COOKIE = "agoranet-flip";
 
+// In production (HTTPS) the cookies carrying the session bearer token and
+// one-time secrets must never travel over plaintext HTTP. Off in dev so
+// local http://localhost still works.
+const SECURE_COOKIE = process.env.NODE_ENV === "production";
+
 export async function ensureSessionId(): Promise<string> {
   const jar = await cookies();
   const existing = jar.get(SESSION_COOKIE)?.value;
@@ -20,7 +25,7 @@ export async function ensureSessionId(): Promise<string> {
     if (session) return session.id;
   }
   const id = await createSession(db);
-  jar.set(SESSION_COOKIE, id, { httpOnly: true, sameSite: "lax" });
+  jar.set(SESSION_COOKIE, id, { httpOnly: true, sameSite: "lax", secure: SECURE_COOKIE });
   return id;
 }
 
@@ -66,7 +71,7 @@ export async function clientAddress(): Promise<string | null> {
 /** Stash a secret for one short-lived display (call from an action). */
 export async function setOneTimeSecret(value: string): Promise<void> {
   const jar = await cookies();
-  jar.set(ONE_TIME_COOKIE, value, { httpOnly: true, sameSite: "lax", maxAge: 300 });
+  jar.set(ONE_TIME_COOKIE, value, { httpOnly: true, sameSite: "lax", secure: SECURE_COOKIE, maxAge: 300 });
 }
 
 /** Read the pending secret (safe in a server component render). */
@@ -86,7 +91,7 @@ export async function clearOneTimeSecret(): Promise<void> {
  *  it self-expires so a refresh moments later doesn't replay the turn. */
 export async function markFaceFlip(): Promise<void> {
   const jar = await cookies();
-  jar.set(FLIP_COOKIE, "1", { httpOnly: true, sameSite: "lax", maxAge: 3 });
+  jar.set(FLIP_COOKIE, "1", { httpOnly: true, sameSite: "lax", secure: SECURE_COOKIE, maxAge: 3 });
 }
 
 /** Is a face change landing on this render? (safe in a layout render) */

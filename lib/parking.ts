@@ -11,12 +11,18 @@
 // registry that doesn't exist.
 
 import type { PrismaClient } from "@prisma/client";
+import { randomBytes } from "crypto";
 import { getRail } from "./rails";
 
 export async function createSession(db: PrismaClient): Promise<string> {
   const lifetimeHours = await getRail(db, "identity.sessionLifetimeHours");
+  // The session id IS the browser's bearer token (it's the cookie value),
+  // so it must be unguessable — not the schema's default cuid(), whose
+  // random block derives from a non-cryptographic RNG. 256 bits from the
+  // CSPRNG puts session prediction out of reach.
+  const id = randomBytes(32).toString("hex");
   const session = await db.soulSession.create({
-    data: { expiresAt: new Date(Date.now() + lifetimeHours * 3_600_000) },
+    data: { id, expiresAt: new Date(Date.now() + lifetimeHours * 3_600_000) },
   });
   return session.id;
 }
