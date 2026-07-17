@@ -637,8 +637,13 @@ at the Phase 9 real-money re-review regardless.
     the last wire, and it wants your call — or a spec amendment naming
     the rule.
 
-18. **Two inferences in mission donations — built the narrow way, bless
-    or overrule (Phase 8.7 Slice 3, 2026-07-16).** §9.1 is thin on both;
+18. ~~**Two inferences in mission donations**~~ — **RATIFIED AS BUILT
+    (owner, 2026-07-16: "go with your picks").** Creator-only declaration
+    stands; donating carries no fee. Both are rails/policy, poll-
+    adjustable later. *(Original reasoning below.)*
+
+18-original. **Two inferences in mission donations — built the narrow
+    way, bless or overrule (Phase 8.7 Slice 3, 2026-07-16).** §9.1 is thin on both;
     neither blocks anything, and both are reversible in a sentence.
 
     **(a) Only the creator may declare a chamber is raising.** §9.1 says
@@ -664,8 +669,16 @@ at the Phase 9 real-money re-review regardless.
     to giving-money would also invent a loop worth auditing (give →
     accrue → give), so it stays off until the spec says otherwise.
 
-19. **Fund Auditor numbers — build-time defaults, nobody sized this role
-    (Phase 8.7 Slice 6, 2026-07-16).** The Phase C numbers session
+19. ~~**Fund Auditor numbers**~~ — **RATIFIED AS BUILT (owner,
+    2026-07-16: "go with your picks").** Sample 25%, reward 5uG, offer
+    window 12h, self-deal threshold 3/24h. All four are rails: they move
+    by poll, and they SHOULD move once real usage exists to price them
+    against — they were derived from neighbouring anchors, not measured.
+    The one thing that is design and must not drift: **per case, never
+    per finding.** *(Original reasoning below.)*
+
+19-original. **Fund Auditor numbers — build-time defaults, nobody sized
+    this role (Phase 8.7 Slice 6, 2026-07-16).** The Phase C numbers session
     (2026-07-09) couldn't size Fund Auditors because they didn't exist
     until 2026-07-16. Derived from the nearest ratified anchors and
     flagged rather than presented as settled:
