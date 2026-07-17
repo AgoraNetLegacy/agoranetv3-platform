@@ -320,6 +320,30 @@ export async function caseFileFor(db: PrismaClient, caseId: string) {
       : null;
     parentExcerpt = parent?.body?.slice(0, 280) ?? null;
     pillarName = post.discussion.pillar.name;
+  } else if (modCase.releaseId) {
+    // A mission payment (Phase 8.7). The "content" under judgment is the
+    // payment's own claim: what it was for, how much, and to whom. All
+    // of it is already public on the civic ledger, so the case file
+    // reveals nothing new — but the moderator still sees no handles,
+    // exactly like every other case. The triangle holds.
+    const release = await db.missionRelease.findUniqueOrThrow({
+      where: { id: modCase.releaseId },
+      include: { chamber: { select: { title: true } } },
+    });
+    const audits = await db.fundAudit.findMany({
+      where: { releaseId: release.id, status: "completed" },
+      select: { finding: true, note: true },
+    });
+    content = [
+      `Stated purpose: ${release.purpose}`,
+      `Amount: ${release.amount}u ${release.currency}`,
+      `Co-signers: ${await db.releaseAttestation.count({ where: { releaseId: release.id } })}`,
+      `State: ${release.state}`,
+      audits.length
+        ? `Auditor findings: ${audits.map((a) => `${a.finding} — ${a.note}`).join(" | ")}`
+        : "Auditor findings: none",
+    ].join("\n");
+    pillarName = `Mission payment — ${release.chamber.title}`;
   } else {
     const excerpt = await db.dmExcerpt.findUniqueOrThrow({
       where: { id: modCase.dmExcerptId! },
@@ -913,12 +937,16 @@ async function applyStrikeLadder(
       data: { readOnlyUntil: new Date(Date.now() + readOnlyDays * 86_400_000) },
     });
     // Tribunal review of the third strike (§7 ladder) — the docket
-    // entry carries the originating case's evidence, whichever kind.
+    // entry carries the originating case's evidence, whichever kind:
+    // a post, a DM excerpt, or a mission payment (Phase 8.7). Dropping
+    // one would leave a case with NO evidence, which db:verify's
+    // evidence-shape check would (rightly) fail on.
     const origin = await tx.modCase.findUniqueOrThrow({ where: { id: input.caseId } });
     await tx.modCase.create({
       data: {
         postId: origin.postId,
         dmExcerptId: origin.dmExcerptId,
+        releaseId: origin.releaseId,
         ruleId: "R3.6", // placeholder docket entry: severe-lane review
         tier: 3,
         tribunal: true,
@@ -970,6 +998,9 @@ export async function appealCase(
         data: {
           postId: original.postId,
           dmExcerptId: original.dmExcerptId,
+          // Carried, like the other two: an appeal with no evidence is
+          // not an appeal, and db:verify would fail the shape.
+          releaseId: original.releaseId,
           ruleId: original.ruleId,
           tier: original.tier,
           heavy: original.heavy,

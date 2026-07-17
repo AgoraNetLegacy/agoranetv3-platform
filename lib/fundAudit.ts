@@ -27,13 +27,14 @@
 //    adjudication. Offers expire unanswered, exactly like badge offers —
 //    service is opt-in, never conscription.
 //
-// ⚠ WHERE THIS STOPS TODAY: a "concern" finding has nowhere to go. There
-// is no case for a release (DECISIONS_PENDING #17 — Flag accepts postId
-// XOR dmExcerptId, and a release is neither), and the spec never names
-// which rule is "misuse." So a concern is published and left there,
-// honestly. That is a real limit, and it is written on the finding
-// itself rather than hidden behind an auditor who appears to be doing
-// more than they can.
+// WHERE A CONCERN GOES (resolved 2026-07-16, owner ruling — this comment
+// used to say "nowhere"). A release can now be reported like any other
+// evidence (`flags.fileReleaseFlag`), and an upheld **R3.4 Fraud**
+// ruling freezes the chamber's unpaid money. So the road exists — but
+// the auditor still does not walk it: the finding is the signal, and a
+// human must decide to file. An auditor whose finding auto-opened a case
+// would be a machine accusing people, which is the thing sortition and
+// due process exist to prevent.
 
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx } from "./db";
@@ -232,9 +233,11 @@ export async function completeFundAudit(
         chamberRef: audit.release.chamberId,
         finding: input.finding,
         note,
-        // Stated on every concern, deliberately: this signal has no
-        // enforcement path yet (DECISIONS_PENDING #17). Publishing the
-        // gap beats implying it isn't there.
+        // Stated on every concern, deliberately: a finding is a signal,
+        // and the road from here runs through a human filing a report
+        // and a ruling landing — never through the auditor. Saying so on
+        // the record beats an auditor who looks more powerful than they
+        // are.
         consequence:
           input.finding === "concern"
             ? "recorded — a concern is a public signal, not a penalty; consequences travel due process"

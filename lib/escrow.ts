@@ -732,10 +732,11 @@ export async function freezeChamberReleases(
  * freeze, deduct, or block — a detector that punishes is an operator
  * without due process.
  *
- * ⚠ Today the signal has nowhere to escalate: there is no case for a
- * release (DECISIONS_PENDING #17). The pattern still becomes publicly
- * visible, which is worth something on its own — and when #17 resolves,
- * this is where the case would open.
+ * The pattern becomes publicly visible and stops there — deliberately.
+ * A release CAN now be reported (owner ruling 2026-07-16), but Sentinel
+ * does not file: a detector that opens its own cases is a machine
+ * accusing people. It makes the pattern visible; a human decides whether
+ * it deserves a report.
  */
 export async function sentinelMissionSweep(db: PrismaClient): Promise<number> {
   const [threshold, windowHours] = await Promise.all([

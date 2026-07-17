@@ -1216,3 +1216,49 @@ end-to-end on the dev database, closing on a real preprod anchor tx.
 **PHASE 8.7 BUILD-HALF COMPLETE — the checkpoint is YOUR run of the
 runbook above.** Open for your ruling: #17 (freeze trigger), #18
 (donation inferences), #19 (auditor numbers).
+
+### ★ POST-BUILD AUDIT (2026-07-16) — three real bugs, found and fixed
+
+Owner asked for one last review before moving on. **It was worth it: the
+audit found three real bugs the slice tests missed, all from one root.**
+
+**The root:** the freeze wiring added a THIRD evidence type
+(`Flag.releaseId` / `ModCase.releaseId`, joining a post and a DM
+excerpt). Three shared moderation paths still knew only two — and none
+of them were exercised, because the slice tests called `resolveCase()`
+directly and **never walked the road a real moderator walks.**
+
+| Bug | Effect |
+|---|---|
+| `caseFileFor()` fell through to `dmExcerptId!` | **A moderator could not open a release case — it threw.** The freeze was unreachable in practice. |
+| `appealCase()` copied postId + dmExcerptId only | An appealed release case had **NO evidence pointer** → db:verify's own evidence-shape check would fail it. |
+| Strike-ladder Tribunal docket, same omission | Same. Its comment even claimed it carried evidence "whichever kind" — which had become a lie. |
+
+**Fixed and now tested by walking the whole road:** file a report → open
+the case file (asserting the triangle still holds: no handles, no ids) →
+resolve → appeal → assert the appeal carries the evidence → db:verify.
+The case file for a release renders the payment's own claim (purpose,
+amount, co-signer count, auditor findings) — all already public on the
+ledger, so it reveals nothing new.
+
+**Also corrected — comments that had stopped being true.** `fundAudit.ts`
+and `escrow.ts` both said a concern/pattern "has nowhere to go
+(DECISIONS_PENDING #17)". #17 is resolved; the road exists. The ledger
+events themselves were already accurate ("consequences travel due
+process") — only the prose lied. Now they say the sharper truth: the road
+exists, but **neither the auditor nor Sentinel walks it** — a detector
+that opens its own cases is a machine accusing people, and a human must
+decide to file.
+
+`PHASE_8_7_SPEC.md` corrected from "DRAFT, not built" to as-built, with
+its §8 closed and the three things the spec did not anticipate recorded
+(§9.1's "reusing Circle machinery" was wrong; §3.3's staging lost to
+§9.1's binding vote; this audit's three bugs).
+
+**THE LESSON, worth more than the fixes:** unit-testing a mechanism is
+not the same as testing the road users take to reach it. Every one of
+these bugs sat behind a function the slice tests bypassed.
+
+**Evidence:** tests **262/262** (3 new, all walking the full road).
+db:verify green. Postgres parity valid. `npm run check` exit 0. Demo
+re-verified end-to-end after the freeze wiring.

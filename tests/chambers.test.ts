@@ -30,7 +30,7 @@ import {
 import { createPost, upgradePostPermanence } from "../lib/discussions";
 import { createPoll, castVote, closeDuePolls } from "../lib/polls";
 import { fileReleaseFlag } from "../lib/flags";
-import { resolveCase } from "../lib/moderation";
+import { resolveCase, caseFileFor, appealCase } from "../lib/moderation";
 import { balanceOf, tip } from "../lib/economy";
 import {
   chamberBalanceOf,
@@ -1700,6 +1700,118 @@ describe("the freeze, wired to a real ruling (§3.4)", () => {
   }, 60_000);
 
   it("db:verify passes with the freeze wired", () => {
+    const result = runVerify();
+    expect(result.status).toBe(0);
+  }, 60_000);
+});
+
+// ★ THE AUDIT'S CATCH (2026-07-16). Adding a third evidence type left
+// three shared moderation paths still knowing only two. None were caught
+// by the freeze tests, because those called resolveCase() directly and
+// never walked the road a real moderator walks. These tests walk it.
+describe("a release case survives the whole moderation road", () => {
+  let rChamberId: string;
+  let rReleaseId: string;
+  let rMemberId: string;
+  let rWitnessId: string;
+  let rReporterId: string;
+
+  beforeAll(async () => {
+    const m = await makeOnboardedSoul(db, { trueSelf: "road-member", alias: "rm-shade" });
+    const w = await makeOnboardedSoul(db, { trueSelf: "road-witness", alias: "rw-shade" });
+    const r = await makeOnboardedSoul(db, { trueSelf: "road-reporter", alias: "rr-shade" });
+    rMemberId = m.trueSelfId;
+    rWitnessId = w.trueSelfId;
+    rReporterId = r.trueSelfId;
+    await topUpForTests(db, creatorId, { pc: 120, g: 120 });
+    const made = await createChamber(db, {
+      profileId: creatorId,
+      title: "Road Test Mission",
+      subject: "A mission whose case travels",
+      pitch: "Raising toward a stated mission.",
+      whyCare: "It matters.",
+      isPublic: true,
+      scaffold: SCAFFOLD,
+    });
+    if (!made.ok) throw new Error(made.reason);
+    rChamberId = made.chamberId;
+    await enterChamber(db, { chamberId: rChamberId, profileId: rMemberId });
+    await enterChamber(db, { chamberId: rChamberId, profileId: rWitnessId });
+    await db.$transaction((tx) =>
+      creditMissionBalance(tx, {
+        chamberId: rChamberId,
+        currency: "PC",
+        amount: 40,
+        sourceKind: "donation",
+      })
+    );
+    const rel = await proposeRelease(db, {
+      chamberId: rChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: rMemberId,
+      currency: "PC",
+      amount: 9,
+      purpose: "Materials for the build day",
+    });
+    if (!rel.ok) throw new Error(rel.reason);
+    rReleaseId = rel.releaseId;
+    await attestRelease(db, { releaseId: rReleaseId, attestorProfileId: rMemberId });
+    await attestRelease(db, { releaseId: rReleaseId, attestorProfileId: rWitnessId });
+    await fileReleaseFlag(db, {
+      releaseId: rReleaseId,
+      profileId: rReporterId,
+      ruleId: "R3.4",
+      note: "No receipts; the build day never happened.",
+    });
+  }, 120_000);
+
+  it("★ a moderator can actually OPEN the case (it crashed before the audit)", async () => {
+    const modCase = await db.modCase.findFirstOrThrow({ where: { releaseId: rReleaseId } });
+    const file = await caseFileFor(db, modCase.id);
+    expect(file).not.toBeNull();
+
+    // The payment's own claim is the evidence under judgment.
+    expect(file!.content).toContain("Materials for the build day");
+    expect(file!.content).toContain("9u PC");
+    expect(file!.content).toContain("Co-signers: 2");
+    expect(file!.pillar).toContain("Road Test Mission");
+
+    // The triangle holds identically: no handles, no names, no ids.
+    const blob = JSON.stringify(file);
+    expect(blob).not.toContain(creatorId);
+    expect(blob).not.toContain(rMemberId);
+    expect(blob).not.toContain(rReporterId);
+  }, 60_000);
+
+  it("★ an APPEAL carries the evidence forward (it was silently dropped)", async () => {
+    const modCase = await db.modCase.findFirstOrThrow({ where: { releaseId: rReleaseId } });
+    await resolveCase(db, {
+      caseId: modCase.id,
+      outcome: "upheld",
+      citedRuleId: "R3.4",
+      badFaith: false,
+    });
+
+    await topUpForTests(db, creatorId, { pc: 60, g: 60 });
+    const appealed = await appealCase(db, {
+      caseId: modCase.id,
+      profileId: creatorId, // the accused proposer
+    });
+    expect(appealed.ok).toBe(true);
+
+    // An appeal with no evidence is not an appeal — and db:verify's
+    // evidence-shape check would fail the case outright.
+    const appeal = await db.modCase.findFirstOrThrow({ where: { appealOfId: modCase.id } });
+    expect(appeal.releaseId).toBe(rReleaseId);
+    expect(appeal.postId).toBeNull();
+    expect(appeal.dmExcerptId).toBeNull();
+
+    // And the appealed case's file opens too.
+    const file = await caseFileFor(db, appeal.id);
+    expect(file!.content).toContain("Materials for the build day");
+  }, 60_000);
+
+  it("db:verify passes with a release case and its appeal on the books", () => {
     const result = runVerify();
     expect(result.status).toBe(0);
   }, 60_000);
