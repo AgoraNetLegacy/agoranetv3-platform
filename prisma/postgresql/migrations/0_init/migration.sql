@@ -498,6 +498,7 @@ CREATE TABLE "Flag" (
     "id" TEXT NOT NULL,
     "postId" TEXT,
     "dmExcerptId" TEXT,
+    "releaseId" TEXT,
     "ruleId" TEXT NOT NULL,
     "note" TEXT,
     "reporterProfileId" TEXT NOT NULL,
@@ -515,6 +516,7 @@ CREATE TABLE "ModCase" (
     "id" TEXT NOT NULL,
     "postId" TEXT,
     "dmExcerptId" TEXT,
+    "releaseId" TEXT,
     "ruleId" TEXT NOT NULL,
     "tier" INTEGER NOT NULL,
     "heavy" BOOLEAN NOT NULL DEFAULT false,
@@ -1247,3 +1249,9 @@ CREATE INDEX "FundAudit_status_idx" ON "FundAudit"("status");
 
 -- AddForeignKey
 ALTER TABLE "FundAudit" ADD CONSTRAINT "FundAudit_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Flag" ADD CONSTRAINT "Flag_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ModCase" ADD CONSTRAINT "ModCase_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE SET NULL ON UPDATE CASCADE;

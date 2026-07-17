@@ -693,13 +693,17 @@ model PostRevision {
 
 model Flag {
   id                String   @id @default(cuid())
-  // Exactly one evidence pointer: a public post, or a DM excerpt the
-  // recipient revealed (Phase 6.5 — FELLOW_SOULS §5.1: reports feed the
-  // standard flag path unchanged).
+  // Exactly one evidence pointer: a public post, a DM excerpt the
+  // recipient revealed (Phase 6.5 — FELLOW_SOULS §5.1), or a mission
+  // release (Phase 8.7, owner-ruled 2026-07-16 — FUND_INTEGRITY §3.4's
+  // freeze needed a way for a case to START, and a payment is neither a
+  // post nor a message).
   postId            String?
   post              Post?    @relation(fields: [postId], references: [id])
   dmExcerptId       String?
   dmExcerpt         DmExcerpt? @relation(fields: [dmExcerptId], references: [id])
+  releaseId         String?
+  release           MissionRelease? @relation(fields: [releaseId], references: [id])
   ruleId            String // which rule is alleged (the case category)
   rule              Rule     @relation(fields: [ruleId], references: [id])
   note              String?
@@ -723,13 +727,17 @@ model Flag {
 
 model ModCase {
   id          String   @id @default(cuid())
-  // Evidence: a public post, or a revealed DM excerpt (Phase 6.5) —
-  // exactly one. DM cases carry no content actions (nothing public to
-  // blur or tombstone); consequences are personal, and the triangle of
-  // blindness holds identically.
+  // Evidence: a public post, a revealed DM excerpt (Phase 6.5), or a
+  // mission release (Phase 8.7) — exactly one. DM cases carry no content
+  // actions (nothing public to blur or tombstone); consequences are
+  // personal, and the triangle of blindness holds identically. Release
+  // cases likewise blur nothing: the evidence IS a public payment, and
+  // the consequence is the freeze (FUND_INTEGRITY §3.4).
   postId      String?
   dmExcerptId String?
   dmExcerpt   DmExcerpt? @relation(fields: [dmExcerptId], references: [id])
+  releaseId   String?
+  release     MissionRelease? @relation(fields: [releaseId], references: [id])
   ruleId      String // the alleged rule (the case category, §3.1)
   tier        Int // 1 routine | 2 serious | 3 severe (from the rule)
   // Heavy handling: removal from a permanent space needs 3 independent
@@ -1224,6 +1232,8 @@ model MissionRelease {
 
   attestations ReleaseAttestation[]
   audits       FundAudit[]
+  flags        Flag[]
+  cases        ModCase[]
 
   @@index([chamberId, state])
 }

@@ -1289,19 +1289,31 @@ async function main() {
       console.error(`✗ REQUEST RETENTION: ${stale} pending request(s) past the expiry rail`);
     }
   }
-  // Exactly one evidence pointer per flag and per case.
-  const allFlags = await db.flag.findMany({ select: { id: true, postId: true, dmExcerptId: true } });
+  // EXACTLY ONE evidence pointer per flag and per case — a post, a DM
+  // excerpt, or (Phase 8.7) a mission release. The rule is unchanged;
+  // only the number of legal shapes grew. Two pointers would make the
+  // case file ambiguous about what is actually being judged.
+  const exactlyOne = (...pointers: (string | null)[]) =>
+    pointers.filter(Boolean).length === 1;
+
+  const allFlags = await db.flag.findMany({
+    select: { id: true, postId: true, dmExcerptId: true, releaseId: true },
+  });
   for (const f of allFlags) {
-    if (!!f.postId === !!f.dmExcerptId) {
+    if (!exactlyOne(f.postId, f.dmExcerptId, f.releaseId)) {
       dmProblems++;
-      console.error(`✗ EVIDENCE SHAPE: flag ${f.id} has ${f.postId ? "two" : "no"} evidence pointers`);
+      const n = [f.postId, f.dmExcerptId, f.releaseId].filter(Boolean).length;
+      console.error(`✗ EVIDENCE SHAPE: flag ${f.id} has ${n === 0 ? "no" : `${n}`} evidence pointers`);
     }
   }
-  const allCases = await db.modCase.findMany({ select: { id: true, postId: true, dmExcerptId: true } });
+  const allCases = await db.modCase.findMany({
+    select: { id: true, postId: true, dmExcerptId: true, releaseId: true },
+  });
   for (const c of allCases) {
-    if (!!c.postId === !!c.dmExcerptId) {
+    if (!exactlyOne(c.postId, c.dmExcerptId, c.releaseId)) {
       dmProblems++;
-      console.error(`✗ EVIDENCE SHAPE: case ${c.id} has ${c.postId ? "two" : "no"} evidence pointers`);
+      const n = [c.postId, c.dmExcerptId, c.releaseId].filter(Boolean).length;
+      console.error(`✗ EVIDENCE SHAPE: case ${c.id} has ${n === 0 ? "no" : `${n}`} evidence pointers`);
     }
   }
   if (dmProblems === 0) {

@@ -24,6 +24,24 @@ import { contentHash } from "./discussions";
 // poll-governed, deliberately short).
 const EXPEDITED_RULES = ["R3.1", "R3.3"];
 
+// The freeze trigger (FUND_INTEGRITY §3.4; owner-ruled 2026-07-16 after
+// the spec was found silent on it — DECISIONS_PENDING #17).
+//
+// **R3.4 "Fraud & phishing — active attempts to steal credentials,
+// FUNDS, or identities."** The rulebook already had the rule; nothing
+// was invented for this.
+//
+// DELIBERATELY NARROW, and this is the whole design decision: an upheld
+// ruling on a release freezes the chamber's remaining money ONLY when
+// the cited rule is fraud. Any other upheld rule against a release still
+// carries its normal consequences (strike ladder, Light Score) but moves
+// no money. The alternative — "any upheld ruling freezes" — would mean a
+// rude sentence in a payment's stated purpose could freeze a mission's
+// entire purse. Over-triggering here is not a smaller error than
+// under-triggering; it is a censorship mechanism wearing an anti-fraud
+// costume.
+const FREEZE_RULES = ["R3.4"];
+
 // v0 Moderation Rating — the input categories are public (agreement
 // with final outcomes, appeal survival); the weights below are platform
 // secret by ratified design. Never rendered.
@@ -40,14 +58,24 @@ function ratingMultiplier(agreementRate: number, max: number): number {
  *  exists to blur, and the recipient already holds the message. */
 export async function openOrJoinCase(
   tx: Tx,
-  input: { flagId: string; ruleId: string; postId?: string; dmExcerptId?: string }
+  input: {
+    flagId: string;
+    ruleId: string;
+    postId?: string;
+    dmExcerptId?: string;
+    releaseId?: string;
+  }
 ): Promise<string> {
-  if (!input.postId && !input.dmExcerptId) {
-    throw new Error("A case needs evidence: a post or a DM excerpt.");
+  if (!input.postId && !input.dmExcerptId && !input.releaseId) {
+    throw new Error("A case needs evidence: a post, a DM excerpt, or a mission release.");
   }
   const existing = await tx.modCase.findFirst({
     where: {
-      ...(input.postId ? { postId: input.postId } : { dmExcerptId: input.dmExcerptId }),
+      ...(input.postId
+        ? { postId: input.postId }
+        : input.dmExcerptId
+          ? { dmExcerptId: input.dmExcerptId }
+          : { releaseId: input.releaseId }),
       status: { in: ["open", "awaiting-supervision"] },
     },
   });
@@ -76,6 +104,7 @@ export async function openOrJoinCase(
     data: {
       postId: input.postId ?? null,
       dmExcerptId: input.dmExcerptId ?? null,
+      releaseId: input.releaseId ?? null,
       ruleId: rule.id,
       tier: rule.tier,
       heavy,
@@ -105,7 +134,7 @@ export async function openOrJoinCase(
  */
 async function accusedOf(
   db: PrismaClient | Tx,
-  modCase: { postId: string | null; dmExcerptId: string | null }
+  modCase: { postId: string | null; dmExcerptId: string | null; releaseId?: string | null }
 ): Promise<{ profileId: string; pillarId: string }> {
   if (modCase.postId) {
     const post = await db.post.findUniqueOrThrow({
@@ -113,6 +142,20 @@ async function accusedOf(
       include: { discussion: true },
     });
     return { profileId: post.authorProfileId, pillarId: post.discussion.pillarId };
+  }
+  // A mission release (Phase 8.7): the accused is the soul who PROPOSED
+  // the payment — the one who made the claim about what it was for. Not
+  // the recipient, who may be an innocent supplier, and not the
+  // co-signers, whose own accountability runs through their staked
+  // reputations rather than through this case. Consequences land in the
+  // meta pillar, like DM conduct: a violation of the commons' rules
+  // rather than any one pillar's room.
+  if (modCase.releaseId) {
+    const release = await db.missionRelease.findUniqueOrThrow({
+      where: { id: modCase.releaseId },
+    });
+    const metaPillar = await db.pillar.findFirstOrThrow({ where: { isMeta: true } });
+    return { profileId: release.proposerProfileId, pillarId: metaPillar.id };
   }
   const excerpt = await db.dmExcerpt.findUniqueOrThrow({
     where: { id: modCase.dmExcerptId! },
@@ -597,6 +640,44 @@ export async function resolveCase(
           },
         });
       }
+      // ★ THE FREEZE (FUND_INTEGRITY §3.4 — "the module's real teeth").
+      // An upheld FRAUD ruling on a mission payment halts every release
+      // that chamber has not yet paid out. Automatic, inside this
+      // ruling's own transaction: no operator decides, which closes the
+      // mirror-image capture path — freezing funds someone simply
+      // doesn't want paid (§3.7).
+      //
+      // Said honestly, in the product and here: you CANNOT claw back
+      // what is spent. This stops what has not moved. That is the whole
+      // claim, and overselling it would be the easiest lie in the
+      // module.
+      if (modCase.releaseId && FREEZE_RULES.includes(input.citedRuleId)) {
+        const release = await tx.missionRelease.findUniqueOrThrow({
+          where: { id: modCase.releaseId },
+        });
+        // The CASE is the public reference, not the ruling: rulings are
+        // nullifier-keyed in every public record (moderator identity
+        // never surfaces), so a frozen release cites the case a reader
+        // can actually look up.
+        const { freezeChamberReleases } = await import("./escrow");
+        const frozen = await freezeChamberReleases(tx, {
+          chamberId: release.chamberId,
+          rulingId: modCase.id,
+        });
+        await appendEvent(tx, {
+          actorType: "system",
+          eventType: "mission.freeze-ordered",
+          payload: {
+            chamberRef: release.chamberId,
+            releaseRef: release.id,
+            caseRef: modCase.id,
+            rule: input.citedRuleId,
+            frozenCount: frozen,
+            // The limit, on the record, every time.
+            note: "Unreleased payments only — money already paid out cannot be recovered by the platform.",
+          },
+        });
+      }
       await applyStrikeLadder(tx, {
         profileId: accused.profileId,
         pillarId: accused.pillarId,
@@ -634,14 +715,22 @@ export async function resolveCase(
       },
     });
 
-    // Where ruling notifications point: the post, or the DM thread
-    // (both parties already know the thread exists — nothing leaks).
+    // Where ruling notifications point: the post, the DM thread (both
+    // parties already know the thread exists — nothing leaks), or the
+    // chamber whose payment was ruled on (Phase 8.7). A release's
+    // chamber is already public, so pointing at it reveals nothing the
+    // ledger doesn't already carry.
     const excerpt = modCase.dmExcerptId
       ? await tx.dmExcerpt.findUniqueOrThrow({ where: { id: modCase.dmExcerptId } })
       : null;
+    const ruledRelease = modCase.releaseId
+      ? await tx.missionRelease.findUniqueOrThrow({ where: { id: modCase.releaseId } })
+      : null;
     const notifyRef = post
       ? { refType: "post", refId: post.id }
-      : { refType: "dm-thread", refId: excerpt!.threadId };
+      : ruledRelease
+        ? { refType: "chamber", refId: ruledRelease.chamberId }
+        : { refType: "dm-thread", refId: excerpt!.threadId };
 
     // Deposits: refunded on upheld AND good-faith declined; forfeited
     // only on an explicit bad-faith ruling (DISCUSSIONS §7).

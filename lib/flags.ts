@@ -91,3 +91,86 @@ export async function fileFlag(
 
   return { ok: true, flagId: flag.id };
 }
+
+/**
+ * Report a mission payment (Phase 8.7, owner-ruled 2026-07-16).
+ *
+ * FUND_INTEGRITY §3.4 calls the freeze "the module's real teeth" — but a
+ * case had no way to START. `Flag` accepted a post XOR a DM excerpt, and
+ * a payment is neither. This is the missing door, and it was left unbuilt
+ * until the owner ruled rather than guessed at (DECISIONS_PENDING #17).
+ *
+ * The evidence is the payment itself: its stated purpose, its amount, who
+ * proposed it, who co-signed, and where it went — all already public on
+ * the civic ledger. Nothing is blurred, unlike a post: **you cannot
+ * un-see a payment, and pretending otherwise would be theatre.** The
+ * consequence lives elsewhere — an upheld R3.4 ruling freezes whatever
+ * that chamber has not yet paid out (`applyReleaseFreeze`).
+ *
+ * Same deposit, same triangle of blindness, same rulebook as every other
+ * flag. A payment is not a special kind of accusation.
+ */
+export async function fileReleaseFlag(
+  db: PrismaClient,
+  input: {
+    releaseId: string;
+    profileId: string;
+    ruleId: string;
+    note?: string;
+  }
+): Promise<FlagResult> {
+  const release = await db.missionRelease.findUnique({ where: { id: input.releaseId } });
+  if (!release) return { ok: false, reason: "No such release." };
+
+  const rule = await db.rule.findUnique({ where: { id: input.ruleId } });
+  if (!rule) return { ok: false, reason: "Unknown rule — flags cite the rulebook." };
+
+  const gate = await clearGate(db, {
+    profileId: input.profileId,
+    scope: `flag:release:${release.id}`,
+    scopeKind: "per-profile",
+    ledgerRecording: "private",
+  });
+  if (gate.outcome === "DUPLICATE") {
+    return { ok: false, reason: "You have already flagged this release." };
+  }
+  if (gate.outcome !== "CLEARED" || !gate.nullifier) {
+    return { ok: false, reason: `Gate: ${gate.outcome}` };
+  }
+
+  const flag = await db.$transaction(async (tx) => {
+    const depositAmount = await getRail(tx, "moderation.flagDeposit");
+    const { balanceOf } = await import("./economy");
+    let depositTaken = 0;
+    if ((await balanceOf(tx, input.profileId, "PC")) >= depositAmount) {
+      const deposit = await chargeToTreasury(tx, {
+        profileId: input.profileId,
+        currency: "PC",
+        amount: depositAmount,
+        kind: "deposit.flag",
+        refType: "flag",
+      });
+      if (!deposit.ok) throw new Error(deposit.reason);
+      depositTaken = depositAmount;
+    }
+    const created = await tx.flag.create({
+      data: {
+        releaseId: release.id,
+        ruleId: rule.id,
+        note: input.note?.trim() || null,
+        reporterProfileId: input.profileId,
+        nullifier: gate.nullifier!,
+        depositHeld: depositTaken,
+      },
+    });
+    const { openOrJoinCase } = await import("./moderation");
+    await openOrJoinCase(tx, {
+      flagId: created.id,
+      releaseId: release.id,
+      ruleId: rule.id,
+    });
+    return created;
+  });
+
+  return { ok: true, flagId: flag.id };
+}

@@ -29,6 +29,8 @@ import {
 } from "../lib/chambers";
 import { createPost, upgradePostPermanence } from "../lib/discussions";
 import { createPoll, castVote, closeDuePolls } from "../lib/polls";
+import { fileReleaseFlag } from "../lib/flags";
+import { resolveCase } from "../lib/moderation";
 import { balanceOf, tip } from "../lib/economy";
 import {
   chamberBalanceOf,
@@ -1519,6 +1521,185 @@ describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () 
   }, 60_000);
 
   it("db:verify passes with audits and machine flags on the books", () => {
+    const result = runVerify();
+    expect(result.status).toBe(0);
+  }, 60_000);
+});
+
+// ★ THE FREEZE, WIRED (FUND_INTEGRITY §3.4; owner-ruled 2026-07-16).
+//
+// The mechanism was built in Slice 2 and left deliberately unwired: the
+// spec never said how a case STARTS, and a release couldn't be flagged
+// at all. Both answers came from the owner — yes, payments are
+// reportable; the rule is R3.4 (Fraud & phishing: "attempts to steal
+// credentials, FUNDS, or identities").
+//
+// The narrowness is the design. Over-triggering is not a smaller error
+// than under-triggering: "any upheld ruling freezes" would mean a rude
+// sentence in a payment's stated purpose could freeze a mission's whole
+// purse — a censorship mechanism in an anti-fraud costume.
+describe("the freeze, wired to a real ruling (§3.4)", () => {
+  let fChamberId: string;
+  let fMemberId: string;
+  let fWitnessId: string;
+  let reporterId: string;
+
+  beforeAll(async () => {
+    const m = await makeOnboardedSoul(db, { trueSelf: "freeze-member", alias: "fm-shade" });
+    const w = await makeOnboardedSoul(db, { trueSelf: "freeze-witness", alias: "fw-shade" });
+    const r = await makeOnboardedSoul(db, { trueSelf: "freeze-reporter", alias: "fr-shade" });
+    fMemberId = m.trueSelfId;
+    fWitnessId = w.trueSelfId;
+    reporterId = r.trueSelfId;
+    await topUpForTests(db, creatorId, { pc: 120, g: 120 });
+    const made = await createChamber(db, {
+      profileId: creatorId,
+      title: "Freeze Test Mission",
+      subject: "A mission that gets caught",
+      pitch: "Raising toward a stated mission.",
+      whyCare: "It matters.",
+      isPublic: true,
+      scaffold: SCAFFOLD,
+    });
+    if (!made.ok) throw new Error(made.reason);
+    fChamberId = made.chamberId;
+    await enterChamber(db, { chamberId: fChamberId, profileId: fMemberId });
+    await enterChamber(db, { chamberId: fChamberId, profileId: fWitnessId });
+    await db.$transaction((tx) =>
+      creditMissionBalance(tx, {
+        chamberId: fChamberId,
+        currency: "PC",
+        amount: 60,
+        sourceKind: "donation",
+      })
+    );
+  }, 120_000);
+
+  it("a payment can be reported — the door that didn't exist", async () => {
+    const rel = await proposeRelease(db, {
+      chamberId: fChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: fMemberId,
+      currency: "PC",
+      amount: 10,
+      purpose: "Supplies that were never bought",
+    });
+    if (!rel.ok) throw new Error(rel.reason);
+    await attestRelease(db, { releaseId: rel.releaseId, attestorProfileId: fMemberId });
+    await attestRelease(db, { releaseId: rel.releaseId, attestorProfileId: fWitnessId });
+
+    const filed = await fileReleaseFlag(db, {
+      releaseId: rel.releaseId,
+      profileId: reporterId,
+      ruleId: "R3.4",
+      note: "The stated purpose never happened; no receipts in the workshop.",
+    });
+    expect(filed.ok).toBe(true);
+
+    // Same deposit, same rulebook, same triangle of blindness as any
+    // other flag — a payment is not a special kind of accusation.
+    const flag = await db.flag.findFirstOrThrow({ where: { releaseId: rel.releaseId } });
+    expect(flag.ruleId).toBe("R3.4");
+    expect(flag.caseId).not.toBeNull();
+
+    const modCase = await db.modCase.findFirstOrThrow({ where: { releaseId: rel.releaseId } });
+    expect(modCase.tier).toBe(3); // R3.4 is severe → Tribunal lane
+  }, 60_000);
+
+  it("★ an upheld FRAUD ruling freezes what hasn't moved — automatically", async () => {
+    // Two payments still pending when the ruling lands.
+    const pendingA = await proposeRelease(db, {
+      chamberId: fChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: fMemberId,
+      currency: "PC",
+      amount: 5,
+      purpose: "Pending one",
+    });
+    const pendingB = await proposeRelease(db, {
+      chamberId: fChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: fWitnessId,
+      currency: "PC",
+      amount: 6,
+      purpose: "Pending two",
+    });
+    expect(pendingA.ok && pendingB.ok).toBe(true);
+    const paidBefore = await db.missionRelease.count({
+      where: { chamberId: fChamberId, state: "released" },
+    });
+
+    const modCase = await db.modCase.findFirstOrThrow({
+      where: { releaseId: { not: null }, ruleId: "R3.4", status: { not: "resolved" } },
+    });
+    await resolveCase(db, {
+      caseId: modCase.id,
+      outcome: "upheld",
+      citedRuleId: "R3.4",
+      badFaith: false,
+    });
+
+    const frozen = await db.missionRelease.findMany({
+      where: { chamberId: fChamberId, state: "frozen" },
+    });
+    expect(frozen.length).toBe(2);
+    expect(frozen.every((r) => r.frozenByRulingId === modCase.id)).toBe(true);
+
+    // The limit, proven rather than promised: money already paid stays
+    // paid. The platform cannot claw it back, and says so.
+    const paidAfter = await db.missionRelease.count({
+      where: { chamberId: fChamberId, state: "released" },
+    });
+    expect(paidAfter).toBe(paidBefore);
+
+    const event = await db.ledgerEvent.findFirst({
+      where: { eventType: "mission.freeze-ordered" },
+      orderBy: { seq: "desc" },
+    });
+    expect(event).not.toBeNull();
+    const payload = JSON.parse(event!.payload);
+    expect(payload.rule).toBe("R3.4");
+    expect(payload.note).toContain("cannot be recovered");
+  }, 60_000);
+
+  it("★ does NOT over-trigger: a non-fraud ruling moves no money", async () => {
+    // A rude sentence in a payment's purpose is a rule violation. It is
+    // NOT a reason to freeze a mission's purse — that would be a
+    // censorship mechanism wearing an anti-fraud costume.
+    const rel = await proposeRelease(db, {
+      chamberId: fChamberId,
+      proposerProfileId: creatorId,
+      toProfileId: fMemberId,
+      currency: "PC",
+      amount: 4,
+      purpose: "Totes — and a rude aside about a neighbour",
+    });
+    if (!rel.ok) throw new Error(rel.reason);
+
+    const filed = await fileReleaseFlag(db, {
+      releaseId: rel.releaseId,
+      profileId: reporterId,
+      ruleId: "R2.1", // harassment — real, but not fraud
+      note: "The purpose line attacks someone.",
+    });
+    expect(filed.ok).toBe(true);
+    const modCase = await db.modCase.findFirstOrThrow({ where: { releaseId: rel.releaseId } });
+
+    await resolveCase(db, {
+      caseId: modCase.id,
+      outcome: "upheld",
+      citedRuleId: "R2.1",
+      badFaith: false,
+    });
+
+    // Upheld — the accused takes the strike. But the payment stands: no
+    // freeze, because the rule wasn't fraud.
+    const after = await db.missionRelease.findUniqueOrThrow({ where: { id: rel.releaseId } });
+    expect(after.state).toBe("proposed");
+    expect(after.frozenByRulingId).toBeNull();
+  }, 60_000);
+
+  it("db:verify passes with the freeze wired", () => {
     const result = runVerify();
     expect(result.status).toBe(0);
   }, 60_000);

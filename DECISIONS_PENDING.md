@@ -576,8 +576,32 @@ at the Phase 9 real-money re-review regardless.
     commons grows. §7.2's own directive, surfaced at the exact moment
     it matters. Never blocks hatching.
 
-17. **★ The freeze has a mechanism but no trigger — TWO spec silences,
-    flagged not invented (Phase 8.7 Slice 2, 2026-07-16).**
+17. ~~**The freeze has a mechanism but no trigger**~~ — **RESOLVED AND
+    BUILT (owner, 2026-07-16): "1. yes. 2. yes. use that."** Payments are
+    now reportable (`Flag.releaseId` — the third evidence type, joining a
+    post and a DM excerpt), and the freeze rule is **R3.4 Fraud &
+    phishing** ("attempts to steal credentials, FUNDS, or identities" —
+    the rulebook already had it; nothing was invented).
+
+    **The narrowness is the design, and it's tested both ways.** An
+    upheld ruling on a payment freezes the chamber's unpaid money ONLY
+    when the cited rule is fraud. Any other upheld rule still carries its
+    normal consequences but moves no money — because "any upheld ruling
+    freezes" would mean a rude sentence in a payment's stated purpose
+    could freeze a mission's whole purse. Over-triggering isn't a smaller
+    error than under-triggering; it's a censorship mechanism in an
+    anti-fraud costume.
+
+    Also settled while wiring it: the **accused is the PROPOSER** — the
+    soul who made the claim about what the money was for. Not the
+    recipient (who may be an innocent supplier), and not the co-signers
+    (whose accountability runs through their staked reputations). Strikes
+    land in the meta pillar, like DM conduct.
+
+    *(Original entry preserved below for the reasoning.)*
+
+17-original. **★ The freeze has a mechanism but no trigger — TWO spec
+    silences, flagged not invented (Phase 8.7 Slice 2, 2026-07-16).**
     `FUND_INTEGRITY_SPEC` §3.4 calls the freeze "the module's real
     teeth": an upheld Tribunal ruling of misuse halts every unreleased
     tranche. Built and tested: `escrow.freezeChamberReleases()`, taking
