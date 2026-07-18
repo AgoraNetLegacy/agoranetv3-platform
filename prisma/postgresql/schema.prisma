@@ -324,6 +324,20 @@ model NullifierSpend {
   @@id([scope, nullifier])
 }
 
+// A one-time grant already issued to a profile. The composite primary key
+// is the mutex: the SELECT-then-INSERT idempotency of the Welcome-Grant
+// milestones (grant.orientation / grant.seed / grant.first-action) raced
+// under concurrency and could mint issuance twice. This constraint makes
+// "grant once" an atomic invariant, not a hopeful check (grantOnce,
+// lib/economy.ts) — the winning insert grants, the loser collides.
+model GrantClaim {
+  profileId String
+  kind      String
+  createdAt DateTime @default(now())
+
+  @@id([profileId, kind])
+}
+
 // ------------------------------------------------------------------
 // The Civic Ledger — append-only, hash-chained (v2 pattern, reimplemented).
 // Nothing edits or deletes rows; corrections are new amendment events.

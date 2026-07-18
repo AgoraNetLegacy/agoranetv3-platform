@@ -45,7 +45,8 @@ import {
   deleteThreadForMe,
   reportMessage,
 } from "@/lib/dm";
-import { tip, grant, grantAlreadyGiven } from "@/lib/economy";
+import { Prisma } from "@prisma/client";
+import { tip, grantOnce } from "@/lib/economy";
 import { getRail } from "@/lib/rails";
 import { fileFlag } from "@/lib/flags";
 import {
@@ -184,17 +185,27 @@ export async function submitPermanenceUpgrade(formData: FormData) {
 export async function completeOrientation(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "");
   const face = await requireFace("settings");
-  if (!(await grantAlreadyGiven(db, face.id, "grant.orientation"))) {
+  // One-time orientation grant, minted atomically: the GrantClaim primary
+  // key means concurrent completeOrientation requests can't double-mint —
+  // exactly one wins the claim, the rest collide (P2002) and no-op.
+  let granted = false;
+  try {
     await db.$transaction(async (tx) => {
-      await grant(tx, {
+      await grantOnce(tx, {
         profileId: face.id,
         currency: "PC",
         amount: await getRail(tx, "grant.orientation.pc"),
         kind: "grant.orientation",
       });
     });
-    await recordEvent(db, "funnel.oriented", face.id);
+    granted = true;
+  } catch (err) {
+    if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002")) {
+      throw err;
+    }
+    // Already oriented (or a concurrent request won the claim) — not an error.
   }
+  if (granted) await recordEvent(db, "funnel.oriented", face.id);
   redirect(`/verify/seed${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`);
 }
 

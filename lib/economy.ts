@@ -185,6 +185,30 @@ export async function grant(
   });
 }
 
+/**
+ * Mint a one-time grant atomically. The GrantClaim insert IS the mutex:
+ * (profileId, kind) is the primary key, so two concurrent callers can never
+ * both mint — the second insert collides with P2002 and its transaction
+ * rolls back (the lib/gate.ts nullifier pattern). A plain
+ * grantAlreadyGiven()-then-grant() is a SELECT-then-INSERT race that mints
+ * issuance N× under concurrent requests.
+ *
+ * Runs inside the caller's transaction. Callers that OWN the whole
+ * transaction should wrap it in try/catch and treat P2002 as "already
+ * granted" (no double issue, no error surfaced). Callers that nest this in
+ * a larger action transaction should pre-check with a GrantClaim lookup so
+ * the constraint only trips on a genuine race (see maybeFirstActionGrant).
+ */
+export async function grantOnce(
+  tx: Tx,
+  input: { profileId: string; currency: Currency; amount: number; kind: string }
+): Promise<void> {
+  await tx.grantClaim.create({
+    data: { profileId: input.profileId, kind: input.kind },
+  });
+  await grant(tx, input);
+}
+
 /** Has this profile already received a given one-time grant? */
 export async function grantAlreadyGiven(
   db: DbOrTx,
@@ -306,11 +330,17 @@ export async function maybeFirstActionGrant(
 ): Promise<void> {
   const profile = await tx.profile.findUnique({ where: { id: profileId } });
   if (!profile || profile.face !== "TRUE_SELF") return;
-  const already = await tx.economyEntry.findFirst({
-    where: { kind: "grant.first-action", toProfileId: profileId },
+  // Pre-check the claim so the constraint does NOT trip on every action
+  // after the first (a P2002 here would abort the caller's whole action
+  // transaction). On a genuine concurrent-first-action race the pre-check
+  // misses, the losing grantOnce insert collides, and that action's
+  // transaction rolls back — no double mint; the retry sees the claim and
+  // skips.
+  const already = await tx.grantClaim.findUnique({
+    where: { profileId_kind: { profileId, kind: "grant.first-action" } },
   });
   if (already) return;
-  await grant(tx, {
+  await grantOnce(tx, {
     profileId,
     currency: "G",
     amount: await getRail(tx, "grant.firstAction.g"),

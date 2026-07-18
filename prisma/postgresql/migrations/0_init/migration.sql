@@ -1255,3 +1255,12 @@ ALTER TABLE "Flag" ADD CONSTRAINT "Flag_releaseId_fkey" FOREIGN KEY ("releaseId"
 
 -- AddForeignKey
 ALTER TABLE "ModCase" ADD CONSTRAINT "ModCase_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- CreateTable
+CREATE TABLE "GrantClaim" (
+    "profileId" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "GrantClaim_pkey" PRIMARY KEY ("profileId","kind")
+);

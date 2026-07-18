@@ -6,8 +6,8 @@ const { url } = createTestDb("economy");
 process.env.DATABASE_URL = url;
 process.env.GATE_OPERATOR_SECRET = "test-secret-for-economy-tests";
 
-import { PrismaClient } from "@prisma/client";
-import { balanceOf, tip, tipStats, payFromTreasury } from "../lib/economy";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { balanceOf, tip, tipStats, payFromTreasury, grantOnce } from "../lib/economy";
 import { createPost, upgradePostPermanence, createPollDiscussion } from "../lib/discussions";
 import { createPoll, castVote } from "../lib/polls";
 import { saveSeedAnswer, seedQuestions } from "../lib/valuesSeed";
@@ -64,6 +64,49 @@ describe("the Welcome Grant", () => {
     // Re-answering never re-grants.
     await saveSeedAnswer(db, { profileId: trueSelfId, questionId: questions[0].id, body: "Edited." });
     expect(await balanceOf(db, trueSelfId, "PC")).toBe(35);
+  });
+
+  it("mints a one-time grant atomically — the second claim collides, no double-mint", async () => {
+    const soul = await makeOnboardedSoul(db, {
+      trueSelf: "grant-once-1",
+      alias: "grant-once-1a",
+    });
+    const before = await balanceOf(db, soul.trueSelfId, "PC");
+
+    await db.$transaction((tx) =>
+      grantOnce(tx, {
+        profileId: soul.trueSelfId,
+        currency: "PC",
+        amount: 7,
+        kind: "grant.orientation",
+      })
+    );
+    expect(await balanceOf(db, soul.trueSelfId, "PC")).toBe(before + 7);
+
+    // The GrantClaim row is the mutex — the atomic record of "granted".
+    const claim = await db.grantClaim.findUnique({
+      where: { profileId_kind: { profileId: soul.trueSelfId, kind: "grant.orientation" } },
+    });
+    expect(claim).not.toBeNull();
+
+    // A second grant of the same kind collides on the primary key: this is
+    // the SELECT-then-INSERT race that used to mint issuance twice under
+    // concurrent requests. It must throw P2002 and NOT increment the balance.
+    let collided = false;
+    try {
+      await db.$transaction((tx) =>
+        grantOnce(tx, {
+          profileId: soul.trueSelfId,
+          currency: "PC",
+          amount: 7,
+          kind: "grant.orientation",
+        })
+      );
+    } catch (err) {
+      collided = err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
+    }
+    expect(collided).toBe(true);
+    expect(await balanceOf(db, soul.trueSelfId, "PC")).toBe(before + 7);
   });
 });
 
