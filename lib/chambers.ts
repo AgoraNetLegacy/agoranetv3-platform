@@ -26,7 +26,7 @@
 import { randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
-import { clearGate } from "./gate";
+import { clearGateTx } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
@@ -187,20 +187,20 @@ export async function createChamber(
     return { ok: false, reason: "The permanence and Constitution acknowledgments come first." };
   }
 
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `chamber-create:${randomUUID()}`,
-    scopeKind: "per-profile",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
   // The workshop Discussion needs a pillar row; chambers aren't pillar
   // surfaces, so it homes in the meta pillar. Chamber scoping overrides
   // pillar surfaces everywhere — it never appears on pillar pages.
   const metaPillar = await db.pillar.findFirstOrThrow({ where: { isMeta: true } });
 
+  // Gate spend + dual fee + chamber creation share one transaction (#25).
   try {
-    const chamber = await db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
+      const gate = await clearGateTx(tx, {
+        profileId: profile.id,
+        scope: `chamber-create:${randomUUID()}`,
+        scopeKind: "per-profile",
+      });
+      if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
       // The dual-token signature: BOTH halves, or neither.
       const feePc = await chargeToTreasury(tx, {
         profileId: profile.id,
@@ -264,9 +264,8 @@ export async function createChamber(
           handle: profile.handle,
         },
       });
-      return created;
+      return { ok: true as const, chamberId: created.id };
     });
-    return { ok: true, chamberId: chamber.id };
   } catch (err) {
     if (err instanceof InsufficientFunds) return { ok: false, reason: err.message };
     throw err;
@@ -390,26 +389,27 @@ export async function enterChamber(
 
   // One entry per profile per chamber: the fixed scope IS the once.
   // PRIVATE recording — entry must not be observable from outside.
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `chamber:${chamber.id}:enter`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
-  });
-  if (gate.outcome === "DUPLICATE") {
-    return { ok: false, reason: "You have already entered this chamber." };
-  }
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
-  await db.$transaction(async (tx) => {
+  // Gate spend + membership share one transaction (#25): a rollback no
+  // longer strands the enter nullifier, so entering is retryable.
+  return db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: profile.id,
+      scope: `chamber:${chamber.id}:enter`,
+      scopeKind: "per-profile",
+      ledgerRecording: "private",
+    });
+    if (gate.outcome === "DUPLICATE") {
+      return { ok: false as const, reason: "You have already entered this chamber." };
+    }
+    if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     await tx.chamberMember.create({
       data: { chamberId: chamber.id, profileId: profile.id, handle: profile.handle },
     });
     await touchActivity(tx, chamber.id);
     await accrueForAction(tx, profile.id);
     await notifyChamberActivity(tx, chamber, "A soul entered the workshop", profile.id);
+    return { ok: true as const };
   });
-  return { ok: true };
 }
 
 // -------------------------------------------------------------- invites
@@ -454,18 +454,20 @@ export async function inviteToChamber(
   });
   if (existing) return { ok: false, reason: "Already invited." };
 
-  const gate = await clearGate(db, {
-    profileId: input.profileId,
-    scope: `chamber:${chamber.id}:invite:${invitee.id}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
+  // Gate spend + invite row share one transaction (#25).
+  return db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: input.profileId,
+      scope: `chamber:${chamber.id}:invite:${invitee.id}`,
+      scopeKind: "per-profile",
+      ledgerRecording: "private",
+    });
+    if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+    await tx.chamberInvite.create({
+      data: { chamberId: chamber.id, profileId: invitee.id, handle: invitee.handle },
+    });
+    return { ok: true as const };
   });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
-  await db.chamberInvite.create({
-    data: { chamberId: chamber.id, profileId: invitee.id, handle: invitee.handle },
-  });
-  return { ok: true };
 }
 
 /** The viewer's pending invites — visible to them alone, on the
