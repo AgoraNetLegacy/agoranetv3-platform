@@ -14,7 +14,7 @@
 // balances; flagging is never blocked by an empty balance (DISCUSSIONS §7).
 
 import type { PrismaClient } from "@prisma/client";
-import { clearGate } from "./gate";
+import { clearGateTx } from "./gate";
 import { chargeToTreasury } from "./economy";
 import { getRail } from "./rails";
 
@@ -37,20 +37,23 @@ export async function fileFlag(
   const rule = await db.rule.findUnique({ where: { id: input.ruleId } });
   if (!rule) return { ok: false, reason: "Unknown rule — flags cite the rulebook." };
 
-  const gate = await clearGate(db, {
-    profileId: input.profileId,
-    scope: `flag:post:${post.id}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
-  });
-  if (gate.outcome === "DUPLICATE") {
-    return { ok: false, reason: "You have already flagged this content." };
-  }
-  if (gate.outcome !== "CLEARED" || !gate.nullifier) {
-    return { ok: false, reason: `Gate: ${gate.outcome}` };
-  }
+  // Gate and feature write share ONE transaction (#25): if anything below
+  // rolls back, the humanity spend rolls back with it, so a retry is clean
+  // rather than refused as a phantom DUPLICATE.
+  return db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: input.profileId,
+      scope: `flag:post:${post.id}`,
+      scopeKind: "per-profile",
+      ledgerRecording: "private",
+    });
+    if (gate.outcome === "DUPLICATE") {
+      return { ok: false as const, reason: "You have already flagged this content." };
+    }
+    if (gate.outcome !== "CLEARED" || !gate.nullifier) {
+      return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+    }
 
-  const flag = await db.$transaction(async (tx) => {
     // The refundable deposit — but flagging is NEVER blocked by an
     // empty balance (DISCUSSIONS §7): a zero-balance soul flags without
     // a deposit; pattern penalties fall back to rate-limiting, not debt.
@@ -74,7 +77,7 @@ export async function fileFlag(
         ruleId: rule.id,
         note: input.note?.trim() || null,
         reporterProfileId: input.profileId,
-        nullifier: gate.nullifier!,
+        nullifier: gate.nullifier,
         depositHeld: depositTaken,
       },
     });
@@ -86,10 +89,8 @@ export async function fileFlag(
       postId: post.id,
       ruleId: rule.id,
     });
-    return created;
+    return { ok: true as const, flagId: created.id };
   });
-
-  return { ok: true, flagId: flag.id };
 }
 
 /**
@@ -125,20 +126,20 @@ export async function fileReleaseFlag(
   const rule = await db.rule.findUnique({ where: { id: input.ruleId } });
   if (!rule) return { ok: false, reason: "Unknown rule — flags cite the rulebook." };
 
-  const gate = await clearGate(db, {
-    profileId: input.profileId,
-    scope: `flag:release:${release.id}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
-  });
-  if (gate.outcome === "DUPLICATE") {
-    return { ok: false, reason: "You have already flagged this release." };
-  }
-  if (gate.outcome !== "CLEARED" || !gate.nullifier) {
-    return { ok: false, reason: `Gate: ${gate.outcome}` };
-  }
+  return db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: input.profileId,
+      scope: `flag:release:${release.id}`,
+      scopeKind: "per-profile",
+      ledgerRecording: "private",
+    });
+    if (gate.outcome === "DUPLICATE") {
+      return { ok: false as const, reason: "You have already flagged this release." };
+    }
+    if (gate.outcome !== "CLEARED" || !gate.nullifier) {
+      return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+    }
 
-  const flag = await db.$transaction(async (tx) => {
     const depositAmount = await getRail(tx, "moderation.flagDeposit");
     const { balanceOf } = await import("./economy");
     let depositTaken = 0;
@@ -159,7 +160,7 @@ export async function fileReleaseFlag(
         ruleId: rule.id,
         note: input.note?.trim() || null,
         reporterProfileId: input.profileId,
-        nullifier: gate.nullifier!,
+        nullifier: gate.nullifier,
         depositHeld: depositTaken,
       },
     });
@@ -169,8 +170,6 @@ export async function fileReleaseFlag(
       releaseId: release.id,
       ruleId: rule.id,
     });
-    return created;
+    return { ok: true as const, flagId: created.id };
   });
-
-  return { ok: true, flagId: flag.id };
 }
