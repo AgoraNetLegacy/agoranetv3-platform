@@ -16,7 +16,7 @@
 
 import { randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
-import { clearGate } from "./gate";
+import { clearGateTx } from "./gate";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
 import { chargeToTreasury, maybeFirstActionGrant } from "./economy";
@@ -106,16 +106,17 @@ export async function openThread(
 
   const bonded = await areFellowSouls(db, from.id, to.id);
 
-  const gate = await clearGate(db, {
-    profileId: from.id,
-    scope: `dm-thread:${randomUUID()}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
+  // Gate spend + fees + thread + first message share one transaction (#25),
+  // so a rollback leaves no orphan spend.
   try {
-    const threadId = await db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
+      const gate = await clearGateTx(tx, {
+        profileId: from.id,
+        scope: `dm-thread:${randomUUID()}`,
+        scopeKind: "per-profile",
+        ledgerRecording: "private",
+      });
+      if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
       // Initiator pays — blinded entries, no counterparty reference.
       const threadFee = await chargeToTreasury(tx, {
         profileId: from.id,
@@ -171,9 +172,8 @@ export async function openThread(
         refId: thread.id,
         aggregationKey: `dm:${thread.id}`,
       });
-      return thread.id;
+      return { ok: true as const, threadId: thread.id };
     });
-    return { ok: true, threadId };
   } catch (err) {
     return { ok: false, reason: (err as Error).message };
   }
@@ -210,16 +210,16 @@ export async function sendMessage(
   });
   if (profile.status !== "active") return { ok: false, reason: "No active face." };
 
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `dm-message:${randomUUID()}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
+  // Gate spend + fee + message share one transaction (#25).
   try {
-    await db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
+      const gate = await clearGateTx(tx, {
+        profileId: profile.id,
+        scope: `dm-message:${randomUUID()}`,
+        scopeKind: "per-profile",
+        ledgerRecording: "private",
+      });
+      if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
       const fee = await chargeToTreasury(tx, {
         profileId: profile.id,
         currency: "PC",
@@ -265,8 +265,8 @@ export async function sendMessage(
           aggregationKey: `dm:${thread.id}`,
         });
       }
+      return { ok: true as const };
     });
-    return { ok: true };
   } catch (err) {
     return { ok: false, reason: (err as Error).message };
   }
@@ -450,21 +450,8 @@ export async function reportMessage(
   const rule = await db.rule.findUnique({ where: { id: input.ruleId } });
   if (!rule) return { ok: false, reason: "Unknown rule — reports cite the rulebook." };
 
-  // One report per message per recipient — the gate's fixed scope is
-  // the enforcement, private like every flag.
-  const gate = await clearGate(db, {
-    profileId: input.profileId,
-    scope: `flag:dm:${message.id}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
-  });
-  if (gate.outcome === "DUPLICATE") {
-    return { ok: false, reason: "You have already reported this message." };
-  }
-  if (gate.outcome !== "CLEARED" || !gate.nullifier) {
-    return { ok: false, reason: `Gate: ${gate.outcome}` };
-  }
-
+  // One report per message per recipient — the gate's fixed scope is the
+  // enforcement, private like every flag.
   const threadKey = await threadKeyFor(db, message.thread);
   const plaintext = openMessage(
     threadKey,
@@ -473,7 +460,21 @@ export async function reportMessage(
     message.ciphertext
   );
 
-  await db.$transaction(async (tx) => {
+  // Gate spend + excerpt + deposit + flag + case share one transaction
+  // (#25): a rollback no longer strands the report nullifier.
+  return db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: input.profileId,
+      scope: `flag:dm:${message.id}`,
+      scopeKind: "per-profile",
+      ledgerRecording: "private",
+    });
+    if (gate.outcome === "DUPLICATE") {
+      return { ok: false as const, reason: "You have already reported this message." };
+    }
+    if (gate.outcome !== "CLEARED" || !gate.nullifier) {
+      return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+    }
     const excerpt = await tx.dmExcerpt.create({
       data: {
         threadId: message.threadId,
@@ -503,7 +504,7 @@ export async function reportMessage(
         ruleId: rule.id,
         note: input.note?.trim() || null,
         reporterProfileId: input.profileId,
-        nullifier: gate.nullifier!,
+        nullifier: gate.nullifier,
         depositHeld: depositTaken,
       },
     });
@@ -513,6 +514,6 @@ export async function reportMessage(
       dmExcerptId: excerpt.id,
       ruleId: rule.id,
     });
+    return { ok: true as const };
   });
-  return { ok: true };
 }
