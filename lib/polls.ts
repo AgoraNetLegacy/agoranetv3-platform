@@ -348,8 +348,15 @@ export async function castVote(
 
   // Circle-restricted visibility (§4.5): the ballot box sits inside the
   // members' room. Scope stays per-profile — the CIRCLES §7 sharp rule.
+  // A closed Circle's room is read-only (createPost enforces the same);
+  // the ballot box closes with it, so a poll still inside its window can't
+  // be voted after the Circle closes.
   if (poll.visibilityScope === "circle" && poll.circleRef) {
     const { activeMembership } = await import("./circles");
+    const circle = await db.circle.findUniqueOrThrow({ where: { id: poll.circleRef } });
+    if (circle.status === "closed") {
+      return { ok: false, reason: "This Circle is closed — its ballot box is read-only, like its room." };
+    }
     if (!(await activeMembership(db, poll.circleRef, profile.id))) {
       return { ok: false, reason: "This poll is restricted to its Circle's members." };
     }

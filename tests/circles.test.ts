@@ -517,6 +517,46 @@ describe("internal polls (§7) — reuse with the sharp rule", () => {
     });
     expect(result.ok).toBe(false);
   });
+
+  it("a closed Circle's ballot box is read-only, even mid-window", async () => {
+    // A fresh Circle so we don't disturb the shared one. Its founder is a
+    // member by construction and opens an internal poll still in its window.
+    const fresh = await formCircle(db, {
+      profileId: founderId,
+      name: "Closing Circle",
+      purpose: "A circle that closes while a vote is open.",
+      pillarId,
+    });
+    if (!fresh.ok) throw new Error(fresh.reason);
+    const poll = await createPoll(db, {
+      profileId: founderId,
+      pillarId,
+      title: "Decide before we close?",
+      type: "single",
+      mode: "pseudonymous",
+      options: ["Yes", "No"],
+      durationHours: 1, // still open
+      circle: { circleId: fresh.circleId },
+    });
+    if (!poll.ok) throw new Error(poll.reason);
+    const opt = await db.pollOption.findFirstOrThrow({ where: { pollId: poll.pollId } });
+
+    // The Circle closes while the poll is still inside its window.
+    await db.circle.update({ where: { id: fresh.circleId }, data: { status: "closed" } });
+
+    const vote = await castVote(db, {
+      pollId: poll.pollId,
+      profileId: founderId,
+      optionIds: [opt.id],
+    });
+    expect(vote.ok).toBe(false);
+    if (!vote.ok) expect(vote.reason).toContain("closed");
+    // No ballot landed.
+    const cast = await db.gateRequest.findFirst({
+      where: { scope: `poll:${poll.pollId}`, profileId: founderId, status: "CLEARED" },
+    });
+    expect(cast).toBeNull();
+  });
 });
 
 describe("stewardship — binding decisions (§7, §8)", () => {
