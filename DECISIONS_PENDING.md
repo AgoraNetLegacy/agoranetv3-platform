@@ -702,26 +702,26 @@ at the Phase 9 real-money re-review regardless.
     they're *my* dials, not yours, and they'd benefit from a numbers
     sitting once there's real usage to look at.
 
-25. **Gate spend and feature write should share one transaction — DO AT
-    DEPLOYMENT (security review, 2026-07-17).** Every gated action proves
-    humanity (spending a nullifier) in one database save, then does the
-    real work (post, vote, attest) in a *second* save. If the second save
-    rolls back, the nullifier is already spent — so a retry is refused as a
-    DUPLICATE and the action is silently lost. The rollback trigger is two
-    ledger-writing actions committing in the same instant, which needs the
-    production database (Postgres); SQLite (dev + testnet) is single-writer
-    and serializes, so this **cannot happen on what runs today**, and
-    production is behind the Phase 9 legal gate. Worst case is one lost
-    action, operator-recoverable — no funds or security exposure.
+25. ~~**Gate spend and feature write should share one transaction**~~ —
+    **DONE (owner-directed, 2026-07-17).** Every gated action used to prove
+    humanity (spending a nullifier) in one database save, then do the real
+    work in a *second* save — a rollback stranded the spend and refused the
+    retry as a DUPLICATE (a silently lost action). Postgres-only (SQLite is
+    single-writer), so it could not bite what runs today, but the owner
+    chose to close it now rather than carry it to deployment.
 
-    **The fix (its own slice, ~half a day):** add a transaction-aware
-    `clearGateTx(tx, …)` twin of `clearGate` — the pattern already exists
-    (`clearRegistration` runs inside the caller's transaction) — then move
-    the gate call *inside* each feature transaction at all **23** call
-    sites (polls, DMs, moderation, flags, chambers, circles, discussions,
-    escrow, fellow-souls, domains), so gate-spend and feature-write commit
-    or roll back together. Not architecturally risky; the cost is 23
-    careful rewires with the 262-test suite as the net. **Natural home:
-    the deployment slice (#14)** — the moment Postgres concurrency becomes
-    real and can be tested against actual Postgres. Deferred here on
-    purpose rather than rushed into a wrap-up session.
+    **What shipped:** a transaction-aware `clearGateTx(tx, …)` twin of
+    `clearGate` (the `clearRegistration`-in-caller-tx pattern), and all
+    **23** call sites migrated so gate-spend and feature-write commit or
+    roll back together (flags, discussions, polls, circles, chambers, DMs,
+    moderation, fellow-souls, domains, escrow). `clearGate` remains as a
+    thin `db.$transaction` wrapper. Duplicate detection uses a `findUnique`
+    pre-check (a caught P2002 inside the caller's tx would poison it on
+    Postgres); the rare truly-simultaneous same-subject race rolls the whole
+    action back cleanly, and `isGateDuplicateError` in an OUTER catch maps
+    that collision back to the graceful DUPLICATE message. Nine commits,
+    each its own cluster; 269 tests + db:verify + Postgres parity + build
+    green. An independent adversarial review found no correctness
+    regressions. Still validated on SQLite — the Postgres concurrency
+    payoff itself remains a deployment-time (#14) verification against real
+    Postgres, as noted in the commits.
