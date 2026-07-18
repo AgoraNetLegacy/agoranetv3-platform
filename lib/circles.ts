@@ -24,7 +24,7 @@
 import { createHash, randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
-import { clearGateTx, isGateDuplicateError } from "./gate";
+import { clearGateTx, gateDuplicateConfirmed } from "./gate";
 import { appendEvent, canonicalJson } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
@@ -855,7 +855,7 @@ export async function attestAction(
     return { ok: true as const };
     });
   } catch (err) {
-    if (isGateDuplicateError(err)) {
+    if (await gateDuplicateConfirmed(db, err, { profileId: profile.id, scope: `circle-attest:${entry.id}`, scopeKind: "per-profile" })) {
       return { ok: false, reason: "You have already attested this entry." };
     }
     throw err;

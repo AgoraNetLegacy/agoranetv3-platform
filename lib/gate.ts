@@ -267,19 +267,46 @@ export async function clearGate(
   }
 }
 
-/**
- * True for the rare simultaneous-spend collision: the P2002 raised when two
- * truly-concurrent submissions both pass clearGateTx's DUPLICATE pre-check
- * and one loses the nullifier insert (its whole transaction rolls back — no
- * spend persists). Fixed-scope gated actions wrap their transaction and map
- * this back to a graceful DUPLICATE, restoring the pre-#25 message instead
- * of surfacing a raised error. (Cannot arise on SQLite, which serialises
- * writers; a Postgres-only edge, like #25 itself.)
- */
+/** True for any Prisma unique-constraint (P2002) error. Necessary but NOT
+ *  sufficient to conclude a gated action was a duplicate — a transaction can
+ *  raise P2002 from OTHER unique constraints (the ledger's prevHash under
+ *  concurrent appends, a GrantClaim first-action race). Use
+ *  gateDuplicateConfirmed to decide DUPLICATE; this is its first gate. */
 export function isGateDuplicateError(err: unknown): boolean {
   return (
     err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002"
   );
+}
+
+/**
+ * After a gated transaction rolls back with a P2002, decide whether it was
+ * genuinely the one-per-scope nullifier collision — versus an unrelated
+ * unique clash (a ledger-prevHash race, a GrantClaim first-action race) that
+ * happened to roll the same transaction back. Returns true ONLY if the error
+ * is P2002 AND this subject's nullifier for this scope is now actually spent
+ * (by the winner of a truly-simultaneous race). Otherwise the action rolled
+ * back cleanly and is genuinely retryable — the caller must re-throw so it
+ * surfaces as a retryable error, never a misleading "you already did this".
+ *
+ * Fixed-scope gated actions call this from their OUTER catch (never inside
+ * the transaction — a caught P2002 poisons it on Postgres). Cannot fire on
+ * SQLite, which serialises writers; a Postgres-only edge, like #25 itself.
+ */
+export async function gateDuplicateConfirmed(
+  db: PrismaClient,
+  err: unknown,
+  input: { profileId: string; scope: string; scopeKind: ScopeKind }
+): Promise<boolean> {
+  if (!isGateDuplicateError(err)) return false;
+  const profile = await db.profile.findUnique({ where: { id: input.profileId } });
+  const subjectId =
+    input.scopeKind === "per-human" ? profile?.humanId : input.profileId;
+  if (!subjectId) return false;
+  const nullifier = nullifierFor(input.scope, input.scopeKind, subjectId);
+  const spent = await db.nullifierSpend.findUnique({
+    where: { scope_nullifier: { scope: input.scope, nullifier } },
+  });
+  return spent !== null;
 }
 
 export type RegistrationOutcome = "CLEARED" | "DUPLICATE";

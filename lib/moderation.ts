@@ -12,7 +12,7 @@
 
 import type { PrismaClient, ModCase, Prisma } from "@prisma/client";
 import type { Tx } from "./db";
-import { clearGateTx, isGateDuplicateError } from "./gate";
+import { clearGateTx, gateDuplicateConfirmed } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 import { chargeToTreasury, grant, payFromTreasury } from "./economy";
@@ -531,7 +531,7 @@ export async function submitRuling(
       return { ok: true as const };
     });
   } catch (err) {
-    if (isGateDuplicateError(err)) {
+    if (await gateDuplicateConfirmed(db, err, { profileId: input.profileId, scope: `ruling:${modCase.id}`, scopeKind: "per-profile" })) {
       return { ok: false, reason: "You have already ruled on this case." };
     }
     throw err;
@@ -1226,7 +1226,7 @@ export async function submitTribunalRuling(
       return { ok: true as const };
     });
   } catch (err) {
-    if (isGateDuplicateError(err)) {
+    if (await gateDuplicateConfirmed(db, err, { profileId: input.profileId, scope: `ruling:${modCase.id}`, scopeKind: "per-profile" })) {
       return { ok: false, reason: "You have already ruled on this case." };
     }
     throw err;

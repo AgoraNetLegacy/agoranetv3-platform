@@ -20,7 +20,7 @@
 
 import { createHash, randomBytes } from "crypto";
 import type { PrismaClient } from "@prisma/client";
-import { clearGateTx, isGateDuplicateError } from "./gate";
+import { clearGateTx, gateDuplicateConfirmed } from "./gate";
 import { appendEvent, canonicalJson } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
@@ -433,7 +433,7 @@ export async function castVote(
     return { ok: true as const };
     });
   } catch (err) {
-    if (isGateDuplicateError(err)) {
+    if (await gateDuplicateConfirmed(db, err, { profileId: profile.id, scope: `poll:${poll.id}`, scopeKind: "per-profile" })) {
       return { ok: false, reason: "You have already voted in this poll." };
     }
     throw err;

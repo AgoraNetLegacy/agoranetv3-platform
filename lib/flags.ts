@@ -14,7 +14,7 @@
 // balances; flagging is never blocked by an empty balance (DISCUSSIONS §7).
 
 import type { PrismaClient } from "@prisma/client";
-import { clearGateTx, isGateDuplicateError } from "./gate";
+import { clearGateTx, gateDuplicateConfirmed } from "./gate";
 import { chargeToTreasury } from "./economy";
 import { getRail } from "./rails";
 
@@ -93,7 +93,7 @@ export async function fileFlag(
     return { ok: true as const, flagId: created.id };
     });
   } catch (err) {
-    if (isGateDuplicateError(err)) {
+    if (await gateDuplicateConfirmed(db, err, { profileId: input.profileId, scope: `flag:post:${post.id}`, scopeKind: "per-profile" })) {
       return { ok: false, reason: "You have already flagged this content." };
     }
     throw err;
@@ -181,7 +181,7 @@ export async function fileReleaseFlag(
     return { ok: true as const, flagId: created.id };
     });
   } catch (err) {
-    if (isGateDuplicateError(err)) {
+    if (await gateDuplicateConfirmed(db, err, { profileId: input.profileId, scope: `flag:release:${release.id}`, scopeKind: "per-profile" })) {
       return { ok: false, reason: "You have already flagged this release." };
     }
     throw err;

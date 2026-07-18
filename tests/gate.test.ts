@@ -7,7 +7,13 @@ process.env.GATE_OPERATOR_SECRET = "test-secret-for-gate-tests-only";
 
 import { spawnSync } from "child_process";
 import { PrismaClient } from "@prisma/client";
-import { clearGate, clearGateTx, submitProof, isGateDuplicateError } from "../lib/gate";
+import {
+  clearGate,
+  clearGateTx,
+  submitProof,
+  isGateDuplicateError,
+  gateDuplicateConfirmed,
+} from "../lib/gate";
 import { Prisma } from "@prisma/client";
 import { verifyChain, findForbiddenId } from "../lib/ledger";
 import { registerAlias } from "../lib/identity";
@@ -213,5 +219,48 @@ describe("clearGateTx: the spend commits (and rolls back) with the feature write
     expect(isGateDuplicateError(other)).toBe(false);
     expect(isGateDuplicateError(new Error("plain"))).toBe(false);
     expect(isGateDuplicateError(null)).toBe(false);
+  });
+
+  // The outer catches must NOT report DUPLICATE for a P2002 that isn't the
+  // nullifier collision (a ledger prevHash race, a GrantClaim first-action
+  // race) — that would drop a valid action and tell the soul, falsely, that
+  // they already acted. gateDuplicateConfirmed re-checks the actual spend.
+  it("gateDuplicateConfirmed: a P2002 with NO matching spend is NOT a duplicate", async () => {
+    const p2002 = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+      code: "P2002",
+      clientVersion: "5.22.0",
+    });
+    const result = await gateDuplicateConfirmed(db, p2002, {
+      profileId: trueSelfId,
+      scope: "poll:never-spent-here:face",
+      scopeKind: "per-profile",
+    });
+    expect(result).toBe(false); // retryable — must re-throw, not claim DUPLICATE
+  });
+
+  it("gateDuplicateConfirmed: a P2002 WITH a committed spend IS a duplicate", async () => {
+    const scope = "poll:confirmed-dup:face";
+    await db.$transaction((tx) =>
+      clearGateTx(tx, { profileId: trueSelfId, scope, scopeKind: "per-profile" })
+    );
+    const p2002 = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+      code: "P2002",
+      clientVersion: "5.22.0",
+    });
+    const result = await gateDuplicateConfirmed(db, p2002, {
+      profileId: trueSelfId,
+      scope,
+      scopeKind: "per-profile",
+    });
+    expect(result).toBe(true);
+  });
+
+  it("gateDuplicateConfirmed: a non-P2002 error is never a duplicate", async () => {
+    const result = await gateDuplicateConfirmed(db, new Error("boom"), {
+      profileId: trueSelfId,
+      scope: "poll:confirmed-dup:face",
+      scopeKind: "per-profile",
+    });
+    expect(result).toBe(false);
   });
 });
