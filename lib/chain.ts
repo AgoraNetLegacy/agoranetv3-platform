@@ -134,3 +134,109 @@ export async function recordSelfCustodyProof(
   });
   return { ok: true, txHash };
 }
+
+// ------------------------------------------------------------------
+// On-chain migration Slice 3: the non-custodial donation. The soul's
+// own wallet locks value at the donation-lock SCRIPT address; the
+// platform never possesses it — before recording, the server checks
+// the chain and requires value to actually sit at the script in that
+// transaction's outputs. Same verify-before-record discipline as the
+// Slice 2 proof, one step further: not just "the tx exists" but "the
+// funds went where the donor was told they went."
+// ------------------------------------------------------------------
+
+export type DonationResult =
+  | { ok: true; txHash: string; lovelace: number }
+  | { ok: false; reason: string; retryable: boolean };
+
+/** How much lovelace this transaction locked at `scriptAddress`, per
+ *  the configured testnet's chain. Returns null when the tx isn't
+ *  visible yet (retryable); 0 means the tx exists but paid the script
+ *  nothing (wrong transaction — not retryable); throws on outages so
+ *  they never masquerade as either. */
+export async function lockedAtScriptOnConfiguredTestnet(
+  txHash: string,
+  scriptAddress: string
+): Promise<number | null> {
+  const net = cardanoNetwork();
+  const projectId = process.env.BLOCKFROST_PROJECT_ID;
+  if (!projectId) throw new Error("BLOCKFROST_PROJECT_ID is not set.");
+  const res = await fetch(`https://cardano-${net}.blockfrost.io/api/v0/txs/${txHash}/utxos`, {
+    headers: { project_id: projectId },
+    cache: "no-store",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Blockfrost lookup failed (${res.status}).`);
+  const utxos = (await res.json()) as {
+    outputs: { address: string; amount: { unit: string; quantity: string }[] }[];
+  };
+  return utxos.outputs
+    .filter((o) => o.address === scriptAddress)
+    .reduce(
+      (sum, o) => sum + Number(o.amount.find((a) => a.unit === "lovelace")?.quantity ?? 0),
+      0
+    );
+}
+
+/** Record a face's donation to the script — but only once the chain
+ *  shows value locked there in that transaction. The verifier is
+ *  injectable for tests; recording is idempotent per tx hash. */
+export async function recordScriptDonation(
+  db: PrismaClient,
+  input: { profileId: string; txHash: string; scriptAddress: string },
+  verify: (txHash: string, scriptAddress: string) => Promise<number | null> =
+    lockedAtScriptOnConfiguredTestnet
+): Promise<DonationResult> {
+  const txHash = input.txHash.trim().toLowerCase();
+  if (!TX_HASH_RE.test(txHash)) {
+    return { ok: false, retryable: false, reason: "That isn't a Cardano transaction hash." };
+  }
+  const link = await walletLinkFor(db, input.profileId);
+  if (!link) {
+    return {
+      ok: false,
+      retryable: false,
+      reason: "No wallet is linked to this face yet — connect one first.",
+    };
+  }
+  const lovelace = await verify(txHash, input.scriptAddress);
+  if (lovelace === null) {
+    return {
+      ok: false,
+      retryable: true,
+      reason:
+        `Not visible on ${cardanoNetwork()} yet. If this persists past a couple of ` +
+        "minutes, your wallet is probably on the OTHER testnet (Preview) — " +
+        "the two share the same address format.",
+    };
+  }
+  if (lovelace <= 0) {
+    return {
+      ok: false,
+      retryable: false,
+      reason:
+        "That transaction exists but locked nothing at the donation script — " +
+        "it isn't the donation. Nothing was recorded.",
+    };
+  }
+  await db.testnetDonation.upsert({
+    where: { txHash },
+    create: {
+      profileId: input.profileId,
+      txHash,
+      lovelace,
+      scriptAddress: input.scriptAddress,
+      network: cardanoNetwork(),
+    },
+    update: {},
+  });
+  return { ok: true, txHash, lovelace };
+}
+
+/** This face's recorded script donations, newest first. */
+export async function donationsFor(db: PrismaClient, profileId: string) {
+  return db.testnetDonation.findMany({
+    where: { profileId },
+    orderBy: { createdAt: "desc" },
+  });
+}

@@ -28,7 +28,8 @@ export interface RailDefault {
     | "flags"
     | "members"
     | "x"
-    | "actions";
+    | "actions"
+    | "lovelace";
   boundMin?: number; // defaults to ¼× value
   boundMax?: number; // defaults to 4× value
   description: string;
@@ -269,6 +270,24 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     unit: "hours",
     description:
       "Civic-ledger anchor cadence (ARWEAVE_RECORDS' ratified daily anchors, at TESTNET_RAILS §3's testnet grade): the head hash is witnessed by a public testnet transaction on this rhythm — when the ledger has moved. The 7-minute heartbeat is the recorded money-era target, not this phase's.",
+  },
+  {
+    key: "onchain.demoDonationLovelace",
+    value: 3_000_000,
+    unit: "lovelace",
+    boundMin: 1_000_000,
+    boundMax: 12_000_000,
+    description:
+      "On-chain migration Slice 3: size of the demo donation a soul's own wallet locks at the donation-lock script (testnet tADA only — 3 tADA default). A demo parameter, railed like every number; the real donation model waits on the securities answer.",
+  },
+  {
+    key: "onchain.demoLockMinutes",
+    value: 10,
+    unit: "minutes",
+    boundMin: 2,
+    boundMax: 1440,
+    description:
+      "On-chain migration Slice 3: how long the demo donation stays time-locked at the script before the beneficiary may collect. Short by design — the demo proves the lock is real without stranding testnet funds for days.",
   },
   // --- Circle rails (Phase 6 — CIRCLES_SPEC.md; "rails, not rules" is
   // the spec's own Principle 6). Per-Circle dials (attestation

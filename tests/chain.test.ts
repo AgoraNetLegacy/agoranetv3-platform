@@ -11,6 +11,8 @@ import {
   recordWalletLink,
   walletLinkFor,
   recordSelfCustodyProof,
+  recordScriptDonation,
+  donationsFor,
 } from "../lib/chain";
 import { anchorStatus, recordAnchor } from "../lib/chainAnchor";
 import { appendEvent } from "../lib/ledger";
@@ -209,3 +211,80 @@ describe("the self-custody proof", () => {
     expect(await db.testnetWalletLink.count()).toBe(1);
   });
 });
+
+// On-chain migration Slice 3: a donation is recorded ONLY when the
+// chain shows value locked at the donation script in that transaction.
+// The verifier is injected — no network in the fast suite.
+describe("the non-custodial donation", () => {
+  const script = "addr_test1wzscript000000000000000000000000000000000000000000";
+  const hash = (c: string) => c.repeat(64);
+
+  it("refuses a malformed hash without consulting the chain", async () => {
+    let consulted = false;
+    const spy = async () => ((consulted = true), 3_000_000 as number | null);
+    const r = await recordScriptDonation(
+      db,
+      { profileId: "profile-a", txHash: "nope", scriptAddress: script },
+      spy
+    );
+    expect(r.ok).toBe(false);
+    expect(consulted).toBe(false);
+  });
+
+  it("refuses a donation for a face with no wallet link", async () => {
+    const r = await recordScriptDonation(
+      db,
+      { profileId: "profile-unlinked", txHash: hash("c"), scriptAddress: script },
+      async () => 3_000_000
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.retryable).toBe(false);
+  });
+
+  it("tx not visible yet → retryable, nothing recorded", async () => {
+    const r = await recordScriptDonation(
+      db,
+      { profileId: "profile-a", txHash: hash("c"), scriptAddress: script },
+      async () => null
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.retryable).toBe(true);
+    expect(await db.testnetDonation.count()).toBe(0);
+  });
+
+  it("tx exists but locked NOTHING at the script → refused, not retryable", async () => {
+    const r = await recordScriptDonation(
+      db,
+      { profileId: "profile-a", txHash: hash("c"), scriptAddress: script },
+      async () => 0
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.retryable).toBe(false);
+    expect(await db.testnetDonation.count()).toBe(0);
+  });
+
+  it("records the donation with the chain-verified amount", async () => {
+    const r = await recordScriptDonation(
+      db,
+      { profileId: "profile-a", txHash: hash("c"), scriptAddress: script },
+      async () => 3_000_000
+    );
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.lovelace).toBe(3_000_000);
+    const rows = await donationsFor(db, "profile-a");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].scriptAddress).toBe(script);
+    expect(rows[0].network).toBe("preprod");
+  });
+
+  it("recording the same tx twice stays one row — idempotent per hash", async () => {
+    const r = await recordScriptDonation(
+      db,
+      { profileId: "profile-a", txHash: hash("c"), scriptAddress: script },
+      async () => 3_000_000
+    );
+    expect(r.ok).toBe(true);
+    expect(await db.testnetDonation.count()).toBe(1);
+  });
+});
+

@@ -41,6 +41,21 @@ model TestnetWalletLink {
   proofAt        DateTime?
 }
 
+// On-chain migration Slice 3: donations a face's OWN wallet sent to the
+// donation-lock SCRIPT address on a Cardano testnet. The platform never
+// possessed these funds — each row is recorded only after the chain
+// shows value locked at the script. The internal double-entry economy
+// remains the system of record; this table mirrors a boundary event.
+model TestnetDonation {
+  id            String   @id @default(cuid())
+  profileId     String
+  txHash        String   @unique
+  lovelace      Int
+  scriptAddress String
+  network       String // "preprod" | "preview" — never "mainnet", enforced at write
+  createdAt     DateTime @default(now())
+}
+
 model Human {
   id             String    @id @default(cuid())
   // Interim issuer (Phase A): the soul holds the credential secret (their

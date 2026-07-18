@@ -8,10 +8,13 @@ import {
   setSwitchAnimation,
   submitWalletLink,
   submitSelfCustodyProof,
+  submitScriptDonation,
 } from "@/app/actions";
-import { cardanoNetwork, walletLinkFor } from "@/lib/chain";
+import { cardanoNetwork, walletLinkFor, donationsFor } from "@/lib/chain";
+import { donationScript, demoBeneficiaryHash } from "@/lib/chainDonation";
 import { LaceConnect } from "@/components/LaceConnect";
 import { SelfCustodySign } from "@/components/SelfCustodySign";
+import { DonateToScript } from "@/components/DonateToScript";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +31,21 @@ export default async function SettingsPage({
   const { m } = await searchParams;
   const face = await activeFace();
   if (!face) redirect("/login");
-  const [cooldownDays, walletLink] = await Promise.all([
-    getRail(db, "identity.displayNameCooldownDays"),
-    walletLinkFor(db, face.id),
-  ]);
+  const [cooldownDays, walletLink, donations, demoLovelace, demoLockMinutes] =
+    await Promise.all([
+      getRail(db, "identity.displayNameCooldownDays"),
+      walletLinkFor(db, face.id),
+      donationsFor(db, face.id),
+      getRail(db, "onchain.demoDonationLovelace"),
+      getRail(db, "onchain.demoLockMinutes"),
+    ]);
   const network = cardanoNetwork();
+  // Derived only when a wallet is linked — the donation section only
+  // renders then, and an unconfigured beneficiary must not take the
+  // whole settings page down with it.
+  const [{ address: donationAddress }, beneficiaryHash] = walletLink
+    ? await Promise.all([donationScript(), demoBeneficiaryHash()])
+    : [{ address: "" }, ""];
 
   return (
     <div className="ceremony">
@@ -153,6 +166,51 @@ export default async function SettingsPage({
             <p className="lore">No proof signed by this face yet.</p>
           )}
           <SelfCustodySign network={network} onProof={submitSelfCustodyProof} />
+
+          <h4>The non-custodial donation</h4>
+          <p className="lore">
+            The first real value movement on this rail: {(demoLovelace / 1_000_000).toLocaleString()} tADA
+            from <strong>your</strong> wallet to the donation-lock{" "}
+            <strong>script</strong> —{" "}
+            <code>{donationAddress.slice(0, 24)}…</code> — an address
+            governed by validator math, not by anyone&rsquo;s key. The
+            platform cannot spend, redirect, or return what sits there;
+            it never touches the funds at all. Honestly, the demo&rsquo;s
+            shape: the lock opens after {demoLockMinutes} minutes, and
+            the collector is the dev demo wallet — the real
+            mission-treasury release (M-of-N attestation, no single
+            collector) is the next track of this build. Testnet tADA
+            only; nothing of real value.
+          </p>
+          {donations.length > 0 ? (
+            <ul className="lore">
+              {donations.map((d) => (
+                <li key={d.id}>
+                  {(d.lovelace / 1_000_000).toLocaleString()} tADA locked{" "}
+                  {d.createdAt.toLocaleDateString()}:{" "}
+                  <a
+                    href={`https://${d.network}.cardanoscan.io/transaction/${d.txHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <code>{d.txHash.slice(0, 16)}…</code>
+                  </a>{" "}
+                  — publicly verifiable; the funds sit at the script,
+                  not with us.
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="lore">No donation from this face yet.</p>
+          )}
+          <DonateToScript
+            network={network}
+            scriptAddress={donationAddress}
+            beneficiaryHash={beneficiaryHash}
+            lovelace={demoLovelace}
+            lockMinutes={demoLockMinutes}
+            onDonate={submitScriptDonation}
+          />
         </>
       )}
 

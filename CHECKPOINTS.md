@@ -1337,3 +1337,93 @@ flash now echoes the address it linked.
 preprod (Mesh vesting lock pattern). Open decisions still owed by the
 owner before Track 2: the initial M-of-N signer set; the freeze trust
 model.
+
+### Slice 3 — the non-custodial donation lock: BUILD + ROUNDTRIP SELF-VERIFIED 2026-07-18, awaiting the owner's donation
+
+**The validator (the real new ground):** `infra/onchain/` gains
+`lib/agoranet/donation.ak` + `validators/donation.ak` — the Mesh
+vesting lock pattern adapted as our own Aiken code, Slice 1 style (pure
+tested rule, thin validator). The rule: funds leave the script ONLY if
+the beneficiary signed AND the transaction's validity range provably
+starts at/after the unlock time; an unbounded validity start proves
+nothing and is refused. `aiken check` 10/10 (5 new); blueprint
+committed (plutus.json); script address derived from the blueprint at
+runtime — `addr_test1wrdsgwqf7wtpfl2j03gced2wyj8fcr64ksl7qallaf65rkcvwmfcp`
+on preprod. Everything downstream reads the blueprint: no copy-pasted
+addresses to drift.
+
+**THE ROUNDTRIP, PROVEN LIVE ON PREPROD (dev wallet as donor AND
+beneficiary):**
+- DONATE `7292911af3a6d64feb028702dfa18cc76fac9135eeee8012bc5ce37f69aa0454`
+  — 3 tADA locked at the script with the inline datum (beneficiary,
+  unlock).
+- EARLY COLLECT REFUSED **BY THE PLUTUS SCRIPT ITSELF** — a
+  structurally valid, node-acceptable transaction whose validity
+  started before the unlock: `PlutusFailure`, phase-2. The refusal is
+  the validator's judgment, not a plumbing error — the negative proof
+  that matters.
+- COLLECT `04fc80e23109c29e8c795b4ba533a6d85d35041681f05b25e1c38a701fba3ac4`
+  — after the chain's own clock passed the unlock slot: accepted, paid
+  to the beneficiary.
+The lock is real in both directions: refuses early, releases after.
+Runbook: `npx tsx scripts/chain/demo-donation-roundtrip.ts [lockSeconds]`.
+
+**App side (additive):** `TestnetDonation` model (both schemas
+byte-identical; consolidated into the postgres 0_init per the
+house convention — pre-deployment history is rewritten, not appended);
+`recordScriptDonation` verifies not just "the tx exists" but **"value
+actually sits at the script in that tx's outputs"** before recording
+(Blockfrost /txs/{hash}/utxos; wrong-tx → refused outright, not-found →
+retryable with the Preview hint); rails `onchain.demoDonationLovelace`
+(3 tADA) + `onchain.demoLockMinutes` (10) — the demo's numbers are
+data, like every number; `submitScriptDonation` action (script address
+resolved SERVER-side from the blueprint — a tampered browser can't
+point verification at a different script); `DonateToScript` component
+(browser-built from the wallet's own UTxOs, wallet-signed,
+wallet-submitted, then polls); the `/settings` donation section with
+the honest-shape disclosure (demo beneficiary = dev wallet; M-of-N
+replaces it in Track 2). Env: `TESTNET_DEMO_BENEFICIARY_ADDR` (an
+address, public by nature — never a key).
+
+**Evidence:** tests 287/287 (6 new donation tests: malformed-hash
+refusal without a chain call, no-link refusal, not-found retryable,
+zero-at-script refused outright, chain-verified amount recorded,
+idempotent per hash). `npm run check` exit 0. aiken 10/10. Browser
+walkthrough: section renders with the blueprint-derived address;
+without a wallet the flow fails safe; zero console errors.
+
+**Toolchain gotchas, learned by four live attempts (Track 2 will need
+every one of these):**
+1. `aiken check` piped shows NOTHING on compile errors AND `$?` after a
+   pipe is the pipe's — run under `script -q /dev/null` (pseudo-TTY) to
+   capture diagnostics, or parse the JSON from stdout.
+2. Validator names must not collide with imported module names
+   (`validator donation` vs `use agoranet/donation` → duplicate name).
+3. Mesh's legacy `Transaction` wrapper mis-serializes script-spend txs
+   (3-element pre-Alonzo CBOR → node `DeserialiseFailure`). Script
+   spends use **MeshTxBuilder** (the shape of Mesh's own vesting
+   example): spendingPlutusScriptV3 → txIn → txInInlineDatumPresent →
+   txInRedeemerValue → txInScript → txOut → txInCollateral →
+   invalidBefore → requiredSignerHash → changeAddress → selectUtxosFrom.
+4. ALWAYS build with live protocol params (fetcher: BlockfrostProvider)
+   — stale local cost models fail `ScriptIntegrityHashMismatch` at the
+   node. Post-van-Rossem (PV11, mainnet 2026-07-18) this matters more,
+   not less: cost models just changed.
+5. Mesh's local ms→slot mapping drifts tens of seconds from the node.
+   Never gate submission on wallclock — poll Blockfrost /blocks/latest
+   until the chain itself passes the validity-start slot.
+6. Collateral: a script spend needs a pure-ADA UTxO; the wallet
+   consolidates into one token-carrying UTxO, so provision collateral
+   (5 tADA self-send) — and do it AFTER the donate leg, whose coin
+   selection will otherwise spend it.
+
+**Known residue, deliberate:** the failed attempts left 4×3 tADA of
+matured, collectable UTxOs at the script (the collect leg proved they
+are recoverable — the beneficiary can sweep them any time). Testnet
+faucet money; left as-is.
+
+**THE CHECKPOINT (owner at the keyboard, ~2 minutes):** donate from HIS
+Lace via /settings — funds provably leave his wallet for the script,
+platform never in possession; the recorded tx hash + Cardanoscan link
+is the record. The collect side is already proven above and is NOT his
+checkpoint.

@@ -1022,6 +1022,25 @@ export async function submitSelfCustodyProof(formData: FormData) {
   return result;
 }
 
+/** On-chain migration Slice 3: record a donation the soul's own wallet
+ *  locked at the donation-lock script. The script address comes from
+ *  the committed blueprint server-side — never from the client, so a
+ *  tampered browser can't have us verify against the wrong script.
+ *  Returns a result for client polling, like the Slice 2 proof. */
+export async function submitScriptDonation(formData: FormData) {
+  const face = await requireFace("settings");
+  const { recordScriptDonation } = await import("@/lib/chain");
+  const { donationScript } = await import("@/lib/chainDonation");
+  const { address } = await donationScript();
+  const result = await recordScriptDonation(db, {
+    profileId: face.id,
+    txHash: String(formData.get("txHash") ?? ""),
+    scriptAddress: address,
+  });
+  if (result.ok) revalidatePath("/settings");
+  return result;
+}
+
 /** §5.1 + §2.2: the switch animation is a per-face choice — flip
  *  (default), crossfade, or instant. By choice, never by detection. */
 export async function setSwitchAnimation(formData: FormData) {

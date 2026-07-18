@@ -1206,19 +1206,38 @@ ALTER TABLE "DmMessage" ADD CONSTRAINT "DmMessage_threadId_fkey" FOREIGN KEY ("t
 ALTER TABLE "DmExcerpt" ADD CONSTRAINT "DmExcerpt_threadId_fkey" FOREIGN KEY ("threadId") REFERENCES "DmThread"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 
--- CreateTable (Phase 8.6, TESTNET_RAILS_SPEC §6.3)
+-- CreateTable (Phase 8.6, TESTNET_RAILS_SPEC §6.3; proof columns from
+-- the on-chain migration's Slice 2)
 CREATE TABLE "TestnetWalletLink" (
     "id" TEXT NOT NULL,
     "profileId" TEXT NOT NULL,
     "cardanoAddress" TEXT NOT NULL,
     "network" TEXT NOT NULL,
     "connectedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "proofTxHash" TEXT,
+    "proofAt" TIMESTAMP(3),
 
     CONSTRAINT "TestnetWalletLink_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "TestnetWalletLink_profileId_key" ON "TestnetWalletLink"("profileId");
+
+-- CreateTable (On-chain migration Slice 3)
+CREATE TABLE "TestnetDonation" (
+    "id" TEXT NOT NULL,
+    "profileId" TEXT NOT NULL,
+    "txHash" TEXT NOT NULL,
+    "lovelace" INTEGER NOT NULL,
+    "scriptAddress" TEXT NOT NULL,
+    "network" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "TestnetDonation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TestnetDonation_txHash_key" ON "TestnetDonation"("txHash");
 
 -- AddForeignKey
 ALTER TABLE "EconomyEntry" ADD CONSTRAINT "EconomyEntry_budgetCategory_fkey" FOREIGN KEY ("budgetCategory") REFERENCES "BudgetCategory"("name") ON DELETE SET NULL ON UPDATE CASCADE;
