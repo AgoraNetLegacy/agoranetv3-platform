@@ -336,6 +336,18 @@ model GrantClaim {
   @@id([profileId, kind])
 }
 
+// One row per (profile, UTC day) — the authoritative accrual counter.
+// accrueForAction locks this row first, so a soul's concurrent qualifying
+// actions serialize on it and the daily/weekly ceilings become a hard
+// invariant instead of a read-then-grant race (lib/accrual.ts).
+model AccrualDay {
+  profileId String
+  day       DateTime
+  totalUpc  Float    @default(0)
+
+  @@id([profileId, day])
+}
+
 // ------------------------------------------------------------------
 // The Civic Ledger — append-only, hash-chained (v2 pattern, reimplemented).
 // Nothing edits or deletes rows; corrections are new amendment events.

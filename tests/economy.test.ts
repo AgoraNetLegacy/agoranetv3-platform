@@ -230,6 +230,35 @@ describe("fees flow to the treasury", () => {
       });
       expect(streak).toBe(1);
     });
+
+    it("the per-day counter tracks grants and never passes the ceiling", async () => {
+      // The AccrualDay row is the lock the ceiling now rides on (it makes
+      // the read-then-grant sequence atomic per soul per day on Postgres,
+      // where interleaving was possible; SQLite serialises writers on its
+      // own). Here we assert the invariant the lock guarantees: across many
+      // qualifying actions the counter equals what was actually granted and
+      // never exceeds the 10u/day ceiling.
+      const { accrueForAction } = await import("../lib/accrual");
+      const racer = await makeOnboardedSoul(db, {
+        trueSelf: "racer-1",
+        alias: "racer-1a",
+      });
+
+      for (let i = 0; i < 25; i++) {
+        await db.$transaction((tx) => accrueForAction(tx, racer.trueSelfId));
+      }
+
+      const accrued = await db.economyEntry.findMany({
+        where: { toProfileId: racer.trueSelfId, kind: { in: ["accrual", "accrual.streak"] } },
+      });
+      const total = accrued.reduce((s, e) => s + e.amount, 0);
+      expect(total).toBe(10); // saturates at the ceiling, never past it
+      // The authoritative counter agrees with what was actually granted.
+      const day = await db.accrualDay.findFirstOrThrow({
+        where: { profileId: racer.trueSelfId },
+      });
+      expect(day.totalUpc).toBe(total);
+    });
   });
 });
 

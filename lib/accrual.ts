@@ -51,6 +51,20 @@ export async function accrueForAction(tx: Tx, profileId: string): Promise<void> 
   const dayStart = utcDayStart(now);
   const weekStart = new Date(dayStart.getTime() - 6 * DAY_MS); // rolling 7 days
 
+  // Serialize this soul's concurrent qualifying actions on today's counter
+  // row FIRST — before any read. The upsert compiles to an atomic INSERT …
+  // ON CONFLICT DO UPDATE that acquires the row's write lock (held to
+  // commit), so two actions racing near the ceiling can no longer both read
+  // a pre-grant total and both grant past the cap. Taking the write before
+  // the rail/total reads also keeps the ordering deadlock-free (no
+  // shared-then-exclusive lock upgrade). The counter also records the day's
+  // running accrual for audit.
+  await tx.accrualDay.upsert({
+    where: { profileId_day: { profileId, day: dayStart } },
+    create: { profileId, day: dayStart, totalUpc: 0 },
+    update: { totalUpc: { increment: 0 } },
+  });
+
   const [dailyCeiling, weeklyCeiling, streakBonus, streakWeeklyCap] =
     await Promise.all([
       getRail(tx, "accrual.dailyCeilingPc"),
@@ -62,6 +76,7 @@ export async function accrueForAction(tx: Tx, profileId: string): Promise<void> 
   const accrualKinds = ["accrual", "accrual.streak"];
   const todayTotal = await accruedSince(tx, profileId, dayStart, accrualKinds);
   const weekTotal = await accruedSince(tx, profileId, weekStart, accrualKinds);
+  let granted = 0;
 
   // Streak: paid once, on the first qualifying action of a day whose
   // previous UTC day also accrued (consecutive presence).
@@ -84,6 +99,7 @@ export async function accrueForAction(tx: Tx, profileId: string): Promise<void> 
       );
       if (bonus > 0) {
         await grant(tx, { profileId, currency: "PC", amount: bonus, kind: "accrual.streak" });
+        granted += bonus;
       }
     }
   }
@@ -97,5 +113,13 @@ export async function accrueForAction(tx: Tx, profileId: string): Promise<void> 
   );
   if (base > 0) {
     await grant(tx, { profileId, currency: "PC", amount: base, kind: "accrual" });
+    granted += base;
+  }
+
+  if (granted > 0) {
+    await tx.accrualDay.update({
+      where: { profileId_day: { profileId, day: dayStart } },
+      data: { totalUpc: { increment: granted } },
+    });
   }
 }

@@ -1264,3 +1264,12 @@ CREATE TABLE "GrantClaim" (
 
     CONSTRAINT "GrantClaim_pkey" PRIMARY KEY ("profileId","kind")
 );
+
+-- CreateTable
+CREATE TABLE "AccrualDay" (
+    "profileId" TEXT NOT NULL,
+    "day" TIMESTAMP(3) NOT NULL,
+    "totalUpc" DOUBLE PRECISION NOT NULL DEFAULT 0,
+
+    CONSTRAINT "AccrualDay_pkey" PRIMARY KEY ("profileId","day")
+);
