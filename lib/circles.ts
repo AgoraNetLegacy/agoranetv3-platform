@@ -24,7 +24,7 @@
 import { createHash, randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
-import { clearGate } from "./gate";
+import { clearGateTx } from "./gate";
 import { appendEvent, canonicalJson } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
@@ -235,15 +235,16 @@ export async function formCircle(
   const homePillar =
     pillar ?? (await db.pillar.findFirstOrThrow({ where: { isMeta: true } }));
 
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `circle-create:${randomUUID()}`,
-    scopeKind: "per-profile",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
+  // Gate spend + fee + Circle creation share one transaction (#25), so a
+  // rollback leaves no orphan spend.
   try {
-    const circle = await db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
+      const gate = await clearGateTx(tx, {
+        profileId: profile.id,
+        scope: `circle-create:${randomUUID()}`,
+        scopeKind: "per-profile",
+      });
+      if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
       const fee = await chargeToTreasury(tx, {
         profileId: profile.id,
         currency: "PC",
@@ -307,9 +308,8 @@ export async function formCircle(
         eventType: "circle.joined",
         payload: { circleRef: created.id, handle: profile.handle },
       });
-      return created;
+      return { ok: true as const, circleId: created.id };
     });
-    return { ok: true, circleId: circle.id };
   } catch (err) {
     if (err instanceof InsufficientFunds) return { ok: false, reason: err.message };
     throw err;
@@ -448,14 +448,14 @@ export async function joinCircle(
   // Each join is its own gate-cleared action (rejoining after leaving
   // is allowed — §8 keeps Circles joinable); membership uniqueness
   // lives in the membership table, humanity proof in the gate.
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `circle:${circle.id}:join:${randomUUID()}`,
-    scopeKind: "per-profile",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
-  await db.$transaction(async (tx) => {
+  // Gate spend + membership row share one transaction (#25).
+  return db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: profile.id,
+      scope: `circle:${circle.id}:join:${randomUUID()}`,
+      scopeKind: "per-profile",
+    });
+    if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     const already = await tx.circleMember.findFirst({
       where: { circleId: circle.id, profileId: profile.id, leftAt: null },
     });
@@ -472,8 +472,8 @@ export async function joinCircle(
     await touchActivity(tx, circle.id);
     await accrueForAction(tx, profile.id);
     await notifyCircleActivity(tx, circle, "A soul joined", profile.id);
+    return { ok: true as const };
   });
-  return { ok: true };
 }
 
 /** Leaving (§5): one tap, no ceremony, logged as public record. */
@@ -524,15 +524,15 @@ export async function postOffer(
   if (!membership) return { ok: false, reason: "Members only." };
   const profile = await db.profile.findUniqueOrThrow({ where: { id: input.profileId } });
 
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `circle:${circle.id}:offer:${randomUUID()}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
-  const offer = await db.$transaction(async (tx) => {
+  // Gate spend + offer row share one transaction (#25).
+  return db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: profile.id,
+      scope: `circle:${circle.id}:offer:${randomUUID()}`,
+      scopeKind: "per-profile",
+      ledgerRecording: "private",
+    });
+    if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     const created = await tx.resourceOffer.create({
       data: {
         circleId: circle.id,
@@ -544,9 +544,8 @@ export async function postOffer(
     });
     await touchActivity(tx, circle.id);
     await accrueForAction(tx, profile.id);
-    return created;
+    return { ok: true as const, offerId: created.id };
   });
-  return { ok: true, offerId: offer.id };
 }
 
 /** Offers are editable and retractable by their member (§2.3, §5). */
@@ -636,17 +635,17 @@ export async function logAction(
     drewOn.push({ offerId: offer.id, kind: offer.kind, body: offer.body });
   }
 
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `circle:${circle.id}:action:${randomUUID()}`,
-    scopeKind: "per-profile",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
   const didAt = input.didAt?.trim() || null;
   const place = input.place?.trim() || null;
 
-  const entry = await db.$transaction(async (tx) => {
+  // Gate spend + action entry share one transaction (#25).
+  return db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: profile.id,
+      scope: `circle:${circle.id}:action:${randomUUID()}`,
+      scopeKind: "per-profile",
+    });
+    if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     const created = await tx.actionEntry.create({
       data: {
         circleId: circle.id,
@@ -689,9 +688,8 @@ export async function logAction(
     await touchActivity(tx, circle.id);
     await accrueForAction(tx, profile.id);
     await notifyCircleActivity(tx, circle, "An action was logged", profile.id);
-    return created;
+    return { ok: true as const, entryId: created.id };
   });
-  return { ok: true, entryId: entry.id };
 }
 
 /** Re-derivable hash of an entry's public claim — verify.ts re-checks
@@ -743,18 +741,20 @@ export async function attestAction(
 
   // One attestation per profile per entry: a fixed per-entry scope, so
   // the nullifier collision rejects repeats — privately, like all
-  // duplicates.
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `circle-attest:${entry.id}`,
-    scopeKind: "per-profile",
-  });
-  if (gate.outcome === "DUPLICATE") {
-    return { ok: false, reason: "You have already attested this entry." };
-  }
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
-  await db.$transaction(async (tx) => {
+  // duplicates. Gate spend + attestation + latch share ONE transaction
+  // (#25): a rollback (e.g. the ledger append losing a concurrent race) no
+  // longer strands the attest nullifier, so the co-signature is retryable
+  // instead of vanishing as a phantom DUPLICATE.
+  return db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: profile.id,
+      scope: `circle-attest:${entry.id}`,
+      scopeKind: "per-profile",
+    });
+    if (gate.outcome === "DUPLICATE") {
+      return { ok: false as const, reason: "You have already attested this entry." };
+    }
+    if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     await tx.attestation.create({
       data: {
         entryId: entry.id,
@@ -851,8 +851,8 @@ export async function attestAction(
         profile.id
       );
     }
+    return { ok: true as const };
   });
-  return { ok: true };
 }
 
 /**
