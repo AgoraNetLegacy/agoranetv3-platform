@@ -116,7 +116,8 @@ export default async function SettingsPage({
         <p className="lore">
           Linked to this face: <code>{walletLink.cardanoAddress.slice(0, 24)}…</code>{" "}
           ({walletLink.network}, since {walletLink.connectedAt.toLocaleDateString()}).
-          Reconnect below to update it.
+          Switched wallets? The &ldquo;Connect Lace&rdquo; button below
+          re-links this face to whatever wallet is in your browser now.
         </p>
       ) : (
         <p className="lore">No wallet linked to this face yet.</p>

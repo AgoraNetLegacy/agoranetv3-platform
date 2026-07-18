@@ -996,7 +996,14 @@ export async function submitWalletLink(formData: FormData) {
     network: String(formData.get("network") ?? ""),
   });
   revalidatePath("/settings");
-  backTo("/settings", result.ok ? "Testnet wallet linked to this face." : result.reason);
+  backTo(
+    "/settings",
+    result.ok
+      ? `Testnet wallet linked to this face: ${String(formData.get("cardanoAddress") ?? "")
+          .trim()
+          .slice(0, 24)}…`
+      : result.reason
+  );
 }
 
 /** On-chain migration Slice 2: record the self-custody proof tx the

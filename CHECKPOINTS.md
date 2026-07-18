@@ -1262,3 +1262,78 @@ these bugs sat behind a function the slice tests bypassed.
 **Evidence:** tests **262/262** (3 new, all walking the full road).
 db:verify green. Postgres parity valid. `npm run check` exit 0. Demo
 re-verified end-to-end after the freeze wiring.
+
+---
+
+## On-Chain Economy Migration — Track 1 (ONCHAIN_ECONOMY_MIGRATION.md)
+
+*The parallel track: testnet-only, additive, no production. The internal
+double-entry economy remains the system of record. This work does NOT
+replace the two venture gates — the legal conversation (securities
+classification) and the demand test.*
+
+### Slice 1 — Aiken workspace + tested release primitive ✅ (2026-07-18, 71d26b9)
+
+`infra/onchain/` stood up (Aiken, Plutus v3, stdlib v3.1.0). The seed of
+the release authority as pure, unit-tested logic in
+`lib/agoranet/treasury.ak`: `signed_by` / `count_signed` /
+`threshold_met` — the mathematical form of attestRelease's "N members
+co-signed → release," where the validator, not an operator, decides.
+
+**Evidence:** `aiken check` 5/5 green (signer_present, signer_absent,
+counts_only_authorised_signers, threshold_met_at_two_of_three,
+threshold_not_met_below). Toolchain note: run via
+`npx --yes @aiken-lang/aiken` (Homebrew tap-trust broken on this
+machine); compile diagnostics render only in a real TTY.
+
+### Slice 2 — CIP-30 self-custody proof ✅ OWNER-PERFORMED 2026-07-18 (128db49)
+
+**The checkpoint, achieved at the owner's keyboard:** his own Lace
+wallet signed a preprod transaction the app built — a ~2 tADA self-send
+carrying a CIP-20 note (label 674), built in the browser from the
+wallet's own UTxOs, signed and submitted by the wallet. The platform
+held no key, submitted nothing, and possessed nothing at any moment —
+the non-custodial pattern every real flow will follow.
+
+**The proof tx:**
+`96893e34169a51526eb5d10d0f91a10ff61faabe72da38fbd425078120161539`
+(preprod block 4,951,560; fee 0.172321 tADA; metadata label 674 =
+"AgoraNet slice-2 self-custody proof (testnet)"). Independently
+re-confirmed via Blockfrost after recording. Publicly verifiable:
+https://preprod.cardanoscan.io/transaction/96893e34169a51526eb5d10d0f91a10ff61faabe72da38fbd425078120161539
+
+**The enforced gotcha:** CIP-30 reports networkId 0 for BOTH Cardano
+testnets, so the app cannot tell preprod from preview client-side. The
+server therefore refuses to record a proof hash until Blockfrost
+confirms it exists on the CONFIGURED testnet — the 8.6 "Eternl was on
+Preview" incident, promoted from footnote to invariant.
+
+**What was built (additive only):** two nullable columns on
+`TestnetWalletLink` (`proofTxHash`, `proofAt`; both schemas
+byte-identical + postgres migration), `recordSelfCustodyProof` /
+`txExistsOnConfiguredTestnet` in `lib/chain.ts` (verifier injectable for
+tests), `submitSelfCustodyProof` server action (returns a result for
+client polling instead of redirecting), `components/SelfCustodySign.tsx`
+(browser-side build/sign/submit + poll), and the `/settings` proof
+section. The browser path never touches `TESTNET_MINT_MNEMONIC` — the
+script wallet and the soul's wallet stay separate worlds.
+
+**Evidence:** tests 281/281 (5 new: malformed-hash refusal without a
+chain call, no-link refusal, unverified-hash NOT recorded + retryable
+with the wrong-testnet hint, verified proof recorded lowercase,
+re-signing updates in place). `npm run check` exit 0 (tsc, build,
+postgres parity). Live verifier check: found the real 8.6 anchor tx on
+preprod, rejected a bogus hash. Browser walkthrough: section renders;
+without a wallet extension the flow fails safe ("nothing left your
+wallet and nothing was recorded"), zero console errors.
+
+**Owner walkthrough findings (both fixed same-session):** (1) "Reconnect
+below to update it" pointed at no visible control — now names the
+Connect Lace button; (2) the post-link flash said only "Testnet wallet
+linked to this face" while the rail section showed the address — the
+flash now echoes the address it linked.
+
+**NEXT:** Slice 3 — simplest non-custodial donation to a script on
+preprod (Mesh vesting lock pattern). Open decisions still owed by the
+owner before Track 2: the initial M-of-N signer set; the freeze trust
+model.
