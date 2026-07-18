@@ -16,6 +16,7 @@ import {
   caseQueueFor,
   caseFileFor,
   submitRuling,
+  reviewSupervisedRuling,
   appealCase,
   submitTribunalRuling,
   acceptRestorative,
@@ -329,6 +330,59 @@ describe("the whole road: flag → blur → ruling → tombstone → ladder", ()
     expect(stillOpen.outcome).toBeNull();
     const rulings = await db.ruling.count({ where: { caseId: tribunalCase.id } });
     expect(rulings).toBe(0); // nothing was recorded
+  });
+
+  it("an unqualified soul cannot confirm a pending supervised ruling", async () => {
+    // Stand up a routine case with a genuinely pending ruling.
+    const posted = await createPost(db, {
+      discussionId,
+      profileId: author.trueSelfId,
+      body: "Content whose ruling is awaiting supervision.",
+    });
+    if (!posted.ok) throw new Error(posted.reason);
+    const flagged = await fileFlag(db, {
+      postId: posted.postId,
+      profileId: flagger.trueSelfId,
+      ruleId: "R1.2",
+    });
+    expect(flagged.ok).toBe(true);
+    const pendingCase = await db.modCase.findFirstOrThrow({
+      where: { postId: posted.postId },
+    });
+    const realJudge = await makeOnboardedSoul(db, {
+      trueSelf: "sup-judge",
+      alias: "sup-judge-a",
+    });
+    const pendingRuling = await db.ruling.create({
+      data: {
+        caseId: pendingCase.id,
+        moderatorNullifier: "test-nullifier-pending-review",
+        moderatorProfileId: realJudge.trueSelfId,
+        verdict: "uphold",
+        citedRuleId: "R1.2",
+        supervision: "pending",
+      },
+    });
+
+    // A soul with no badge at all must be refused, and the strike ladder
+    // must NOT fire on the accused.
+    const strikesBefore = await activeStrikeCount(db, author.trueSelfId);
+    const badgeless = await makeOnboardedSoul(db, {
+      trueSelf: "no-badge",
+      alias: "no-badge-a",
+    });
+    const attempt = await reviewSupervisedRuling(db, {
+      rulingId: pendingRuling.id,
+      profileId: badgeless.trueSelfId,
+      agree: true,
+    });
+    expect(attempt.ok).toBe(false);
+
+    const stillPending = await db.ruling.findUniqueOrThrow({
+      where: { id: pendingRuling.id },
+    });
+    expect(stillPending.supervision).toBe("pending"); // untouched
+    expect(await activeStrikeCount(db, author.trueSelfId)).toBe(strikesBefore);
   });
 });
 

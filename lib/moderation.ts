@@ -548,6 +548,20 @@ export async function reviewSupervisedRuling(
   db: PrismaClient,
   input: { rulingId: string; profileId: string; agree: boolean }
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
+  // Only a qualified supervisor may confirm/override — the same gate
+  // supervisionQueueFor applies to the queue. Without it, any signed-in
+  // soul (no badge, or a brand-new badge holder past zero confirmed cases)
+  // could push a stranger's pending ruling to "confirmed" (triggering the
+  // strike ladder on the accused) or "overridden" (staining the real
+  // moderator's agreement rate). The action gates only rate-limit family,
+  // not standing, so the check must live here.
+  const term = await activeTermFor(db, input.profileId);
+  if (!term) return { ok: false, reason: "No active badge — the workbench is closed to you." };
+  const initial = await getRail(db, "moderation.supervisionInitialCases");
+  if ((await confirmedRulingCount(db, input.profileId)) < initial) {
+    return { ok: false, reason: "Not a qualified supervisor yet." };
+  }
+
   const ruling = await db.ruling.findUnique({
     where: { id: input.rulingId },
     include: { case: true },
