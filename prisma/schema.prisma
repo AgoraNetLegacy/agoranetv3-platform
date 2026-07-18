@@ -29,11 +29,16 @@ generator client {
 // Testnet-only by construction: the recording path refuses mainnet
 // addresses, and nothing here custodies anything.
 model TestnetWalletLink {
-  id             String   @id @default(cuid())
-  profileId      String   @unique
+  id             String    @id @default(cuid())
+  profileId      String    @unique
   cardanoAddress String
   network        String // "preprod" | "preview" — never "mainnet", enforced at write
-  connectedAt    DateTime @default(now())
+  connectedAt    DateTime  @default(now())
+  // On-chain migration Slice 2: the user-signed self-custody proof tx.
+  // Recorded only after the hash is CONFIRMED to exist on the configured
+  // testnet (the preview-vs-preprod gotcha, made an enforced check).
+  proofTxHash    String?
+  proofAt        DateTime?
 }
 
 model Human {

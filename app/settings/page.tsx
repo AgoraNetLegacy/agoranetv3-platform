@@ -3,9 +3,15 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { getRail } from "@/lib/rails";
-import { updateDisplayName, setSwitchAnimation, submitWalletLink } from "@/app/actions";
+import {
+  updateDisplayName,
+  setSwitchAnimation,
+  submitWalletLink,
+  submitSelfCustodyProof,
+} from "@/app/actions";
 import { cardanoNetwork, walletLinkFor } from "@/lib/chain";
 import { LaceConnect } from "@/components/LaceConnect";
+import { SelfCustodySign } from "@/components/SelfCustodySign";
 
 export const dynamic = "force-dynamic";
 
@@ -116,6 +122,38 @@ export default async function SettingsPage({
         <p className="lore">No wallet linked to this face yet.</p>
       )}
       <LaceConnect network={network} onLink={submitWalletLink} />
+
+      {walletLink && (
+        <>
+          <h4>The self-custody proof</h4>
+          <p className="lore">
+            One small transaction ({network}), built in your browser and
+            signed by <strong>your</strong> wallet — a ~2 tADA send from
+            your address back to your address, so only the network fee is
+            spent. The platform holds no keys and submits nothing; it
+            records the transaction only after verifying it on {network}.
+            This is the pattern every real flow will follow: your money
+            moves only when you sign.
+          </p>
+          {walletLink.proofTxHash ? (
+            <p className="lore">
+              Proven {walletLink.proofAt?.toLocaleDateString()}:{" "}
+              <a
+                href={`https://${walletLink.network}.cardanoscan.io/transaction/${walletLink.proofTxHash}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <code>{walletLink.proofTxHash.slice(0, 16)}…</code>
+              </a>{" "}
+              — publicly verifiable; anyone can look it up. Sign again
+              anytime to refresh it.
+            </p>
+          ) : (
+            <p className="lore">No proof signed by this face yet.</p>
+          )}
+          <SelfCustodySign network={network} onProof={submitSelfCustodyProof} />
+        </>
+      )}
 
       <h3>This face&rsquo;s other controls</h3>
       <ul>

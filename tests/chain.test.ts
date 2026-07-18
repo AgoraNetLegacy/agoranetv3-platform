@@ -6,7 +6,12 @@ process.env.DATABASE_URL = url;
 process.env.CARDANO_NETWORK = "preprod";
 
 import { PrismaClient } from "@prisma/client";
-import { cardanoNetwork, recordWalletLink, walletLinkFor } from "../lib/chain";
+import {
+  cardanoNetwork,
+  recordWalletLink,
+  walletLinkFor,
+  recordSelfCustodyProof,
+} from "../lib/chain";
 import { anchorStatus, recordAnchor } from "../lib/chainAnchor";
 import { appendEvent } from "../lib/ledger";
 
@@ -131,5 +136,76 @@ describe("the testnet wallet rail", () => {
     expect(link?.cardanoAddress).toContain("addr_test1qz1111");
     const rows = await db.testnetWalletLink.count();
     expect(rows).toBe(1);
+  });
+});
+
+// On-chain migration Slice 2: the self-custody proof is recorded ONLY
+// after the claimed hash is verified to exist on the configured testnet.
+// The verifier is injected here — no network in the fast suite.
+describe("the self-custody proof", () => {
+  const goodHash = "a".repeat(64);
+  const found = async () => true;
+  const notFound = async () => false;
+
+  it("refuses a malformed transaction hash without consulting the chain", async () => {
+    let consulted = false;
+    const spy = async () => ((consulted = true), true);
+    const r = await recordSelfCustodyProof(
+      db,
+      { profileId: "profile-a", txHash: "not-a-hash" },
+      spy
+    );
+    expect(r.ok).toBe(false);
+    expect(consulted).toBe(false);
+  });
+
+  it("refuses a proof for a face with no wallet link", async () => {
+    const r = await recordSelfCustodyProof(
+      db,
+      { profileId: "profile-unlinked", txHash: goodHash },
+      found
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.retryable).toBe(false);
+  });
+
+  it("does NOT record a hash the testnet has never seen — retryable, wrong-testnet hint", async () => {
+    const r = await recordSelfCustodyProof(
+      db,
+      { profileId: "profile-a", txHash: goodHash },
+      notFound
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.retryable).toBe(true);
+      expect(r.reason).toMatch(/Preview/);
+    }
+    const link = await walletLinkFor(db, "profile-a");
+    expect(link?.proofTxHash).toBeNull();
+  });
+
+  it("records a verified proof, normalized to lowercase", async () => {
+    const r = await recordSelfCustodyProof(
+      db,
+      { profileId: "profile-a", txHash: goodHash.toUpperCase() },
+      found
+    );
+    expect(r.ok).toBe(true);
+    const link = await walletLinkFor(db, "profile-a");
+    expect(link?.proofTxHash).toBe(goodHash);
+    expect(link?.proofAt).toBeInstanceOf(Date);
+  });
+
+  it("re-signing updates the proof in place — still one row per face", async () => {
+    const newer = "b".repeat(64);
+    const r = await recordSelfCustodyProof(
+      db,
+      { profileId: "profile-a", txHash: newer },
+      found
+    );
+    expect(r.ok).toBe(true);
+    const link = await walletLinkFor(db, "profile-a");
+    expect(link?.proofTxHash).toBe(newer);
+    expect(await db.testnetWalletLink.count()).toBe(1);
   });
 });

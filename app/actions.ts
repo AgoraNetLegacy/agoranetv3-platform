@@ -999,6 +999,22 @@ export async function submitWalletLink(formData: FormData) {
   backTo("/settings", result.ok ? "Testnet wallet linked to this face." : result.reason);
 }
 
+/** On-chain migration Slice 2: record the self-custody proof tx the
+ *  soul's own wallet signed and submitted. Returns a result instead of
+ *  redirecting — the client POLLS while the tx propagates (the server
+ *  verifies the hash exists on the configured testnet before recording;
+ *  see recordSelfCustodyProof). */
+export async function submitSelfCustodyProof(formData: FormData) {
+  const face = await requireFace("settings");
+  const { recordSelfCustodyProof } = await import("@/lib/chain");
+  const result = await recordSelfCustodyProof(db, {
+    profileId: face.id,
+    txHash: String(formData.get("txHash") ?? ""),
+  });
+  if (result.ok) revalidatePath("/settings");
+  return result;
+}
+
 /** §5.1 + §2.2: the switch animation is a per-face choice — flip
  *  (default), crossfade, or instant. By choice, never by detection. */
 export async function setSwitchAnimation(formData: FormData) {
