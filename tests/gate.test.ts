@@ -7,7 +7,8 @@ process.env.GATE_OPERATOR_SECRET = "test-secret-for-gate-tests-only";
 
 import { spawnSync } from "child_process";
 import { PrismaClient } from "@prisma/client";
-import { clearGate, submitProof } from "../lib/gate";
+import { clearGate, clearGateTx, submitProof, isGateDuplicateError } from "../lib/gate";
+import { Prisma } from "@prisma/client";
 import { verifyChain, findForbiddenId } from "../lib/ledger";
 import { registerAlias } from "../lib/identity";
 import { makeOnboardedSoul } from "./helpers/souls";
@@ -142,5 +143,75 @@ describe("the gate: pending → proof → cleared", () => {
     }
 
     expect(verifyChain(events).valid).toBe(true);
+  });
+});
+
+// The #25 fix: clearGateTx runs the spend INSIDE the caller's transaction,
+// so a feature-write failure unwinds the spend and the action is retryable
+// instead of being lost as a phantom DUPLICATE. This is the property that
+// separates clearGateTx from the old two-transaction clearGate.
+describe("clearGateTx: the spend commits (and rolls back) with the feature write", () => {
+  it("a rolled-back feature write leaves NO spend — the retry clears", async () => {
+    const scope = "poll:rollback-proof:face";
+
+    // The gate clears inside the transaction, then the "feature write" fails.
+    await expect(
+      db.$transaction(async (tx) => {
+        const gate = await clearGateTx(tx, {
+          profileId: trueSelfId,
+          scope,
+          scopeKind: "per-profile",
+        });
+        expect(gate.outcome).toBe("CLEARED");
+        throw new Error("simulated feature-write failure");
+      })
+    ).rejects.toThrow("simulated feature-write failure");
+
+    // Everything rolled back with the transaction: no spend, no cleared row,
+    // no ledger event — nothing was stranded.
+    expect(await db.nullifierSpend.count({ where: { scope } })).toBe(0);
+    expect(await db.gateRequest.count({ where: { scope, status: "CLEARED" } })).toBe(0);
+
+    // The retry succeeds — the humanity spend was NOT consumed by the failed
+    // attempt. Under the old separate-transaction gate this returned DUPLICATE
+    // and the action was lost forever.
+    const retry = await db.$transaction((tx) =>
+      clearGateTx(tx, { profileId: trueSelfId, scope, scopeKind: "per-profile" })
+    );
+    expect(retry.outcome).toBe("CLEARED");
+  });
+
+  it("a COMMITTED spend still blocks the same scope as DUPLICATE", async () => {
+    const scope = "poll:committed-once:face";
+    const first = await db.$transaction((tx) =>
+      clearGateTx(tx, { profileId: trueSelfId, scope, scopeKind: "per-profile" })
+    );
+    expect(first.outcome).toBe("CLEARED");
+    const second = await db.$transaction((tx) =>
+      clearGateTx(tx, { profileId: trueSelfId, scope, scopeKind: "per-profile" })
+    );
+    expect(second.outcome).toBe("DUPLICATE");
+  });
+
+  it("per-human scope with a humanId-less Alias is INVALID inside a tx too", async () => {
+    const result = await db.$transaction((tx) =>
+      clearGateTx(tx, { profileId: aliasId, scope: "reserved:tx-per-human", scopeKind: "per-human" })
+    );
+    expect(result.outcome).toBe("INVALID");
+  });
+
+  it("isGateDuplicateError matches only the P2002 collision", () => {
+    const p2002 = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+      code: "P2002",
+      clientVersion: "5.22.0",
+    });
+    expect(isGateDuplicateError(p2002)).toBe(true);
+    const other = new Prisma.PrismaClientKnownRequestError("Not found", {
+      code: "P2025",
+      clientVersion: "5.22.0",
+    });
+    expect(isGateDuplicateError(other)).toBe(false);
+    expect(isGateDuplicateError(new Error("plain"))).toBe(false);
+    expect(isGateDuplicateError(null)).toBe(false);
   });
 });
