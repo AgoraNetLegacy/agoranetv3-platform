@@ -12,7 +12,7 @@
 
 import type { PrismaClient, ModCase, Prisma } from "@prisma/client";
 import type { Tx } from "./db";
-import { clearGateTx } from "./gate";
+import { clearGateTx, isGateDuplicateError } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 import { chargeToTreasury, grant, payFromTreasury } from "./economy";
@@ -496,38 +496,46 @@ export async function submitRuling(
   // record is written at resolution. The gate spend and the ruling row
   // commit in ONE transaction (#25), so a rollback can't strand the ruling
   // nullifier; resolution (the strike-ladder cascade) runs after the commit.
-  const result = await db.$transaction(async (tx) => {
-    const gate = await clearGateTx(tx, {
-      profileId: input.profileId,
-      scope: `ruling:${modCase.id}`,
-      scopeKind: "per-profile",
-      ledgerRecording: "private",
-    });
-    if (gate.outcome === "DUPLICATE") {
-      return { ok: false as const, reason: "You have already ruled on this case." };
-    }
-    if (gate.outcome !== "CLEARED" || !gate.nullifier) {
-      return { ok: false as const, reason: `Gate: ${gate.outcome}` };
-    }
-    await tx.ruling.create({
-      data: {
-        caseId: modCase.id,
-        moderatorNullifier: gate.nullifier,
-        moderatorProfileId: input.profileId,
-        verdict: input.verdict,
-        citedRuleId: input.citedRuleId ?? null,
-        badFaithFlag: input.badFaithFlag ?? false,
-        supervision: needsSupervision ? "pending" : "none",
-      },
-    });
-    if (needsSupervision) {
-      await tx.modCase.update({
-        where: { id: modCase.id },
-        data: { status: "awaiting-supervision" },
+  let result: { ok: true } | { ok: false; reason: string };
+  try {
+    result = await db.$transaction(async (tx) => {
+      const gate = await clearGateTx(tx, {
+        profileId: input.profileId,
+        scope: `ruling:${modCase.id}`,
+        scopeKind: "per-profile",
+        ledgerRecording: "private",
       });
+      if (gate.outcome === "DUPLICATE") {
+        return { ok: false as const, reason: "You have already ruled on this case." };
+      }
+      if (gate.outcome !== "CLEARED" || !gate.nullifier) {
+        return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+      }
+      await tx.ruling.create({
+        data: {
+          caseId: modCase.id,
+          moderatorNullifier: gate.nullifier,
+          moderatorProfileId: input.profileId,
+          verdict: input.verdict,
+          citedRuleId: input.citedRuleId ?? null,
+          badFaithFlag: input.badFaithFlag ?? false,
+          supervision: needsSupervision ? "pending" : "none",
+        },
+      });
+      if (needsSupervision) {
+        await tx.modCase.update({
+          where: { id: modCase.id },
+          data: { status: "awaiting-supervision" },
+        });
+      }
+      return { ok: true as const };
+    });
+  } catch (err) {
+    if (isGateDuplicateError(err)) {
+      return { ok: false, reason: "You have already ruled on this case." };
     }
-    return { ok: true as const };
-  });
+    throw err;
+  }
   if (!result.ok) return result;
   if (!needsSupervision) await maybeResolve(db, modCase.id);
   return { ok: true };
@@ -1189,32 +1197,40 @@ export async function submitTribunalRuling(
   }
   // Gate spend + ruling row commit in ONE transaction (#25) so a rollback
   // can't strand the ruling nullifier; the quorum resolution runs after.
-  const result = await db.$transaction(async (tx) => {
-    const gate = await clearGateTx(tx, {
-      profileId: input.profileId,
-      scope: `ruling:${modCase.id}`,
-      scopeKind: "per-profile",
-      ledgerRecording: "private",
+  let result: { ok: true } | { ok: false; reason: string };
+  try {
+    result = await db.$transaction(async (tx) => {
+      const gate = await clearGateTx(tx, {
+        profileId: input.profileId,
+        scope: `ruling:${modCase.id}`,
+        scopeKind: "per-profile",
+        ledgerRecording: "private",
+      });
+      if (gate.outcome === "DUPLICATE") {
+        return { ok: false as const, reason: "You have already ruled on this case." };
+      }
+      if (gate.outcome !== "CLEARED" || !gate.nullifier) {
+        return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+      }
+      await tx.ruling.create({
+        data: {
+          caseId: modCase.id,
+          moderatorNullifier: gate.nullifier,
+          moderatorProfileId: input.profileId,
+          verdict: input.verdict,
+          citedRuleId: input.citedRuleId ?? null,
+          badFaithFlag: input.badFaithFlag ?? false,
+          supervision: "none",
+        },
+      });
+      return { ok: true as const };
     });
-    if (gate.outcome === "DUPLICATE") {
-      return { ok: false as const, reason: "You have already ruled on this case." };
+  } catch (err) {
+    if (isGateDuplicateError(err)) {
+      return { ok: false, reason: "You have already ruled on this case." };
     }
-    if (gate.outcome !== "CLEARED" || !gate.nullifier) {
-      return { ok: false as const, reason: `Gate: ${gate.outcome}` };
-    }
-    await tx.ruling.create({
-      data: {
-        caseId: modCase.id,
-        moderatorNullifier: gate.nullifier,
-        moderatorProfileId: input.profileId,
-        verdict: input.verdict,
-        citedRuleId: input.citedRuleId ?? null,
-        badFaithFlag: input.badFaithFlag ?? false,
-        supervision: "none",
-      },
-    });
-    return { ok: true as const };
-  });
+    throw err;
+  }
   if (!result.ok) return result;
 
   const seatedNow = await db.tribunalSeat.count({ where: { termEnd: { gt: new Date() } } });

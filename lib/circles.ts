@@ -24,7 +24,7 @@
 import { createHash, randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
-import { clearGateTx } from "./gate";
+import { clearGateTx, isGateDuplicateError } from "./gate";
 import { appendEvent, canonicalJson } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
@@ -745,7 +745,8 @@ export async function attestAction(
   // (#25): a rollback (e.g. the ledger append losing a concurrent race) no
   // longer strands the attest nullifier, so the co-signature is retryable
   // instead of vanishing as a phantom DUPLICATE.
-  return db.$transaction(async (tx) => {
+  try {
+    return await db.$transaction(async (tx) => {
     const gate = await clearGateTx(tx, {
       profileId: profile.id,
       scope: `circle-attest:${entry.id}`,
@@ -852,7 +853,13 @@ export async function attestAction(
       );
     }
     return { ok: true as const };
-  });
+    });
+  } catch (err) {
+    if (isGateDuplicateError(err)) {
+      return { ok: false, reason: "You have already attested this entry." };
+    }
+    throw err;
+  }
 }
 
 /**

@@ -26,7 +26,7 @@
 import { randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
-import { clearGateTx } from "./gate";
+import { clearGateTx, isGateDuplicateError } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
@@ -391,7 +391,8 @@ export async function enterChamber(
   // PRIVATE recording — entry must not be observable from outside.
   // Gate spend + membership share one transaction (#25): a rollback no
   // longer strands the enter nullifier, so entering is retryable.
-  return db.$transaction(async (tx) => {
+  try {
+    return await db.$transaction(async (tx) => {
     const gate = await clearGateTx(tx, {
       profileId: profile.id,
       scope: `chamber:${chamber.id}:enter`,
@@ -409,7 +410,13 @@ export async function enterChamber(
     await accrueForAction(tx, profile.id);
     await notifyChamberActivity(tx, chamber, "A soul entered the workshop", profile.id);
     return { ok: true as const };
-  });
+    });
+  } catch (err) {
+    if (isGateDuplicateError(err)) {
+      return { ok: false, reason: "You have already entered this chamber." };
+    }
+    throw err;
+  }
 }
 
 // -------------------------------------------------------------- invites

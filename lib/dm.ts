@@ -16,7 +16,7 @@
 
 import { randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
-import { clearGateTx } from "./gate";
+import { clearGateTx, isGateDuplicateError } from "./gate";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
 import { chargeToTreasury, maybeFirstActionGrant } from "./economy";
@@ -462,7 +462,8 @@ export async function reportMessage(
 
   // Gate spend + excerpt + deposit + flag + case share one transaction
   // (#25): a rollback no longer strands the report nullifier.
-  return db.$transaction(async (tx) => {
+  try {
+    return await db.$transaction(async (tx) => {
     const gate = await clearGateTx(tx, {
       profileId: input.profileId,
       scope: `flag:dm:${message.id}`,
@@ -515,5 +516,11 @@ export async function reportMessage(
       ruleId: rule.id,
     });
     return { ok: true as const };
-  });
+    });
+  } catch (err) {
+    if (isGateDuplicateError(err)) {
+      return { ok: false, reason: "You have already reported this message." };
+    }
+    throw err;
+  }
 }

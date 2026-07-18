@@ -14,7 +14,7 @@
 // balances; flagging is never blocked by an empty balance (DISCUSSIONS §7).
 
 import type { PrismaClient } from "@prisma/client";
-import { clearGateTx } from "./gate";
+import { clearGateTx, isGateDuplicateError } from "./gate";
 import { chargeToTreasury } from "./economy";
 import { getRail } from "./rails";
 
@@ -40,7 +40,8 @@ export async function fileFlag(
   // Gate and feature write share ONE transaction (#25): if anything below
   // rolls back, the humanity spend rolls back with it, so a retry is clean
   // rather than refused as a phantom DUPLICATE.
-  return db.$transaction(async (tx) => {
+  try {
+    return await db.$transaction(async (tx) => {
     const gate = await clearGateTx(tx, {
       profileId: input.profileId,
       scope: `flag:post:${post.id}`,
@@ -90,7 +91,13 @@ export async function fileFlag(
       ruleId: rule.id,
     });
     return { ok: true as const, flagId: created.id };
-  });
+    });
+  } catch (err) {
+    if (isGateDuplicateError(err)) {
+      return { ok: false, reason: "You have already flagged this content." };
+    }
+    throw err;
+  }
 }
 
 /**
@@ -126,7 +133,8 @@ export async function fileReleaseFlag(
   const rule = await db.rule.findUnique({ where: { id: input.ruleId } });
   if (!rule) return { ok: false, reason: "Unknown rule — flags cite the rulebook." };
 
-  return db.$transaction(async (tx) => {
+  try {
+    return await db.$transaction(async (tx) => {
     const gate = await clearGateTx(tx, {
       profileId: input.profileId,
       scope: `flag:release:${release.id}`,
@@ -171,5 +179,11 @@ export async function fileReleaseFlag(
       ruleId: rule.id,
     });
     return { ok: true as const, flagId: created.id };
-  });
+    });
+  } catch (err) {
+    if (isGateDuplicateError(err)) {
+      return { ok: false, reason: "You have already flagged this release." };
+    }
+    throw err;
+  }
 }

@@ -267,6 +267,21 @@ export async function clearGate(
   }
 }
 
+/**
+ * True for the rare simultaneous-spend collision: the P2002 raised when two
+ * truly-concurrent submissions both pass clearGateTx's DUPLICATE pre-check
+ * and one loses the nullifier insert (its whole transaction rolls back — no
+ * spend persists). Fixed-scope gated actions wrap their transaction and map
+ * this back to a graceful DUPLICATE, restoring the pre-#25 message instead
+ * of surfacing a raised error. (Cannot arise on SQLite, which serialises
+ * writers; a Postgres-only edge, like #25 itself.)
+ */
+export function isGateDuplicateError(err: unknown): boolean {
+  return (
+    err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002"
+  );
+}
+
 export type RegistrationOutcome = "CLEARED" | "DUPLICATE";
 
 /**

@@ -20,7 +20,7 @@
 
 import { createHash, randomBytes } from "crypto";
 import type { PrismaClient } from "@prisma/client";
-import { clearGateTx } from "./gate";
+import { clearGateTx, isGateDuplicateError } from "./gate";
 import { appendEvent, canonicalJson } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
@@ -391,7 +391,8 @@ export async function castVote(
   // Gate spend + fee + ballot share ONE transaction (#25): if the ballot
   // write rolls back, the poll nullifier rolls back with it, so the vote is
   // retryable instead of being lost forever as a phantom DUPLICATE.
-  return db.$transaction(async (tx) => {
+  try {
+    return await db.$transaction(async (tx) => {
     const gate = await clearGateTx(tx, {
       profileId: profile.id,
       scope: `poll:${poll.id}`,
@@ -430,7 +431,13 @@ export async function castVote(
       },
     });
     return { ok: true as const };
-  });
+    });
+  } catch (err) {
+    if (isGateDuplicateError(err)) {
+      return { ok: false, reason: "You have already voted in this poll." };
+    }
+    throw err;
+  }
 }
 
 /** The live tally — exists ONLY for ordinary polls whose creator enabled
