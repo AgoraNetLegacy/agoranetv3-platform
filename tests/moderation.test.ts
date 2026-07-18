@@ -285,6 +285,51 @@ describe("the whole road: flag → blur → ruling → tombstone → ladder", ()
     expect(resolved.status).toBe("resolved");
     expect(resolved.outcome).toBe("upheld");
   });
+
+  it("a routine badge holder cannot rule on a Tribunal case (segregation)", async () => {
+    // A fresh severe case sits at status "open", tribunal: true — the same
+    // shape the routine bench sees, but off-limits to it.
+    const posted = await createPost(db, {
+      discussionId,
+      profileId: author.trueSelfId,
+      body: "Severe content a routine judge must not be able to resolve.",
+    });
+    if (!posted.ok) throw new Error(posted.reason);
+    const flagged = await fileFlag(db, {
+      postId: posted.postId,
+      profileId: flagger.trueSelfId,
+      ruleId: "R3.2", // severe → tribunal
+    });
+    expect(flagged.ok).toBe(true);
+    const tribunalCase = await db.modCase.findFirstOrThrow({
+      where: { postId: posted.postId },
+    });
+    expect(tribunalCase.tribunal).toBe(true);
+    expect(tribunalCase.status).toBe("open");
+
+    // An ordinary badge holder, not seated on the Tribunal, hand-crafts the
+    // case id into the routine ruling path. It must be refused, and the case
+    // must remain undecided.
+    const outsider = await makeOnboardedSoul(db, {
+      trueSelf: "routine-judge",
+      alias: "routine-judge-a",
+    });
+    await equipFor(outsider.trueSelfId);
+    const attempt = await submitRuling(db, {
+      caseId: tribunalCase.id,
+      profileId: outsider.trueSelfId,
+      verdict: "decline", // would shield a fraudster if it landed
+    });
+    expect(attempt.ok).toBe(false);
+
+    const stillOpen = await db.modCase.findUniqueOrThrow({
+      where: { id: tribunalCase.id },
+    });
+    expect(stillOpen.status).toBe("open");
+    expect(stillOpen.outcome).toBeNull();
+    const rulings = await db.ruling.count({ where: { caseId: tribunalCase.id } });
+    expect(rulings).toBe(0); // nothing was recorded
+  });
 });
 
 describe("db:verify over the whole Phase 5 state", () => {

@@ -446,7 +446,18 @@ export async function submitRuling(
     where: { id: input.caseId },
     include: { flags: true, rulings: true },
   });
-  if (!modCase || !["open", "awaiting-supervision"].includes(modCase.status)) {
+  // Tribunal cases (tier-3, escalated, or Sentinel-bundled) live at
+  // status "open" too, but the routine bench must never touch them — they
+  // are decided only by seated Tribunal members through submitTribunalRuling
+  // (§4). caseQueueFor already filters { tribunal: false }; enforce the same
+  // segregation here so a hand-crafted caseId can't route a Tribunal case
+  // through the single-ruling routine path. The reason stays generic — the
+  // routine bench should not learn which cases are Tribunal.
+  if (
+    !modCase ||
+    modCase.tribunal ||
+    !["open", "awaiting-supervision"].includes(modCase.status)
+  ) {
     return { ok: false, reason: "This case is not open." };
   }
   const accused = await accusedOf(db, modCase);
