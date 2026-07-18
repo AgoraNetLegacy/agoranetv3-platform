@@ -563,6 +563,13 @@ export async function updateOffer(
     return { ok: false, reason: "Only the offering member edits an offer." };
   }
   if (offer.circle.status === "closed") return { ok: false, reason: "This Circle is closed." };
+  // Offers live in the members' room: editing or retracting one is a
+  // membership act, like postOffer. A member who has left (or been removed)
+  // no longer manages the board — their offer stays as a record of what was
+  // pledged while they were in.
+  if (!(await activeMembership(db, offer.circleId, input.profileId))) {
+    return { ok: false, reason: "You have left this Circle — its offers are no longer yours to change." };
+  }
   const body = input.body?.trim();
   await db.resourceOffer.update({
     where: { id: offer.id },

@@ -285,6 +285,49 @@ describe("the resource board (§5)", () => {
     const events = await db.ledgerEvent.findMany();
     expect(events.some((e) => `${e.payload}`.includes(offerId))).toBe(false);
   });
+
+  it("a member who leaves can no longer edit or retract their offer", async () => {
+    // A fresh Circle so the shared one is undisturbed.
+    const host = await formCircle(db, {
+      profileId: outsiderId,
+      name: "Board Circle",
+      purpose: "Testing that offers outlive their owner's membership as record.",
+      pillarId,
+    });
+    if (!host.ok) throw new Error(host.reason);
+    const joined = await joinCircle(db, { circleId: host.circleId, profileId: memberBId });
+    expect(joined.ok).toBe(true);
+    const posted = await postOffer(db, {
+      circleId: host.circleId,
+      profileId: memberBId,
+      kind: "tool",
+      body: "A ladder.",
+    });
+    if (!posted.ok) throw new Error(posted.reason);
+
+    // While still a member, editing their own offer works.
+    const okEdit = await updateOffer(db, {
+      offerId: posted.offerId,
+      profileId: memberBId,
+      body: "A tall ladder.",
+    });
+    expect(okEdit.ok).toBe(true);
+
+    // They leave; the Circle stays open.
+    const left = await leaveCircle(db, { circleId: host.circleId, profileId: memberBId });
+    expect(left.ok).toBe(true);
+
+    // Now edit and retract are both refused — the offer stands as a record
+    // of what was pledged while they were in.
+    const blocked = await updateOffer(db, {
+      offerId: posted.offerId,
+      profileId: memberBId,
+      retract: true,
+    });
+    expect(blocked.ok).toBe(false);
+    const offer = await db.resourceOffer.findUniqueOrThrow({ where: { id: posted.offerId } });
+    expect(offer.status).not.toBe("retracted");
+  });
 });
 
 describe("the action log (§6) — the heart of the feature", () => {
