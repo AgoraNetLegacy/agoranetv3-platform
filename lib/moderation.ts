@@ -12,7 +12,7 @@
 
 import type { PrismaClient, ModCase, Prisma } from "@prisma/client";
 import type { Tx } from "./db";
-import { clearGate } from "./gate";
+import { clearGateTx } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 import { chargeToTreasury, grant, payFromTreasury } from "./economy";
@@ -483,49 +483,53 @@ export async function submitRuling(
     if (!cited) return { ok: false, reason: "Cite a real rule." };
   }
 
-  // The nullifier keys the ruling (v2 sealed-vote pattern) and enforces
-  // one-ruling-per-moderator-per-case; private recording — the public
-  // record is written at resolution.
-  const gate = await clearGate(db, {
-    profileId: input.profileId,
-    scope: `ruling:${modCase.id}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
-  });
-  if (gate.outcome === "DUPLICATE") {
-    return { ok: false, reason: "You have already ruled on this case." };
-  }
-  if (gate.outcome !== "CLEARED" || !gate.nullifier) {
-    return { ok: false, reason: `Gate: ${gate.outcome}` };
-  }
-
   // Supervision (§6): a new moderator's early rulings are double-checked
-  // before effect — when a qualified second exists.
+  // before effect — when a qualified second exists. Computed here (reads)
+  // before the atomic spend+create, exactly as before.
   const initial = await getRail(db, "moderation.supervisionInitialCases");
   const myConfirmed = await confirmedRulingCount(db, input.profileId);
   const needsSupervision =
     myConfirmed < initial && (await qualifiedSupervisorExists(db, input.profileId));
 
-  await db.ruling.create({
-    data: {
-      caseId: modCase.id,
-      moderatorNullifier: gate.nullifier,
-      moderatorProfileId: input.profileId,
-      verdict: input.verdict,
-      citedRuleId: input.citedRuleId ?? null,
-      badFaithFlag: input.badFaithFlag ?? false,
-      supervision: needsSupervision ? "pending" : "none",
-    },
-  });
-
-  if (needsSupervision) {
-    await db.modCase.update({
-      where: { id: modCase.id },
-      data: { status: "awaiting-supervision" },
+  // The nullifier keys the ruling (v2 sealed-vote pattern) and enforces
+  // one-ruling-per-moderator-per-case; private recording — the public
+  // record is written at resolution. The gate spend and the ruling row
+  // commit in ONE transaction (#25), so a rollback can't strand the ruling
+  // nullifier; resolution (the strike-ladder cascade) runs after the commit.
+  const result = await db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: input.profileId,
+      scope: `ruling:${modCase.id}`,
+      scopeKind: "per-profile",
+      ledgerRecording: "private",
     });
-    return { ok: true };
-  }
-  await maybeResolve(db, modCase.id);
+    if (gate.outcome === "DUPLICATE") {
+      return { ok: false as const, reason: "You have already ruled on this case." };
+    }
+    if (gate.outcome !== "CLEARED" || !gate.nullifier) {
+      return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+    }
+    await tx.ruling.create({
+      data: {
+        caseId: modCase.id,
+        moderatorNullifier: gate.nullifier,
+        moderatorProfileId: input.profileId,
+        verdict: input.verdict,
+        citedRuleId: input.citedRuleId ?? null,
+        badFaithFlag: input.badFaithFlag ?? false,
+        supervision: needsSupervision ? "pending" : "none",
+      },
+    });
+    if (needsSupervision) {
+      await tx.modCase.update({
+        where: { id: modCase.id },
+        data: { status: "awaiting-supervision" },
+      });
+    }
+    return { ok: true as const };
+  });
+  if (!result.ok) return result;
+  if (!needsSupervision) await maybeResolve(db, modCase.id);
   return { ok: true };
 }
 
@@ -1183,29 +1187,35 @@ export async function submitTribunalRuling(
   if (input.verdict === "uphold" && !input.citedRuleId) {
     return { ok: false, reason: "An uphold must cite a specific rule." };
   }
-  const gate = await clearGate(db, {
-    profileId: input.profileId,
-    scope: `ruling:${modCase.id}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
+  // Gate spend + ruling row commit in ONE transaction (#25) so a rollback
+  // can't strand the ruling nullifier; the quorum resolution runs after.
+  const result = await db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: input.profileId,
+      scope: `ruling:${modCase.id}`,
+      scopeKind: "per-profile",
+      ledgerRecording: "private",
+    });
+    if (gate.outcome === "DUPLICATE") {
+      return { ok: false as const, reason: "You have already ruled on this case." };
+    }
+    if (gate.outcome !== "CLEARED" || !gate.nullifier) {
+      return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+    }
+    await tx.ruling.create({
+      data: {
+        caseId: modCase.id,
+        moderatorNullifier: gate.nullifier,
+        moderatorProfileId: input.profileId,
+        verdict: input.verdict,
+        citedRuleId: input.citedRuleId ?? null,
+        badFaithFlag: input.badFaithFlag ?? false,
+        supervision: "none",
+      },
+    });
+    return { ok: true as const };
   });
-  if (gate.outcome === "DUPLICATE") {
-    return { ok: false, reason: "You have already ruled on this case." };
-  }
-  if (gate.outcome !== "CLEARED" || !gate.nullifier) {
-    return { ok: false, reason: `Gate: ${gate.outcome}` };
-  }
-  await db.ruling.create({
-    data: {
-      caseId: modCase.id,
-      moderatorNullifier: gate.nullifier,
-      moderatorProfileId: input.profileId,
-      verdict: input.verdict,
-      citedRuleId: input.citedRuleId ?? null,
-      badFaithFlag: input.badFaithFlag ?? false,
-      supervision: "none",
-    },
-  });
+  if (!result.ok) return result;
 
   const seatedNow = await db.tribunalSeat.count({ where: { termEnd: { gt: new Date() } } });
   const rulings = await db.ruling.count({ where: { caseId: modCase.id } });
@@ -1249,15 +1259,16 @@ export async function acceptRestorative(
 
   const profile = await db.profile.findUniqueOrThrow({ where: { id: input.profileId } });
 
-  const gate = await clearGate(db, {
-    profileId: input.profileId,
-    scope: `restorative:${modCase.id}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
-  await db.$transaction(async (tx) => {
+  // Gate spend + correction append + strike reduction share one transaction
+  // (#25), so a rollback leaves no orphan restorative spend.
+  return db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: input.profileId,
+      scope: `restorative:${modCase.id}`,
+      scopeKind: "per-profile",
+      ledgerRecording: "private",
+    });
+    if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     const body = `[Restorative correction] ${correction}`;
     if (modCase.postId) {
       const post = await tx.post.findUniqueOrThrow({ where: { id: modCase.postId } });
@@ -1334,15 +1345,16 @@ export async function acceptRestorative(
     // Public-record only for public content: a DM case's ruling is
     // known to its parties alone, so no ledger event may name the
     // accused (the correction lives in the private thread).
-    if (!modCase.postId) return;
-    await appendEvent(tx, {
-      actorType: "soul",
-      actorId: profile.handle,
-      eventType: "restorative.accepted",
-      payload: { caseRef: modCase.id, handle: profile.handle },
-    });
+    if (modCase.postId) {
+      await appendEvent(tx, {
+        actorType: "soul",
+        actorId: profile.handle,
+        eventType: "restorative.accepted",
+        payload: { caseRef: modCase.id, handle: profile.handle },
+      });
+    }
+    return { ok: true as const };
   });
-  return { ok: true };
 }
 
 // --------------------------------------------------------------- sentinel
