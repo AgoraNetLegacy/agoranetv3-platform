@@ -164,11 +164,15 @@ export default async function TransparencyPage() {
           cut over to it yet.
         </li>
         <li>
-          <strong>The one-per-scope law, as math.</strong> A Midnight{" "}
-          {midnightNet} testnet contract enforces the gate&rsquo;s
-          one-voice-per-scope rule with zero-knowledge proofs — a spent
-          nullifier is publicly auditable, linkable to no one, and a
-          duplicate is refused by the chain itself.{" "}
+          <strong>The one-per-scope law, as math (the nullifier half).</strong>{" "}
+          A Midnight {midnightNet} testnet contract proves the nullifier
+          half of the gate&rsquo;s one-voice-per-scope rule with
+          zero-knowledge proofs — a spent nullifier is publicly auditable,
+          linkable to no one, and a second act by the same subject is
+          refused by the chain itself. What it does not yet do on its own is
+          bind each subject to a single human (the identity-commitment step
+          that stops a fresh secret from being minted) — that half is the
+          remaining Phase B/C cutover work.{" "}
           {midnightContract ? (
             <>
               Contract address:{" "}

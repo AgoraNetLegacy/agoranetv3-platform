@@ -24,10 +24,12 @@ export const PHASE_A_DISCLOSURE =
   "AgoraNet's gate enforces one-per-scope integrity with an operator-held " +
   "secret: we are structurally honest, but you are trusting us not to " +
   "look. The replacement is no longer hypothetical: a public Midnight " +
-  "testnet contract enforces this same one-per-scope law with " +
-  "zero-knowledge proofs today — anyone can verify it on-chain. The live " +
-  "gate cuts over when proving is consumer-ready; until then, this " +
-  "notice stays up.";
+  "testnet contract already proves the nullifier half on-chain with " +
+  "zero-knowledge proofs — that no subject can act twice in a scope, " +
+  "verifiable by anyone. Binding each subject to a single human (so a new " +
+  "secret can't just be minted) is the other half, and remains the " +
+  "cutover work ahead. The live gate cuts over when both halves are " +
+  "proven and proving is consumer-ready; until then, this notice stays up.";
 
 export type GateOutcome = "CLEARED" | "DUPLICATE" | "INVALID";
 
