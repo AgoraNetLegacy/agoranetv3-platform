@@ -38,7 +38,7 @@ import { randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
 import { appendEvent } from "./ledger";
-import { clearGate } from "./gate";
+import { clearGateTx } from "./gate";
 import { balanceOf } from "./economy";
 import { getRail } from "./rails";
 
@@ -286,15 +286,15 @@ export async function donateToMission(
 
   // Every write action clears the gate — no exceptions, even where
   // bypassing would be easy (CLAUDE.md rule 3). Per-donation scope: a
-  // soul may give more than once.
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `mission-donate:${randomUUID()}`,
-    scopeKind: "per-profile",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
+  // soul may give more than once. Gate spend + transfer share one
+  // transaction (#25), so a rollback leaves no orphan spend.
   return await db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: profile.id,
+      scope: `mission-donate:${randomUUID()}`,
+      scopeKind: "per-profile",
+    });
+    if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     const balance = await balanceOf(tx, profile.id, "PC");
     if (balance < input.amount) {
       return {

@@ -19,7 +19,7 @@
 import { createHash, randomBytes } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx } from "./db";
-import { clearGate } from "./gate";
+import { clearGateTx } from "./gate";
 import { appendEvent, canonicalJson } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
@@ -106,21 +106,22 @@ export async function submitRepair(
     return { ok: false, reason: "You already have an open repair on this domain — one at a time." };
   }
 
-  // A repair is a public civic contribution: gate-cleared, pseudonymous.
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `repair-submit:${randomBytes(8).toString("hex")}`,
-    scopeKind: "per-profile",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
   const [durationHours, consensusPercent, windowPercent] = await Promise.all([
     getRail(db, "repair.pollDurationHours"),
     getRail(db, "repair.consensusPercent"),
     getRail(db, "poll.candleWindowPercent"),
   ]);
 
+  // A repair is a public civic contribution: gate-cleared, pseudonymous.
+  // Gate spend + poll + repair share one transaction (#25), so a rollback
+  // leaves no orphan spend.
   const result = await db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: profile.id,
+      scope: `repair-submit:${randomBytes(8).toString("hex")}`,
+      scopeKind: "per-profile",
+    });
+    if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     const nominalCloseAt = new Date(Date.now() + durationHours * 3_600_000);
     // Governance polls close by candle — same law, system-opened or not.
     const windowMs = (durationHours * 3_600_000 * windowPercent) / 100;
@@ -189,10 +190,9 @@ export async function submitRepair(
         handle: profile.handle,
       },
     });
-    return { repairId: repair.id, pollId: poll.id };
+    return { ok: true as const, repairId: repair.id, pollId: poll.id };
   });
-
-  return { ok: true, ...result };
+  return result;
 }
 
 /** Called by closeDuePolls for every closed poll: if a repair rides this

@@ -17,7 +17,7 @@
 import { randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
-import { clearGate } from "./gate";
+import { clearGateTx } from "./gate";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
 import { chargeToTreasury, maybeFirstActionGrant } from "./economy";
@@ -132,16 +132,17 @@ export async function sendFellowSoulRequest(
     };
   }
 
-  const gate = await clearGate(db, {
-    profileId: from.id,
-    scope: `fellow-request:${randomUUID()}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
+  // Gate spend + fee + request row share one transaction (#25), so a
+  // rollback leaves no orphan spend.
   try {
-    await db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
+      const gate = await clearGateTx(tx, {
+        profileId: from.id,
+        scope: `fellow-request:${randomUUID()}`,
+        scopeKind: "per-profile",
+        ledgerRecording: "private",
+      });
+      if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
       // Initiator pays (participation-cost rule) — the fee entry is
       // BLINDED: no reference to the recipient; who-asked-whom stays
       // out of the economy table entirely.
@@ -172,8 +173,8 @@ export async function sendFellowSoulRequest(
         refType: "souls",
         aggregationKey: "fellow-requests",
       });
+      return { ok: true as const };
     });
-    return { ok: true };
   } catch (err) {
     return { ok: false, reason: (err as Error).message };
   }
