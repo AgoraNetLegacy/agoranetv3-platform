@@ -725,7 +725,7 @@ export async function attestAction(
 ): Promise<CircleResult> {
   const entry = await db.actionEntry.findUnique({
     where: { id: input.entryId },
-    include: { circle: true, attestations: true },
+    include: { circle: true },
   });
   if (!entry) return { ok: false, reason: "No such entry." };
   if (entry.circle.status === "closed") {
@@ -762,7 +762,11 @@ export async function attestAction(
         attestorHandle: profile.handle,
       },
     });
-    const count = entry.attestations.length + 1;
+    // Count from the DATABASE inside the tx — never entry.attestations from
+    // the snapshot read before it, which is stale the moment another
+    // attestation commits. (Attestations serialise on the ledger append, so
+    // a co-signer commits after this function's opening read was taken.)
+    const count = await tx.attestation.count({ where: { entryId: entry.id } });
     await appendEvent(tx, {
       actorType: "soul",
       actorId: profile.handle,
@@ -775,13 +779,20 @@ export async function attestAction(
       },
     });
 
-    const wasAttested = entry.attestedAt !== null;
-    const nowAttested = !wasAttested && count >= entry.circle.attestationThreshold;
-    if (nowAttested) {
-      await tx.actionEntry.update({
-        where: { id: entry.id },
+    // Atomic threshold latch: updateMany's WHERE attestedAt=null lets
+    // exactly ONE attestation flip the entry to attested. That caller
+    // "crosses" (credits author + cohort); any later co-signature is a
+    // wasAttested late credit. Deriving both from the write, not the stale
+    // entry.attestedAt, is what stops a double author-credit at the edge.
+    let nowAttested = false;
+    let wasAttested = false;
+    if (count >= entry.circle.attestationThreshold) {
+      const latched = await tx.actionEntry.updateMany({
+        where: { id: entry.id, attestedAt: null },
         data: { attestedAt: new Date() },
       });
+      if (latched.count === 1) nowAttested = true;
+      else wasAttested = true;
     }
 
     // Light Score crediting (§6.3, LIGHT_SCORE spec §2): ATTESTED
@@ -790,7 +801,7 @@ export async function attestAction(
     if (entry.circle.pillarId) {
       if (nowAttested) {
         // Crossing the threshold credits the author and every attestor
-        // so far (their signatures made the state).
+        // so far (their signatures made the state) — read fresh from the tx.
         await creditCircleLightScore(tx, {
           profileId: entry.authorProfileId,
           pillarId: entry.circle.pillarId,
@@ -800,9 +811,13 @@ export async function attestAction(
           refType: "circle-action",
           diminishing: true,
         });
-        for (const a of [...entry.attestations.map((a) => a.attestorProfileId), profile.id]) {
+        const attestors = await tx.attestation.findMany({
+          where: { entryId: entry.id },
+          select: { attestorProfileId: true },
+        });
+        for (const a of attestors) {
           await creditCircleLightScore(tx, {
-            profileId: a,
+            profileId: a.attestorProfileId,
             pillarId: entry.circle.pillarId,
             circleId: entry.circleId,
             entryId: entry.id,

@@ -416,6 +416,62 @@ describe("the action log (§6) — the heart of the feature", () => {
     expect(attestors.map((a) => a.amount)).toEqual([1, 1]);
   });
 
+  it("the threshold latches exactly once; a late co-signature credits only itself", async () => {
+    // Self-contained: author + three members in a fresh Circle.
+    const host = await formCircle(db, {
+      profileId: memberAId,
+      name: "Latch Circle",
+      purpose: "Prove the attested latch fires once and counts from the db.",
+      pillarId,
+    });
+    if (!host.ok) throw new Error(host.reason);
+    for (const id of [founderId, memberBId, outsiderId]) {
+      const j = await joinCircle(db, { circleId: host.circleId, profileId: id });
+      expect(j.ok).toBe(true);
+    }
+    const logged = await logAction(db, {
+      circleId: host.circleId,
+      profileId: memberAId,
+      body: "An action three others will co-sign.",
+    });
+    if (!logged.ok) throw new Error(logged.reason);
+    const eId = logged.entryId;
+
+    // Two attestations reach the threshold (rail default 2) and latch it.
+    expect((await attestAction(db, { entryId: eId, profileId: founderId })).ok).toBe(true);
+    expect((await attestAction(db, { entryId: eId, profileId: memberBId })).ok).toBe(true);
+    const attested = await db.actionEntry.findUniqueOrThrow({ where: { id: eId } });
+    expect(attested.attestedAt).not.toBeNull();
+    const latchedAt = attested.attestedAt;
+
+    // The author is credited exactly once for the crossing — never twice,
+    // which is the double-latch symptom the atomic guard prevents.
+    const authorCredits = await db.lightScoreAdjustment.findMany({
+      where: { refId: eId, profileId: memberAId, refType: "circle-action" },
+    });
+    expect(authorCredits).toHaveLength(1);
+
+    // A late, third co-signature: still valid, credits only the attestor,
+    // does NOT re-credit the author, and does NOT move the latch timestamp.
+    const late = await attestAction(db, { entryId: eId, profileId: outsiderId });
+    expect(late.ok).toBe(true);
+    const after = await db.actionEntry.findUniqueOrThrow({ where: { id: eId } });
+    expect(after.attestedAt).toEqual(latchedAt); // unchanged
+    const authorAfter = await db.lightScoreAdjustment.count({
+      where: { refId: eId, profileId: memberAId, refType: "circle-action" },
+    });
+    expect(authorAfter).toBe(1); // still exactly one
+
+    // The ledger's attestorCount is the real db count (3), not a stale
+    // snapshot — the third event records three signatures.
+    const events = await db.ledgerEvent.findMany({
+      where: { eventType: "action.attested" },
+      orderBy: { seq: "asc" },
+    });
+    const mine = events.filter((e) => `${e.payload}`.includes(eId));
+    expect(JSON.parse(mine[mine.length - 1].payload).attestorCount).toBe(3);
+  });
+
   it("no edit, no delete — corrections are new entries referencing the old", async () => {
     const correction = await logAction(db, {
       circleId,
