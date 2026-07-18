@@ -12,6 +12,7 @@
 // retired), not the callers.
 
 import { Prisma, PrismaClient } from "@prisma/client";
+import type { Tx } from "./db";
 import { appendEvent } from "./ledger";
 import { nullifierFor, type ScopeKind } from "./nullifier";
 
@@ -156,7 +157,94 @@ export async function submitProof(
   }
 }
 
-/** The full flow in one call — what feature code will actually use. */
+/**
+ * The gate flow, run INSIDE the caller's transaction — the tx-aware twin of
+ * clearGate (same contract: scope in, opaque outcome out). Because the
+ * nullifier spend commits with the feature write, an action that rolls back
+ * no longer strands a spent nullifier that would refuse the retry as a
+ * DUPLICATE (DECISIONS_PENDING #25). This is still THE gate — feature code
+ * branches on outcome only, never on identity.
+ *
+ * The duplicate check is a findUnique, NOT a caught insert: a P2002 inside
+ * the caller's transaction would abort it on Postgres. The pre-check clears
+ * the common "already acted" case without touching the transaction; the
+ * rare truly-simultaneous spend still collides on the create below and rolls
+ * the whole action back — correct now, because the retry finds no spend.
+ */
+export async function clearGateTx(
+  tx: Tx,
+  input: {
+    profileId: string;
+    scope: string;
+    scopeKind: ScopeKind;
+    ledgerRecording?: LedgerRecording;
+  }
+): Promise<GateResult> {
+  const ledgerRecording = input.ledgerRecording ?? "pseudonymous";
+  const request = await tx.gateRequest.create({
+    data: {
+      profileId: input.profileId,
+      scope: input.scope,
+      scopeKind: input.scopeKind,
+      ledgerRecording,
+      status: "PENDING",
+    },
+  });
+
+  const profile = await tx.profile.findUnique({ where: { id: input.profileId } });
+  // An Alias carries no humanId (deliberately — lib/identity.ts), so it
+  // cannot act in per-human scopes.
+  const subjectId =
+    input.scopeKind === "per-human" ? profile?.humanId : input.profileId;
+  if (!profile || !subjectId) {
+    await tx.gateRequest.update({
+      where: { id: request.id },
+      data: { status: "INVALID", resolvedAt: new Date() },
+    });
+    return { outcome: "INVALID", requestId: request.id };
+  }
+
+  const nullifier = nullifierFor(input.scope, input.scopeKind, subjectId);
+  const existing = await tx.nullifierSpend.findUnique({
+    where: { scope_nullifier: { scope: input.scope, nullifier } },
+  });
+  if (existing) {
+    // Private duplicate record (§3.2): a row for the soul, no public event.
+    await tx.gateRequest.update({
+      where: { id: request.id },
+      data: { status: "DUPLICATE", resolvedAt: new Date() },
+    });
+    return { outcome: "DUPLICATE", requestId: request.id };
+  }
+
+  await tx.nullifierSpend.create({ data: { scope: input.scope, nullifier } });
+  await tx.gateRequest.update({
+    where: { id: request.id },
+    data: { status: "CLEARED", nullifier, resolvedAt: new Date() },
+  });
+  if (ledgerRecording === "pseudonymous") {
+    await appendEvent(tx, {
+      actorType: "soul",
+      actorId: profile.handle,
+      eventType: "gate.cleared",
+      payload: {
+        scope: input.scope,
+        scopeKind: input.scopeKind,
+        nullifier,
+        handle: profile.handle,
+      },
+    });
+  }
+  return { outcome: "CLEARED", requestId: request.id, nullifier };
+}
+
+/**
+ * The full flow in one call. Prefer clearGateTx from inside a feature
+ * transaction so the spend and the write commit together; this wrapper
+ * remains for callers that own no surrounding transaction. On the rare
+ * simultaneous-spend P2002 (the pre-check missed it), report the DUPLICATE
+ * it is — the transaction rolled back, so nothing was spent.
+ */
 export async function clearGate(
   db: PrismaClient,
   input: {
@@ -166,8 +254,17 @@ export async function clearGate(
     ledgerRecording?: LedgerRecording;
   }
 ): Promise<GateResult> {
-  const request = await requestGate(db, input);
-  return submitProof(db, request.id);
+  try {
+    return await db.$transaction((tx) => clearGateTx(tx, input));
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return { outcome: "DUPLICATE", requestId: "" };
+    }
+    throw err;
+  }
 }
 
 export type RegistrationOutcome = "CLEARED" | "DUPLICATE";
