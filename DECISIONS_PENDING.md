@@ -701,3 +701,27 @@ at the Phase 9 real-money re-review regardless.
     None of these are load-bearing for correctness — they're dials. But
     they're *my* dials, not yours, and they'd benefit from a numbers
     sitting once there's real usage to look at.
+
+25. **Gate spend and feature write should share one transaction — DO AT
+    DEPLOYMENT (security review, 2026-07-17).** Every gated action proves
+    humanity (spending a nullifier) in one database save, then does the
+    real work (post, vote, attest) in a *second* save. If the second save
+    rolls back, the nullifier is already spent — so a retry is refused as a
+    DUPLICATE and the action is silently lost. The rollback trigger is two
+    ledger-writing actions committing in the same instant, which needs the
+    production database (Postgres); SQLite (dev + testnet) is single-writer
+    and serializes, so this **cannot happen on what runs today**, and
+    production is behind the Phase 9 legal gate. Worst case is one lost
+    action, operator-recoverable — no funds or security exposure.
+
+    **The fix (its own slice, ~half a day):** add a transaction-aware
+    `clearGateTx(tx, …)` twin of `clearGate` — the pattern already exists
+    (`clearRegistration` runs inside the caller's transaction) — then move
+    the gate call *inside* each feature transaction at all **23** call
+    sites (polls, DMs, moderation, flags, chambers, circles, discussions,
+    escrow, fellow-souls, domains), so gate-spend and feature-write commit
+    or roll back together. Not architecturally risky; the cost is 23
+    careful rewires with the 262-test suite as the net. **Natural home:
+    the deployment slice (#14)** — the moment Postgres concurrency becomes
+    real and can be tested against actual Postgres. Deferred here on
+    purpose rather than rushed into a wrap-up session.
