@@ -13,7 +13,7 @@
 
 import { createHash, randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
-import { clearGate } from "./gate";
+import { clearGateTx } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
@@ -66,22 +66,23 @@ export async function createPollDiscussion(
     };
   }
 
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `discussion-create:${randomUUID()}`,
-    scopeKind: "per-profile",
-  });
-  if (gate.outcome !== "CLEARED") {
-    return { ok: false, reason: `Gate: ${gate.outcome}` };
-  }
-
   const permanence = poll.isGovernance
     ? "permanent-governance"
     : input.paidPermanent
       ? "permanent-creator"
       : "deletable";
+  // Gate spend + fees + creation in ONE transaction (#25): a rollback (e.g.
+  // insufficient funds) unwinds the humanity spend too, so a retry is clean.
   try {
-    const discussion = await db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
+      const gate = await clearGateTx(tx, {
+        profileId: profile.id,
+        scope: `discussion-create:${randomUUID()}`,
+        scopeKind: "per-profile",
+      });
+      if (gate.outcome !== "CLEARED") {
+        return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+      }
       const fee = await chargeToTreasury(tx, {
         profileId: profile.id,
         currency: "PC",
@@ -103,7 +104,7 @@ export async function createPollDiscussion(
         if (!upgrade.ok) throw new InsufficientFunds(upgrade.reason);
       }
       await maybeFirstActionGrant(tx, profile.id);
-    await accrueForAction(tx, profile.id);
+      await accrueForAction(tx, profile.id);
 
       const created = await tx.discussion.create({
         data: {
@@ -125,9 +126,8 @@ export async function createPollDiscussion(
           handle: profile.handle,
         },
       });
-      return created;
+      return { ok: true as const, postId: created.id };
     });
-    return { ok: true, postId: discussion.id };
   } catch (err) {
     if (err instanceof InsufficientFunds) {
       return { ok: false, reason: err.message };
@@ -310,21 +310,24 @@ export async function createPost(
   // public record by spec), so a public clearance naming the workshop
   // would leak who works inside. The gate still enforces everything.
   const actionRef = randomUUID();
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `discussion:${discussion.id}:post:${actionRef}`,
-    scopeKind: "per-profile",
-    ledgerRecording: discussion.chamberId ? "private" : "pseudonymous",
-  });
-  if (gate.outcome !== "CLEARED") {
-    return { ok: false, reason: `Gate: ${gate.outcome}` };
-  }
-
   const graceMinutes = await getRail(db, "discussion.graceWindowMinutes");
   const editableUntil = new Date(Date.now() + graceMinutes * 60_000);
 
+  // Gate spend + fee + post creation in ONE transaction (#25): a rollback
+  // unwinds the humanity spend too, so a retry is clean, not a phantom
+  // DUPLICATE. (The scope is per-post-unique, so retries were already safe;
+  // folding in keeps every gated write atomic and leaves no orphan spend.)
   try {
-    const post = await db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
+      const gate = await clearGateTx(tx, {
+        profileId: profile.id,
+        scope: `discussion:${discussion.id}:post:${actionRef}`,
+        scopeKind: "per-profile",
+        ledgerRecording: discussion.chamberId ? "private" : "pseudonymous",
+      });
+      if (gate.outcome !== "CLEARED") {
+        return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+      }
     // The participation fee: workshop posts carry the dual-token
     // signature (POLLINATOR §3 — both currencies, rails chamber.postFee*);
     // everywhere else, the standard reply micro-fee.
@@ -402,9 +405,8 @@ export async function createPost(
         },
       });
     }
-    return created;
+    return { ok: true as const, postId: created.id };
     });
-    return { ok: true, postId: post.id };
   } catch (err) {
     if (err instanceof InsufficientFunds) {
       return { ok: false, reason: err.message };
