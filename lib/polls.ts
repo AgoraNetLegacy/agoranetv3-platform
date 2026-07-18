@@ -20,7 +20,7 @@
 
 import { createHash, randomBytes } from "crypto";
 import type { PrismaClient } from "@prisma/client";
-import { clearGate } from "./gate";
+import { clearGateTx } from "./gate";
 import { appendEvent, canonicalJson } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
@@ -195,16 +195,17 @@ export async function createPoll(
     candleCommitment = candleCommitmentFor(trueCloseAt, candleSalt);
   }
 
-  // Creating a poll is its own gated action instance.
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `poll-create:${randomBytes(8).toString("hex")}`,
-    scopeKind: "per-profile",
-  });
-  if (gate.outcome !== "CLEARED") return { ok: false, reason: `Gate: ${gate.outcome}` };
-
+  // Creating a poll is its own gated action instance — the gate spend and
+  // the creation share one transaction (#25), so a rollback leaves no orphan
+  // spend behind.
   try {
-  const poll = await db.$transaction(async (tx) => {
+  return await db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: profile.id,
+      scope: `poll-create:${randomBytes(8).toString("hex")}`,
+      scopeKind: "per-profile",
+    });
+    if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     const fee = await chargeToTreasury(tx, {
       profileId: profile.id,
       currency: "PC",
@@ -309,10 +310,8 @@ export async function createPoll(
         },
       });
     }
-    return created;
+    return { ok: true as const, pollId: created.id };
   });
-
-  return { ok: true, pollId: poll.id };
   } catch (err) {
     if (err instanceof InsufficientFunds) return { ok: false, reason: err.message };
     throw err;
@@ -389,20 +388,22 @@ export async function castVote(
   // One vote per profile: the per-poll scope makes a second attempt a
   // DUPLICATE — refused privately (visible only to the soul). PRIVATE
   // recording: sealed means sealed; the ledger learns nothing mid-poll.
-  const gate = await clearGate(db, {
-    profileId: profile.id,
-    scope: `poll:${poll.id}`,
-    scopeKind: "per-profile",
-    ledgerRecording: "private",
-  });
-  if (gate.outcome === "DUPLICATE") {
-    return { ok: false, reason: "You have already voted in this poll." };
-  }
-  if (gate.outcome !== "CLEARED" || !gate.nullifier) {
-    return { ok: false, reason: `Gate: ${gate.outcome}` };
-  }
-
-  await db.$transaction(async (tx) => {
+  // Gate spend + fee + ballot share ONE transaction (#25): if the ballot
+  // write rolls back, the poll nullifier rolls back with it, so the vote is
+  // retryable instead of being lost forever as a phantom DUPLICATE.
+  return db.$transaction(async (tx) => {
+    const gate = await clearGateTx(tx, {
+      profileId: profile.id,
+      scope: `poll:${poll.id}`,
+      scopeKind: "per-profile",
+      ledgerRecording: "private",
+    });
+    if (gate.outcome === "DUPLICATE") {
+      return { ok: false as const, reason: "You have already voted in this poll." };
+    }
+    if (gate.outcome !== "CLEARED" || !gate.nullifier) {
+      return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+    }
     const fee = await chargeToTreasury(tx, {
       profileId: profile.id,
       currency: "PC",
@@ -419,7 +420,7 @@ export async function castVote(
     await tx.ballot.create({
       data: {
         pollId: poll.id,
-        nullifier: gate.nullifier!,
+        nullifier: gate.nullifier,
         // Public mode attaches the face by design; pseudonymous mode is
         // nullifier-keyed only — no profile, ever (DUAL_IDENTITY §4.3).
         voterProfileId: poll.mode === "public" ? profile.id : null,
@@ -428,9 +429,8 @@ export async function castVote(
         choices: { create: optionIds.map((optionId) => ({ optionId })) },
       },
     });
+    return { ok: true as const };
   });
-
-  return { ok: true };
 }
 
 /** The live tally — exists ONLY for ordinary polls whose creator enabled
