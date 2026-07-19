@@ -28,6 +28,8 @@
     "analytics:crush": "tsx scripts/crush-analytics.ts",
     "chain:anchor": "tsx scripts/chain/anchor-ledger.ts",
     "chain:reconcile": "tsx scripts/chain/reconcile-donations.ts",
+    "chain:verify-treasury": "tsx scripts/chain/verify-treasury.ts",
+    "chain:settle-auditors": "tsx scripts/chain/settle-auditors.ts",
     "smoke:staging": "tsx scripts/smoke-staging.ts",
     "demo:phase0": "tsx scripts/demo-phase0.ts",
     "demo:phase1": "tsx scripts/demo-phase1.ts",

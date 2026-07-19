@@ -97,6 +97,8 @@ CREATE TABLE "FundAudit" (
     "note" TEXT,
     "completedAt" TIMESTAMP(3),
     "gratiumEarned" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "settlementTxHash" TEXT,
+    "settlementAt" TIMESTAMP(3),
 
     CONSTRAINT "FundAudit_pkey" PRIMARY KEY ("id")
 );

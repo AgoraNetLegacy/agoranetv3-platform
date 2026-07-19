@@ -1524,3 +1524,88 @@ ONCHAIN_ECONOMY_MIGRATION.MD IS COMPLETE.** Track 2 (mission-treasury
 validator + freeze) awaits the owner's two decisions: the initial
 M-of-N signer set; the freeze trust model. Design starts from
 ONCHAIN_DESIGN_PATTERNS.md §2+§6 per OPEN_ITEMS_CHECKLIST 43b.
+
+### ★ TRACK 2 — THE MISSION TREASURY, LIVE ON PREPROD (Slices 5–7, 2026-07-18 night → 07-19). Standing owner authorization: "make Track 2 completion a goal… without me authorizing each step."
+
+**Design law first:** corpus `ONCHAIN_TREASURY_VALIDATOR_SPEC.md`
+(written before code, ⭐-flags on every spec-silent choice), built on
+the owner's two same-night rulings — signers = the chamber's attesting
+members; freeze = Tribunal-held attestation — plus the harvested §6
+design and the mandatory double-satisfaction defense.
+
+### Slice 5 — the treasury cycle ✅ SELF-VERIFIED on preprod
+
+`lib/agoranet/mission.ak` (pure transitions, 11 tests: init sanity,
+propose freezes terms, signer-swap smuggling refused, release at
+threshold only + refused frozen, tribunal-only freeze that moves
+nothing else) + `validators/mission_treasury.ak` (one script, two UTxO
+kinds: NFT-carried State thread + non-custodial Donation UTxOs;
+indexed payout output; donations spendable ONLY inside their
+chamber's Release, enforced by redeemer lookup). aiken 24/24.
+
+**THE FULL §4 CYCLE, ONE CHAIN OF REAL TRANSACTIONS:**
+- INIT `d30d7ee32e68c62650305511984679860cb1caf2fd39e495e949176b8df057d5`
+- DONATE ×2 `8beb416d36c1…`, `78da94047642…` (2×3 tADA, non-custodial)
+- PROPOSE `6f49e00209d9…` (terms frozen in-datum by one attesting member)
+- 1-OF-3 RELEASE **REFUSED BY THE PLUTUS SCRIPT** (phase-2 threshold judgment)
+- 2-OF-3 RELEASE `3cd98d11301c24f0e23881cdedd1017a6b00ecb030d095e4bdf8c47d0b3d6f72`
+  — recipient paid EXACTLY 4 tADA; remainder (5 tADA) provably back to
+  the pot. The fee-paying operator wallet is not a signer; its
+  signature satisfies nothing.
+
+**Invariant check (db:verify's spirit, aimed at the chain):**
+`npm run chain:verify-treasury` — ALL INVARIANTS HOLD across 12 UTxOs
+/ 6 chambers, including the remainder math verified independently
+(Slice 5 pot = 3+6−4 = 5 tADA exactly; Slice 6 pot = 3+3−2 = 4).
+
+### Slice 6 — the Tribunal freeze ✅ SELF-VERIFIED on preprod
+
+The §4 hard question answered per ruling: the validator accepts "an
+upheld ruling froze this chamber" only from the Tribunal key. Proven
+BOTH directions on one chamber:
+- FREEZE `f6768001cee91af00dea6a46b6bfb64efbe264c216f80dc45d1dd5c0a3953faa`
+- **FULL-THRESHOLD (2-of-3) RELEASE REFUSED WHILE FROZEN** — the brake
+  beats the engine; a freeze moves NOTHING (value + pending intact).
+- LIFT `2d86d57416f1…` (same key; only the flag changes — the sneaky
+  signer-swap-during-freeze is refused by unit-tested transition law)
+- The SAME release then accepted:
+  `476ee185113a001883706652b405d7e87726c05fe2dfc3c65fb02f7a9261f135`
+App-side trigger policy (which conduct freezes) remains
+DECISIONS_PENDING #17 — the MECHANISM no longer waits on it.
+
+### Slice 7 — auditor settlement ✅ SELF-VERIFIED on preprod
+
+Off-chain process (8.7's offer→accept→complete, the system of record)
+→ on-chain settlement: `lib/chainSettlement.ts` + `npm run
+chain:settle-auditors` pays each completed audit's auditor at THEIR OWN
+linked wallet, PER CASE NEVER PER FINDING — the basis declared in
+public CIP-20 metadata on the settlement tx itself. Verify-then-record;
+idempotent (re-run settles nothing); unlinked auditors skipped and
+counted. Rail: `onchain.auditorSettlementLovelace` (2 tADA demo
+default). Settled live against a REAL completed audit from the owner's
+8.7 demo data:
+`d6be5650e125a27ba1fa40d3b1138cc74cba4086be5b7bac9ab1c928a2fca577`
+(metadata: basis=per-case-never-per-finding, auditId in the open;
+2 skipped-no-wallet). New FundAudit columns settlementTxHash/At (both
+schemas byte-identical; 0_init consolidated).
+
+**Evidence across the three slices:** tests 292/292; `npm run check`
+exit 0; aiken 24/24; the invariant checker green against the live
+chain; every negative proof a Plutus phase-2 refusal, not a plumbing
+error. **New toolchain rules learned (beyond Slice 3's list):** Mesh
+defaults 7M-mem per redeemer — multi-script txs MUST set explicit
+budgets or blow the 16.5M per-tx cap; the ADDRESS-UTxO index lags the
+TX index everywhere, so (a) wait until the wallet sees its own change
+before the next build, (b) track thread-state UTxOs by their EXPECTED
+TIP tx, never by "what the index shows"; `deserializeDatum` returns
+`{constructor: BigInt, fields: [{bytes|int|list}]}` — probe shapes,
+don't guess.
+
+**★ TRACK 2 OF ONCHAIN_ECONOMY_MIGRATION.MD IS COMPLETE.** Every §4
+invariant that was code-review-enforced in the DB escrow now exists as
+validator mathematics with preprod transaction hashes behind it. What
+remains beyond Track 2 is deliberately NOT built: mainnet anything,
+real-value anything, production talk — all behind the legal gate,
+unchanged. Before-mainnet items live in the spec's §5 ⭐ list
+(seed-derived NFT names, withdraw-zero at scale, property-test bar,
+signer rotation, audit).

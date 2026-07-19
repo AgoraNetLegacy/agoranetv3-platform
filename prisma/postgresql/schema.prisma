@@ -1206,6 +1206,11 @@ model FundAudit {
   note          String?
   completedAt   DateTime?
   gratiumEarned Float    @default(0)
+  // On-chain migration Slice 7: the per-case settlement mirrored onto
+  // the testnet rail — recorded only after the chain shows the auditor
+  // paid. Internal points remain the system of record.
+  settlementTxHash String?
+  settlementAt     DateTime?
 
   @@unique([releaseId, auditorProfileId])
   @@index([status])

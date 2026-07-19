@@ -288,6 +288,135 @@ describe("the non-custodial donation", () => {
   });
 });
 
+// On-chain migration Slice 7: fund-auditor settlement — per case,
+// never per finding, verify-then-record, idempotent. Sender and
+// chain verifier injected; no network in the fast suite.
+describe("auditor settlement", () => {
+  const auditorWallet = "addr_test1qz222222222222222222222222222222222222222222222222222222";
+  let auditId = "";
+
+  it("pays a completed audit's auditor at their own wallet and records only after verification", async () => {
+    const { settleCompletedAudits } = await import("../lib/chainSettlement");
+    // Fixture: chamber → release → completed audit, auditor with a wallet.
+    const chamber = await db.chamber.create({
+      data: {
+        title: "t",
+        subject: "s",
+        pitch: "p",
+        whyCare: "w",
+        isPublic: true,
+        scaffoldSolving: "x",
+        scaffoldNeedToKnow: "y",
+        scaffoldSuccess: "z",
+        creatorProfileId: "profile-p",
+        creatorHandle: "p",
+      },
+    });
+    const release = await db.missionRelease.create({
+      data: {
+        chamberId: chamber.id,
+        currency: "PC",
+        amount: 1,
+        purpose: "test",
+        toProfileId: "profile-r",
+        toHandle: "r",
+        proposerProfileId: "profile-p",
+        proposerHandle: "p",
+      },
+    });
+    const audit = await db.fundAudit.create({
+      data: {
+        releaseId: release.id,
+        auditorProfileId: "profile-auditor",
+        expiresAt: new Date(Date.now() + 86_400_000),
+        status: "completed",
+        finding: "clean",
+        completedAt: new Date(),
+      },
+    });
+    auditId = audit.id;
+    await db.rail.create({
+      data: {
+        key: "onchain.auditorSettlementLovelace",
+        value: 2_000_000,
+        unit: "lovelace",
+        boundMin: 1_000_000,
+        boundMax: 8_000_000,
+        description: "test seed",
+      },
+    });
+    await recordWalletLink(db, {
+      profileId: "profile-auditor",
+      cardanoAddress: auditorWallet,
+      network: "preprod",
+    });
+
+    const sends: { to: string; lovelace: number; auditId: string; basis: string }[] = [];
+    const result = await settleCompletedAudits(
+      db,
+      async (to, lovelace, note) => {
+        sends.push({ to, lovelace, ...note });
+        return "F".repeat(64);
+      },
+      async () => 2_000_000
+    );
+    expect(sends).toEqual([
+      {
+        to: auditorWallet,
+        lovelace: 2_000_000,
+        auditId: audit.id,
+        basis: "per-case-never-per-finding",
+      },
+    ]);
+    expect(result.settled).toHaveLength(1);
+    const row = await db.fundAudit.findUnique({ where: { id: audit.id } });
+    expect(row?.settlementTxHash).toBe("f".repeat(64));
+    expect(row?.settlementAt).toBeInstanceOf(Date);
+  });
+
+  it("is idempotent — a settled case is never paid twice", async () => {
+    const { settleCompletedAudits } = await import("../lib/chainSettlement");
+    let sendCalls = 0;
+    const result = await settleCompletedAudits(
+      db,
+      async () => ((sendCalls += 1), "a".repeat(64)),
+      async () => 2_000_000
+    );
+    expect(sendCalls).toBe(0);
+    expect(result.settled).toEqual([]);
+  });
+
+  it("refuses to record an unconfirmed settlement — and leaves the row unsettled", async () => {
+    const { settleCompletedAudits } = await import("../lib/chainSettlement");
+    // A second completed audit for the same auditor, unsettled.
+    const prior = await db.fundAudit.findUnique({ where: { id: auditId } });
+    const audit = await db.fundAudit.create({
+      data: {
+        releaseId: prior!.releaseId,
+        auditorProfileId: "profile-auditor2",
+        expiresAt: new Date(Date.now() + 86_400_000),
+        status: "completed",
+        finding: "concern",
+        completedAt: new Date(),
+      },
+    });
+    await recordWalletLink(db, {
+      profileId: "profile-auditor2",
+      cardanoAddress: "addr_test1qz333333333333333333333333333333333333333333333333333333",
+      network: "preprod",
+    });
+    await expect(
+      settleCompletedAudits(
+        db,
+        async () => "b".repeat(64),
+        async () => 0 // chain says: paid nothing
+      )
+    ).rejects.toThrow(/NOT recorded/);
+    const row = await db.fundAudit.findUnique({ where: { id: audit.id } });
+    expect(row?.settlementTxHash).toBeNull();
+  });
+});
+
 // Slice 4 carry-over: the server mirrors the chain on ITS schedule —
 // a donation the browser poll lost is recovered by the sweep, and
 // nothing is double-recorded or invented. Chain access injected.

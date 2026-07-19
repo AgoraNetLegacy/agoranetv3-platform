@@ -281,6 +281,15 @@ export const RAIL_DEFAULTS: RailDefault[] = [
       "On-chain migration Slice 3: size of the demo donation a soul's own wallet locks at the donation-lock script (testnet tADA only — 3 tADA default). A demo parameter, railed like every number; the real donation model waits on the securities answer.",
   },
   {
+    key: "onchain.auditorSettlementLovelace",
+    value: 2_000_000,
+    unit: "lovelace",
+    boundMin: 1_000_000,
+    boundMax: 8_000_000,
+    description:
+      "On-chain migration Slice 7: testnet tADA settled to a fund auditor's own wallet PER COMPLETED CASE — never per finding, mirroring the internal rail's rule ('clean' and 'concern' pay identically). Demo-grade; the internal economy remains the system of record.",
+  },
+  {
     key: "onchain.demoLockMinutes",
     value: 10,
     unit: "minutes",
