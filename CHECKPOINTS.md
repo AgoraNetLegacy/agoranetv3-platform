@@ -1669,3 +1669,20 @@ donation refusal, sweep mis-attribution). `npm run check` exit 0.
 Known limit, recorded: matching is by the linked ADDRESS — fine for
 single-address wallets (Lace); multi-address wallets would need
 payment-credential matching (noted in spec §5 hardening list ⭐).
+
+### ★ PHASE 8.7 CLOSED — owner checkpoint complete 2026-07-19
+
+Both owner halves landed the same day: the **ratification read** of
+PHASE_8_7_SPEC as-built (OPEN_ITEMS Track 1 #3, struck), and **his
+demo run** — `npm run demo:phase8.7` from his own terminal ("done."),
+its fixture events (mission proposed → attested ×2 → released,
+Sentinel's pattern note) confirmed in the ledger at seq 635–642. The
+overdue anchor cadence then witnessed everything through his run:
+**anchor `6f8500376c5989811729be8ec7d4ad573b5ef36dd84aeeb79712d6b13327c6cf`**
+(seq 643, head 0e90b364…), db:verify ALL CHECKS PASSED including
+check 27. Rulings #17/#18/#19 had already landed 2026-07-16. Phase
+pointers advanced (CLAUDE.md + BUILD_KICKOFF_PROMPT.md + PDF
+regenerated). **Phases 0–8.7 are now all closed; the one phase-half
+still open anywhere is the Phase 8 cohort checkpoint, gated on the
+deployment slice (#14, unscheduled). The owner's open items: the
+Tournament leaderboard-metrics design session, and the lawyer date.**
