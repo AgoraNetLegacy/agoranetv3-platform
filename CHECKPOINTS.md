@@ -1496,3 +1496,31 @@ check` exit 0. aiken 13/13. Live drill + roundtrip above.
 then Track 2 design (start from ONCHAIN_DESIGN_PATTERNS.md per
 checklist 43b), still gated on the owner's two decisions: initial
 signer set; freeze trust model.
+
+### Slice 4b — the Anastasia dependency decision: RESOLVED BY EVALUATION, owner-ruled 2026-07-18 ("adapt, don't depend")
+
+The integration slice became an evaluation the moment the evidence came
+in, and the owner ruled on it the same hour. Hands-on verification of
+`aiken-upgradable-multisig` (the §2 before-mainnet checklist items,
+now answered): dormant since 2025-05 with zero releases; NO audit; NO
+LICENSE file (only an aiken.toml Apache-2.0 declaration — intent
+without the instrument); pinned to compiler v1.1.10/stdlib 2.2.0,
+incompatible with our v1.1.23/3.1.0 workspace; companion off-chain SDK
+is lucid-evolution (a second tx stack). The "community support"
+premise does not hold for this artifact — it is a completed Catalyst
+grant deliverable, not a living project.
+
+**Its design, however, is excellent and is HARVESTED** (corpus:
+`ONCHAIN_DESIGN_PATTERNS.md` §6): state-token NFT for unique findable
+state; indexed redeemers closing double-satisfaction by construction;
+`Update` gated on the CURRENT threshold — upgradability without an
+admin key; in-datum spending limits; fuzz-test bar. Track 2's own
+validator implements this shape on our toolchain with the maintained
+`aiken-design-patterns` (MIT, v1.7.0) as the dependency and Mesh as
+the only off-chain stack.
+
+**With 4a's live proof and 4b's decision, TRACK 1 OF
+ONCHAIN_ECONOMY_MIGRATION.MD IS COMPLETE.** Track 2 (mission-treasury
+validator + freeze) awaits the owner's two decisions: the initial
+M-of-N signer set; the freeze trust model. Design starts from
+ONCHAIN_DESIGN_PATTERNS.md §2+§6 per OPEN_ITEMS_CHECKLIST 43b.
