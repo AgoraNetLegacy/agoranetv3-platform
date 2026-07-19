@@ -115,6 +115,31 @@
       },
       "compiledCode": "58d001010029800aba2aba1aab9eaab9dab9a48888966002646465300130053754003300700398038012444b30013370e9000001c4c98dd7180518049baa0048acc004cdc3a400400713233226300b001300b300c0013009375400915980099b874801000e264c601460126ea80122b30013370e9003001c4c8cc898dd698058009805980600098049baa0048acc004cdc3a40100071326300a3009375400913233226375a60160026016601800260126ea8011007200e401c80390070c018c01c004c018004c00cdd5003452689b2b20021",
       "hash": "f2388d136606a27c4a531d0040c3e12e07eb95cd5011793c160707dc"
+    },
+    {
+      "title": "release.release_lock.spend",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/agoranet~1treasury~1ReleaseDatum"
+        }
+      },
+      "redeemer": {
+        "title": "_redeemer",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "compiledCode": "59011e01010029800aba2aba1aba0aab9faab9eaab9dab9a488888896600264646644b30013370e900118031baa00189919912cc004cdc3a400060126ea8006265300130010019bac300e300f300f300f300f300f300f300f300f300b3754601c011300e300b375400491119b89375a60226024601c6ea8004c00cc8cc004004dd6180918079baa0022259800800c52f5c113322598009919800800803912cc00400629422b30013371e6eb8c05c00401229462660040046030002809101544cc050dd480119802002000c4cc0100100050101bae3013001301400140442259800800c52000899b8048008cc008008c04000500d45900818058009805980600098039baa0018b200a300800130083009001300800130033754011149a26cac8009",
+      "hash": "e38279335733db552f50bec29301941d1a7fd0322f87127b28e69106"
+    },
+    {
+      "title": "release.release_lock.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "59011e01010029800aba2aba1aba0aab9faab9eaab9dab9a488888896600264646644b30013370e900118031baa00189919912cc004cdc3a400060126ea8006265300130010019bac300e300f300f300f300f300f300f300f300f300b3754601c011300e300b375400491119b89375a60226024601c6ea8004c00cc8cc004004dd6180918079baa0022259800800c52f5c113322598009919800800803912cc00400629422b30013371e6eb8c05c00401229462660040046030002809101544cc050dd480119802002000c4cc0100100050101bae3013001301400140442259800800c52000899b8048008cc008008c04000500d45900818058009805980600098039baa0018b200a300800130083009001300800130033754011149a26cac8009",
+      "hash": "e38279335733db552f50bec29301941d1a7fd0322f87127b28e69106"
     }
   ],
   "definitions": {
@@ -127,6 +152,12 @@
     },
     "Int": {
       "dataType": "integer"
+    },
+    "List<agoranet/treasury/Signer>": {
+      "dataType": "list",
+      "items": {
+        "$ref": "#/definitions/agoranet~1treasury~1Signer"
+      }
     },
     "agoranet/donation/DonationDatum": {
       "title": "DonationDatum",
@@ -150,6 +181,31 @@
           ]
         }
       ]
+    },
+    "agoranet/treasury/ReleaseDatum": {
+      "title": "ReleaseDatum",
+      "description": "Slice 4a: what the release lock stores alongside locked funds —\n the authorised signer set and how many of them must co-sign.\n The on-chain twin of `ReleaseAttestation`'s threshold.",
+      "anyOf": [
+        {
+          "title": "ReleaseDatum",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "signers",
+              "$ref": "#/definitions/List<agoranet~1treasury~1Signer>"
+            },
+            {
+              "title": "threshold",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    },
+    "agoranet/treasury/Signer": {
+      "title": "Signer",
+      "dataType": "bytes"
     }
   }
 }

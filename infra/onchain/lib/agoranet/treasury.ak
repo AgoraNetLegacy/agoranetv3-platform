@@ -38,6 +38,23 @@ pub fn threshold_met(
   count_signed(authorised, signatories) >= threshold
 }
 
+/// Slice 4a: what the release lock stores alongside locked funds —
+/// the authorised signer set and how many of them must co-sign.
+/// The on-chain twin of `ReleaseAttestation`'s threshold.
+pub type ReleaseDatum {
+  signers: List<Signer>,
+  threshold: Int,
+}
+
+/// The release rule, whole: enough authorised signers co-signed THIS
+/// transaction. No operator key satisfies it; none can veto it.
+pub fn release_permitted(
+  datum: ReleaseDatum,
+  signatories: List<Signer>,
+) -> Bool {
+  threshold_met(datum.signers, signatories, datum.threshold)
+}
+
 test signer_present() {
   signed_by([#"bb", #"aa"], #"aa")
 }
@@ -57,4 +74,20 @@ test threshold_met_at_two_of_three() {
 
 test threshold_not_met_below() {
   !threshold_met([#"aa", #"bb", #"cc"], [#"aa", #"dd"], 2)
+}
+
+test release_permitted_at_threshold() {
+  let datum = ReleaseDatum { signers: [#"aa", #"bb", #"cc"], threshold: 2 }
+  release_permitted(datum, [#"cc", #"dd", #"aa"])
+}
+
+test release_refused_below_threshold() {
+  let datum = ReleaseDatum { signers: [#"aa", #"bb", #"cc"], threshold: 2 }
+  !release_permitted(datum, [#"aa", #"dd"])
+}
+
+test release_refused_for_unauthorised_crowd() {
+  // Five signatures, none authorised: crowds don't outvote the set.
+  let datum = ReleaseDatum { signers: [#"aa", #"bb", #"cc"], threshold: 2 }
+  !release_permitted(datum, [#"dd", #"ee", #"ff", #"11", #"22"])
 }

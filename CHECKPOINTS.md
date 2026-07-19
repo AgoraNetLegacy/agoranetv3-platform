@@ -1446,3 +1446,53 @@ not luck: the chain is the source of truth, the row just mirrors it.
 open decisions owed before Track 2 (initial signer set; freeze trust
 model). Track 2 design must start from ONCHAIN_DESIGN_PATTERNS.md
 (corpus) per OPEN_ITEMS_CHECKLIST 43b.**
+
+### Slice 4a — the M-of-N release, our primitives, live on preprod: SELF-VERIFIED 2026-07-18 (evening)
+
+**Owner ruling that shaped it (same evening): "both, ours first."**
+Slice 4 split — 4a proves the release authority with OUR tested
+primitives now; 4b integrates Anastasia's `aiken-upgradable-multisig`
+(the candidate for its real differentiator, UPGRADABLE signer sets)
+before Track 2 commits to the dependency. Migration doc amended.
+
+**The validator:** `treasury.ak` gains `ReleaseDatum` +
+`release_permitted` (three new tests incl. the crowd test: five
+unauthorised signatures satisfy nothing); `validators/release.ak`
+wires it to the script context. aiken 13/13; blueprint rebuilt.
+
+**THE ROUNDTRIP, PROVEN LIVE ON PREPROD** (three throwaway signer
+keys, never funded — they only sign; the fee-paying dev wallet is
+deliberately NOT in the signer set, so "the operator signed" can never
+satisfy the rule):
+- LOCK `0dabf0bf5caac6e78479c9d195ab7324b3d5c8eadd0cebd1f3f82ce1bd29e550`
+  — 3 tADA behind 2-of-3 at
+  `addr_test1wr3cy7fn2ueak4f02zlv9ycpjsw35l7sxghcwynm9rnfzps7qr5fn`.
+- 1-OF-3 RELEASE **REFUSED BY THE PLUTUS SCRIPT** (phase-2
+  PlutusFailure) — below threshold, structurally valid, refused on the
+  rule alone.
+- 2-OF-3 RELEASE ACCEPTED:
+  `7bfd9228dd02887c56cca971f1ad55e88ab8af9bef5052cd61df5916f8e48537`.
+This is `attestRelease` — "N members co-signed → release, no operator
+step" — as chain mathematics. The Slice 1 primitives, now proven in
+anger. Runbook: `npx tsx scripts/chain/demo-multisig-roundtrip.ts`.
+
+**The Slice 3 carry-over, DELIVERED (was a MUST before this
+checkpoint):** `lib/chainReconcile.ts` + `npm run chain:reconcile` —
+the server mirrors the chain on ITS schedule; no record depends on a
+browser tab again. Proven by live drill: the owner's real donation row
+was deleted, the sweep RECOVERED it from pure chain evidence
+(a4ce0332…, 3,000,000 lovelace), and a second sweep changed nothing
+(idempotent; already-recorded txs never re-consult the chain).
+Malformed placeholder links skip cleanly (Blockfrost 400 ≠ outage);
+real failures still throw. Multisig signing gotcha for 4b/Track 2:
+`required_signers` is what the validator reads as extra_signatories —
+each named key must witness the tx, and co-signing is sequential
+partial signs (`signTx(tx, true)`) accumulating witnesses.
+
+**Evidence:** tests 289/289 (2 new reconciliation tests). `npm run
+check` exit 0. aiken 13/13. Live drill + roundtrip above.
+
+**NEXT:** Slice 4b (Anastasia integration, before Track 2 commits) —
+then Track 2 design (start from ONCHAIN_DESIGN_PATTERNS.md per
+checklist 43b), still gated on the owner's two decisions: initial
+signer set; freeze trust model.

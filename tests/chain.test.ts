@@ -288,3 +288,41 @@ describe("the non-custodial donation", () => {
   });
 });
 
+// Slice 4 carry-over: the server mirrors the chain on ITS schedule —
+// a donation the browser poll lost is recovered by the sweep, and
+// nothing is double-recorded or invented. Chain access injected.
+describe("donation reconciliation", () => {
+  it("recovers a chain-confirmed donation the database missed", async () => {
+    const { reconcileDonations } = await import("../lib/chainReconcile");
+    const missed = "d".repeat(64);
+    const script = "addr_test1wzscript000000000000000000000000000000000000000000";
+    const result = await reconcileDonations(db, script, {
+      // The linked wallet's recent txs: one already recorded, one missed,
+      // one unrelated (pays the script nothing).
+      listTxs: async () => ["c".repeat(64), missed, "e".repeat(64)],
+      lockedAtScript: async (tx) => (tx === missed ? 3_000_000 : 0),
+    });
+    expect(result.recovered).toEqual([{ txHash: missed, lovelace: 3_000_000 }]);
+    expect(await db.testnetDonation.count()).toBe(2);
+    const row = await db.testnetDonation.findUnique({ where: { txHash: missed } });
+    expect(row?.scriptAddress).toBe(script);
+  });
+
+  it("is idempotent — a second sweep recovers nothing and verifies nothing twice", async () => {
+    const { reconcileDonations } = await import("../lib/chainReconcile");
+    let verifierCalls = 0;
+    const result = await reconcileDonations(
+      db,
+      "addr_test1wzscript000000000000000000000000000000000000000000",
+      {
+        listTxs: async () => ["c".repeat(64), "d".repeat(64)],
+        lockedAtScript: async () => (verifierCalls++, 3_000_000),
+      }
+    );
+    expect(result.recovered).toEqual([]);
+    // Both txs already have rows — the chain is never re-consulted.
+    expect(verifierCalls).toBe(0);
+    expect(await db.testnetDonation.count()).toBe(2);
+  });
+});
+
