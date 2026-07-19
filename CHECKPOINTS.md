@@ -1609,3 +1609,45 @@ real-value anything, production talk — all behind the legal gate,
 unchanged. Before-mainnet items live in the spec's §5 ⭐ list
 (seed-derived NFT names, withdraw-zero at scale, property-test bar,
 signer rotation, audit).
+
+### ★ TRACK 1+2 ADVERSARIAL REVIEW (2026-07-19, owner-requested "double check your work")
+
+**Verified, all green:** every claimed transaction re-checked
+independently against preprod — **17/17 hold**, including the
+exact-amount assertions (S5 release pays EXACTLY 4 tADA + 5 back to
+the pot; S6 release EXACTLY 2 + 4 back; S7 settlement EXACTLY 2 to the
+auditor with the per-case basis in metadata). All gates re-run fresh:
+aiken 24/24, tests 292/292, **db:verify ALL CHECKS PASSED** (not part
+of `npm run check` — run explicitly), chain:verify-treasury green,
+reconcile + settlement sweeps idempotent, working tree clean, 31
+commits ahead of origin, none pushed (owner hold intact).
+
+**Found by reading the validators as an attacker — the review's real
+product (both recorded in the spec §5 security-critical list and
+OPEN_ITEMS 43c; both HARMLESS while only faucet tADA exists; both
+absolute blockers before real value):**
+- **F1 — thread-forgery drain (SERIOUS before-value).** Permissionless
+  init + the constant "STATE" NFT name means a forged parallel State
+  thread claiming a victim chamber's id (attacker as 1-of-1 signer)
+  satisfies every donation's ReleaseSupport check → donations
+  drainable. The ⭐ flag that accepted the constant name recorded the
+  simplification but UNDER-CLASSIFIED its consequence — the review
+  corrected the classification. Fix designed: seed-derived NFT names,
+  donations bind to the named asset.
+- **F2 — proposal-brick griefing (MODERATE).** propose_transition
+  checks only amount > 0; one attestor proposing a malformed recipient
+  or unpayable amount bricks the release path forever (Release is the
+  only pending-clearing path). Fix designed: propose sanity + a
+  threshold-gated Cancel.
+- **F3 — record integrity (LOW, cosmetic):** proof/donation submit
+  paths verify the tx on-chain but not that the FACE's wallet sent it;
+  someone else's tx is claimable as one's record. No funds at risk.
+- **F4/F5 (notes):** continuing-state checks preserve lovelace+NFT
+  only (token-stripping impossible today, relevant later); no End/burn
+  path — chamber threads are eternal, minADA stranded per chamber.
+
+**Verdict: Tracks 1 and 2 work exactly as planned and claimed, at the
+scope claimed — a valueless-testnet proof of the §4 mechanics. The
+review's findings define the distance between "proven pattern" and
+"trustable with real money," and that distance is now written down
+with designs, not discovered later with funds.**
