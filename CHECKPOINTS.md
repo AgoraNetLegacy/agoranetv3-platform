@@ -1427,3 +1427,22 @@ Lace via /settings — funds provably leave his wallet for the script,
 platform never in possession; the recorded tx hash + Cardanoscan link
 is the record. The collect side is already proven above and is NOT his
 checkpoint.
+
+**★ SLICE 3 CHECKPOINT — OWNER-PERFORMED 2026-07-18 (his evening).**
+The owner donated from HIS OWN Lace via /settings:
+`a4ce03324a0465f067104532f6e35e9fc329113cf20688b388dd147ce09e31bb`
+— 3 tADA from his wallet to the donation-lock script, inline datum
+attached, change back to him, platform never in possession. Verified
+on-chain (Blockfrost: 3,000,000 lovelace at the script in that tx's
+outputs) and recorded through `recordScriptDonation`'s
+verify-then-record path. Publicly verifiable:
+https://preprod.cardanoscan.io/transaction/a4ce03324a0465f067104532f6e35e9fc329113cf20688b388dd147ce09e31bb
+One wrinkle, honestly recorded: the page's own polling didn't write the
+row (he moved on while it was still confirming); the idempotent record
+path closed it from the chain's evidence — which is the design working,
+not luck: the chain is the source of truth, the row just mirrors it.
+**Slice 3 of ONCHAIN_ECONOMY_MIGRATION.md is COMPLETE. Next: Slice 4
+(toy M-of-N release, Anastasia upgradable-multisig) — plus the two
+open decisions owed before Track 2 (initial signer set; freeze trust
+model). Track 2 design must start from ONCHAIN_DESIGN_PATTERNS.md
+(corpus) per OPEN_ITEMS_CHECKLIST 43b.**
