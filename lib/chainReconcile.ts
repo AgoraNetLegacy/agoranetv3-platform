@@ -9,7 +9,11 @@
 // twice, or concurrently with a live UI poll, changes nothing.
 
 import type { PrismaClient } from "@prisma/client";
-import { cardanoNetwork, lockedAtScriptOnConfiguredTestnet } from "./chain";
+import {
+  cardanoNetwork,
+  lockedAtScriptOnConfiguredTestnet,
+  txInputAddressesOnConfiguredTestnet,
+} from "./chain";
 
 export type AddressTxLister = (address: string) => Promise<string[]>;
 
@@ -39,10 +43,12 @@ export async function reconcileDonations(
   deps: {
     listTxs?: AddressTxLister;
     lockedAtScript?: (txHash: string, scriptAddress: string) => Promise<number | null>;
+    inputAddresses?: (txHash: string) => Promise<string[] | null>;
   } = {}
 ): Promise<{ walletsScanned: number; recovered: { txHash: string; lovelace: number }[] }> {
   const listTxs = deps.listTxs ?? listRecentAddressTxs;
   const lockedAtScript = deps.lockedAtScript ?? lockedAtScriptOnConfiguredTestnet;
+  const inputAddresses = deps.inputAddresses ?? txInputAddressesOnConfiguredTestnet;
   const links = await db.testnetWalletLink.findMany();
   const recovered: { txHash: string; lovelace: number }[] = [];
   for (const link of links) {
@@ -51,6 +57,10 @@ export async function reconcileDonations(
       if (known) continue;
       const lovelace = await lockedAtScript(txHash, scriptAddress);
       if (lovelace === null || lovelace <= 0) continue;
+      // F3: the address listing includes txs that merely PAID this
+      // wallet — record only what the linked wallet itself SENT.
+      const senders = await inputAddresses(txHash);
+      if (!senders?.includes(link.cardanoAddress)) continue;
       await db.testnetDonation.upsert({
         where: { txHash },
         create: {

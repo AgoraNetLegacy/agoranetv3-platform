@@ -1651,3 +1651,21 @@ scope claimed — a valueless-testnet proof of the §4 mechanics. The
 review's findings define the distance between "proven pattern" and
 "trustable with real money," and that distance is now written down
 with designs, not discovered later with funds.**
+
+### F3 FIXED (2026-07-19, owner-directed): records are only ever YOUR wallet's own acts
+
+The review's record-integrity finding, closed the only way this rail
+closes anything — verified against the chain: `recordSelfCustodyProof`,
+`recordScriptDonation`, AND the reconciliation sweep now require the
+face's linked wallet to appear among the transaction's INPUTS before
+recording (`txInputAddressesOnConfiguredTestnet`). The sweep needed it
+most: Blockfrost's address listing includes txs that merely PAID a
+wallet, so a stranger's donation could have been mis-attributed by the
+sweep with no user action at all. Proven live on preprod: claiming the
+dev wallet's real donation (7292911a…) as the owner's → REFUSED
+("wasn't sent by this face's linked wallet"); his genuine a4ce0332… →
+accepted, idempotent, one row. Tests 295/295 (3 new: proof refusal,
+donation refusal, sweep mis-attribution). `npm run check` exit 0.
+Known limit, recorded: matching is by the linked ADDRESS — fine for
+single-address wallets (Lace); multi-address wallets would need
+payment-credential matching (noted in spec §5 hardening list ⭐).

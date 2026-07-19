@@ -96,14 +96,41 @@ export async function txExistsOnConfiguredTestnet(txHash: string): Promise<boole
   return true;
 }
 
+/** The addresses that FUNDED a transaction (its inputs), per the
+ *  configured testnet. null when the tx isn't visible yet. The
+ *  record-integrity primitive (review finding F3): a record is yours
+ *  only if your linked wallet actually SENT the transaction. */
+export async function txInputAddressesOnConfiguredTestnet(
+  txHash: string
+): Promise<string[] | null> {
+  const net = cardanoNetwork();
+  const projectId = process.env.BLOCKFROST_PROJECT_ID;
+  if (!projectId) throw new Error("BLOCKFROST_PROJECT_ID is not set.");
+  const res = await fetch(`https://cardano-${net}.blockfrost.io/api/v0/txs/${txHash}/utxos`, {
+    headers: { project_id: projectId },
+    cache: "no-store",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Blockfrost lookup failed (${res.status}).`);
+  const utxos = (await res.json()) as { inputs: { address: string }[] };
+  return utxos.inputs.map((i) => i.address);
+}
+
+const NOT_SENT_BY_LINKED =
+  "That transaction exists, but it wasn't sent by this face's linked " +
+  "wallet — records here are only ever YOUR wallet's own acts. Nothing was recorded.";
+
 /** Record the face's self-custody proof — but only once the tx is
- *  actually visible on the configured testnet. Not-yet-found is
- *  retryable (propagation takes seconds to a couple of minutes);
- *  the caller polls. The verifier is injectable for tests. */
+ *  actually visible on the configured testnet AND provably sent by
+ *  the face's own linked wallet (F3). Not-yet-found is retryable
+ *  (propagation takes seconds to a couple of minutes); the caller
+ *  polls. Verifiers are injectable for tests. */
 export async function recordSelfCustodyProof(
   db: PrismaClient,
   input: { profileId: string; txHash: string },
-  verify: (txHash: string) => Promise<boolean> = txExistsOnConfiguredTestnet
+  verify: (txHash: string) => Promise<boolean> = txExistsOnConfiguredTestnet,
+  inputAddresses: (txHash: string) => Promise<string[] | null> =
+    txInputAddressesOnConfiguredTestnet
 ): Promise<ProofResult> {
   const txHash = input.txHash.trim().toLowerCase();
   if (!TX_HASH_RE.test(txHash)) {
@@ -127,6 +154,13 @@ export async function recordSelfCustodyProof(
         "minutes, your wallet is probably on the OTHER testnet (Preview) — " +
         "the two share the same address format.",
     };
+  }
+  const senders = await inputAddresses(txHash);
+  if (senders === null) {
+    return { ok: false, retryable: true, reason: `Not visible on ${cardanoNetwork()} yet.` };
+  }
+  if (!senders.includes(link.cardanoAddress)) {
+    return { ok: false, retryable: false, reason: NOT_SENT_BY_LINKED };
   }
   await db.testnetWalletLink.update({
     where: { profileId: input.profileId },
@@ -185,7 +219,9 @@ export async function recordScriptDonation(
   db: PrismaClient,
   input: { profileId: string; txHash: string; scriptAddress: string },
   verify: (txHash: string, scriptAddress: string) => Promise<number | null> =
-    lockedAtScriptOnConfiguredTestnet
+    lockedAtScriptOnConfiguredTestnet,
+  inputAddresses: (txHash: string) => Promise<string[] | null> =
+    txInputAddressesOnConfiguredTestnet
 ): Promise<DonationResult> {
   const txHash = input.txHash.trim().toLowerCase();
   if (!TX_HASH_RE.test(txHash)) {
@@ -218,6 +254,13 @@ export async function recordScriptDonation(
         "That transaction exists but locked nothing at the donation script — " +
         "it isn't the donation. Nothing was recorded.",
     };
+  }
+  const senders = await inputAddresses(txHash);
+  if (senders === null) {
+    return { ok: false, retryable: true, reason: `Not visible on ${cardanoNetwork()} yet.` };
+  }
+  if (!senders.includes(link.cardanoAddress)) {
+    return { ok: false, retryable: false, reason: NOT_SENT_BY_LINKED };
   }
   await db.testnetDonation.upsert({
     where: { txHash },

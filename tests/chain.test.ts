@@ -148,6 +148,13 @@ describe("the self-custody proof", () => {
   const goodHash = "a".repeat(64);
   const found = async () => true;
   const notFound = async () => false;
+  // F3: the linked wallet must have SENT the tx.
+  const sentByLinked = async () => [
+    (await walletLinkFor(db, "profile-a"))!.cardanoAddress,
+  ];
+  const sentByStranger = async () => [
+    "addr_test1qzstranger0000000000000000000000000000000000000000000",
+  ];
 
   it("refuses a malformed transaction hash without consulting the chain", async () => {
     let consulted = false;
@@ -186,11 +193,28 @@ describe("the self-custody proof", () => {
     expect(link?.proofTxHash).toBeNull();
   });
 
+  it("refuses a real tx that was NOT sent by the face's linked wallet (F3)", async () => {
+    const r = await recordSelfCustodyProof(
+      db,
+      { profileId: "profile-a", txHash: goodHash },
+      found,
+      sentByStranger
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.retryable).toBe(false);
+      expect(r.reason).toMatch(/wasn't sent by this face's linked wallet/);
+    }
+    const link = await walletLinkFor(db, "profile-a");
+    expect(link?.proofTxHash).toBeNull();
+  });
+
   it("records a verified proof, normalized to lowercase", async () => {
     const r = await recordSelfCustodyProof(
       db,
       { profileId: "profile-a", txHash: goodHash.toUpperCase() },
-      found
+      found,
+      sentByLinked
     );
     expect(r.ok).toBe(true);
     const link = await walletLinkFor(db, "profile-a");
@@ -203,12 +227,14 @@ describe("the self-custody proof", () => {
     const r = await recordSelfCustodyProof(
       db,
       { profileId: "profile-a", txHash: newer },
-      found
+      found,
+      sentByLinked
     );
     expect(r.ok).toBe(true);
     const link = await walletLinkFor(db, "profile-a");
     expect(link?.proofTxHash).toBe(newer);
-    expect(await db.testnetWalletLink.count()).toBe(1);
+    // Only profile-a's link exists at this point in the suite.
+    expect(await db.testnetWalletLink.count({ where: { profileId: "profile-a" } })).toBe(1);
   });
 });
 
@@ -218,6 +244,9 @@ describe("the self-custody proof", () => {
 describe("the non-custodial donation", () => {
   const script = "addr_test1wzscript000000000000000000000000000000000000000000";
   const hash = (c: string) => c.repeat(64);
+  const sentByLinked = async () => [
+    (await walletLinkFor(db, "profile-a"))!.cardanoAddress,
+  ];
 
   it("refuses a malformed hash without consulting the chain", async () => {
     let consulted = false;
@@ -263,11 +292,27 @@ describe("the non-custodial donation", () => {
     expect(await db.testnetDonation.count()).toBe(0);
   });
 
+  it("refuses someone ELSE's donation tx — not sent by the linked wallet (F3)", async () => {
+    const r = await recordScriptDonation(
+      db,
+      { profileId: "profile-a", txHash: hash("c"), scriptAddress: script },
+      async () => 3_000_000,
+      async () => ["addr_test1qzsomeoneelse000000000000000000000000000000000000000"]
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.retryable).toBe(false);
+      expect(r.reason).toMatch(/wasn't sent by this face's linked wallet/);
+    }
+    expect(await db.testnetDonation.count()).toBe(0);
+  });
+
   it("records the donation with the chain-verified amount", async () => {
     const r = await recordScriptDonation(
       db,
       { profileId: "profile-a", txHash: hash("c"), scriptAddress: script },
-      async () => 3_000_000
+      async () => 3_000_000,
+      sentByLinked
     );
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.lovelace).toBe(3_000_000);
@@ -281,7 +326,8 @@ describe("the non-custodial donation", () => {
     const r = await recordScriptDonation(
       db,
       { profileId: "profile-a", txHash: hash("c"), scriptAddress: script },
-      async () => 3_000_000
+      async () => 3_000_000,
+      sentByLinked
     );
     expect(r.ok).toBe(true);
     expect(await db.testnetDonation.count()).toBe(1);
@@ -425,16 +471,36 @@ describe("donation reconciliation", () => {
     const { reconcileDonations } = await import("../lib/chainReconcile");
     const missed = "d".repeat(64);
     const script = "addr_test1wzscript000000000000000000000000000000000000000000";
+    const linked = (await walletLinkFor(db, "profile-a"))!.cardanoAddress;
     const result = await reconcileDonations(db, script, {
       // The linked wallet's recent txs: one already recorded, one missed,
       // one unrelated (pays the script nothing).
       listTxs: async () => ["c".repeat(64), missed, "e".repeat(64)],
       lockedAtScript: async (tx) => (tx === missed ? 3_000_000 : 0),
+      inputAddresses: async () => [linked],
     });
     expect(result.recovered).toEqual([{ txHash: missed, lovelace: 3_000_000 }]);
     expect(await db.testnetDonation.count()).toBe(2);
     const row = await db.testnetDonation.findUnique({ where: { txHash: missed } });
     expect(row?.scriptAddress).toBe(script);
+  });
+
+  it("never mis-attributes a tx the wallet RECEIVED but did not send (F3)", async () => {
+    const { reconcileDonations } = await import("../lib/chainReconcile");
+    const foreign = "1".repeat(64);
+    const result = await reconcileDonations(
+      db,
+      "addr_test1wzscript000000000000000000000000000000000000000000",
+      {
+        // A tx that paid the script AND touched the linked wallet's
+        // address listing — but was FUNDED by someone else entirely.
+        listTxs: async () => [foreign],
+        lockedAtScript: async () => 3_000_000,
+        inputAddresses: async () => ["addr_test1qzsomeoneelse00000000000000000000000000000000000"],
+      }
+    );
+    expect(result.recovered).toEqual([]);
+    expect(await db.testnetDonation.findUnique({ where: { txHash: foreign } })).toBeNull();
   });
 
   it("is idempotent — a second sweep recovers nothing and verifies nothing twice", async () => {
@@ -446,6 +512,7 @@ describe("donation reconciliation", () => {
       {
         listTxs: async () => ["c".repeat(64), "d".repeat(64)],
         lockedAtScript: async () => (verifierCalls++, 3_000_000),
+        inputAddresses: async () => [],
       }
     );
     expect(result.recovered).toEqual([]);
