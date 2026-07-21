@@ -83,9 +83,21 @@ import {
 import { enforceRateLimit, type RateLimitPolicyName } from "@/lib/rateLimit";
 import { recordEvent, type AnalyticsEventName } from "@/lib/analytics";
 
+/** Open-redirect guard (CWE-601): only same-origin relative paths are
+ *  allowed as redirect targets. Rejects absolute URLs, protocol-relative
+ *  "//host", and "/\host" tricks that browsers normalize to off-origin.
+ *  Every redirect target that comes from form input passes through this. */
+export function safePath(candidate: string, fallback: string): string {
+  return candidate.startsWith("/") &&
+    !candidate.startsWith("//") &&
+    !candidate.startsWith("/\\")
+    ? candidate
+    : fallback;
+}
+
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
-  redirect(`${path}${suffix}`);
+  redirect(`${safePath(path, "/")}${suffix}`);
 }
 
 // Every write action passes a wall from the consolidated W4 schedule
@@ -892,7 +904,7 @@ export async function beginVerification(formData: FormData) {
 export async function acknowledgeSecretSaved(formData: FormData) {
   const next = String(formData.get("next") ?? "/");
   await clearOneTimeSecret();
-  redirect(next);
+  redirect(safePath(next, "/"));
 }
 
 export async function createTrueSelf(formData: FormData) {
@@ -927,7 +939,7 @@ export async function acknowledgeConsent(formData: FormData) {
   const face = await requireFace("settings");
   await recordAck(db, { profileId: face.id, kind });
   await recordEvent(db, "funnel.consents");
-  redirect(next);
+  redirect(safePath(next, "/verify/consents"));
 }
 
 export async function submitSeedAnswer(formData: FormData) {
