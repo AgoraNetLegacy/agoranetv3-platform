@@ -634,6 +634,15 @@ export async function attestRelease(
   }
 
   return await db.$transaction(async (tx) => {
+    // Serialise concurrent attestations on this release: a no-op self-write
+    // takes the row's write lock (held to commit), so a second attestor
+    // blocks until the first commits and then counts it. Without this, two
+    // concurrent attestors each see zero priors, both fall short of a
+    // two-signature threshold, and the release is never paid.
+    await tx.missionRelease.update({
+      where: { id: release.id },
+      data: { chamberId: release.chamberId },
+    });
     const profile = await tx.profile.findUniqueOrThrow({
       where: { id: input.attestorProfileId },
     });
@@ -644,7 +653,11 @@ export async function attestRelease(
         attestorHandle: profile.handle,
       },
     });
-    const count = release.attestations.length + 1;
+    // Count from the DATABASE inside the serialised transaction — never the
+    // pre-transaction snapshot, which misses a concurrent co-signer.
+    const count = await tx.releaseAttestation.count({
+      where: { releaseId: release.id },
+    });
 
     await appendEvent(tx, {
       actorType: "soul",
