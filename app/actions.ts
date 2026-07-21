@@ -6,6 +6,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { safePath } from "@/lib/safePath";
 import { db } from "@/lib/db";
 import {
   createPost,
@@ -82,18 +83,6 @@ import {
 } from "@/lib/webSession";
 import { enforceRateLimit, type RateLimitPolicyName } from "@/lib/rateLimit";
 import { recordEvent, type AnalyticsEventName } from "@/lib/analytics";
-
-/** Open-redirect guard (CWE-601): only same-origin relative paths are
- *  allowed as redirect targets. Rejects absolute URLs, protocol-relative
- *  "//host", and "/\host" tricks that browsers normalize to off-origin.
- *  Every redirect target that comes from form input passes through this. */
-export function safePath(candidate: string, fallback: string): string {
-  return candidate.startsWith("/") &&
-    !candidate.startsWith("//") &&
-    !candidate.startsWith("/\\")
-    ? candidate
-    : fallback;
-}
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";

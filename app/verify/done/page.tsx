@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { safePath } from "@/lib/safePath";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default async function DonePage({
       {returnTo ? (
         <p>
           Now finish what you came to do:{" "}
-          <Link href={returnTo}>return to where the gate met you →</Link>
+          <Link href={safePath(returnTo, "/")}>return to where the gate met you →</Link>
         </p>
       ) : (
         <p>
