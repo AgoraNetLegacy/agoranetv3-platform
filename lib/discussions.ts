@@ -223,6 +223,21 @@ export type PostResult =
   | { ok: true; postId: string }
   | { ok: false; reason: string };
 
+/** Citations become clickable links, so accept web URLs only. In
+ * particular, `javascript:` and `data:` must never reach an href. */
+export function safeSourceUrl(raw: string): string | null {
+  const value = raw.trim();
+  if (!value || value.length > 2048) return null;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:"
+      ? parsed.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Create a reply (or a top-level post) in a Discussion. */
 export async function createPost(
   db: PrismaClient,
@@ -239,6 +254,15 @@ export async function createPost(
 ): Promise<PostResult> {
   const body = input.body.trim();
   if (!body) return { ok: false, reason: "Empty post." };
+  const sourceUrl = input.source?.url.trim()
+    ? safeSourceUrl(input.source.url)
+    : null;
+  if (input.source?.url.trim() && !sourceUrl) {
+    return {
+      ok: false,
+      reason: "A source must be a valid http:// or https:// web address.",
+    };
+  }
 
   const discussion = await db.discussion.findUnique({
     where: { id: input.discussionId },
@@ -370,10 +394,10 @@ export async function createPost(
       },
     });
 
-    if (input.source?.url.trim()) {
+    if (input.source && sourceUrl) {
       // One source, one object: the same citation anywhere resolves to
       // one shared SourceObject (§4).
-      const url = input.source.url.trim();
+      const url = sourceUrl;
       const sourceObject = await tx.sourceObject.upsert({
         where: { url },
         create: { url },

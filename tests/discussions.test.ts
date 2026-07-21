@@ -7,7 +7,7 @@ process.env.DATABASE_URL = url;
 process.env.GATE_OPERATOR_SECRET = "test-secret-for-discussion-tests";
 
 import { PrismaClient } from "@prisma/client";
-import { createPost, editPost, contentHash } from "../lib/discussions";
+import { createPost, editPost, contentHash, safeSourceUrl } from "../lib/discussions";
 import { fileFlag } from "../lib/flags";
 import { makeOnboardedSoul } from "./helpers/souls";
 
@@ -43,6 +43,28 @@ afterAll(async () => {
 });
 
 describe("posting in a permanent space", () => {
+  it("allows web citations and rejects executable URL schemes", async () => {
+    expect(safeSourceUrl(" https://example.org/source?q=1 ")).toBe(
+      "https://example.org/source?q=1"
+    );
+    expect(safeSourceUrl("javascript:alert(document.cookie)")).toBeNull();
+    expect(safeSourceUrl("data:text/html,<script>alert(1)</script>")).toBeNull();
+    expect(safeSourceUrl("not a URL")).toBeNull();
+
+    const rejected = await createPost(db, {
+      discussionId,
+      profileId: trueSelfId,
+      body: "This citation must never become an executable link.",
+      source: {
+        url: "javascript:alert(document.cookie)",
+        kind: "other",
+        vouch: "unverified",
+      },
+    });
+    expect(rejected.ok).toBe(false);
+    if (!rejected.ok) expect(rejected.reason).toContain("http:// or https://");
+  });
+
   it("records the post on the ledger by content hash, pseudonymously", async () => {
     const result = await createPost(db, {
       discussionId,
