@@ -11,6 +11,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  statSync,
 } from "fs";
 import { tmpdir } from "os";
 import { join, resolve } from "path";
@@ -41,6 +42,13 @@ function ensureTemplateDb(template: string) {
   if (existsSync(template)) return;
 
   const lock = `${template}.lock`;
+  // A process SIGKILLed mid-build never runs its cleanup, orphaning the lock
+  // dir. Without recovery the whole suite waits on it forever. Reclaim a lock
+  // older than STALE_MS (a real db push is seconds), and hard-cap the total
+  // wait so a wedged run fails loudly instead of hanging.
+  const STALE_MS = 60_000;
+  const GIVE_UP_MS = 120_000;
+  const start = Date.now();
   for (;;) {
     try {
       mkdirSync(lock);
@@ -48,6 +56,20 @@ function ensureTemplateDb(template: string) {
     } catch {
       // Another test file is building the template right now.
       if (existsSync(template)) return;
+      try {
+        if (Date.now() - statSync(lock).mtimeMs > STALE_MS) {
+          rmSync(lock, { recursive: true, force: true }); // orphaned — reclaim
+          continue;
+        }
+      } catch {
+        // Lock vanished between the checks — just retry the mkdir.
+      }
+      if (Date.now() - start > GIVE_UP_MS) {
+        throw new Error(
+          `Timed out waiting for the test-template lock at ${lock}. ` +
+            `Remove it and retry if no build is running.`
+        );
+      }
       sleepSync(25);
     }
   }
