@@ -39,7 +39,7 @@ import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
 import { appendEvent } from "./ledger";
 import { clearGateTx } from "./gate";
-import { balanceOf } from "./economy";
+import { balanceOf, debitBalance } from "./economy";
 import { getRail } from "./rails";
 
 export type EscrowResult =
@@ -295,18 +295,13 @@ export async function donateToMission(
       scopeKind: "per-profile",
     });
     if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
-    const balance = await balanceOf(tx, profile.id, "PC");
-    if (balance < input.amount) {
+    if (!(await debitBalance(tx, profile.id, "PC", input.amount))) {
+      const balance = await balanceOf(tx, profile.id, "PC");
       return {
         ok: false as const,
         reason: `Insufficient PollCoin (${balance.toFixed(2)}u of ${input.amount}u) — a donation is a real transfer, not a gesture.`,
       };
     }
-
-    await tx.balance.update({
-      where: { profileId_currency: { profileId: profile.id, currency: "PC" } },
-      data: { amount: { decrement: input.amount } },
-    });
     await creditMissionBalance(tx, {
       chamberId: input.chamberId,
       currency: "PC",

@@ -37,6 +37,30 @@ export async function balanceOf(
 export type EconomyResult = { ok: true } | { ok: false; reason: string };
 
 /** Debit a profile into the treasury (fees, deposits). */
+/**
+ * Atomically debit a profile's balance. The conditional UPDATE (WHERE
+ * amount >= X) is the check AND the decrement in one statement, so two
+ * concurrent debits cannot both pass a stale read and overspend under
+ * Postgres READ COMMITTED — the check-then-act class Gate #25 closed
+ * elsewhere, applied here to balances. (SQLite's single writer masks this
+ * in dev/test, which is why it never surfaced.) Returns true if debited,
+ * false if the balance could not cover it.
+ */
+export async function debitBalance(
+  tx: Tx,
+  profileId: string,
+  currency: Currency,
+  amount: number
+): Promise<boolean> {
+  if (amount <= 0) return true;
+  await ensureBalance(tx, profileId, currency);
+  const result = await tx.balance.updateMany({
+    where: { profileId, currency, amount: { gte: amount } },
+    data: { amount: { decrement: amount } },
+  });
+  return result.count === 1;
+}
+
 export async function chargeToTreasury(
   tx: Tx,
   input: {
@@ -49,18 +73,13 @@ export async function chargeToTreasury(
   }
 ): Promise<EconomyResult> {
   if (input.amount <= 0) return { ok: true };
-  await ensureBalance(tx, input.profileId, input.currency);
-  const balance = await balanceOf(tx, input.profileId, input.currency);
-  if (balance < input.amount) {
+  if (!(await debitBalance(tx, input.profileId, input.currency, input.amount))) {
+    const balance = await balanceOf(tx, input.profileId, input.currency);
     return {
       ok: false,
       reason: `Insufficient ${input.currency === "PC" ? "PollCoin" : "Gratium"} (${balance.toFixed(2)}u of ${input.amount}u) — participation costs; the earnable path covers committed souls.`,
     };
   }
-  await tx.balance.update({
-    where: { profileId_currency: { profileId: input.profileId, currency: input.currency } },
-    data: { amount: { decrement: input.amount } },
-  });
   await tx.treasuryBalance.upsert({
     where: { currency: input.currency },
     create: { currency: input.currency, amount: input.amount },
@@ -241,21 +260,16 @@ export async function tip(
 
   try {
     return await db.$transaction(async (tx) => {
-      await ensureBalance(tx, input.tipperProfileId, "G");
-      const balance = await balanceOf(tx, input.tipperProfileId, "G");
-      if (balance < input.amount) {
+      const cut = Math.round(input.amount * cutPercent) / 100;
+      const net = input.amount - cut;
+
+      if (!(await debitBalance(tx, input.tipperProfileId, "G", input.amount))) {
+        const balance = await balanceOf(tx, input.tipperProfileId, "G");
         return {
           ok: false as const,
           reason: `Insufficient Gratium (${balance.toFixed(2)}u) — appreciation is costly on purpose.`,
         };
       }
-      const cut = Math.round(input.amount * cutPercent) / 100;
-      const net = input.amount - cut;
-
-      await tx.balance.update({
-        where: { profileId_currency: { profileId: input.tipperProfileId, currency: "G" } },
-        data: { amount: { decrement: input.amount } },
-      });
       await ensureBalance(tx, post.authorProfileId, "G");
       await tx.balance.update({
         where: { profileId_currency: { profileId: post.authorProfileId, currency: "G" } },
