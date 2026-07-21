@@ -756,6 +756,15 @@ export async function attestAction(
       return { ok: false as const, reason: "You have already attested this entry." };
     }
     if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
+    // Serialise concurrent attestations on this entry: a no-op self-write
+    // takes the entry row's write lock (held to commit), so a second
+    // co-signer blocks until the first commits and then counts it —
+    // otherwise two concurrent attestors each see zero priors and neither
+    // crosses the threshold, leaving the entry stuck below attested.
+    await tx.actionEntry.update({
+      where: { id: entry.id },
+      data: { circleId: entry.circleId },
+    });
     await tx.attestation.create({
       data: {
         entryId: entry.id,
@@ -763,10 +772,8 @@ export async function attestAction(
         attestorHandle: profile.handle,
       },
     });
-    // Count from the DATABASE inside the tx — never entry.attestations from
-    // the snapshot read before it, which is stale the moment another
-    // attestation commits. (Attestations serialise on the ledger append, so
-    // a co-signer commits after this function's opening read was taken.)
+    // Count from the DATABASE inside the serialised tx — never the
+    // pre-transaction snapshot, which misses a concurrent co-signer.
     const count = await tx.attestation.count({ where: { entryId: entry.id } });
     await appendEvent(tx, {
       actorType: "soul",
