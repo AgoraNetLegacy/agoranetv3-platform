@@ -639,10 +639,23 @@ export async function attestRelease(
     // blocks until the first commits and then counts it. Without this, two
     // concurrent attestors each see zero priors, both fall short of a
     // two-signature threshold, and the release is never paid.
-    await tx.missionRelease.update({
-      where: { id: release.id },
-      data: { chamberId: release.chamberId },
+    const locked = await tx.missionRelease.updateMany({
+      where: { id: release.id, state: "proposed" },
+      data: { state: "proposed" },
     });
+    if (locked.count !== 1) {
+      const current = await tx.missionRelease.findUnique({
+        where: { id: release.id },
+        select: { state: true },
+      });
+      return {
+        ok: false as const,
+        reason:
+          current?.state === "frozen"
+            ? "This release is frozen by a Tribunal ruling — it cannot be attested."
+            : "Already released.",
+      };
+    }
     const profile = await tx.profile.findUniqueOrThrow({
       where: { id: input.attestorProfileId },
     });
