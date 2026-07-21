@@ -470,19 +470,32 @@ async function payRelease(
   },
   authorization: { via: "attestation"; attestorCount: number } | { via: "binding-vote"; pollRef: string }
 ): Promise<void> {
-  // Re-check at payment time. The balance was checked when the release
-  // was proposed, but another release may have paid out since.
-  const balance = await chamberBalanceOf(tx, release.chamberId, release.currency as "PC" | "G");
-  if (balance < release.amount) {
-    throw new Error(
-      `Mission balance fell below this release (${balance.toFixed(2)}u < ${release.amount.toFixed(2)}u) — refusing to overdraw.`
-    );
-  }
+  // Atomically CLAIM the release: only the first transaction to flip it
+  // proposed→released pays out. A concurrent second attestation that also
+  // reached the threshold finds zero rows here and pays nothing — no
+  // double-pay. Made explicit rather than left to the ledger's implicit
+  // prevHash serialisation, which a future refactor could remove.
+  const claimed = await tx.missionRelease.updateMany({
+    where: { id: release.id, state: "proposed" },
+    data: { state: "released", releasedAt: new Date() },
+  });
+  if (claimed.count !== 1) return;
 
-  await tx.chamberBalance.update({
-    where: { chamberId_currency: { chamberId: release.chamberId, currency: release.currency } },
+  // Conditional chamber debit — the check and the decrement in one statement,
+  // so concurrent releases from the same chamber can never overdraw it.
+  const debited = await tx.chamberBalance.updateMany({
+    where: {
+      chamberId: release.chamberId,
+      currency: release.currency,
+      amount: { gte: release.amount },
+    },
     data: { amount: { decrement: release.amount } },
   });
+  if (debited.count !== 1) {
+    throw new Error(
+      `Mission balance fell below this release (< ${release.amount.toFixed(2)}u) — refusing to overdraw.`
+    );
+  }
   await tx.balance.upsert({
     where: { profileId_currency: { profileId: release.toProfileId, currency: release.currency } },
     create: { profileId: release.toProfileId, currency: release.currency, amount: release.amount },
@@ -501,10 +514,6 @@ async function payRelease(
       refType: "chamber",
       refId: release.chamberId,
     },
-  });
-  await tx.missionRelease.update({
-    where: { id: release.id },
-    data: { state: "released", releasedAt: new Date() },
   });
   await appendEvent(tx, {
     actorType: "system",

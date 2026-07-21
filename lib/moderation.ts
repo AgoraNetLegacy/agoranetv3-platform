@@ -923,6 +923,15 @@ async function applyStrikeLadder(
   const lsBase = strikeNumber === 1 ? ls1 : ls2;
 
   // Gratium penalty — clamped at the balance; penalties never create debt.
+  // Lock the balance row first (the no-op upsert acquires its write lock,
+  // held to commit) so concurrent strike resolutions against one profile
+  // serialise and each clamp reads a consistent balance — otherwise two
+  // strikes read the same balance and drive it negative.
+  await tx.balance.upsert({
+    where: { profileId_currency: { profileId: input.profileId, currency: "G" } },
+    create: { profileId: input.profileId, currency: "G", amount: 0 },
+    update: { amount: { increment: 0 } },
+  });
   const balance = await tx.balance.findUnique({
     where: { profileId_currency: { profileId: input.profileId, currency: "G" } },
   });
