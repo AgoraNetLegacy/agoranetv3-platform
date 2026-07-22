@@ -13,7 +13,7 @@ import {
   submitLeaveCircle,
   submitPurposeEdit,
 } from "@/app/actions";
-import { Icon } from "@/components/Icon";
+import { Icon, PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -82,7 +82,7 @@ export default async function CirclePage({
         )}{" "}
         {circle.pillar && (
           <Link href={`/pillars/${circle.pillar.slug}`}>
-            {circle.pillar.icon} {circle.pillar.name}
+            <PillarMark slug={circle.pillar.slug} /> {circle.pillar.name}
           </Link>
         )}
         {circle.placeTag && <> · 📍 {circle.placeTag}</>}
@@ -123,7 +123,7 @@ export default async function CirclePage({
                 <option value="">None</option>
                 {pillars.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.icon} {p.name}
+                    <PillarMark slug={p.slug} /> {p.name}
                   </option>
                 ))}
               </select>

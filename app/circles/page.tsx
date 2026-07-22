@@ -4,7 +4,7 @@ import { activeFace } from "@/lib/webSession";
 import { alignmentPillarsFor, lastAttestedAt, circleStatusLabel } from "@/lib/circles";
 import { getRail } from "@/lib/rails";
 import { submitCircle } from "@/app/actions";
-import { Icon } from "@/components/Icon";
+import { Icon, PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -125,7 +125,7 @@ export default async function CirclesPage({
           <option value="">Any pillar</option>
           {pillars.map((p) => (
             <option key={p.id} value={p.slug}>
-              {p.icon} {p.name}
+              <PillarMark slug={p.slug} /> {p.name}
             </option>
           ))}
         </select>{" "}
@@ -157,7 +157,7 @@ export default async function CirclesPage({
                 {c.purpose.length > 140 ? `${c.purpose.slice(0, 140)}…` : c.purpose}
               </div>
               <div className="meta">
-                {c.pillar ? `${c.pillar.icon} ${c.pillar.name}` : "No pillar tag"}
+                {c.pillar ? <><PillarMark slug={c.pillar.slug} /> {c.pillar.name}</> : "No pillar tag"}
                 {c.domain ? ` → ${c.domain.position}. ${c.domain.title}` : ""}
                 {c.placeTag ? ` · 📍 ${c.placeTag}` : ""} · {c.members.length}{" "}
                 member{c.members.length === 1 ? "" : "s"} ·{" "}
@@ -203,7 +203,7 @@ export default async function CirclesPage({
                   .filter((p) => !p.isMeta)
                   .map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.icon} {p.name}
+                      <PillarMark slug={p.slug} /> {p.name}
                     </option>
                   ))}
               </select>
@@ -215,7 +215,7 @@ export default async function CirclesPage({
                 {pillars
                   .filter((p) => !p.isMeta)
                   .map((p) => (
-                    <optgroup key={p.id} label={`${p.icon} ${p.name}`}>
+                    <optgroup key={p.id} label={p.name}>
                       {domains
                         .filter((d) => d.pillarId === p.id)
                         .map((d) => (

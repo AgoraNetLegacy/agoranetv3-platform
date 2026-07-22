@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { ensureFeedDefaults } from "@/lib/feed";
 import { saveFeedSources } from "@/app/actions";
-import { Icon } from "@/components/Icon";
+import { Icon, PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -83,7 +83,7 @@ export default async function FeedSourcesPage({
               value={p.id}
               defaultChecked={followedPillarIds.has(p.id)}
             />{" "}
-            {p.icon} {p.name}
+            <PillarMark slug={p.slug} /> {p.name}
           </label>
         ))}
 
@@ -127,7 +127,7 @@ export default async function FeedSourcesPage({
             {domains.map((d) => (
               <label key={d.id} style={{ display: "block" }}>
                 <input type="checkbox" name="domain" value={d.id} defaultChecked />{" "}
-                {d.pillar.icon} {d.pillar.name} → {d.position}. {d.title}
+                <PillarMark slug={d.pillar.slug} /> {d.pillar.name} → {d.position}. {d.title}
               </label>
             ))}
           </>

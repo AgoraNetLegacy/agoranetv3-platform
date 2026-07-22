@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { PillarMark } from "@/components/Icon";
 import { closeDuePolls } from "@/lib/polls";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export default async function GovernanceIndex() {
     db.poll.findMany({
       where: { visibilityScope: "public" },
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-      include: { pillar: { select: { name: true, icon: true } } },
+      include: { pillar: { select: { name: true, slug: true } } },
       take: 25,
     }),
   ]);
@@ -41,7 +42,7 @@ export default async function GovernanceIndex() {
         {pillars.map((p) => (
           <li key={p.id} style={{ borderTop: `4px solid ${p.colorPrimary}` }}>
             <Link href={`/pillars/${p.slug}/governance`}>
-              {p.icon} <strong>{p.name}</strong> governance
+              <PillarMark slug={p.slug} /> <strong>{p.name}</strong> governance
             </Link>
           </li>
         ))}
@@ -61,7 +62,7 @@ export default async function GovernanceIndex() {
               <span className="badge locked">Closed</span>
             )}
             <div className="meta">
-              {p.pillar.icon} {p.pillar.name} ·{" "}
+              <PillarMark slug={p.pillar.slug} /> {p.pillar.name} ·{" "}
               {p.mode === "public" ? "Public vote" : "Pseudonymous vote"}
             </div>
           </li>

@@ -5,7 +5,7 @@ import { getRail } from "@/lib/rails";
 import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
 import { submitPost, submitEdit, submitFlag, submitTip, submitPermanenceUpgrade, submitAppeal, submitRestorative } from "@/app/actions";
-import { Icon } from "@/components/Icon";
+import { Icon, PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -446,7 +446,7 @@ export default async function DiscussionPage({
           </Link>
         ) : (
           <Link href={`/pillars/${discussion.pillar.slug}`}>
-            ← {discussion.pillar.icon} {discussion.pillar.name}
+            ← <PillarMark slug={discussion.pillar.slug} /> {discussion.pillar.name}
           </Link>
         )}
       </p>

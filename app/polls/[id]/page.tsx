@@ -6,6 +6,7 @@ import { activeFace } from "@/lib/webSession";
 import { followInFeed } from "@/app/actions";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
 import { submitVote, startPollDiscussion } from "@/app/actions";
+import { PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -80,7 +81,7 @@ export default async function PollPage({
                 : `/pillars/${poll.pillar.slug}`
             }
           >
-            ← {poll.pillar.icon} {poll.pillar.name}
+            ← <PillarMark slug={poll.pillar.slug} /> {poll.pillar.name}
             {poll.isGovernance ? " · Governance room" : ""}
           </Link>
         )}

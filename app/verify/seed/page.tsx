@@ -5,6 +5,7 @@ import { activeFace } from "@/lib/webSession";
 import { seedQuestions } from "@/lib/valuesSeed";
 import { submitSeedAnswer } from "@/app/actions";
 import { JourneySteps } from "@/components/JourneySteps";
+import { PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,7 @@ export default async function SeedPage({
       {questions.map((q) => (
         <details key={q.id} open={!answeredIds.has(q.id)}>
           <summary>
-            {q.pillar.icon} <strong>{q.pillar.name}</strong>
+            <PillarMark slug={q.pillar.slug} /> <strong>{q.pillar.name}</strong>
             {answeredIds.has(q.id) ? " ✓" : " — open"}
           </summary>
           <p className="lore">{q.text}</p>

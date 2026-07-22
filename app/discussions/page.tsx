@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,7 @@ export default async function DiscussionsIndex() {
         {pillars.map((p) => (
           <li key={p.id} style={{ borderTop: `4px solid ${p.colorPrimary}` }}>
             <Link href={p.isMeta ? "/" : `/pillars/${p.slug}`}>
-              {p.icon} <strong>{p.name}</strong>
+              <PillarMark slug={p.slug} /> <strong>{p.name}</strong>
             </Link>
             <div className="lore">
               {p._count.discussions} Discussion{p._count.discussions === 1 ? "" : "s"}
@@ -77,7 +78,7 @@ export default async function DiscussionsIndex() {
               <span className="badge locked">Author-deletable</span>
             )}
             <div className="meta">
-              {d.pillar.icon} {d.pillar.name} · {d._count.posts} post
+              <PillarMark slug={d.pillar.slug} /> {d.pillar.name} · {d._count.posts} post
               {d._count.posts === 1 ? "" : "s"} · last activity{" "}
               {lastActivity.toLocaleString()}
             </div>

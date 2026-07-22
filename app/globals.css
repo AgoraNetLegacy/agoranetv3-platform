@@ -94,6 +94,14 @@ html[data-theme="alias"] {
 /* the platform icon family (§6.2): sized and colored by the text it
    sits in, so one set reads correctly in all three rooms */
 .pi { width: 1em; height: 1em; vertical-align: -0.12em; display: inline-block; }
+.pillar-mark { font-size: 1.22em; vertical-align: -0.2em; }
+.pillar-compassion { color: #db2777; }
+.pillar-hope { color: #d97706; }
+.pillar-justice { color: #2563eb; }
+.pillar-freedom { color: #059669; }
+.pillar-unity { color: #0891b2; }
+.pillar-harmony { color: #dc2626; }
+.pillar-agoranet { color: #7c3aed; }
 
 body {
   margin: 0;
@@ -1059,6 +1067,48 @@ textarea { padding: 0.8rem !important; }
   box-shadow: 0 0 0 30px rgba(18,64,78,.035), 0 0 0 62px rgba(18,64,78,.025);
 }
 .why-banner .why-text { max-width: 750px; font-size: 1rem; line-height: 1.75; }
+/* The Agora dashboard's own hero — a starfield backdrop instead of the
+   pillar's flat tint, so its text needs light-on-dark colors instead of
+   the shared .why-banner dark-on-light defaults. Card-scoped (image
+   cropped to fit just this card) for Reader and Alias. */
+.why-banner.agora-hero {
+  background: #05070d url("/brand/agora/agora-hero-starfield.png") center / cover no-repeat;
+  color: #eef2f7;
+}
+.why-banner.agora-hero::after { display: none; }
+.why-banner.agora-hero a { color: #9fd3ff; }
+.why-banner.agora-hero .why-text { color: #d7dde6; }
+/* Owner ruling: no panel between the text and the artwork in the
+   Alias/Reader rooms — the text sits straight on the starfield, with
+   only a soft shadow keeping the busy center legible. */
+.why-banner.agora-hero { text-shadow: 0 1px 8px rgba(0, 0, 0, .55); }
+
+/* True Self ONLY (owner directive: scoped to this room, not Alias/
+   Reader): the starfield becomes the page's own backdrop instead of
+   living inside the card, and the card itself — "the white square" —
+   turns frosted/see-through over it, rather than carrying its own
+   cropped copy of the image. */
+.agora-dashboard-backdrop { display: none; }
+html[data-theme="true-self"] .agora-dashboard-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: #eef2fb url("/brand/agora/agora-hero-starfield-light.png") center / cover no-repeat;
+}
+/* body's own opaque background paints over a z-index:-1 fixed child
+   (root stacking order: html bg → negative-z children → body bg), so
+   while the backdrop is mounted the body must let it show through.
+   :has() keeps this scoped to the dashboard page only. */
+html[data-theme="true-self"] body:has(.agora-dashboard-backdrop) { background: none; }
+html[data-theme="true-self"] .why-banner.agora-hero {
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  backdrop-filter: blur(18px) saturate(1.3);
+  color: var(--ink);
+  text-shadow: none;
+}
+html[data-theme="true-self"] .why-banner.agora-hero a { color: var(--accent); }
+html[data-theme="true-self"] .why-banner.agora-hero .why-text { color: var(--muted); }
 .stat-row { gap: 1rem; }
 .stat { padding: 1rem; }
 .stat-number { font-family: var(--font-text); font-size: 1.65rem; letter-spacing: -0.04em; }

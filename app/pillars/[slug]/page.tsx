@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { PillarMark } from "@/components/Icon";
 import { closeDuePolls } from "@/lib/polls";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
 import { editorialFor } from "@/lib/pillarContent";
@@ -56,7 +57,7 @@ export default async function PillarPage({
         style={{ borderLeft: `5px solid ${pillar.colorPrimary}`, background: pillar.colorLight }}
       >
         <h1 style={{ marginBottom: "0.1rem" }}>
-          {pillar.icon} {pillar.name}
+          <PillarMark slug={pillar.slug} /> {pillar.name}
         </h1>
         <p className="lore" style={{ marginTop: 0 }}>
           {pillar.classicalName} — {pillar.loreName}

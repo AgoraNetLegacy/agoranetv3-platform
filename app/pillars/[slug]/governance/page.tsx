@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { PillarMark } from "@/components/Icon";
 import { closeDuePolls } from "@/lib/polls";
 import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
@@ -52,7 +53,7 @@ export default async function GovernanceRoom({
     <>
       <p>
         <Link href={`/pillars/${pillar.slug}`}>
-          ← {pillar.icon} {pillar.name}
+          ← <PillarMark slug={pillar.slug} /> {pillar.name}
         </Link>
       </p>
       <h1><Icon name="temple" /> {pillar.name} — Governance room</h1>

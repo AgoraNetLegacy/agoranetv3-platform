@@ -6,6 +6,7 @@ import { editorialFor } from "@/lib/pillarContent";
 import { activeFace } from "@/lib/webSession";
 import { ChosenSourcesFeed, LensSection, PollinatorStrip } from "@/app/feed/FeedSections";
 import { PillarAnatomy, asSortKey } from "@/app/pillars/PillarAnatomy";
+import { PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -46,13 +47,19 @@ export default async function AgoraDashboard({
 
   return (
     <>
+      {/* The dashboard's own backdrop (owner directive: the starfield as
+          the page background, not just the hero card). Fixed to the
+          viewport — independent of <main>'s box model — and unmounted
+          automatically when navigating away from this page. */}
+      <div className="agora-dashboard-backdrop" aria-hidden="true" />
+
       {/* What is this place — the first arrival's framing (§1.1). */}
       <div
-        className="why-banner"
-        style={{ borderLeft: `5px solid ${agora.colorPrimary}`, background: agora.colorLight }}
+        className="why-banner agora-hero"
+        style={{ borderLeft: `5px solid ${agora.colorPrimary}` }}
       >
         <h1 style={{ marginBottom: "0.1rem" }}>
-          {agora.icon} {agora.name}
+          <PillarMark slug={agora.slug} /> {agora.name}
         </h1>
         <p className="lore" style={{ marginTop: 0 }}>
           {agora.classicalName} — {agora.loreName}
@@ -111,7 +118,7 @@ export default async function AgoraDashboard({
         {outer.map((p) => (
           <li key={p.id} style={{ borderTop: `4px solid ${p.colorPrimary}` }}>
             <Link href={`/pillars/${p.slug}`}>
-              {p.icon} <strong>{p.name}</strong>
+              <PillarMark slug={p.slug} /> <strong>{p.name}</strong>
             </Link>
             <div className="lore">
               {p._count.domains} domains · {p._count.discussions} Discussions

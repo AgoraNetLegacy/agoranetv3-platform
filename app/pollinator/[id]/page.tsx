@@ -9,7 +9,7 @@ import {
 } from "@/lib/chambers";
 import { faceConstellation } from "@/lib/lightScore";
 import { submitEnterChamber } from "@/app/actions";
-import { Icon } from "@/components/Icon";
+import { Icon, PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -143,7 +143,7 @@ export default async function StorefrontPage({
             <ul className="discussions">
               {constellation.pillars.map((p) => (
                 <li key={p.pillarId}>
-                  {p.icon} <strong>{p.name}</strong>: {p.points}
+                  <PillarMark slug={p.slug} /> <strong>{p.name}</strong>: {p.points}
                 </li>
               ))}
             </ul>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
+import { PillarMark } from "@/components/Icon";
 import {
   search,
   recordSearch,
@@ -92,7 +93,7 @@ export default async function SearchPage({
             <option value="">Any pillar</option>
             {pillars.map((p) => (
               <option key={p.id} value={p.slug}>
-                {p.icon} {p.name}
+                <PillarMark slug={p.slug} /> {p.name}
               </option>
             ))}
           </select>{" "}

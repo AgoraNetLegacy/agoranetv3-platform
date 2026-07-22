@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { editorialFor } from "@/lib/pillarContent";
 import { faceConstellation } from "@/lib/lightScore";
 import { activeFace } from "@/lib/webSession";
+import { PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export default async function SevenPillars() {
           return (
             <li key={p.id} style={{ borderTop: `4px solid ${p.colorPrimary}` }}>
               <Link href={`/pillars/${p.slug}`} className="tile-title">
-                {p.icon} <strong>{p.name}</strong>
+                <PillarMark slug={p.slug} /> <strong>{p.name}</strong>
               </Link>
               <div className="hook">{editorial.hookLine}</div>
               <div className="lore">
@@ -56,7 +57,7 @@ export default async function SevenPillars() {
 
       <div className="agora-tile" style={{ borderColor: agora.colorPrimary }}>
         <Link href="/" className="tile-title">
-          {agora.icon} <strong>{agora.name}</strong>
+          <PillarMark slug={agora.slug} /> <strong>{agora.name}</strong>
         </Link>
         <div className="hook">{agoraEditorial.hookLine}</div>
         <div className="lore">

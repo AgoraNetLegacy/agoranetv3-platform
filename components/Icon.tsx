@@ -1,8 +1,7 @@
 // The platform icon family (Phase 8.5, PRESENTATION_SPEC §6.2): one
 // matched set of inline SVGs replacing emoji and framework defaults
-// everywhere EXCEPT the seven pillar glyphs — owner-ruled 2026-07-13:
-// the pillar emoji stay as identity symbols. Icons inherit the text's
-// color and size, so they read correctly in all three theme rooms.
+// everywhere, including the seven pillar glyphs. Icons inherit the
+// text's color and size, so they read correctly in all theme rooms.
 
 const PATHS = {
   agora: (
@@ -74,6 +73,47 @@ const PATHS = {
     </>
   ),
   chevron: <path d="m9 6 6 6-6 6" />,
+  compassion: (
+    <>
+      <path d="M12 20.2S4 15.6 4 9.5A4.1 4.1 0 0 1 11.2 6.8L12 8l.8-1.2A4.1 4.1 0 0 1 20 9.5c0 6.1-8 10.7-8 10.7z" />
+      <path d="M7.5 12h2l1.2-2.2 2.1 4.5 1.3-2.3h2.4" />
+    </>
+  ),
+  hope: (
+    <>
+      <path d="M12 2.8c.7 4.9 3.3 7.5 8.2 8.2-4.9.7-7.5 3.3-8.2 8.2-.7-4.9-3.3-7.5-8.2-8.2 4.9-.7 7.5-3.3 8.2-8.2z" />
+      <path d="M19.5 3.5v3M21 5h-3M4.5 17.5v3M6 19H3" />
+    </>
+  ),
+  justice: (
+    <>
+      <path d="M12 3v18M7 21h10M5 7h14" />
+      <path d="m7 7-3 6h6L7 7zM17 7l-3 6h6l-3-6z" />
+      <path d="M3.7 13c.6 1.5 1.7 2.3 3.3 2.3s2.7-.8 3.3-2.3M13.7 13c.6 1.5 1.7 2.3 3.3 2.3s2.7-.8 3.3-2.3" />
+    </>
+  ),
+  freedom: (
+    <>
+      <path d="M12 20V9.5" />
+      <path d="M12 12C9 7 6 5 2.8 5.4 4.2 10 7.2 12.5 12 14" />
+      <path d="M12 12c3-5 6-7 9.2-6.6C19.8 10 16.8 12.5 12 14" />
+      <path d="M5 8.5c1.6 3.4 3.9 5.4 7 6.2M19 8.5c-1.6 3.4-3.9 5.4-7 6.2" />
+    </>
+  ),
+  unity: (
+    <>
+      <circle cx="12" cy="7" r="3" />
+      <circle cx="7" cy="16" r="3" />
+      <circle cx="17" cy="16" r="3" />
+      <path d="m10.5 9.7-2 3.6M13.5 9.7l2 3.6M10 16h4" />
+    </>
+  ),
+  harmony: (
+    <>
+      <circle cx="12" cy="12" r="2.4" />
+      <path d="M12 9.6C9.8 7.2 10 4.2 12 2.5c2 1.7 2.2 4.7 0 7.1zM14.1 10.8c.8-3.1 3.5-4.4 6-3.5.1 2.7-1.8 4.9-5 5.2M14 13.4c3.1-.8 5.5.9 6.1 3.5-2.3 1.4-5 .4-6.5-2.4M11.7 14.4c2.2 2.4 2 5.4 0 7.1-2-1.7-2.2-4.7 0-7.1zM9.8 13.2c-.8 3.1-3.5 4.4-6 3.5-.1-2.7 1.8-4.9 5-5.2M10 10.6c-3.1.8-5.5-.9-6.1-3.5 2.3-1.4 5-.4 6.5 2.4" />
+    </>
+  ),
   // Civic architecture: the brand mark, governance rooms, the record.
   temple: (
     <>
@@ -141,4 +181,18 @@ export function Icon({ name, className }: { name: IconName; className?: string }
       {PATHS[name]}
     </svg>
   );
+}
+
+const PILLAR_ICON: Record<string, IconName> = {
+  compassion: "compassion",
+  hope: "hope",
+  justice: "justice",
+  freedom: "freedom",
+  unity: "unity",
+  harmony: "harmony",
+  agoranet: "agora",
+};
+
+export function PillarMark({ slug, className }: { slug: string; className?: string }) {
+  return <Icon name={PILLAR_ICON[slug] ?? "agora"} className={`pillar-mark pillar-${slug}${className ? ` ${className}` : ""}`} />;
 }

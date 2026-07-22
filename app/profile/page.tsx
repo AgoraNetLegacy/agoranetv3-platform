@@ -5,6 +5,7 @@ import { activeFace } from "@/lib/webSession";
 import { faceConstellation, scoreChangeLog } from "@/lib/lightScore";
 import { ALIAS_DISCLOSURES } from "@/lib/disclosures";
 import { updateProfileBio } from "@/app/actions";
+import { PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -97,7 +98,7 @@ export default async function ProfilePage({
       <ul className="discussions">
         {constellation.pillars.map((p) => (
           <li key={p.pillarId}>
-            {p.icon} <strong>{p.name}</strong>: {p.points}
+            <PillarMark slug={p.slug} /> <strong>{p.name}</strong>: {p.points}
             <details>
               <summary className="lore">why — the full breakdown</summary>
               <ul>
