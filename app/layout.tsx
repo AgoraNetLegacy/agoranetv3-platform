@@ -93,7 +93,12 @@ async function ProfileBubble() {
   const others = faces.filter((f) => f.id !== face.id);
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
   return (
-    <details className="profile-bubble">
+    // Keyed by the active face: a successful switch remounts the
+    // <details>, which resets its uncontrolled `open` state — the panel
+    // closes itself after a switch instead of lingering. On a refused
+    // switch the face (and key) are unchanged, so the panel stays open
+    // to show the refusal.
+    <details className="profile-bubble" key={face.id}>
       <summary aria-label="Profile mode and face switching">
         <Icon name="profile" />
         <span className={`profile-mode-dot ${chipClass}`} aria-hidden="true" />
