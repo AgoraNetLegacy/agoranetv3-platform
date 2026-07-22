@@ -85,7 +85,7 @@ import { enforceRateLimit, type RateLimitPolicyName } from "@/lib/rateLimit";
 import { recordEvent, type AnalyticsEventName } from "@/lib/analytics";
 import { asSpiritLevel } from "@/lib/spirit";
 import { saveDiscussion, unsaveDiscussion } from "@/lib/saved";
-import { ingestProfileImage, removeProfileImage, IMAGE_KINDS, type ImageKind } from "@/lib/images";
+import { ingestProfileImage, removeProfileImage, IMAGE_KINDS, IMAGE_LIMITS, type ImageKind } from "@/lib/images";
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
@@ -557,6 +557,16 @@ export async function submitProfileImage(formData: FormData) {
   const file = formData.get("image");
   if (!(file instanceof File) || file.size === 0) {
     backTo("/profile", "Choose an image file first.");
+  }
+  // Reject on the declared size BEFORE materializing the buffer, so an
+  // oversize upload can't be fully read into memory just to be tossed
+  // (security review F2). ingestProfileImage re-checks the true length.
+  const cap = IMAGE_LIMITS[kind].maxUploadBytes;
+  if (file.size > cap) {
+    backTo(
+      "/profile",
+      `Too large — the ${kind} limit is ${Math.round(cap / 1024 / 1024)} MB.`
+    );
   }
   const bytes = Buffer.from(await file.arrayBuffer());
   const result = await ingestProfileImage(db, {

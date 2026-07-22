@@ -54,13 +54,15 @@ export async function ingestProfileImage(
   }
   let out: Buffer;
   try {
-    // limitInputPixels caps decode allocation — a sub-1MB PNG bomb can
-    // otherwise expand to ~1GB at sharp's ~268MP default (hardening,
-    // 2026-07-22). 30MP comfortably exceeds any real avatar/banner.
+    // limitInputPixels caps decode allocation against decompression
+    // bombs (hardening, 2026-07-22). Tightened to 12MP after the
+    // security review (F1): avatars are 512² and banners 1500×500, so a
+    // few hundred KP suffices — 12MP is generous headroom while capping
+    // per-request decode RAM on memory-constrained hosts.
     const img = sharp(input.bytes, {
       animated: false,
       pages: 1,
-      limitInputPixels: 30_000_000,
+      limitInputPixels: 12_000_000,
     });
     const meta = await img.metadata();
     if (!meta.width || !meta.height) throw new Error("undecodable");
