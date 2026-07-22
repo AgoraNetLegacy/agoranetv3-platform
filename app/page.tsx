@@ -4,7 +4,7 @@ import { activateDueAliases } from "@/lib/identity";
 import { closeDuePolls } from "@/lib/polls";
 import { editorialFor } from "@/lib/pillarContent";
 import { activeFace } from "@/lib/webSession";
-import { ChosenSourcesFeed, LensSection, PollinatorStrip } from "@/app/feed/FeedSections";
+import { ChosenSourcesFeed, LensSection, PollinatorStrip, SavedAndStirring, CommonsNow } from "@/app/feed/FeedSections";
 import { PillarAnatomy, asSortKey } from "@/app/pillars/PillarAnatomy";
 import { PillarMark } from "@/components/Icon";
 
@@ -130,8 +130,9 @@ export default async function AgoraDashboard({
         <Link href="/pillars">The Seven Pillars, in full →</Link>
       </p>
 
-      {/* The feed lives here (§1.1): per-persona for the signed-in,
-          the open lens for readers. */}
+      {/* The Beacon assembled (BEACON_FEED_SPEC §5.3): the chosen
+          current first, then the memory current (saved & stirring),
+          then the commons — and the feed still ends. */}
       {face ? (
         <>
           <h2>Your feed</h2>
@@ -142,6 +143,7 @@ export default async function AgoraDashboard({
             other face has its own.
           </p>
           <ChosenSourcesFeed profileId={face.id} compactDoor />
+          <SavedAndStirring profileId={face.id} />
         </>
       ) : (
         <>
@@ -149,6 +151,7 @@ export default async function AgoraDashboard({
           <LensSection />
         </>
       )}
+      <CommonsNow />
       <PollinatorStrip />
 
       {/* The Agora pillar's own anatomy (§1.1): domains, canon threads,

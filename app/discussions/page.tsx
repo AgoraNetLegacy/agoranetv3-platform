@@ -1,73 +1,66 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { PillarMark } from "@/components/Icon";
+import { LearnMore } from "@/components/LearnMore";
 
 export const dynamic = "force-dynamic";
 
-// Discussions, findable by name (PRESENTATION_SPEC §1.3: this page
-// exists because the owner couldn't find "discussions" by name — it is
-// a direct alias into the pillar discussion sections, not a new
-// surface). Nothing here bypasses pillar parking: every link walks
-// through the same doors as always.
-export default async function DiscussionsIndex() {
-  const pillars = await db.pillar.findMany({
-    orderBy: { position: "asc" },
-    include: {
-      _count: {
-        select: { discussions: { where: { circleId: null, chamberId: null } } },
-      },
-    },
-  });
+// General Discussions (BEACON_FEED_SPEC §5.1, owner-directed
+// 2026-07-21): this page carries the Agora-homed threads only —
+// platform-itself topics and general conversation that belongs to no
+// value pillar. Pillar conversations live in their pillars (each
+// pillar page carries its own three lenses); the cross-pillar
+// "recently active everywhere" stream moved home to the dashboard as
+// The commons now. Chamber-scoped threads are homed in the meta pillar
+// as an implementation detail and stay enclosed — never listed here.
+export default async function GeneralDiscussions() {
+  const agora = await db.pillar.findFirstOrThrow({ where: { isMeta: true } });
 
-  // Recently active across all PUBLIC pillar spaces (members' rooms and
-  // workshops are enclosed and never surface here — same rule as
-  // pillar dashboards).
-  const recent = await db.discussion.findMany({
-    where: { circleId: null, chamberId: null },
+  const threads = await db.discussion.findMany({
+    where: { pillarId: agora.id, circleId: null, chamberId: null },
     include: {
-      pillar: { select: { name: true, icon: true, slug: true } },
-      posts: { select: { createdAt: true, authorHandle: true }, orderBy: { createdAt: "desc" }, take: 1 },
+      posts: {
+        select: { createdAt: true },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
       _count: { select: { posts: true } },
     },
     orderBy: { createdAt: "desc" },
-    take: 200,
+    take: 50,
   });
-  const ranked = recent
-    .map((d) => ({
-      d,
-      lastActivity: d.posts[0]?.createdAt ?? d.createdAt,
-    }))
-    .sort((a, b) => b.lastActivity.getTime() - a.lastActivity.getTime())
-    .slice(0, 15);
+  const ranked = threads
+    .map((d) => ({ d, lastActivity: d.posts[0]?.createdAt ?? d.createdAt }))
+    .sort((a, b) => b.lastActivity.getTime() - a.lastActivity.getTime());
 
   return (
     <>
-      <h1>Discussions</h1>
+      <h1>
+        General Discussions
+        <LearnMore label="About General Discussions">
+          <h4>The conversation that belongs to no pillar</h4>
+          <p>
+            Platform-itself topics and general conversation live here,
+            homed in The Agora. Value conversations live where their
+            values live: every pillar page carries its own threads, plus
+            your personal lenses — the ones you&rsquo;ve spoken in and
+            the ones you&rsquo;ve saved.
+          </p>
+          <p>
+            The platform-wide stream of everything recently active is on{" "}
+            <Link href="/">the dashboard</Link> — The commons now, ranked
+            by the same published formula for everyone.
+          </p>
+          <p>
+            The permanence law is unchanged: posts lock after a grace
+            window, and permanent threads hash-commit to the public
+            ledger — silent edits are structurally impossible.
+          </p>
+        </LearnMore>
+      </h1>
       <p>
-        <em>Say it where it can&rsquo;t be quietly erased.</em> Every
-        pillar carries permanent, threaded conversations: seven canonical
-        questions each, one living thread per domain, and the ones souls
-        open themselves. Posts lock after a grace window and permanent
-        threads hash-commit to the public ledger — silent edits are
-        structurally impossible.
+        <em>Say it where it can&rsquo;t be quietly erased.</em>
       </p>
 
-      <h3>By pillar</h3>
-      <ul className="pillar-grid">
-        {pillars.map((p) => (
-          <li key={p.id} style={{ borderTop: `4px solid ${p.colorPrimary}` }}>
-            <Link href={p.isMeta ? "/" : `/pillars/${p.slug}`}>
-              <PillarMark slug={p.slug} /> <strong>{p.name}</strong>
-            </Link>
-            <div className="lore">
-              {p._count.discussions} Discussion{p._count.discussions === 1 ? "" : "s"}
-              {p.isMeta ? " · on the platform dashboard" : ""}
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <h3>Recently active everywhere</h3>
       <ul className="discussions">
         {ranked.map(({ d, lastActivity }) => (
           <li key={d.id}>
@@ -78,13 +71,18 @@ export default async function DiscussionsIndex() {
               <span className="badge locked">Author-deletable</span>
             )}
             <div className="meta">
-              <PillarMark slug={d.pillar.slug} /> {d.pillar.name} · {d._count.posts} post
-              {d._count.posts === 1 ? "" : "s"} · last activity{" "}
-              {lastActivity.toLocaleString()}
+              {d._count.posts} post{d._count.posts === 1 ? "" : "s"} · last
+              activity {lastActivity.toLocaleDateString()}
             </div>
           </li>
         ))}
-        {ranked.length === 0 && <li className="lore">No discussions yet.</li>}
+        {ranked.length === 0 && (
+          <li className="lore">
+            No general threads yet. Pillar conversations live on their{" "}
+            <Link href="/pillars">pillar pages</Link>; the platform-wide
+            stream lives on <Link href="/">the dashboard</Link>.
+          </li>
+        )}
       </ul>
     </>
   );

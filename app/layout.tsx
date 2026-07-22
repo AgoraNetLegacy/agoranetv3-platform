@@ -199,7 +199,7 @@ async function SideNav() {
         href="/discussions"
         title="Say it where it can't be quietly erased."
       >
-        <span className="nav-icon"><Icon name="discuss" /></span><span>Discussions</span>
+        <span className="nav-icon"><Icon name="discuss" /></span><span>General Discussions</span>
       </Link>
       <Link
         className="navlink"
