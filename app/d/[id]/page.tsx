@@ -192,7 +192,11 @@ function PostNode({
       <div className="byline">
         {/* Permanent record: display name frozen at composition + the
             eternal @handle (naming ruling 2026-07-10). */}
-        <span className="pseudonym">{post.authorDisplayName}</span>{" "}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="avatar-sm" src={`/img/${post.authorHandle}/avatar`} alt="" />
+        <Link href={`/souls/${post.authorHandle}`} className="pseudonym">
+          {post.authorDisplayName}
+        </Link>{" "}
         <span>@{post.authorHandle}</span> · {post.createdAt.toLocaleString()} ·{" "}
         {locked ? (
           <span className="badge locked">🔒 Locked into the record</span>

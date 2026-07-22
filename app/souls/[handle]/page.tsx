@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
+import { SoulHeader } from "@/components/SoulHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -23,18 +24,25 @@ export default async function SoulWindow({
   const viewer = await activeFace();
   const isOwn = viewer?.id === soul.id;
 
+  const images = await db.profileImage.findMany({
+    where: { profileId: soul.id },
+    select: { updatedAt: true },
+  });
+  const bust = images
+    .map((i) => i.updatedAt.getTime())
+    .sort()
+    .join("-");
+
   return (
     <div className="ceremony">
-      <h2>
-        {soul.displayName} <span className="lore">@{soul.handle}</span>
-      </h2>
-      <p className="lore">
-        <span className={`face-chip ${soul.face === "TRUE_SELF" ? "true-self" : "alias"}`}>
-          {soul.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"}
-        </span>{" "}
-        · joined {soul.joinedPeriod}
-        {soul.bioPlace ? ` · ${soul.bioPlace}` : ""}
-      </p>
+      <SoulHeader
+        handle={soul.handle}
+        displayName={soul.displayName}
+        face={soul.face}
+        joinedPeriod={soul.joinedPeriod}
+        bioPlace={soul.bioPlace}
+        cacheBust={bust || undefined}
+      />
       {soul.bio ? (
         <p style={{ whiteSpace: "pre-wrap" }}>{soul.bio}</p>
       ) : (

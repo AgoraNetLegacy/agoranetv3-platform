@@ -69,7 +69,7 @@ import {
   changeDisplayName,
 } from "@/lib/identity";
 import { addFace, switchFace, releaseLocks, releaseLock } from "@/lib/parking";
-import { recordAck } from "@/lib/consent";
+import { recordAck, hasAck } from "@/lib/consent";
 import { saveSeedAnswer } from "@/lib/valuesSeed";
 import type { ConsentKind } from "@/lib/disclosures";
 import {
@@ -85,6 +85,7 @@ import { enforceRateLimit, type RateLimitPolicyName } from "@/lib/rateLimit";
 import { recordEvent, type AnalyticsEventName } from "@/lib/analytics";
 import { asSpiritLevel } from "@/lib/spirit";
 import { saveDiscussion, unsaveDiscussion } from "@/lib/saved";
+import { ingestProfileImage, removeProfileImage, IMAGE_KINDS, type ImageKind } from "@/lib/images";
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
@@ -521,6 +522,60 @@ export async function updateFeedWellbeing(formData: FormData) {
   });
   revalidatePath("/", "layout");
   backTo("/settings", "Beacon pacing set for this face.");
+}
+
+// ---------------------------------------------------------------- imagery
+// PROFILE_PAGE_SPEC §4 (owner-ruled 2026-07-22): upload only, strip &
+// re-encode always, live-surface class, per-face. The Alias imagery
+// warning is a blocking, once-acknowledged consent (§4.5).
+
+export async function submitProfileImage(formData: FormData) {
+  const kindRaw = String(formData.get("kind") ?? "");
+  const kind = (IMAGE_KINDS as readonly string[]).includes(kindRaw)
+    ? (kindRaw as ImageKind)
+    : null;
+  const face = await requireFace("settings");
+  if (!kind) backTo("/profile", "Unknown image kind.");
+
+  if (face.face === "ALIAS") {
+    const acked = await hasAck(db, { profileId: face.id, kind: "alias-imagery" });
+    if (!acked) {
+      if (formData.get("imageryWarningAccepted") !== "on") {
+        backTo(
+          "/profile",
+          "The imagery warning must be acknowledged before this face's first upload."
+        );
+      }
+      await recordAck(db, { profileId: face.id, kind: "alias-imagery" });
+    }
+  }
+
+  const file = formData.get("image");
+  if (!(file instanceof File) || file.size === 0) {
+    backTo("/profile", "Choose an image file first.");
+  }
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const result = await ingestProfileImage(db, {
+    profileId: face.id,
+    kind,
+    bytes,
+    declaredMime: file.type,
+  });
+  revalidatePath("/profile");
+  backTo("/profile", result.ok ? `Your ${kind} is live.` : result.reason);
+}
+
+export async function submitRemoveProfileImage(formData: FormData) {
+  const kindRaw = String(formData.get("kind") ?? "");
+  const face = await requireFace("settings");
+  if ((IMAGE_KINDS as readonly string[]).includes(kindRaw)) {
+    await removeProfileImage(db, {
+      profileId: face.id,
+      kind: kindRaw as ImageKind,
+    });
+  }
+  revalidatePath("/profile");
+  backTo("/profile", "Removed — the generated mark stands in.");
 }
 
 // ---------------------------------------------------------------- repairs

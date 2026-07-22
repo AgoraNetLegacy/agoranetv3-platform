@@ -167,7 +167,9 @@ export default async function SoulsPage({
               className={`presence-dot${unseen ? " unseen" : ""}`}
               aria-hidden="true"
             />
-            <span className="pseudonym">{s.displayName}</span> @{s.handle}{" "}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="avatar-sm" src={`/img/${s.handle}/avatar`} alt="" />
+            <Link href={`/souls/${s.handle}`} className="pseudonym">{s.displayName}</Link> @{s.handle}{" "}
             {unseen && <span className="lore">· walking unseen</span>}{" "}
             <form action={submitReleaseBond} className="inline">
               <input type="hidden" name="otherProfileId" value={s.id} />

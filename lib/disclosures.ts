@@ -19,6 +19,22 @@ export const CONSENT_VERSIONS = {
   // honestly — the cryptographic enforcement now runs on public test
   // rails; the live ceremony's protection is still policy.
   "alias-disclosures": "phase-a-v2",
+  // Profile imagery (PROFILE_PAGE_SPEC §4.5, owner-ruled 2026-07-22):
+  // the Alias imagery warning — pixels out-fingerprint prose.
+  "alias-imagery": "v1",
+} as const;
+
+/** The Alias imagery warning (PROFILE_PAGE_SPEC §4.5) — blocking
+ *  before an Alias's first upload, acknowledged once, ceremony-grade.
+ *  The stylometry warning's precedent, applied to pixels: the platform
+ *  cannot compare your two faces' images (and never will) — this
+ *  warning IS the protection. */
+export const ALIAS_IMAGERY_WARNING = {
+  items: [
+    "A photograph is a stronger fingerprint than writing style. Reverse image search exists, and it is free.",
+    "We strip hidden location and camera data from every upload — but nothing can strip what the photo shows: your face, your room, your street, your cat.",
+    "For this face, use artwork or abstraction. Never a photo of yourself or your surroundings — and never an image related, even loosely, to anything your other face has ever used anywhere.",
+  ],
 } as const;
 
 export type ConsentKind = keyof typeof CONSENT_VERSIONS;

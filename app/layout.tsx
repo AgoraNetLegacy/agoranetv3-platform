@@ -120,7 +120,8 @@ async function ProfileBubble() {
           stays open to show the refusal. */}
       <AutoCloseDetails className="profile-bubble" key={face.id}>
       <summary aria-label="Profile mode and face switching">
-        <Icon name="profile" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bubble-avatar" src={`/img/${face.handle}/avatar`} alt="" />
       </summary>
       <div className="profile-bubble-panel">
         <div className="profile-bubble-heading">

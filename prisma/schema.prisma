@@ -1555,6 +1555,21 @@ model TreasurySnapshot {
 // A face's private bookmark on a Discussion (BEACON_FEED_SPEC §4/§10).
 // The unlinkability and privacy boundary: profileId, never humanId; no
 // public reads, no counts, never a ranking input for anyone else.
+// Profile imagery (PROFILE_PAGE_SPEC §4, owner-ruled 2026-07-22):
+// avatar and banner, per face, live-surface class — replaceable and
+// deletable anytime, never part of the permanent record, never
+// anchored. Bytes are the re-encoded WebP ONLY: originals (and their
+// EXIF) are destroyed at ingest and never stored.
+model ProfileImage {
+  profileId String
+  kind      String // "avatar" | "banner"
+  mime      String   @default("image/webp")
+  bytes     Bytes
+  updatedAt DateTime @updatedAt
+
+  @@id([profileId, kind])
+}
+
 model SavedDiscussion {
   profileId    String
   discussionId String

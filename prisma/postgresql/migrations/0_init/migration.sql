@@ -959,6 +959,17 @@ CREATE TABLE "TreasurySnapshot" (
 );
 
 -- CreateTable
+CREATE TABLE "ProfileImage" (
+    "profileId" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "mime" TEXT NOT NULL DEFAULT 'image/webp',
+    "bytes" BYTEA NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ProfileImage_pkey" PRIMARY KEY ("profileId","kind")
+);
+
+-- CreateTable
 CREATE TABLE "SavedDiscussion" (
     "profileId" TEXT NOT NULL,
     "discussionId" TEXT NOT NULL,

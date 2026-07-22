@@ -1350,3 +1350,51 @@ table.books tr:last-child td { border-bottom: 0; }
   font-size: 0.88rem;
 }
 .beacon-nudge p { margin: 0; }
+
+/* ---- the profile header (PROFILE_PAGE_SPEC §3) ---- */
+.soul-header { margin-bottom: 1.2rem; }
+.soul-banner {
+  aspect-ratio: 3 / 1;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.soul-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.soul-header-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin: -44px 0 0 1.4rem;
+}
+.soul-avatar {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  border: 4px solid var(--surface);
+  background: var(--surface-2);
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+.soul-identity h1 { margin: 0 0 0.15rem; font-size: 1.6rem; }
+.soul-identity .lore { margin: 0.1rem 0; }
+.soul-meta { font-size: 0.8rem; }
+/* the soul's mark at small size, beside handles across the platform */
+.avatar-sm {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  vertical-align: -0.35em;
+  margin-right: 0.3rem;
+  object-fit: cover;
+}
+@media (max-width: 700px) {
+  .soul-header-row { margin-top: -30px; }
+  .soul-avatar { width: 84px; height: 84px; }
+}
+.profile-bubble > summary .bubble-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}

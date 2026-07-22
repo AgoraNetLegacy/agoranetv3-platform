@@ -44,3 +44,18 @@ export async function hasPostingConsents(
     )
   );
 }
+
+/** Version-aware single-ack check (the hasPostingConsents rule,
+ *  generalized): an ack binds to the text it acknowledged — a version
+ *  bump re-presents the screen. */
+export async function hasAck(
+  db: PrismaClient,
+  input: { profileId: string; kind: ConsentKind }
+): Promise<boolean> {
+  const ack = await db.consentAck.findUnique({
+    where: {
+      profileId_kind: { profileId: input.profileId, kind: input.kind },
+    },
+  });
+  return ack !== null && ack.version === CONSENT_VERSIONS[input.kind];
+}

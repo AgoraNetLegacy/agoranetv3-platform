@@ -3,9 +3,11 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { faceConstellation, scoreChangeLog } from "@/lib/lightScore";
-import { ALIAS_DISCLOSURES } from "@/lib/disclosures";
-import { updateProfileBio } from "@/app/actions";
+import { ALIAS_DISCLOSURES, ALIAS_IMAGERY_WARNING } from "@/lib/disclosures";
+import { updateProfileBio, submitProfileImage, submitRemoveProfileImage } from "@/app/actions";
 import { PillarMark } from "@/components/Icon";
+import { SoulHeader } from "@/components/SoulHeader";
+import { hasAck } from "@/lib/consent";
 
 export const dynamic = "force-dynamic";
 
@@ -22,22 +24,101 @@ export default async function ProfilePage({
   const { m } = await searchParams;
   const face = await activeFace();
   if (!face) redirect("/login");
-  const [constellation, changes] = await Promise.all([
-    faceConstellation(db, face.id),
-    scoreChangeLog(db, face.id, 25),
-  ]);
+  const [constellation, changes, images, bondCount, imageryAcked] =
+    await Promise.all([
+      faceConstellation(db, face.id),
+      scoreChangeLog(db, face.id, 25),
+      db.profileImage.findMany({
+        where: { profileId: face.id },
+        select: { kind: true, updatedAt: true },
+      }),
+      db.fellowSoulBond.count({
+        where: { OR: [{ aProfileId: face.id }, { bProfileId: face.id }] },
+      }),
+      hasAck(db, { profileId: face.id, kind: "alias-imagery" }),
+    ]);
+  const bust = images
+    .map((i) => i.updatedAt.getTime())
+    .sort()
+    .join("-");
+  const has = (k: string) => images.some((i) => i.kind === k);
+  const needsImageryWarning = face.face === "ALIAS" && !imageryAcked;
 
   return (
     <div className="ceremony">
-      <h2>
-        {face.displayName} <span className="lore">@{face.handle}</span>
-      </h2>
+      <SoulHeader
+        handle={face.handle}
+        displayName={face.displayName}
+        face={face.face}
+        joinedPeriod={face.joinedPeriod}
+        bioPlace={face.bioPlace}
+        cacheBust={bust || undefined}
+      />
       <p className="lore">
-        {face.face === "TRUE_SELF" ? "True Self" : "Alias"} · joined{" "}
-        {face.joinedPeriod} ·{" "}
+        Your fellow souls ({bondCount}) — visible to you alone ·{" "}
         <Link href={`/souls/${face.handle}`}>see your public window</Link> ·{" "}
         <Link href="/settings">settings</Link>
       </p>
+
+      <h3>Your images — this face&rsquo;s mark and banner</h3>
+      <p className="lore">
+        Live-surface, like the bio: replaceable or removable anytime,
+        never part of the permanent record. Uploads are re-encoded and
+        every trace of hidden camera data (location, device) is
+        destroyed — originals are never stored. Until you upload, your
+        generated mark stands in.
+      </p>
+      {needsImageryWarning && (
+        <div className="notice">
+          <strong>Before this face&rsquo;s first image — read this
+          honestly.</strong>
+          <ol className="disclosure-list">
+            {ALIAS_IMAGERY_WARNING.items.map((item, i) => (
+              <li key={i}>{item}</li>
+            ))}
+          </ol>
+        </div>
+      )}
+      <form action={submitProfileImage} className="inline">
+        <input type="hidden" name="kind" value="avatar" />
+        <label>
+          Mark (square, ≤2&nbsp;MB){" "}
+          <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required />
+        </label>{" "}
+        {needsImageryWarning && (
+          <label>
+            <input type="checkbox" name="imageryWarningAccepted" required />{" "}
+            I read the warning above
+          </label>
+        )}{" "}
+        <button type="submit">Upload mark</button>
+      </form>{" "}
+      {has("avatar") && (
+        <form action={submitRemoveProfileImage} className="inline">
+          <input type="hidden" name="kind" value="avatar" />
+          <button type="submit" className="linklike">remove mark</button>
+        </form>
+      )}
+      <form action={submitProfileImage} className="inline" style={{ display: "block", marginTop: "0.5rem" }}>
+        <input type="hidden" name="kind" value="banner" />
+        <label>
+          Banner (wide 3:1, ≤5&nbsp;MB){" "}
+          <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required />
+        </label>{" "}
+        {needsImageryWarning && (
+          <label>
+            <input type="checkbox" name="imageryWarningAccepted" required />{" "}
+            I read the warning above
+          </label>
+        )}{" "}
+        <button type="submit">Upload banner</button>
+      </form>{" "}
+      {has("banner") && (
+        <form action={submitRemoveProfileImage} className="inline">
+          <input type="hidden" name="kind" value="banner" />
+          <button type="submit" className="linklike">remove banner</button>
+        </form>
+      )}
       {m && <div className="notice">{m}</div>}
 
       <h3>About you — this face&rsquo;s window</h3>
