@@ -265,3 +265,78 @@ export async function BeaconWellbeingMount({ profileId }: { profileId: string })
     />
   );
 }
+
+// Beacon cards — the open current's provable-good set (BEACON §6,
+// v2's heart carried forward): a circle_story (attested, ledger-real
+// action) and a question_prompt (a canon question inviting an answer).
+// Deterministic and legible: newest attested story; the canon question
+// with the fewest voices — every card says why, every card exits into
+// the core loop.
+export async function BeaconCards() {
+  const [story, questions] = await Promise.all([
+    db.actionEntry.findFirst({
+      where: { attestedAt: { not: null } },
+      orderBy: { attestedAt: "desc" },
+      include: {
+        circle: { select: { id: true, name: true, placeTag: true } },
+        attestations: { select: { id: true } },
+      },
+    }),
+    db.question.findMany({
+      include: {
+        pillar: { select: { name: true, isMeta: true } },
+        discussion: {
+          select: { id: true, _count: { select: { posts: true } } },
+        },
+      },
+    }),
+  ]);
+
+  const prompt = questions
+    .filter((q) => q.discussion && !q.pillar.isMeta)
+    .sort(
+      (a, b) =>
+        (a.discussion?._count.posts ?? 0) - (b.discussion?._count.posts ?? 0)
+    )[0];
+
+  if (!story && !prompt) return null;
+  return (
+    <>
+      <h3>From the Beacon</h3>
+      <ul className="discussions">
+        {story && (
+          <li>
+            <Link href={`/circles/${story.circle.id}`}>
+              {story.circle.name}: {story.body.length > 90 ? `${story.body.slice(0, 90)}…` : story.body}
+            </Link>{" "}
+            <span className="badge permanent">Attested action</span>
+            <div className="meta">
+              {story.attestations.length} member
+              {story.attestations.length === 1 ? "" : "s"} staked their names
+              on this{story.circle.placeTag ? ` · 📍 ${story.circle.placeTag}` : ""} ·{" "}
+              {story.attestedAt!.toLocaleDateString()}
+            </div>
+            <div className="why-line">
+              Provable good: the newest ledger-attested Circle action — real
+              hands, real record. Join them.
+            </div>
+          </li>
+        )}
+        {prompt && prompt.discussion && (
+          <li>
+            <Link href={`/d/${prompt.discussion.id}`}>{prompt.text}</Link>{" "}
+            <span className="badge permanent">Canon question {prompt.position}</span>
+            <div className="meta">
+              {prompt.pillar.name} · {prompt.discussion._count.posts} post
+              {prompt.discussion._count.posts === 1 ? "" : "s"} so far
+            </div>
+            <div className="why-line">
+              The canon question with the fewest voices — yours would count
+              double here.
+            </div>
+          </li>
+        )}
+      </ul>
+    </>
+  );
+}

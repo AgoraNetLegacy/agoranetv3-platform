@@ -1686,3 +1686,35 @@ regenerated). **Phases 0–8.7 are now all closed; the one phase-half
 still open anywhere is the Phase 8 cohort checkpoint, gated on the
 deployment slice (#14, unscheduled). The owner's open items: the
 Tournament leaderboard-metrics design session, and the lawyer date.**
+
+## 2026-07-22 — The Beacon Feed (overnight build, owner-authorized)
+
+Owner ratified BEACON_FEED_SPEC (corpus: Feed and Search/) on 2026-07-21
+— including the ruling that adaptation happens through EXPLICIT signals
+only (declared interests, saves, future feedback buttons); passive
+behavioral watching stays out, revisitable by community governance.
+Built overnight on explicit owner authorization ("finish the feed
+tonight while i sleep"), one commit per slice:
+
+- S1 `d89b49f` — the save system: per-face private bookmarks
+  (SavedDiscussion), ☆ control on threads, watermark on read, feed.*
+  rails, 5 tests incl. cross-face isolation.
+- S2 `96daf1d` — pillar three-lens tabs: All here / My Discussions /
+  Saved, enclosed rooms never surface, per-face gating for readers.
+- S3 `f731204` — General Discussions (sidebar + /discussions =
+  Agora-homed only); the cross-pillar stream rehomed to the dashboard
+  as "The commons now" (feed.commons.windowHours rail).
+- S4 `6df997f` — "Saved & stirring" memory current on the dashboard;
+  beacon-resurface-v1 published on /feed/formula, live from rails.
+- S5 `86dd5bc` — wellbeing: per-face nudge + daily budget in
+  FeedSettings (null=off, absent=rail default); timing runs entirely
+  in the soul's browser, platform measures nothing. Postgres init
+  migration reconsolidated; parity 31/31.
+- S6 — Beacon cards "From the Beacon": circle_story (newest attested
+  action — provable good) + question_prompt (canon question with the
+  fewest voices), deterministic and why-lined.
+
+Gate: 311/311 tests, tsc clean, production build clean. All SSR
+surfaces verified via authenticated curl (permission-classifier kept
+the browser pane out of reach overnight). NOTE for the owner's morning:
+restart the dev server (stale Prisma client) and hard-refresh.
