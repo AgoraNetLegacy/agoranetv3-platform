@@ -17,6 +17,13 @@ const FLIP_COOKIE = "agoranet-flip";
 // local http://localhost still works.
 const SECURE_COOKIE = process.env.NODE_ENV === "production";
 
+// Production keeps this a browser-session cookie (no maxAge) by design —
+// closing the browser should drop it. Outside production, persist it so
+// manual test passes don't lose the "logged in here" state on every
+// restart; the SoulSession row still governs the real expiry server-side.
+const SESSION_COOKIE_MAX_AGE =
+  process.env.NODE_ENV === "production" ? undefined : 60 * 60 * 24 * 30;
+
 export async function ensureSessionId(): Promise<string> {
   const jar = await cookies();
   const existing = jar.get(SESSION_COOKIE)?.value;
@@ -25,7 +32,12 @@ export async function ensureSessionId(): Promise<string> {
     if (session) return session.id;
   }
   const id = await createSession(db);
-  jar.set(SESSION_COOKIE, id, { httpOnly: true, sameSite: "lax", secure: SECURE_COOKIE });
+  jar.set(SESSION_COOKIE, id, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: SECURE_COOKIE,
+    maxAge: SESSION_COOKIE_MAX_AGE,
+  });
   return id;
 }
 
