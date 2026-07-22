@@ -1408,3 +1408,26 @@ table.books tr:last-child td { border-bottom: 0; }
   font-size: inherit;
   font-weight: inherit;
 }
+
+/* Face-switch rows wear their OWN face's motif (owner directive
+   2026-07-22): True Self rows white and bright, Alias rows dark —
+   absolute colors, identical in every room, like the ◆/◇ chips.
+   The row you'd switch INTO looks like where you'd land. */
+.profile-bubble-action.face-row-true {
+  background: var(--chip-true-bg);
+  color: var(--chip-true-ink);
+  border-color: #cfdde3;
+}
+.profile-bubble-action.face-row-true .switch-face-name { color: var(--chip-true-ink); }
+.profile-bubble-action.face-row-true span:last-child { color: #46707e; }
+.profile-bubble-action.face-row-alias {
+  background: var(--chip-alias-bg);
+  color: var(--chip-alias-ink);
+  border-color: #263640;
+}
+.profile-bubble-action.face-row-alias .switch-face-name { color: var(--chip-alias-ink); }
+.profile-bubble-action.face-row-alias span:last-child { color: #92a7b0; }
+.profile-bubble-action.face-row-true:hover,
+.profile-bubble-action.face-row-alias:hover { border-color: var(--accent); background: revert-layer; }
+.profile-bubble-action.face-row-true:hover { background: var(--chip-true-bg); }
+.profile-bubble-action.face-row-alias:hover { background: var(--chip-alias-bg); }

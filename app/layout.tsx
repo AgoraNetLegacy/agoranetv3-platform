@@ -100,7 +100,16 @@ async function ProfileBubble() {
   const avatarSrc = `/img/${face.handle}/avatar${
     avatarRow ? `?v=${avatarRow.updatedAt.getTime()}` : ""
   }`;
+  // The switch rows' marks bust the same way — the selector must
+  // always match the profiles (owner finding 2026-07-22).
   const others = faces.filter((f) => f.id !== face.id);
+  const otherAvatars = await db.profileImage.findMany({
+    where: { profileId: { in: others.map((o) => o.id) }, kind: "avatar" },
+    select: { profileId: true, updatedAt: true },
+  });
+  const bustFor = new Map(
+    otherAvatars.map((a) => [a.profileId, `?v=${a.updatedAt.getTime()}`])
+  );
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
   return (
     // The anchor pins the bubble; the spirit dot lives OUTSIDE the
@@ -151,10 +160,19 @@ async function ProfileBubble() {
           others.map((p) => (
             <form key={p.id} action={switchToFace}>
               <input type="hidden" name="profileId" value={p.id} />
-              <button type="submit" className="profile-bubble-action">
+              <button
+                type="submit"
+                className={`profile-bubble-action ${
+                  p.face === "TRUE_SELF" ? "face-row-true" : "face-row-alias"
+                }`}
+              >
                 <span className="switch-face-name">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img className="avatar-sm" src={`/img/${p.handle}/avatar`} alt="" />
+                  <img
+                    className="avatar-sm"
+                    src={`/img/${p.handle}/avatar${bustFor.get(p.id) ?? ""}`}
+                    alt=""
+                  />
                   Switch to {p.displayName}
                 </span>
                 <span>{p.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"}</span>
