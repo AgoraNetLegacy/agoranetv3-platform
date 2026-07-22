@@ -32,7 +32,7 @@ export async function GET(
       headers: {
         "Content-Type": image.mime,
         // Live-surface content: short shared cache, revalidate cheap.
-        "Cache-Control": "public, max-age=300",
+        "Cache-Control": "public, max-age=60",
       },
     });
   }

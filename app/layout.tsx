@@ -91,6 +91,15 @@ async function FaceBar() {
 async function ProfileBubble() {
   const [face, faces] = await Promise.all([activeFace(), sessionFaces()]);
   if (!face) return null;
+  // Cache-bust the bubble's mark by the image row's timestamp — the
+  // bubble must always match the profile (owner finding 2026-07-22).
+  const avatarRow = await db.profileImage.findUnique({
+    where: { profileId_kind: { profileId: face.id, kind: "avatar" } },
+    select: { updatedAt: true },
+  });
+  const avatarSrc = `/img/${face.handle}/avatar${
+    avatarRow ? `?v=${avatarRow.updatedAt.getTime()}` : ""
+  }`;
   const others = faces.filter((f) => f.id !== face.id);
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
   return (
@@ -121,7 +130,7 @@ async function ProfileBubble() {
       <AutoCloseDetails className="profile-bubble" key={face.id}>
       <summary aria-label="Profile mode and face switching">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bubble-avatar" src={`/img/${face.handle}/avatar`} alt="" />
+        <img className="bubble-avatar" src={avatarSrc} alt="" />
       </summary>
       <div className="profile-bubble-panel">
         <div className="profile-bubble-heading">
