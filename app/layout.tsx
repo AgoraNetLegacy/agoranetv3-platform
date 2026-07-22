@@ -152,7 +152,11 @@ async function ProfileBubble() {
             <form key={p.id} action={switchToFace}>
               <input type="hidden" name="profileId" value={p.id} />
               <button type="submit" className="profile-bubble-action">
-                Switch to {p.displayName}
+                <span className="switch-face-name">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img className="avatar-sm" src={`/img/${p.handle}/avatar`} alt="" />
+                  Switch to {p.displayName}
+                </span>
                 <span>{p.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"}</span>
               </button>
             </form>
