@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { PillarMark } from "@/components/Icon";
+import { LearnMore } from "@/components/LearnMore";
 import { closeDuePolls } from "@/lib/polls";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,36 @@ export default async function GovernanceIndex() {
 
   return (
     <>
-      <h1>Polls &amp; Governance</h1>
+      <h1>
+        Polls &amp; Governance
+        <LearnMore label="About Polls & Governance">
+          <h4>Decide together, sealed until it&rsquo;s fair</h4>
+          <p>
+            <strong>Ordinary polls</strong> take the commons&rsquo;
+            temperature — anyone verified can open one, anyone can vote.{" "}
+            <strong>Governance polls</strong> bind: they change the
+            platform&rsquo;s own rules, moving a rail within its
+            published bounds.
+          </p>
+          <p>
+            Three laws hold everywhere: tallies stay{" "}
+            <strong>sealed until close</strong>, so no early count can
+            herd the undecided; the close itself is{" "}
+            <strong>candle-committed</strong> — drawn randomly inside a
+            published window, so nobody can snipe the ending; and{" "}
+            <strong>one profile is one vote</strong> — money can pay a
+            small casting fee, but it never buys outcome weight. Paid
+            visibility and weighted votes are rejected on principle.
+          </p>
+          <p>
+            Every pillar has its own Governance room, and everything
+            written there is permanent public record — permanence is a
+            place you knowingly walk into. Results, once closed, are
+            civic records: searchable, anchored, and beyond quiet
+            revision.
+          </p>
+        </LearnMore>
+      </h1>
       <p>
         <em>Decide together, sealed until it&rsquo;s fair.</em> Ordinary
         polls take the commons&rsquo; temperature; governance polls bind.
