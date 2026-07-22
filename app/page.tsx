@@ -41,7 +41,6 @@ export default async function AgoraDashboard({
     }),
     activeFace(),
   ]);
-  const outer = pillars.filter((p) => !p.isMeta);
   const agora = pillars.find((p) => p.isMeta)!;
   const editorial = editorialFor(agora.slug);
 
@@ -111,24 +110,10 @@ export default async function AgoraDashboard({
         </div>
       )}
 
-      {/* Doors to the six diagnostic pillars (§1.1: doors to everything
-          else — the full grid lives at /pillars). */}
-      <h3>The six diagnostic pillars</h3>
-      <ul className="pillar-grid">
-        {outer.map((p) => (
-          <li key={p.id} style={{ borderTop: `4px solid ${p.colorPrimary}` }}>
-            <Link href={`/pillars/${p.slug}`}>
-              <PillarMark slug={p.slug} /> <strong>{p.name}</strong>
-            </Link>
-            <div className="lore">
-              {p._count.domains} domains · {p._count.discussions} Discussions
-            </div>
-          </li>
-        ))}
-      </ul>
-      <p className="lore">
-        <Link href="/pillars">The Seven Pillars, in full →</Link>
-      </p>
+      {/* The pillar-tile grid left this dashboard (owner directive
+          2026-07-22): the sidebar already carries The Seven Pillars
+          door, and the feed is this room's primary occupant. The full
+          grid lives at /pillars. */}
 
       {/* The Beacon assembled (BEACON_FEED_SPEC §5.3): the chosen
           current first, then the memory current (saved & stirring),
