@@ -1333,3 +1333,20 @@ table.books tr:last-child td { border-bottom: 0; }
   .navlink, .pillar-grid li, .domain-grid li, ul.discussions li,
   button:not(.linklike):not(.navlink-button) { transition: none; }
 }
+
+/* The Beacon's calm nudge (BEACON §7): one quiet card, never a modal,
+   dismissible, at most once per session. */
+.beacon-nudge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.9rem 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--accent);
+  border-left-width: 4px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  font-size: 0.88rem;
+}
+.beacon-nudge p { margin: 0; }

@@ -6,12 +6,14 @@ import { getRail } from "@/lib/rails";
 import {
   updateDisplayName,
   setSwitchAnimation,
+  updateFeedWellbeing,
   updateSpiritSettings,
   submitWalletLink,
   submitSelfCustodyProof,
   submitScriptDonation,
 } from "@/app/actions";
 import { SPIRIT_LEVELS, SPIRIT_LEVEL_LABELS } from "@/lib/spirit";
+import { getRail as getRailDirect } from "@/lib/rails";
 import { cardanoNetwork, walletLinkFor, donationsFor } from "@/lib/chain";
 import { donationScript, demoBeneficiaryHash } from "@/lib/chainDonation";
 import { LaceConnect } from "@/components/LaceConnect";
@@ -33,6 +35,10 @@ export default async function SettingsPage({
   const { m } = await searchParams;
   const face = await activeFace();
   if (!face) redirect("/login");
+  const [wellbeingRow, nudgeDefault] = await Promise.all([
+    db.feedSettings.findUnique({ where: { profileId: face.id } }),
+    getRailDirect(db, "feed.nudge.defaultAfterMin"),
+  ]);
   const [cooldownDays, walletLink, donations, demoLovelace, demoLockMinutes] =
     await Promise.all([
       getRail(db, "identity.displayNameCooldownDays"),
@@ -144,6 +150,39 @@ export default async function SettingsPage({
           the dot on the bubble flips this instantly.
         </p>
         <button type="submit">Save Spirit Mode</button>
+      </form>
+
+      <h3>The Beacon — pacing</h3>
+      <p className="lore">
+        The feed&rsquo;s calm-pacing controls, yours to tune (or turn
+        off). The timing runs entirely in your own browser — the
+        platform measures nothing; it only remembers the numbers you
+        choose here, per face.
+      </p>
+      <form action={updateFeedWellbeing}>
+        <label style={{ display: "block", margin: "0.3rem 0" }}>
+          Go-act nudge after{" "}
+          <select name="nudgeAfterMin" defaultValue={wellbeingRow ? (wellbeingRow.nudgeAfterMin === null ? "off" : String(wellbeingRow.nudgeAfterMin)) : String(nudgeDefault)}>
+            <option value="off">off — never nudge</option>
+            {[10, 20, 30, 45, 60, 90, 120].map((m) => (
+              <option key={m} value={m}>
+                {m} minutes of reading
+              </option>
+            ))}
+          </select>
+        </label>
+        <label style={{ display: "block", margin: "0.3rem 0" }}>
+          Daily feed budget (minutes, blank for none){" "}
+          <input
+            type="number"
+            name="dailyCapMin"
+            min={10}
+            max={600}
+            defaultValue={wellbeingRow?.dailyCapMin ?? ""}
+            style={{ width: "6rem" }}
+          />
+        </label>
+        <button type="submit">Save pacing</button>
       </form>
 
       <h3>Notifications</h3>

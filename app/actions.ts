@@ -498,6 +498,31 @@ export async function submitUnsaveDiscussion(formData: FormData) {
   backTo(returnTo);
 }
 
+/** Beacon wellbeing (BEACON_FEED_SPEC §7): the nudge threshold and the
+ *  daily cap are the face's own choice — calm defaults, fully
+ *  adjustable, per face. "off"/"" mean exactly that; the server stores
+ *  thresholds and measures nothing. */
+export async function updateFeedWellbeing(formData: FormData) {
+  const face = await requireFace("settings");
+  const nudgeRaw = String(formData.get("nudgeAfterMin") ?? "");
+  const capRaw = String(formData.get("dailyCapMin") ?? "");
+  const nudgeAfterMin =
+    nudgeRaw === "off" || nudgeRaw === ""
+      ? null
+      : Math.min(120, Math.max(5, Math.round(Number(nudgeRaw)) || 5));
+  const dailyCapMin =
+    capRaw === ""
+      ? null
+      : Math.min(600, Math.max(10, Math.round(Number(capRaw)) || 10));
+  await db.feedSettings.upsert({
+    where: { profileId: face.id },
+    create: { profileId: face.id, nudgeAfterMin, dailyCapMin },
+    update: { nudgeAfterMin, dailyCapMin },
+  });
+  revalidatePath("/", "layout");
+  backTo("/settings", "Beacon pacing set for this face.");
+}
+
 // ---------------------------------------------------------------- repairs
 
 export async function submitRepair(formData: FormData) {

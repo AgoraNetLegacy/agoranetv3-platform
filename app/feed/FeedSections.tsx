@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { buildFeed, openLens, chamberStorefrontCards } from "@/lib/feed";
 import { stirringSavesFor } from "@/lib/saved";
 import { getRail } from "@/lib/rails";
+import { beaconWellbeingFor } from "@/lib/wellbeing";
+import { BeaconNudge } from "@/components/BeaconNudge";
 import { markCaughtUp } from "@/app/actions";
 import { Icon } from "@/components/Icon";
 
@@ -246,5 +248,20 @@ export async function CommonsNow() {
         ))}
       </ul>
     </>
+  );
+}
+
+// Server shim: resolve the face's wellbeing thresholds and hand them
+// to the client-side nudge (BEACON §7 — the browser does the timing;
+// the server only knows the chosen numbers).
+export async function BeaconWellbeingMount({ profileId }: { profileId: string }) {
+  const wb = await beaconWellbeingFor(db, profileId);
+  if (wb.nudgeAfterMin === null && wb.dailyCapMin === null) return null;
+  return (
+    <BeaconNudge
+      faceId={profileId}
+      nudgeAfterMin={wb.nudgeAfterMin}
+      dailyCapMin={wb.dailyCapMin}
+    />
   );
 }

@@ -1508,6 +1508,11 @@ model FeedSettings {
   openLens     Boolean   @default(true)
   balancedDiet Boolean   @default(true)
   caughtUpAt   DateTime?
+  // Beacon wellbeing (BEACON_FEED_SPEC §7/§10, v2 decision 3): pacing
+  // is the soul's own to tune, per face. null = OFF (explicitly
+  // disabled); an ABSENT row falls back to the nudge rail default.
+  nudgeAfterMin Int?
+  dailyCapMin   Int?
 }
 
 // Search history (§4.2): stored per profile, visible to the soul,
@@ -1545,6 +1550,8 @@ model TreasurySnapshot {
 // job deletes them after two day-cycles. Short retention is the point.
 // ------------------------------------------------------------------
 
+// A face's private bookmark on a Discussion (BEACON_FEED_SPEC §4/§10).
+// The unlinkability and privacy boundary: profileId, never humanId; no
 // A face's private bookmark on a Discussion (BEACON_FEED_SPEC §4/§10).
 // The unlinkability and privacy boundary: profileId, never humanId; no
 // public reads, no counts, never a ranking input for anyone else.

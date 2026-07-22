@@ -1,4 +1,30 @@
 -- CreateTable
+CREATE TABLE "TestnetWalletLink" (
+    "id" TEXT NOT NULL,
+    "profileId" TEXT NOT NULL,
+    "cardanoAddress" TEXT NOT NULL,
+    "network" TEXT NOT NULL,
+    "connectedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "proofTxHash" TEXT,
+    "proofAt" TIMESTAMP(3),
+
+    CONSTRAINT "TestnetWalletLink_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "TestnetDonation" (
+    "id" TEXT NOT NULL,
+    "profileId" TEXT NOT NULL,
+    "txHash" TEXT NOT NULL,
+    "lovelace" INTEGER NOT NULL,
+    "scriptAddress" TEXT NOT NULL,
+    "network" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "TestnetDonation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Human" (
     "id" TEXT NOT NULL,
     "credentialHash" TEXT NOT NULL,
@@ -25,6 +51,9 @@ CREATE TABLE "Profile" (
     "bio" TEXT NOT NULL DEFAULT '',
     "bioPlace" TEXT NOT NULL DEFAULT '',
     "switchAnimation" TEXT NOT NULL DEFAULT 'flip',
+    "spiritActive" BOOLEAN NOT NULL DEFAULT false,
+    "spiritLevel" TEXT NOT NULL DEFAULT 'discovery',
+    "spiritOnLogin" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Profile_pkey" PRIMARY KEY ("id")
@@ -83,76 +112,6 @@ CREATE TABLE "BudgetCategory" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "BudgetCategory_pkey" PRIMARY KEY ("name")
-);
-
--- CreateTable
-CREATE TABLE "FundAudit" (
-    "id" TEXT NOT NULL,
-    "releaseId" TEXT NOT NULL,
-    "auditorProfileId" TEXT NOT NULL,
-    "offeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'offered',
-    "finding" TEXT,
-    "note" TEXT,
-    "completedAt" TIMESTAMP(3),
-    "gratiumEarned" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "settlementTxHash" TEXT,
-    "settlementAt" TIMESTAMP(3),
-
-    CONSTRAINT "FundAudit_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "ChamberFundingRevision" (
-    "id" TEXT NOT NULL,
-    "chamberId" TEXT NOT NULL,
-    "recipient" TEXT NOT NULL,
-    "evidence" TEXT NOT NULL,
-    "breakdown" TEXT NOT NULL,
-    "editedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "ChamberFundingRevision_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "ChamberBalance" (
-    "chamberId" TEXT NOT NULL,
-    "currency" TEXT NOT NULL,
-    "amount" DOUBLE PRECISION NOT NULL DEFAULT 0,
-
-    CONSTRAINT "ChamberBalance_pkey" PRIMARY KEY ("chamberId","currency")
-);
-
--- CreateTable
-CREATE TABLE "MissionRelease" (
-    "id" TEXT NOT NULL,
-    "chamberId" TEXT NOT NULL,
-    "currency" TEXT NOT NULL,
-    "amount" DOUBLE PRECISION NOT NULL,
-    "purpose" TEXT NOT NULL,
-    "toProfileId" TEXT NOT NULL,
-    "toHandle" TEXT NOT NULL,
-    "proposerProfileId" TEXT NOT NULL,
-    "proposerHandle" TEXT NOT NULL,
-    "state" TEXT NOT NULL DEFAULT 'proposed',
-    "releasedAt" TIMESTAMP(3),
-    "frozenAt" TIMESTAMP(3),
-    "frozenByRulingId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "MissionRelease_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "ReleaseAttestation" (
-    "id" TEXT NOT NULL,
-    "releaseId" TEXT NOT NULL,
-    "attestorProfileId" TEXT NOT NULL,
-    "attestorHandle" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "ReleaseAttestation_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -264,6 +223,24 @@ CREATE TABLE "NullifierSpend" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "NullifierSpend_pkey" PRIMARY KEY ("scope","nullifier")
+);
+
+-- CreateTable
+CREATE TABLE "GrantClaim" (
+    "profileId" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "GrantClaim_pkey" PRIMARY KEY ("profileId","kind")
+);
+
+-- CreateTable
+CREATE TABLE "AccrualDay" (
+    "profileId" TEXT NOT NULL,
+    "day" TIMESTAMP(3) NOT NULL,
+    "totalUpc" DOUBLE PRECISION NOT NULL DEFAULT 0,
+
+    CONSTRAINT "AccrualDay_pkey" PRIMARY KEY ("profileId","day")
 );
 
 -- CreateTable
@@ -404,12 +381,6 @@ CREATE TABLE "Poll" (
     "pillarId" TEXT NOT NULL,
     "creatorProfileId" TEXT NOT NULL,
     "creatorHandle" TEXT NOT NULL,
-    "raisingForMission" BOOLEAN NOT NULL DEFAULT false,
-    "fundingRecipient" TEXT,
-    "fundingEvidence" TEXT,
-    "fundingBreakdown" TEXT,
-    "raisingDeclaredAt" TIMESTAMP(3),
-    "releaseThreshold" INTEGER NOT NULL DEFAULT 2,
     "title" TEXT NOT NULL,
     "description" TEXT,
     "type" TEXT NOT NULL,
@@ -745,8 +716,84 @@ CREATE TABLE "Chamber" (
     "creatorHandle" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "lastActivityAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "raisingForMission" BOOLEAN NOT NULL DEFAULT false,
+    "fundingRecipient" TEXT,
+    "fundingEvidence" TEXT,
+    "fundingBreakdown" TEXT,
+    "raisingDeclaredAt" TIMESTAMP(3),
+    "releaseThreshold" INTEGER NOT NULL DEFAULT 2,
 
     CONSTRAINT "Chamber_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "FundAudit" (
+    "id" TEXT NOT NULL,
+    "releaseId" TEXT NOT NULL,
+    "auditorProfileId" TEXT NOT NULL,
+    "offeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'offered',
+    "finding" TEXT,
+    "note" TEXT,
+    "completedAt" TIMESTAMP(3),
+    "gratiumEarned" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "settlementTxHash" TEXT,
+    "settlementAt" TIMESTAMP(3),
+
+    CONSTRAINT "FundAudit_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ChamberFundingRevision" (
+    "id" TEXT NOT NULL,
+    "chamberId" TEXT NOT NULL,
+    "recipient" TEXT NOT NULL,
+    "evidence" TEXT NOT NULL,
+    "breakdown" TEXT NOT NULL,
+    "editedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ChamberFundingRevision_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ChamberBalance" (
+    "chamberId" TEXT NOT NULL,
+    "currency" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+
+    CONSTRAINT "ChamberBalance_pkey" PRIMARY KEY ("chamberId","currency")
+);
+
+-- CreateTable
+CREATE TABLE "MissionRelease" (
+    "id" TEXT NOT NULL,
+    "chamberId" TEXT NOT NULL,
+    "currency" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "purpose" TEXT NOT NULL,
+    "toProfileId" TEXT NOT NULL,
+    "toHandle" TEXT NOT NULL,
+    "proposerProfileId" TEXT NOT NULL,
+    "proposerHandle" TEXT NOT NULL,
+    "state" TEXT NOT NULL DEFAULT 'proposed',
+    "releasedAt" TIMESTAMP(3),
+    "frozenAt" TIMESTAMP(3),
+    "frozenByRulingId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "MissionRelease_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ReleaseAttestation" (
+    "id" TEXT NOT NULL,
+    "releaseId" TEXT NOT NULL,
+    "attestorProfileId" TEXT NOT NULL,
+    "attestorHandle" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ReleaseAttestation_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -883,6 +930,8 @@ CREATE TABLE "FeedSettings" (
     "openLens" BOOLEAN NOT NULL DEFAULT true,
     "balancedDiet" BOOLEAN NOT NULL DEFAULT true,
     "caughtUpAt" TIMESTAMP(3),
+    "nudgeAfterMin" INTEGER,
+    "dailyCapMin" INTEGER,
 
     CONSTRAINT "FeedSettings_pkey" PRIMARY KEY ("profileId")
 );
@@ -907,6 +956,16 @@ CREATE TABLE "TreasurySnapshot" (
     "outflows" TEXT NOT NULL,
 
     CONSTRAINT "TreasurySnapshot_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SavedDiscussion" (
+    "profileId" TEXT NOT NULL,
+    "discussionId" TEXT NOT NULL,
+    "savedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "lastSeenAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SavedDiscussion_pkey" PRIMARY KEY ("profileId","discussionId")
 );
 
 -- CreateTable
@@ -939,6 +998,12 @@ CREATE TABLE "AnalyticsAggregate" (
 
     CONSTRAINT "AnalyticsAggregate_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TestnetWalletLink_profileId_key" ON "TestnetWalletLink"("profileId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TestnetDonation_txHash_key" ON "TestnetDonation"("txHash");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Human_credentialHash_key" ON "Human"("credentialHash");
@@ -1022,6 +1087,18 @@ CREATE UNIQUE INDEX "Notification_profileId_aggregationKey_key" ON "Notification
 CREATE UNIQUE INDEX "Attestation_entryId_attestorProfileId_key" ON "Attestation"("entryId", "attestorProfileId");
 
 -- CreateIndex
+CREATE INDEX "FundAudit_status_idx" ON "FundAudit"("status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "FundAudit_releaseId_auditorProfileId_key" ON "FundAudit"("releaseId", "auditorProfileId");
+
+-- CreateIndex
+CREATE INDEX "MissionRelease_chamberId_state_idx" ON "MissionRelease"("chamberId", "state");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ReleaseAttestation_releaseId_attestorProfileId_key" ON "ReleaseAttestation"("releaseId", "attestorProfileId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "ChamberMember_chamberId_profileId_key" ON "ChamberMember"("chamberId", "profileId");
 
 -- CreateIndex
@@ -1043,6 +1120,9 @@ CREATE UNIQUE INDEX "FeedSource_profileId_kind_refId_key" ON "FeedSource"("profi
 CREATE UNIQUE INDEX "TreasurySnapshot_day_key" ON "TreasurySnapshot"("day");
 
 -- CreateIndex
+CREATE INDEX "SavedDiscussion_profileId_idx" ON "SavedDiscussion"("profileId");
+
+-- CreateIndex
 CREATE INDEX "RateLimitBucket_windowStart_idx" ON "RateLimitBucket"("windowStart");
 
 -- CreateIndex
@@ -1056,6 +1136,9 @@ CREATE UNIQUE INDEX "AnalyticsAggregate_period_name_key" ON "AnalyticsAggregate"
 
 -- AddForeignKey
 ALTER TABLE "Profile" ADD CONSTRAINT "Profile_humanId_fkey" FOREIGN KEY ("humanId") REFERENCES "Human"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EconomyEntry" ADD CONSTRAINT "EconomyEntry_budgetCategory_fkey" FOREIGN KEY ("budgetCategory") REFERENCES "BudgetCategory"("name") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Tip" ADD CONSTRAINT "Tip_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1145,6 +1228,9 @@ ALTER TABLE "Flag" ADD CONSTRAINT "Flag_postId_fkey" FOREIGN KEY ("postId") REFE
 ALTER TABLE "Flag" ADD CONSTRAINT "Flag_dmExcerptId_fkey" FOREIGN KEY ("dmExcerptId") REFERENCES "DmExcerpt"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Flag" ADD CONSTRAINT "Flag_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Flag" ADD CONSTRAINT "Flag_ruleId_fkey" FOREIGN KEY ("ruleId") REFERENCES "Rule"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1152,6 +1238,9 @@ ALTER TABLE "Flag" ADD CONSTRAINT "Flag_caseId_fkey" FOREIGN KEY ("caseId") REFE
 
 -- AddForeignKey
 ALTER TABLE "ModCase" ADD CONSTRAINT "ModCase_dmExcerptId_fkey" FOREIGN KEY ("dmExcerptId") REFERENCES "DmExcerpt"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ModCase" ADD CONSTRAINT "ModCase_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ModCase" ADD CONSTRAINT "ModCase_appealOfId_fkey" FOREIGN KEY ("appealOfId") REFERENCES "ModCase"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -1193,6 +1282,21 @@ ALTER TABLE "ActionEntryPledge" ADD CONSTRAINT "ActionEntryPledge_entryId_fkey" 
 ALTER TABLE "ActionEntryPledge" ADD CONSTRAINT "ActionEntryPledge_offerId_fkey" FOREIGN KEY ("offerId") REFERENCES "ResourceOffer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "FundAudit" ADD CONSTRAINT "FundAudit_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ChamberFundingRevision" ADD CONSTRAINT "ChamberFundingRevision_chamberId_fkey" FOREIGN KEY ("chamberId") REFERENCES "Chamber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ChamberBalance" ADD CONSTRAINT "ChamberBalance_chamberId_fkey" FOREIGN KEY ("chamberId") REFERENCES "Chamber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MissionRelease" ADD CONSTRAINT "MissionRelease_chamberId_fkey" FOREIGN KEY ("chamberId") REFERENCES "Chamber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ReleaseAttestation" ADD CONSTRAINT "ReleaseAttestation_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ChamberScaffoldRevision" ADD CONSTRAINT "ChamberScaffoldRevision_chamberId_fkey" FOREIGN KEY ("chamberId") REFERENCES "Chamber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1207,90 +1311,6 @@ ALTER TABLE "DmMessage" ADD CONSTRAINT "DmMessage_threadId_fkey" FOREIGN KEY ("t
 -- AddForeignKey
 ALTER TABLE "DmExcerpt" ADD CONSTRAINT "DmExcerpt_threadId_fkey" FOREIGN KEY ("threadId") REFERENCES "DmThread"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
-
--- CreateTable (Phase 8.6, TESTNET_RAILS_SPEC §6.3; proof columns from
--- the on-chain migration's Slice 2)
-CREATE TABLE "TestnetWalletLink" (
-    "id" TEXT NOT NULL,
-    "profileId" TEXT NOT NULL,
-    "cardanoAddress" TEXT NOT NULL,
-    "network" TEXT NOT NULL,
-    "connectedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "proofTxHash" TEXT,
-    "proofAt" TIMESTAMP(3),
-
-    CONSTRAINT "TestnetWalletLink_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE UNIQUE INDEX "TestnetWalletLink_profileId_key" ON "TestnetWalletLink"("profileId");
-
--- CreateTable (On-chain migration Slice 3)
-CREATE TABLE "TestnetDonation" (
-    "id" TEXT NOT NULL,
-    "profileId" TEXT NOT NULL,
-    "txHash" TEXT NOT NULL,
-    "lovelace" INTEGER NOT NULL,
-    "scriptAddress" TEXT NOT NULL,
-    "network" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "TestnetDonation_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE UNIQUE INDEX "TestnetDonation_txHash_key" ON "TestnetDonation"("txHash");
-
 -- AddForeignKey
-ALTER TABLE "EconomyEntry" ADD CONSTRAINT "EconomyEntry_budgetCategory_fkey" FOREIGN KEY ("budgetCategory") REFERENCES "BudgetCategory"("name") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "SavedDiscussion" ADD CONSTRAINT "SavedDiscussion_discussionId_fkey" FOREIGN KEY ("discussionId") REFERENCES "Discussion"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- CreateIndex
-CREATE INDEX "MissionRelease_chamberId_state_idx" ON "MissionRelease"("chamberId", "state");
-
--- CreateIndex
-CREATE UNIQUE INDEX "ReleaseAttestation_releaseId_attestorProfileId_key" ON "ReleaseAttestation"("releaseId", "attestorProfileId");
-
--- AddForeignKey
-ALTER TABLE "ChamberBalance" ADD CONSTRAINT "ChamberBalance_chamberId_fkey" FOREIGN KEY ("chamberId") REFERENCES "Chamber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "MissionRelease" ADD CONSTRAINT "MissionRelease_chamberId_fkey" FOREIGN KEY ("chamberId") REFERENCES "Chamber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ReleaseAttestation" ADD CONSTRAINT "ReleaseAttestation_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ChamberFundingRevision" ADD CONSTRAINT "ChamberFundingRevision_chamberId_fkey" FOREIGN KEY ("chamberId") REFERENCES "Chamber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- CreateIndex
-CREATE UNIQUE INDEX "FundAudit_releaseId_auditorProfileId_key" ON "FundAudit"("releaseId", "auditorProfileId");
-
--- CreateIndex
-CREATE INDEX "FundAudit_status_idx" ON "FundAudit"("status");
-
--- AddForeignKey
-ALTER TABLE "FundAudit" ADD CONSTRAINT "FundAudit_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Flag" ADD CONSTRAINT "Flag_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ModCase" ADD CONSTRAINT "ModCase_releaseId_fkey" FOREIGN KEY ("releaseId") REFERENCES "MissionRelease"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- CreateTable
-CREATE TABLE "GrantClaim" (
-    "profileId" TEXT NOT NULL,
-    "kind" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "GrantClaim_pkey" PRIMARY KEY ("profileId","kind")
-);
-
--- CreateTable
-CREATE TABLE "AccrualDay" (
-    "profileId" TEXT NOT NULL,
-    "day" TIMESTAMP(3) NOT NULL,
-    "totalUpc" DOUBLE PRECISION NOT NULL DEFAULT 0,
-
-    CONSTRAINT "AccrualDay_pkey" PRIMARY KEY ("profileId","day")
-);
