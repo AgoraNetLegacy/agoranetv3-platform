@@ -10,11 +10,13 @@ export const dynamic = "force-dynamic";
 // and rendered live from the rails — the page can never drift from the
 // code because both read the same numbers.
 export default async function FormulaPage() {
-  const [wC, wT, wS, halfLife] = await Promise.all([
+  const [wC, wT, wS, halfLife, resurfaceMin, maxCards] = await Promise.all([
     getRail(db, "feed.lensContributorWeight"),
     getRail(db, "feed.lensTipWeight"),
     getRail(db, "feed.lensSourcedWeight"),
     getRail(db, "feed.lensHalfLifeHours"),
+    getRail(db, "feed.saved.resurfaceMinNewPosts"),
+    getRail(db, "feed.saved.maxResurfacedCards"),
   ]);
 
   return (
@@ -58,6 +60,30 @@ export default async function FormulaPage() {
         <li>Views, impressions, dwell time, scroll depth — the platform does not measure them.</li>
         <li>Your identity, history, or behavior — same query, same results, for everyone.</li>
         <li>Payment — paid visibility is rejected on principle, by platform law.</li>
+      </ul>
+      <h3>The saved-current resurfacing formula — beacon-resurface-v1</h3>
+      <p>
+        &ldquo;Saved &amp; stirring&rdquo; surfaces a thread <em>you</em>{" "}
+        saved only when it has genuinely grown since you last read it,
+        ranked by exactly this:
+      </p>
+      <blockquote className="opening-question">
+        priority = (new posts since your last read + new unique voices
+        since your last read) × 0.5<sup>(hours since newest post ÷ 72)</sup>
+      </blockquote>
+      <ul>
+        <li>
+          A saved thread needs at least {resurfaceMin} new post
+          {resurfaceMin === 1 ? "" : "s"} to resurface, and at most{" "}
+          {maxCards} resurfaced threads ride one feed load — the feed
+          still ends. (Both are rails.)
+        </li>
+        <li>
+          The only personal signal is your own watermark — the moment
+          you last read the thread. A time, and nothing else. Your saves
+          are private to your face, never a ranking input for anyone
+          else, and never counted or shown to authors.
+        </li>
       </ul>
       <h3>Versioning &amp; governance</h3>
       <p className="lore">
