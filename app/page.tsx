@@ -4,7 +4,7 @@ import { activateDueAliases } from "@/lib/identity";
 import { closeDuePolls } from "@/lib/polls";
 import { editorialFor } from "@/lib/pillarContent";
 import { activeFace } from "@/lib/webSession";
-import { ChosenSourcesFeed, LensSection, PollinatorStrip, SavedAndStirring, CommonsNow, BeaconWellbeingMount, BeaconCards } from "@/app/feed/FeedSections";
+import { ChosenSourcesFeed, LensSection, PollinatorStrip, SavedAndStirring, CommonsNow, BeaconWellbeingMount, BeaconCards, PillarPulse, SourcesRadar, StoicWisdom } from "@/app/feed/FeedSections";
 import { PillarAnatomy, asSortKey } from "@/app/pillars/PillarAnatomy";
 import { PillarMark } from "@/components/Icon";
 
@@ -138,7 +138,10 @@ export default async function AgoraDashboard({
         </>
       )}
       <CommonsNow />
+      <PillarPulse />
+      <SourcesRadar />
       <BeaconCards />
+      <StoicWisdom />
       <PollinatorStrip />
 
       {/* The Agora pillar's own anatomy (§1.1): domains, canon threads,

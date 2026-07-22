@@ -4,6 +4,7 @@ import { buildFeed, openLens, chamberStorefrontCards } from "@/lib/feed";
 import { stirringSavesFor } from "@/lib/saved";
 import { getRail } from "@/lib/rails";
 import { beaconWellbeingFor } from "@/lib/wellbeing";
+import { STOIC_LESSONS } from "@/lib/stoicContent.generated";
 import { BeaconNudge } from "@/components/BeaconNudge";
 import { markCaughtUp } from "@/app/actions";
 import { Icon } from "@/components/Icon";
@@ -336,6 +337,164 @@ export async function BeaconCards() {
             </div>
           </li>
         )}
+      </ul>
+    </>
+  );
+}
+
+// The day's featured pillar (BEACON §3.4 community lanes): a
+// deterministic date-keyed rotation over the six diagnostic pillars —
+// same pillar for every soul, no personal signal, stated in the
+// why-line.
+async function featuredPillarOfTheDay(dbc: typeof db) {
+  const outer = await dbc.pillar.findMany({
+    where: { isMeta: false },
+    orderBy: { position: "asc" },
+  });
+  if (outer.length === 0) return null;
+  const dayIndex = Math.floor(Date.now() / 86_400_000);
+  return outer[dayIndex % outer.length];
+}
+
+// pillar-pulse: the open-lens formula scoped to the featured pillar.
+export async function PillarPulse() {
+  const pillar = await featuredPillarOfTheDay(db);
+  if (!pillar) return null;
+  const [cap] = await Promise.all([getRail(db, "feed.lane.pulseCards")]);
+  const cards = (await openLens(db, Math.max(1, Math.round(cap)), pillar.slug));
+  if (cards.length === 0) return null;
+  return (
+    <>
+      <h3>Pillar pulse — {pillar.name} today</h3>
+      <p className="lore">
+        Today&rsquo;s featured pillar rotates on a fixed daily cycle —
+        same pillar, same stream, for every soul. Ranked by the{" "}
+        <Link href="/feed/formula">published formula</Link>, scoped to{" "}
+        {pillar.name}.
+      </p>
+      <ul className="discussions">
+        {cards.map((c) => (
+          <li key={c.discussionId}>
+            <Link href={`/d/${c.discussionId}`}>{c.title}</Link>
+            <div className="meta">
+              score {c.score.toFixed(1)} = {c.scoreParts}
+            </div>
+            <div className="why-line">{c.whyLine}</div>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+// sources-radar: the most-cited source objects in the featured
+// pillar's public spaces within the commons window — the studies and
+// articles the pillar is actually arguing about.
+export async function SourcesRadar() {
+  const pillar = await featuredPillarOfTheDay(db);
+  if (!pillar) return null;
+  const [cap, windowHours] = await Promise.all([
+    getRail(db, "feed.lane.radarSources"),
+    getRail(db, "feed.commons.windowHours"),
+  ]);
+  const cutoff = new Date(Date.now() - windowHours * 3_600_000);
+  const usages = await db.postSource.findMany({
+    where: {
+      createdAt: { gte: cutoff },
+      post: {
+        status: "visible",
+        discussion: { pillarId: pillar.id, circleId: null, chamberId: null },
+      },
+    },
+    include: {
+      source: { select: { id: true, url: true } },
+      post: { select: { discussionId: true } },
+    },
+  });
+  if (usages.length === 0) return null;
+  const bySource = new Map<
+    string,
+    { url: string; count: number; discussionId: string }
+  >();
+  for (const u of usages) {
+    const entry = bySource.get(u.source.id);
+    if (entry) entry.count += 1;
+    else
+      bySource.set(u.source.id, {
+        url: u.source.url,
+        count: 1,
+        discussionId: u.post.discussionId,
+      });
+  }
+  const top = [...bySource.values()]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, Math.max(1, Math.round(cap)));
+  return (
+    <>
+      <h3>The sources radar — {pillar.name}</h3>
+      <p className="lore">
+        The most-cited sources in {pillar.name}&rsquo;s public spaces in
+        the last {Math.round(windowHours)} hours — what the commons is
+        actually reading. Citation counts only; nothing personal.
+      </p>
+      <ul className="discussions">
+        {top.map((s) => (
+          <li key={s.url}>
+            <Link href={`/d/${s.discussionId}`}>
+              {s.url.length > 80 ? `${s.url.slice(0, 80)}…` : s.url}
+            </Link>
+            <div className="meta">
+              cited {s.count} time{s.count === 1 ? "" : "s"} this window
+            </div>
+            <div className="why-line">
+              Sources radar: follow the citation into the room discussing it.
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+// stoic-wisdom (BEACON §3.4, owner-ruled 2026-07-22): a date-keyed
+// deterministic rotation over the owner's Stoic teaching corpus —
+// same passage for every soul on a given day, always cited to its
+// lesson, always linking to the pillar it illuminates. Community-level
+// by construction; the Inner Citadel room stays parked — this lane is
+// feed-only.
+export async function StoicWisdom() {
+  if (STOIC_LESSONS.length === 0) return null;
+  const dayIndex = Math.floor(Date.now() / 86_400_000);
+  const lesson = STOIC_LESSONS[dayIndex % STOIC_LESSONS.length];
+  const excerpt =
+    lesson.excerpts[
+      Math.floor(dayIndex / STOIC_LESSONS.length) % lesson.excerpts.length
+    ];
+  const pillar = lesson.pillarSlug
+    ? await db.pillar.findUnique({ where: { slug: lesson.pillarSlug } })
+    : null;
+  return (
+    <>
+      <h3>Stoic wisdom for the commons</h3>
+      <ul className="discussions">
+        <li>
+          <blockquote className="opening-question" style={{ margin: 0 }}>
+            {excerpt.text}
+          </blockquote>
+          <div className="meta">
+            From <em>{lesson.title}</em> — the platform&rsquo;s Stoic
+            teaching corpus
+            {pillar ? (
+              <>
+                {" "}· illuminates <Link href={`/pillars/${pillar.slug}`}>{pillar.name}</Link>
+              </>
+            ) : null}
+          </div>
+          <div className="why-line">
+            One passage a day, the same for every soul — a fixed rotation,
+            nothing personalized.
+          </div>
+        </li>
       </ul>
     </>
   );

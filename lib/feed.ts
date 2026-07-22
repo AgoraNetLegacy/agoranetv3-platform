@@ -327,7 +327,13 @@ export async function chamberStorefrontCards(
  *
  *  computed over the activity window (4 × H hours). Weights and
  *  half-life are rails; the formula page renders them live. */
-export async function openLens(db: PrismaClient, limit = 10): Promise<LensCard[]> {
+export async function openLens(
+  db: PrismaClient,
+  limit = 10,
+  // Community lanes (BEACON §3.4): the same published formula, scoped
+  // to one pillar — the pillar-pulse lane. No new math, no new inputs.
+  pillarSlug?: string
+): Promise<LensCard[]> {
   const [wC, wT, wS, halfLife] = await Promise.all([
     getRail(db, "feed.lensContributorWeight"),
     getRail(db, "feed.lensTipWeight"),
@@ -337,7 +343,12 @@ export async function openLens(db: PrismaClient, limit = 10): Promise<LensCard[]
   const windowStart = new Date(Date.now() - 4 * halfLife * 3_600_000);
 
   const discussions = await db.discussion.findMany({
-    where: { circleId: null, chamberId: null, posts: { some: { createdAt: { gt: windowStart } } } },
+    where: {
+      circleId: null,
+      chamberId: null,
+      ...(pillarSlug ? { pillar: { slug: pillarSlug } } : {}),
+      posts: { some: { createdAt: { gt: windowStart } } },
+    },
     include: {
       pillar: { select: { slug: true, name: true, icon: true } },
       posts: {

@@ -778,6 +778,24 @@ export const RAIL_DEFAULTS: RailDefault[] = [
       "The commons stream: recency window for platform-wide recently-active threads on the dashboard (BEACON §5.3).",
   },
   {
+    key: "feed.lane.pulseCards",
+    value: 3,
+    unit: "cards",
+    boundMin: 1,
+    boundMax: 10,
+    description:
+      "Community lanes: pillar-pulse cards per feed load — the open-lens formula scoped to the day's featured pillar (BEACON §3.4).",
+  },
+  {
+    key: "feed.lane.radarSources",
+    value: 3,
+    unit: "cards",
+    boundMin: 1,
+    boundMax: 10,
+    description:
+      "Community lanes: sources-radar entries per feed load — the most-cited source objects in the featured pillar's window (BEACON §3.4).",
+  },
+  {
     key: "feed.nudge.defaultAfterMin",
     value: 20,
     unit: "minutes",
