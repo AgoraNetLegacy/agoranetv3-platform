@@ -5,6 +5,7 @@ import { chamberActivityLevel, pendingInvitesFor } from "@/lib/chambers";
 import { getRail } from "@/lib/rails";
 import { submitChamber } from "@/app/actions";
 import { Icon } from "@/components/Icon";
+import { LearnMore } from "@/components/LearnMore";
 
 export const dynamic = "force-dynamic";
 
@@ -70,20 +71,34 @@ export default async function PollinatorPage({
 
   return (
     <>
-      <h1><Icon name="hive" /> The Pollinator — the idea incubator</h1>
-      <p>
-        <em>Workshop an idea before you defend it in public.</em>
-      </p>
-      <p className="lore">
-        A chamber is an enclosed pod dedicated to one idea: break it down
-        to first principles, bring knowledge and debate, work it toward
-        viability. Unlike Discussions (open-air), you enter a chamber to
-        see what&apos;s inside — the storefront is public, the workshop is
-        enclosed. Browsing is free; acting costs, in <strong>both
-        tokens</strong> — the Pollinator is the first surface priced in
-        PollCoin and Gratium together, so its souls carry a working stock
-        of both.
-      </p>
+      <h1>
+        <Icon name="hive" /> Neural Pollinator
+        <LearnMore label="About the Neural Pollinator — the idea incubator">
+          <h4>The idea incubator</h4>
+          <p>
+            <em>Workshop an idea before you defend it in public.</em> A
+            chamber is an enclosed pod dedicated to one idea: break it
+            down to first principles, bring knowledge and debate, work
+            it toward viability.
+          </p>
+          <p>
+            Unlike Discussions (open-air), you enter a chamber to see
+            what&rsquo;s inside — the <strong>storefront is public, the
+            workshop is enclosed</strong>. Workshop conversation is
+            deletable working material, never the permanent record, and
+            never in the search index; the case a chamber eventually
+            makes in public is what enters the record.
+          </p>
+          <p>
+            Browsing is free; acting costs in <strong>both tokens</strong>{" "}
+            — the Pollinator is the first surface priced in PollCoin and
+            Gratium together, so its souls carry a working stock of both.
+            After launch, the Leaderboard and the Tournament of Ideas
+            arrive: the best public chambers compete to become the
+            community&rsquo;s main mission.
+          </p>
+        </LearnMore>
+      </h1>
       <p className="interim-note">
         The Leaderboard and the Tournament of Ideas — where the best
         public chambers compete to become the community&apos;s main
