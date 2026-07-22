@@ -123,7 +123,7 @@ export default async function CirclePage({
                 <option value="">None</option>
                 {pillars.map((p) => (
                   <option key={p.id} value={p.id}>
-                    <PillarMark slug={p.slug} /> {p.name}
+                    {p.name}
                   </option>
                 ))}
               </select>

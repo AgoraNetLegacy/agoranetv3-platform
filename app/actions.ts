@@ -83,6 +83,7 @@ import {
 } from "@/lib/webSession";
 import { enforceRateLimit, type RateLimitPolicyName } from "@/lib/rateLimit";
 import { recordEvent, type AnalyticsEventName } from "@/lib/analytics";
+import { asSpiritLevel } from "@/lib/spirit";
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
@@ -1055,6 +1056,33 @@ export async function setSwitchAnimation(formData: FormData) {
   backTo("/settings", "Switch animation set for this face.");
 }
 
+/** Spirit Mode (owner-ruled 2026-07-21): the bubble dot flips the veil
+ *  on/off at will; the level itself is a Settings choice. No redirect —
+ *  the toggle must not yank the soul off the page they're reading. */
+export async function toggleSpiritMode() {
+  const face = await requireFace("settings");
+  await db.profile.update({
+    where: { id: face.id },
+    data: { spiritActive: !face.spiritActive },
+  });
+  revalidatePath("/", "layout");
+}
+
+/** The Settings side of Spirit Mode: which level the veil uses (all
+ *  three available; discovery is the default) and whether fresh
+ *  sign-ins begin already veiled. */
+export async function updateSpiritSettings(formData: FormData) {
+  const face = await requireFace("settings");
+  const level = asSpiritLevel(String(formData.get("spiritLevel") ?? "discovery"));
+  const onLogin = formData.get("spiritOnLogin") === "on";
+  await db.profile.update({
+    where: { id: face.id },
+    data: { spiritLevel: level, spiritOnLogin: onLogin },
+  });
+  revalidatePath("/", "layout");
+  backTo("/settings", "Spirit Mode set for this face.");
+}
+
 // ------------------------------------------------------------------ session
 
 export async function loginFace(formData: FormData) {
@@ -1068,6 +1096,14 @@ export async function loginFace(formData: FormData) {
   const sessionId = await ensureSessionId();
   const session = await currentSession();
   await addFace(db, { sessionId, profileId: result.profile.id });
+  // Spirit Mode: a face that chose to begin sign-ins veiled arrives
+  // veiled (Settings choice, per face).
+  if (result.profile.spiritOnLogin && !result.profile.spiritActive) {
+    await db.profile.update({
+      where: { id: result.profile.id },
+      data: { spiritActive: true },
+    });
+  }
   const switched = await switchFace(db, {
     sessionId,
     fromProfileId: session?.activeProfileId ?? null,

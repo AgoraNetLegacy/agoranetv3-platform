@@ -18,6 +18,7 @@ import { randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
 import { clearGateTx } from "./gate";
+import { spiritCovers } from "./spirit";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
 import { chargeToTreasury, maybeFirstActionGrant } from "./economy";
@@ -59,7 +60,18 @@ export async function myFellowSouls(db: PrismaClient, profileId: string) {
   );
   return db.profile.findMany({
     where: { id: { in: otherIds } },
-    select: { id: true, handle: true, displayName: true, face: true },
+    // spiritActive/spiritLevel ride along so the souls page can show a
+    // bonded fellow walking unseen (ghost level only) — this is the one
+    // deliberate crack in the veil's silence: your OWN fellows may know
+    // you're away, strangers never learn anything.
+    select: {
+      id: true,
+      handle: true,
+      displayName: true,
+      face: true,
+      spiritActive: true,
+      spiritLevel: true,
+    },
   });
 }
 
@@ -107,6 +119,11 @@ export async function sendFellowSoulRequest(
   // Blocks are quiet (§5.2): the same neutral refusal a stranger would
   // see for any undeliverable request — never a block notice.
   if (await isBlocked(db, to.id, from.id)) {
+    return { ok: false, reason: "This request can't be delivered." };
+  }
+  // Spirit Mode at inbound or above refuses new requests — with the
+  // block's exact wording, so the veil is never itself a signal.
+  if (spiritCovers(to, "inbound")) {
     return { ok: false, reason: "This request can't be delivered." };
   }
   const pending = await db.fellowSoulRequest.findFirst({

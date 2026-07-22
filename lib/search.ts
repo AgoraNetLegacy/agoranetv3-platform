@@ -200,6 +200,9 @@ export async function search(
     const profiles = await db.profile.findMany({
       where: {
         status: "active",
+        // Spirit Mode: every level of the veil covers discovery — a
+        // veiled soul simply isn't in this lane (lib/spirit.ts).
+        spiritActive: false,
         OR: [{ handle: { contains: q.toLowerCase().replace(/^@/, "") } }, { displayName: { contains: q } }],
       },
       take: LIMIT_PER_TYPE,

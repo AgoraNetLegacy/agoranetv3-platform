@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
-import { PillarMark } from "@/components/Icon";
+import { LearnMore } from "@/components/LearnMore";
 import {
   search,
   recordSearch,
@@ -60,7 +60,55 @@ export default async function SearchPage({
 
   return (
     <>
-      <h1>Search</h1>
+      <h1>
+        Search
+        <LearnMore label="About search — what the one box can find">
+          <h4>One box, nine kinds of thing</h4>
+          <ul>
+            <li>
+              <strong>Content</strong> — Discussions, replies, Circle
+              pages, Chamber storefronts.
+            </li>
+            <li>
+              <strong>Souls</strong> — look up anyone by @handle or
+              display name.
+            </li>
+            <li>
+              <strong>Fellow souls</strong> — search within your own
+              list.
+            </li>
+            <li>
+              <strong>Places</strong> — Circles working in a city or
+              region.
+            </li>
+            <li>
+              <strong>Pillars &amp; canon</strong> — the 49 questions and
+              56 domains.
+            </li>
+            <li>
+              <strong>Civic records</strong> — governance results, the
+              rulebook, treasury days.
+            </li>
+            <li>
+              <strong>Polls</strong> — open now, or past results.
+            </li>
+            <li>
+              <strong>Sources</strong> — every conversation citing a
+              study or article. Paste a URL to find each room discussing
+              it.
+            </li>
+            <li>
+              <strong>Help</strong> — how the platform works, fees,
+              rules.
+            </li>
+          </ul>
+          <p>
+            The filters narrow by kind, pillar, permanence, place, or
+            date. Never here: direct messages, workshop interiors, and
+            moderator identities — by law, not by ranking.
+          </p>
+        </LearnMore>
+      </h1>
       <p className="lore">
         Nine kinds of thing, one box. Free for everyone — search is
         reading. <Link href="/search/about">How results are ranked →</Link>
@@ -73,57 +121,78 @@ export default async function SearchPage({
       </p>
 
       <form method="get" className="composer">
-        <input
-          type="search"
-          name="q"
-          defaultValue={q}
-          placeholder="A topic, a @handle, a city, a study URL, a rule…"
-          style={{ width: "100%", padding: "0.5rem" }}
-        />
-        <div style={{ margin: "0.5rem 0", fontSize: "0.85rem" }}>
-          <select name="type" defaultValue={params.type ?? ""}>
-            <option value="">Everything</option>
-            {ENTITY_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {ENTITY_LABELS[t]}
-              </option>
-            ))}
-          </select>{" "}
-          <select name="pillar" defaultValue={params.pillar ?? ""}>
-            <option value="">Any pillar</option>
-            {pillars.map((p) => (
-              <option key={p.id} value={p.slug}>
-                <PillarMark slug={p.slug} /> {p.name}
-              </option>
-            ))}
-          </select>{" "}
-          <select name="permanence" defaultValue={params.permanence ?? ""}>
-            <option value="">Any permanence</option>
-            <option value="permanent">Permanent record</option>
-            <option value="deletable">Author-deletable</option>
-          </select>{" "}
-          <select name="pollStatus" defaultValue={params.pollStatus ?? ""}>
-            <option value="">Polls: any status</option>
-            <option value="open">Open now</option>
-            <option value="closed">Past results</option>
-          </select>{" "}
-          <label>
-            <input type="checkbox" name="hasSources" defaultChecked={params.hasSources === "on"} />{" "}
-            sourced only
-          </label>{" "}
+        <div className="search-hero">
           <input
-            name="place"
-            defaultValue={params.place ?? ""}
-            placeholder="Place filter"
-            style={{ width: "8rem" }}
-          />{" "}
-          <label>
-            from <input type="date" name="from" defaultValue={params.from ?? ""} />
-          </label>{" "}
-          <label>
-            to <input type="date" name="to" defaultValue={params.to ?? ""} />
-          </label>{" "}
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="A topic, a @handle, a city, a study URL, a rule…"
+          />
           <button type="submit">Search</button>
+        </div>
+        <div className="search-filters">
+          <label className="search-filter">
+            Type
+            <select name="type" defaultValue={params.type ?? ""}>
+              <option value="">Everything</option>
+              {ENTITY_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {ENTITY_LABELS[t]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="search-filter">
+            Pillar
+            <select name="pillar" defaultValue={params.pillar ?? ""}>
+              <option value="">Any pillar</option>
+              {pillars.map((p) => (
+                <option key={p.id} value={p.slug}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="search-filter">
+            Permanence
+            <select name="permanence" defaultValue={params.permanence ?? ""}>
+              <option value="">Any</option>
+              <option value="permanent">Permanent record</option>
+              <option value="deletable">Author-deletable</option>
+            </select>
+          </label>
+          <label className="search-filter">
+            Polls
+            <select name="pollStatus" defaultValue={params.pollStatus ?? ""}>
+              <option value="">Any status</option>
+              <option value="open">Open now</option>
+              <option value="closed">Past results</option>
+            </select>
+          </label>
+          <label className="search-filter">
+            Place
+            <input
+              name="place"
+              defaultValue={params.place ?? ""}
+              placeholder="Anywhere"
+            />
+          </label>
+          <label className="search-filter">
+            From
+            <input type="date" name="from" defaultValue={params.from ?? ""} />
+          </label>
+          <label className="search-filter">
+            To
+            <input type="date" name="to" defaultValue={params.to ?? ""} />
+          </label>
+          <label className="search-filter search-check">
+            <input
+              type="checkbox"
+              name="hasSources"
+              defaultChecked={params.hasSources === "on"}
+            />
+            sourced only
+          </label>
         </div>
       </form>
 

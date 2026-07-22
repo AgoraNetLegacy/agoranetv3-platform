@@ -159,15 +159,23 @@ export default async function SoulsPage({
         never computed against.
       </p>
       <ul>
-        {souls.map((s) => (
-          <li key={s.id}>
+        {souls.map((s) => {
+          const unseen = s.spiritActive && s.spiritLevel === "ghost";
+          return (
+          <li key={s.id} className={unseen ? "soul-unseen" : undefined}>
+            <span
+              className={`presence-dot${unseen ? " unseen" : ""}`}
+              aria-hidden="true"
+            />
             <span className="pseudonym">{s.displayName}</span> @{s.handle}{" "}
+            {unseen && <span className="lore">· walking unseen</span>}{" "}
             <form action={submitReleaseBond} className="inline">
               <input type="hidden" name="otherProfileId" value={s.id} />
               <button type="submit">Release bond (quiet)</button>
             </form>
           </li>
-        ))}
+          );
+        })}
         {souls.length === 0 && <li className="lore">None yet — send a request below.</li>}
       </ul>
       <details>

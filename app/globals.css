@@ -121,7 +121,7 @@ main { max-width: 780px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
 /* §5.3 the design pass: buttons look decided, never browser-default.
    Form submits inside ceremonies/composers carry the accent; everything
    else is quiet. The reset classes (.linklike, .navlink-button) win. */
-button:not(.linklike):not(.navlink-button) {
+button:not(.linklike):not(.navlink-button):not(.profile-mode-dot) {
   font: inherit;
   font-size: 0.9rem;
   font-weight: 600;
@@ -132,7 +132,7 @@ button:not(.linklike):not(.navlink-button) {
   padding: 0.35rem 0.85rem;
   cursor: pointer;
 }
-button:not(.linklike):not(.navlink-button):hover {
+button:not(.linklike):not(.navlink-button):not(.profile-mode-dot):hover {
   background: var(--accent-soft);
   border-color: var(--accent);
 }
@@ -288,11 +288,21 @@ header.site .brand { font-weight: 700; color: var(--ink); font-family: var(--fon
 
 /* Floating identity control: keeps face switching and session actions
    available without spending the header's horizontal space. */
-.profile-bubble {
+.profile-bubble-anchor {
   position: fixed;
   right: 22px;
   bottom: 22px;
   z-index: 80;
+}
+.profile-bubble { position: relative; }
+/* The spirit toggle wraps the dot; it floats over the bubble's corner
+   and must stay clickable above the summary. */
+.spirit-toggle {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  z-index: 2;
+  margin: 0;
 }
 .profile-bubble > summary {
   position: relative;
@@ -317,17 +327,44 @@ header.site .brand { font-weight: 700; color: var(--ink); font-family: var(--fon
   box-shadow: 0 20px 52px rgba(0, 0, 0, .28), inset 0 0 0 4px var(--surface-2);
 }
 .profile-bubble > summary .pi { font-size: 1.45rem; }
+/* The dot is a BUTTON — the Spirit Mode toggle — and it must read at a
+   glance (owner ruling 2026-07-21): BRIGHT GREEN FILLED = visible,
+   EMPTY = walking unseen. The same green in every room, like the
+   permanence amber: presence is a cross-theme constant. */
 .profile-mode-dot {
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  width: 13px;
-  height: 13px;
+  display: block;
+  width: 17px;
+  height: 17px;
+  padding: 0;
   border: 3px solid var(--surface);
   border-radius: 50%;
+  cursor: pointer;
+  background: #22e065;
+  box-shadow: 0 0 0 1px #16a34a, 0 0 9px rgba(34, 224, 101, .8);
 }
-.profile-mode-dot.true-self { background: #fff; box-shadow: 0 0 0 1px #56bdd2; }
-.profile-mode-dot.alias { background: #10181c; box-shadow: 0 0 0 1px #56bdd2; }
+.profile-mode-dot.spirit {
+  background: transparent;
+  box-shadow: 0 0 0 1px var(--muted);
+}
+.profile-mode-dot:hover { box-shadow: 0 0 0 2px var(--accent); }
+/* The same visual language on the fellow-souls list: a green presence
+   dot beside each fellow; empty dot + faded name for a soul walking
+   unseen (ghost level — the one crack in the veil, fellows only). */
+.presence-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  background: #22e065;
+  box-shadow: 0 0 0 1px #16a34a, 0 0 6px rgba(34, 224, 101, .7);
+  vertical-align: 0;
+}
+.presence-dot.unseen {
+  background: transparent;
+  box-shadow: 0 0 0 1px var(--muted);
+}
+.soul-unseen .pseudonym, .soul-unseen { opacity: 0.55; }
 .profile-bubble[open] > summary { border-color: var(--accent); color: var(--accent); }
 .profile-bubble-panel {
   position: absolute;
@@ -788,13 +825,15 @@ button.linklike.brand {
   font-weight: 600;
 }
 
+/* A door, not a field (owner ruling 2026-07-21): it's a link to
+   /search, so it takes only the width it needs — header space is
+   reserved for what's coming. */
 .search-door {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  min-width: 220px;
+  gap: 0.5rem;
   margin-left: auto;
-  padding: 0.58rem 0.72rem;
+  padding: 0.58rem 0.95rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
   color: var(--muted);
@@ -804,15 +843,6 @@ button.linklike.brand {
 }
 .search-door:hover { color: var(--ink); border-color: var(--accent); text-decoration: none; }
 .search-door .pi { font-size: 1.15rem; }
-.search-door kbd {
-  margin-left: auto;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 0.05rem 0.35rem;
-  color: var(--muted);
-  background: var(--surface-2);
-  font: 0.65rem var(--font-text);
-}
 
 .shell { align-items: stretch; min-height: calc(100vh - var(--header-height)); }
 .sidebar {
@@ -994,14 +1024,14 @@ button.linklike.brand {
 }
 .face-chip { padding: 0.35rem 0.7rem; box-shadow: 0 7px 18px rgba(0,0,0,.06); }
 
-button:not(.linklike):not(.navlink-button) {
+button:not(.linklike):not(.navlink-button):not(.profile-mode-dot) {
   min-height: 40px;
   padding: 0.52rem 0.95rem;
   border-radius: 10px;
   box-shadow: 0 5px 18px rgba(0,0,0,.04);
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
 }
-button:not(.linklike):not(.navlink-button):hover { transform: translateY(-1px); }
+button:not(.linklike):not(.navlink-button):not(.profile-mode-dot):hover { transform: translateY(-1px); }
 input, textarea, select {
   min-height: 44px;
   border-radius: 11px !important;
@@ -1009,6 +1039,117 @@ input, textarea, select {
   background: var(--surface) !important;
   color: var(--ink) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+/* ---- the section "?" (LearnMore): depth one click away ---- */
+.learn-more {
+  position: relative;
+  display: inline-block;
+  margin-left: 0.55rem;
+  vertical-align: middle;
+}
+.learn-more > summary {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+  background: var(--surface-2);
+  cursor: pointer;
+  list-style: none;
+  /* resets — this often sits inside a display-font heading */
+  font-family: var(--font-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: normal;
+}
+.learn-more > summary::-webkit-details-marker { display: none; }
+.learn-more > summary:hover,
+.learn-more[open] > summary {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.learn-more-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 40;
+  width: min(460px, calc(100vw - 2.5rem));
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+  /* resets against a heading parent */
+  font-family: var(--font-text);
+  font-size: 0.84rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.65;
+  color: var(--ink);
+  text-align: left;
+}
+.learn-more-panel h4 {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.learn-more-panel ul { margin: 0.3rem 0 0.6rem; padding-left: 1.1rem; }
+.learn-more-panel li { margin: 0.22rem 0; }
+.learn-more-panel p { margin: 0.45rem 0; }
+
+/* ---- /search: the hero box and the labeled filter rail ---- */
+.search-hero { display: flex; gap: 0.6rem; }
+.search-hero input[type="search"] {
+  flex: 1;
+  min-width: 0;
+  padding: 0 1rem;
+  font-size: 1.02rem;
+}
+.search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.6rem 0.8rem;
+  margin: 0.85rem 0 1.3rem;
+}
+.search-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+/* Long option labels (the Type list) must not inflate the closed
+   control — the open dropdown still shows them in full. */
+.search-filter select, .search-filter input { font-size: 0.86rem; max-width: 13rem; }
+.search-filter input[name="place"] { width: 9rem; }
+/* the checkbox reads as one inline chip, not a stacked column */
+.search-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.85rem;
+  font-weight: 550;
+}
+.search-check input[type="checkbox"] {
+  min-height: 0;
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--accent);
 }
 textarea { padding: 0.8rem !important; }
 
@@ -1028,16 +1169,19 @@ textarea { padding: 0.8rem !important; }
   padding: 1.05rem 1.1rem;
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
+/* The corner motif: concentric hexagon outlines. Drawn as a mask over
+   a --line-colored box (rather than borders/box-shadows, which can only
+   make circles), so it stays theme-aware in all three rooms. */
 .pillar-grid li::after, .domain-grid li::after {
   content: "";
   position: absolute;
-  right: -30px;
-  bottom: -30px;
-  width: 90px;
-  height: 90px;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  box-shadow: 0 0 0 14px color-mix(in srgb, var(--line) 45%, transparent), 0 0 0 28px color-mix(in srgb, var(--line) 22%, transparent);
+  right: -36px;
+  bottom: -36px;
+  width: 146px;
+  height: 146px;
+  background: var(--line);
+  -webkit-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='none' stroke='white'><polygon points='50,20 24.02,35 24.02,65 50,80 75.98,65 75.98,35' stroke-width='1.6'/><polygon points='50,11.5 16.66,30.75 16.66,69.25 50,88.5 83.34,69.25 83.34,30.75' stroke-width='7' stroke-opacity='.45'/><polygon points='50,3.5 9.73,26.75 9.73,73.25 50,96.5 90.27,73.25 90.27,26.75' stroke-width='5' stroke-opacity='.22'/></g></svg>") center / contain no-repeat;
+  mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='none' stroke='white'><polygon points='50,20 24.02,35 24.02,65 50,80 75.98,65 75.98,35' stroke-width='1.6'/><polygon points='50,11.5 16.66,30.75 16.66,69.25 50,88.5 83.34,69.25 83.34,30.75' stroke-width='7' stroke-opacity='.45'/><polygon points='50,3.5 9.73,26.75 9.73,73.25 50,96.5 90.27,73.25 90.27,26.75' stroke-width='5' stroke-opacity='.22'/></g></svg>") center / contain no-repeat;
   pointer-events: none;
 }
 .pillar-grid li:hover, .domain-grid li:hover, ul.discussions li:hover {
@@ -1053,18 +1197,35 @@ textarea { padding: 0.8rem !important; }
   border: 1px solid rgba(255,255,255,.45);
   border-left-width: 5px;
   border-radius: 26px;
-  box-shadow: var(--shadow-raised);
+  /* Frosted glass with a brushed-metal sheen: the pillar's tint arrives
+     as --banner-tint (see app/pillars/[slug]/page.tsx) and is made
+     translucent, then a diagonal light streak runs across it. The
+     agora-hero variant overrides background with its own artwork. */
+  background:
+    linear-gradient(120deg,
+      rgba(255, 255, 255, .55) 0%,
+      rgba(255, 255, 255, .12) 32%,
+      rgba(255, 255, 255, 0) 52%,
+      rgba(255, 255, 255, .22) 72%,
+      rgba(255, 255, 255, .06) 100%),
+    color-mix(in srgb, var(--banner-tint, var(--surface-2)) 80%, transparent);
+  backdrop-filter: blur(14px) saturate(1.25);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .6),
+    var(--shadow-raised);
 }
+/* The banner's corner motif — the same concentric-hexagon family as the
+   grid cards, scaled up and kept as faint as the ring it replaces. */
 .why-banner::after {
   content: "";
   position: absolute;
-  width: 270px;
-  height: 270px;
-  right: -90px;
-  top: -100px;
-  border: 1px solid rgba(18, 64, 78, .12);
-  border-radius: 50%;
-  box-shadow: 0 0 0 30px rgba(18,64,78,.035), 0 0 0 62px rgba(18,64,78,.025);
+  width: 340px;
+  height: 340px;
+  right: -110px;
+  top: -120px;
+  background: rgba(18, 64, 78, .12);
+  -webkit-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='none' stroke='white'><polygon points='50,20 24.02,35 24.02,65 50,80 75.98,65 75.98,35' stroke-width='0.8'/><polygon points='50,13.5 18.39,31.75 18.39,68.25 50,86.5 81.61,68.25 81.61,31.75' stroke-width='9' stroke-opacity='.29'/><polygon points='50,5 11.03,27.5 11.03,72.5 50,95 88.97,72.5 88.97,27.5' stroke-width='8' stroke-opacity='.21'/></g></svg>") center / contain no-repeat;
+  mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='none' stroke='white'><polygon points='50,20 24.02,35 24.02,65 50,80 75.98,65 75.98,35' stroke-width='0.8'/><polygon points='50,13.5 18.39,31.75 18.39,68.25 50,86.5 81.61,68.25 81.61,31.75' stroke-width='9' stroke-opacity='.29'/><polygon points='50,5 11.03,27.5 11.03,72.5 50,95 88.97,72.5 88.97,27.5' stroke-width='8' stroke-opacity='.21'/></g></svg>") center / contain no-repeat;
 }
 .why-banner .why-text { max-width: 750px; font-size: 1rem; line-height: 1.75; }
 /* The Agora dashboard's own hero — a starfield backdrop instead of the
@@ -1096,11 +1257,25 @@ html[data-theme="true-self"] .agora-dashboard-backdrop {
   z-index: -1;
   background: #eef2fb url("/brand/agora/agora-hero-starfield-light.png") center / cover no-repeat;
 }
+/* The Alias room gets the dark rendering as the page's own backdrop,
+   softly blurred (owner ask) — the hero card keeps the sharp copy, so
+   it reads as the focused window onto the same sky. Scaled up a touch
+   so the blur doesn't expose fringed edges. */
+html[data-theme="alias"] .agora-dashboard-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: #05070d url("/brand/agora/agora-hero-starfield.png") center / cover no-repeat;
+  filter: blur(7px) brightness(.85);
+  transform: scale(1.05);
+}
 /* body's own opaque background paints over a z-index:-1 fixed child
    (root stacking order: html bg → negative-z children → body bg), so
    while the backdrop is mounted the body must let it show through.
    :has() keeps this scoped to the dashboard page only. */
-html[data-theme="true-self"] body:has(.agora-dashboard-backdrop) { background: none; }
+html[data-theme="true-self"] body:has(.agora-dashboard-backdrop),
+html[data-theme="alias"] body:has(.agora-dashboard-backdrop) { background: none; }
 html[data-theme="true-self"] .why-banner.agora-hero {
   background: color-mix(in srgb, var(--surface) 55%, transparent);
   backdrop-filter: blur(18px) saturate(1.3);
@@ -1123,7 +1298,7 @@ table.books tr:last-child td { border-bottom: 0; }
 @media (max-width: 1120px) {
   .balance-chip { display: none; }
   .search-door { min-width: 42px; width: 42px; padding: 0; justify-content: center; }
-  .search-door span, .search-door kbd { display: none; }
+  .search-door span { display: none; }
 }
 
 @media (max-width: 860px) {

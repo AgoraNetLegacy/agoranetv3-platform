@@ -8,8 +8,9 @@ import { db } from "@/lib/db";
 import { balanceOf } from "@/lib/economy";
 import { activeTermFor } from "@/lib/moderation";
 import { activeFace, sessionFaces, faceFlipPending } from "@/lib/webSession";
-import { returnToHub, switchToFace, signOutSession } from "./actions";
+import { returnToHub, switchToFace, signOutSession, toggleSpiritMode } from "./actions";
 import { Icon } from "@/components/Icon";
+import { AutoCloseDetails } from "@/components/AutoCloseDetails";
 
 export const dynamic = "force-dynamic";
 
@@ -93,15 +94,33 @@ async function ProfileBubble() {
   const others = faces.filter((f) => f.id !== face.id);
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
   return (
-    // Keyed by the active face: a successful switch remounts the
-    // <details>, which resets its uncontrolled `open` state — the panel
-    // closes itself after a switch instead of lingering. On a refused
-    // switch the face (and key) are unchanged, so the panel stays open
-    // to show the refusal.
-    <details className="profile-bubble" key={face.id}>
+    // The anchor pins the bubble; the spirit dot lives OUTSIDE the
+    // <details> because closed-details content is hidden and a button
+    // inside <summary> would also toggle the panel.
+    <div className="profile-bubble-anchor">
+      {/* Spirit Mode dot (owner-ruled 2026-07-21): the small dot on the
+          bubble IS the veil toggle — filled when visible, hollowed when
+          walking unseen. The level itself is a Settings choice. */}
+      <form action={toggleSpiritMode} className="spirit-toggle">
+        <button
+          type="submit"
+          className={`profile-mode-dot ${chipClass}${face.spiritActive ? " spirit" : ""}`}
+          aria-label={
+            face.spiritActive
+              ? "Spirit Mode is on — click to become visible"
+              : "Click to enter Spirit Mode (visibility veil)"
+          }
+          title={face.spiritActive ? "Walking unseen — click to reappear" : "Spirit Mode"}
+        />
+      </form>
+      {/* Keyed by the active face: a successful switch remounts the
+          <details>, which resets its uncontrolled `open` state — the
+          panel closes itself after a switch instead of lingering. On a
+          refused switch the face (and key) are unchanged, so the panel
+          stays open to show the refusal. */}
+      <AutoCloseDetails className="profile-bubble" key={face.id}>
       <summary aria-label="Profile mode and face switching">
         <Icon name="profile" />
-        <span className={`profile-mode-dot ${chipClass}`} aria-hidden="true" />
       </summary>
       <div className="profile-bubble-panel">
         <div className="profile-bubble-heading">
@@ -132,12 +151,14 @@ async function ProfileBubble() {
         <div className="profile-bubble-links">
           <Link href="/profile">Profile</Link>
           <Link href="/settings">Settings</Link>
+          <Link href="/support">Support</Link>
           <form action={signOutSession} className="inline">
             <button type="submit" className="linklike">Sign out</button>
           </form>
         </div>
       </div>
-    </details>
+      </AutoCloseDetails>
+    </div>
   );
 }
 
@@ -250,7 +271,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <span>AgoraNet<small>Civic observatory</small></span>
             </button>
           </form>
-          <Link href="/search" className="search-door"><Icon name="search" /><span>Search the commons</span><kbd>⌘ K</kbd></Link>
+          <Link href="/search" className="search-door"><Icon name="search" /><span>Search</span></Link>
           <FaceBar />
         </header>
         <ProfileBubble />

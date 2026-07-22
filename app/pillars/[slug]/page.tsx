@@ -54,7 +54,15 @@ export default async function PillarPage({
           identity, shown once a soul has actually entered. */}
       <div
         className="why-banner"
-        style={{ borderLeft: `5px solid ${pillar.colorPrimary}`, background: pillar.colorLight }}
+        style={
+          {
+            borderLeft: `5px solid ${pillar.colorPrimary}`,
+            // The tint rides a CSS variable so globals.css can compose
+            // it into the frosted/sheen treatment instead of painting a
+            // flat pastel.
+            "--banner-tint": pillar.colorLight,
+          } as React.CSSProperties
+        }
       >
         <h1 style={{ marginBottom: "0.1rem" }}>
           <PillarMark slug={pillar.slug} /> {pillar.name}

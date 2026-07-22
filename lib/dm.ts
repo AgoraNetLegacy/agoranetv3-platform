@@ -17,6 +17,7 @@
 import { randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import { clearGateTx, gateDuplicateConfirmed } from "./gate";
+import { spiritCovers } from "./spirit";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
 import { chargeToTreasury, maybeFirstActionGrant } from "./economy";
@@ -102,6 +103,14 @@ export async function openThread(
       body,
     });
     return sent.ok ? { ok: true, threadId: existing.id } : sent;
+  }
+
+  // Spirit Mode at inbound or above refuses NEW threads — the block's
+  // exact wording (§5.2), so the veil is never itself a signal.
+  // Existing conversations continue (ghost handles those in
+  // sendMessage).
+  if (spiritCovers(to, "inbound")) {
+    return { ok: false, reason: "This message can't be delivered." };
   }
 
   const bonded = await areFellowSouls(db, from.id, to.id);
@@ -203,6 +212,12 @@ export async function sendMessage(
   const otherId =
     side === "initiator" ? thread.otherProfileId : thread.initiatorProfileId;
   if (await isBlocked(db, otherId, input.senderProfileId)) {
+    return { ok: false, reason: "This message can't be delivered." };
+  }
+  // Full ghost: even existing threads refuse new messages, with the
+  // same neutral wording — the veil is never itself a signal.
+  const other = await db.profile.findUnique({ where: { id: otherId } });
+  if (other && spiritCovers(other, "ghost")) {
     return { ok: false, reason: "This message can't be delivered." };
   }
   const profile = await db.profile.findUniqueOrThrow({

@@ -5,6 +5,7 @@ import { alignmentPillarsFor, lastAttestedAt, circleStatusLabel } from "@/lib/ci
 import { getRail } from "@/lib/rails";
 import { submitCircle } from "@/app/actions";
 import { Icon, PillarMark } from "@/components/Icon";
+import { LearnMore } from "@/components/LearnMore";
 
 export const dynamic = "force-dynamic";
 
@@ -89,15 +90,31 @@ export default async function CirclesPage({
 
   return (
     <>
-      <h1><Icon name="circles" /> Circles — the action layer</h1>
-      <p>
-        <em>Turn talk into proof you acted.</em>
-      </p>
-      <p className="lore">
-        Where deliberation becomes provable action: a bounded group owns a
-        problem, works it in their room, and logs what actually got done —
-        attested, on the public record, forever.
-      </p>
+      <h1>
+        <Icon name="circles" /> Circles
+        <LearnMore label="About Circles — the action layer">
+          <h4>The action layer</h4>
+          <p>
+            <em>Turn talk into proof you acted.</em> Circles are where
+            deliberation becomes provable action: a bounded group owns a
+            real problem, works it in their own room, and logs what
+            actually got done — attested by the members, on the public
+            record, forever.
+          </p>
+          <p>
+            A Circle forms on a problem, not a vibe: it belongs to a
+            pillar, can carry a place tag for work rooted somewhere real,
+            and its action log is the point — the platform&rsquo;s answer
+            to communities that deliberate, decide, and never act.
+          </p>
+          <p>
+            Discovery is transparent: when a Circle is surfaced for you,
+            the page states exactly why — your standing overlaps its
+            pillar — and that overlap is the whole formula. No hidden
+            ranking, no engagement bait.
+          </p>
+        </LearnMore>
+      </h1>
       {m && <div className="notice">{m}</div>}
 
       {aligned.length > 0 && (
@@ -125,7 +142,7 @@ export default async function CirclesPage({
           <option value="">Any pillar</option>
           {pillars.map((p) => (
             <option key={p.id} value={p.slug}>
-              <PillarMark slug={p.slug} /> {p.name}
+              {p.name}
             </option>
           ))}
         </select>{" "}
@@ -203,7 +220,7 @@ export default async function CirclesPage({
                   .filter((p) => !p.isMeta)
                   .map((p) => (
                     <option key={p.id} value={p.id}>
-                      <PillarMark slug={p.slug} /> {p.name}
+                      {p.name}
                     </option>
                   ))}
               </select>

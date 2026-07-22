@@ -4,6 +4,7 @@ import { editorialFor } from "@/lib/pillarContent";
 import { faceConstellation } from "@/lib/lightScore";
 import { activeFace } from "@/lib/webSession";
 import { PillarMark } from "@/components/Icon";
+import { LearnMore } from "@/components/LearnMore";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,45 @@ export default async function SevenPillars() {
 
   return (
     <>
-      <h1>The Seven Pillars</h1>
+      <h1>
+        The Seven Pillars
+        <LearnMore label="About the pillars — the platform's foundation">
+          <h4>The foundation everything stands on</h4>
+          <p>
+            The pillars are AgoraNet&rsquo;s load-bearing structure — not
+            categories bolted on for navigation, but the reason the
+            platform exists. Each of the six diagnostic pillars names a
+            value civilization runs on — Compassion, Hope, Justice,
+            Freedom, Unity, Harmony — and asks one honest question:
+            where is this broken, and what would fixing it actually
+            take?
+          </p>
+          <p>
+            Each pillar opens into domains — 56 in all, carrying 49
+            canonical questions. Every domain states a settled Picture
+            of what&rsquo;s broken and why it stays broken, plainly and
+            in public, then ends in questions rather than answers. The
+            Discussions, Circles, polls, and governance rooms inside are
+            where the commons works those questions — diagnosis first,
+            then repair.
+          </p>
+          <p>
+            The seventh pillar, The Agora, is deliberately different: it
+            is not a seventh value but the instrument layer — the
+            platform itself, with the tools that make the other six
+            answerable: permanent public discussion, sealed collective
+            decisions, provable action. The six diagnose. The Agora
+            equips. The community inherits.
+          </p>
+          <p>
+            Entering a pillar parks your active face there — one face
+            per pillar at a time — and each pillar carries a flagship
+            Stoic principle as its compass. Your standing in each pillar
+            grows from what you contribute inside it: a constellation,
+            never a sum.
+          </p>
+        </LearnMore>
+      </h1>
       <p>
         Six pillars diagnose; The Agora equips. Read freely; verify to
         act. Entering a pillar parks your active face there — one face per

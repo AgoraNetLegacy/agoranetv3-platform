@@ -6,10 +6,12 @@ import { getRail } from "@/lib/rails";
 import {
   updateDisplayName,
   setSwitchAnimation,
+  updateSpiritSettings,
   submitWalletLink,
   submitSelfCustodyProof,
   submitScriptDonation,
 } from "@/app/actions";
+import { SPIRIT_LEVELS, SPIRIT_LEVEL_LABELS } from "@/lib/spirit";
 import { cardanoNetwork, walletLinkFor, donationsFor } from "@/lib/chain";
 import { donationScript, demoBeneficiaryHash } from "@/lib/chainDonation";
 import { LaceConnect } from "@/components/LaceConnect";
@@ -106,6 +108,42 @@ export default async function SettingsPage({
           </label>
         ))}
         <button type="submit">Save animation choice</button>
+      </form>
+
+      <h3>Spirit Mode</h3>
+      <p className="lore">
+        A visibility veil for this face, toggled any time from the small
+        dot on the profile bubble — filled means visible, hollowed means
+        walking unseen. Choose here how much the veil covers. Refusals it
+        causes look identical to any undeliverable request, so the veil
+        is never itself a signal. What&rsquo;s already in the permanent
+        record stays attributed — no veil rewrites the record.
+      </p>
+      <form action={updateSpiritSettings}>
+        {SPIRIT_LEVELS.map((value) => (
+          <label key={value} style={{ display: "block", margin: "0.3rem 0" }}>
+            <input
+              type="radio"
+              name="spiritLevel"
+              value={value}
+              defaultChecked={face.spiritLevel === value}
+            />{" "}
+            {SPIRIT_LEVEL_LABELS[value]}
+          </label>
+        ))}
+        <label style={{ display: "block", margin: "0.55rem 0 0.3rem" }}>
+          <input
+            type="checkbox"
+            name="spiritOnLogin"
+            defaultChecked={face.spiritOnLogin}
+          />{" "}
+          Begin each fresh sign-in with Spirit Mode already on
+        </label>
+        <p className="lore" style={{ margin: "0.35rem 0" }}>
+          Right now: {face.spiritActive ? "walking unseen" : "visible"} —
+          the dot on the bubble flips this instantly.
+        </p>
+        <button type="submit">Save Spirit Mode</button>
       </form>
 
       <h3>Notifications</h3>
