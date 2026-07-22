@@ -5,6 +5,75 @@
 // color and size, so they read correctly in all three theme rooms.
 
 const PATHS = {
+  agora: (
+    <>
+      <circle cx="12" cy="12" r="8.2" />
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 1.8v2M12 20.2v2M1.8 12h2M20.2 12h2" />
+    </>
+  ),
+  menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  search: (
+    <>
+      <circle cx="10.8" cy="10.8" r="6.8" />
+      <path d="m16 16 4.2 4.2" />
+    </>
+  ),
+  compass: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15.8 8.2-2.1 5.5-5.5 2.1 2.1-5.5 5.5-2.1z" />
+    </>
+  ),
+  pillars: (
+    <>
+      <path d="M4 20V9M9.3 20V9M14.7 20V9M20 20V9M2.8 20h18.4M3 6.8 12 3l9 3.8H3z" />
+    </>
+  ),
+  discuss: (
+    <>
+      <path d="M20.5 11.2a7.8 7.8 0 0 1-8.2 7.3 9.5 9.5 0 0 1-3-.5L4 20l1.6-4.2A7 7 0 0 1 3.5 11c0-4.1 3.8-7.5 8.5-7.5s8.5 3.4 8.5 7.7z" />
+      <path d="M8 10h8M8 13.5h5" />
+    </>
+  ),
+  vote: (
+    <>
+      <path d="M5 10.5 12 3l7 7.5" />
+      <path d="M7.5 9.5v9h9v-9M10 14l1.5 1.5 3-3.2" />
+    </>
+  ),
+  souls: (
+    <>
+      <circle cx="9" cy="8" r="3.3" />
+      <circle cx="17" cy="10" r="2.6" />
+      <path d="M3.5 20c.4-4 2.2-6.2 5.5-6.2s5.2 2.2 5.5 6.2M14.2 15.1c.8-.7 1.8-1 2.9-1 2.5 0 3.8 1.8 4.1 4.9" />
+    </>
+  ),
+  record: (
+    <>
+      <path d="M6 3.5h9l3 3V20.5H6zM15 3.5v3h3" />
+      <path d="M9 11h6M9 14.5h6M9 18h4" />
+    </>
+  ),
+  profile: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4.5 21c.5-5 3-7.5 7.5-7.5s7 2.5 7.5 7.5" />
+    </>
+  ),
+  bell: (
+    <>
+      <path d="M5 17.5h14l-1.6-2.2V10a5.4 5.4 0 0 0-10.8 0v5.3L5 17.5z" />
+      <path d="M10 20.2h4" />
+    </>
+  ),
+  wallet: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="3" />
+      <path d="M3 9h18M15.5 13.8h2" />
+    </>
+  ),
+  chevron: <path d="m9 6 6 6-6 6" />,
   // Civic architecture: the brand mark, governance rooms, the record.
   temple: (
     <>

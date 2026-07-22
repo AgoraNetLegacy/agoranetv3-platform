@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">Gratium double-terminal currency concept</title>
+  <defs>
+    <clipPath id="coin"><circle cx="512" cy="512" r="448"/></clipPath>
+    <clipPath id="dark-half"><path d="M0 0H1024L0 1024Z"/></clipPath>
+  </defs>
+  <circle cx="512" cy="512" r="448" fill="#fff"/>
+  <path d="M0 0H1024L0 1024Z" fill="#000" clip-path="url(#coin)"/>
+
+  <!-- Black symbol over the white half. -->
+  <g fill="#000" stroke="#000">
+    <path d="M478 190V248M546 190V248M478 778V836M546 778V836" fill="none" stroke-width="36" stroke-linecap="round"/>
+    <text x="512" y="755" stroke="none" font-family="Arial, Helvetica, sans-serif" font-size="700" font-weight="700" text-anchor="middle">G</text>
+  </g>
+
+  <!-- The same symbol reverses to white wherever it crosses black. -->
+  <g fill="#fff" stroke="#fff" clip-path="url(#dark-half)">
+    <path d="M478 190V248M546 190V248M478 778V836M546 778V836" fill="none" stroke-width="36" stroke-linecap="round"/>
+    <text x="512" y="755" stroke="none" font-family="Arial, Helvetica, sans-serif" font-size="700" font-weight="700" text-anchor="middle">G</text>
+  </g>
+
+  <circle cx="512" cy="512" r="448" fill="none" stroke="#fff" stroke-width="34"/>
+  <circle cx="512" cy="512" r="448" fill="none" stroke="#000" stroke-width="18"/>
+</svg>

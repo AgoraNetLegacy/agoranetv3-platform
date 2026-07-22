@@ -45,42 +45,94 @@ async function FaceBar() {
         {face.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"} ·{" "}
         {face.displayName} @{face.handle}
       </span>
-      <span className="lore" title="This face's own balances — your two faces' funds never touch.">
-        {pc.toFixed(2)} PC · {g.toFixed(2)} G
+      <span className="balance-chip">
+        <span className="currency-amount">
+          <span className="currency-symbol" tabIndex={0} aria-label="PollCoin">
+            <img
+              className="currency-mark pollcoin-mark"
+              src="/brand/pollcoin/pollcoin-token.png"
+              alt=""
+              aria-hidden="true"
+            />
+            <span className="currency-tooltip" aria-hidden="true">PollCoin</span>
+          </span>
+          {pc.toFixed(2)} PC
+        </span>
+        <span className="balance-divider" aria-hidden="true" />
+        <span className="currency-amount">
+          <span className="currency-symbol" tabIndex={0} aria-label="Gratium">
+            <img
+              className="currency-mark"
+              src="/brand/gratium/concepts/gratium-single-rail.svg"
+              alt=""
+              aria-hidden="true"
+            />
+            <span className="currency-tooltip" aria-hidden="true">Gratium</span>
+          </span>
+          {g.toFixed(2)} G
+        </span>
       </span>
-      <Link href="/inbox">inbox{unread > 0 ? ` (${unread})` : ""}</Link>
-      {others.length === 0 && (
-        <Link
-          href="/login"
-          className="lore"
-          title="Switching appears here once both faces are signed into this browser — a one-time introduction per face."
-        >
-          switch face? sign your other face in once →
-        </Link>
-      )}
-      {others.length > 0 && (
-        <details className="switch-control">
-          <summary>switch face</summary>
-          <div className="switch-panel">
-            <p>
-              Switching is deliberate: it ends this face's pillar
-              sessions.
-            </p>
-            {others.map((p) => (
-              <form key={p.id} action={switchToFace}>
-                <input type="hidden" name="profileId" value={p.id} />
-                <button type="submit">
-                  Switch to {p.displayName} @{p.handle} ({p.face === "TRUE_SELF" ? "True Self" : "Alias"})
-                </button>
-              </form>
-            ))}
-          </div>
-        </details>
-      )}
-      <form action={signOutSession} className="inline">
-        <button type="submit">sign out</button>
-      </form>
+      <Link href="/inbox" className="icon-link" aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}>
+        <Icon name="bell" />
+        {unread > 0 && <span className="notification-dot">{unread}</span>}
+        <span className="currency-tooltip" aria-hidden="true">Notifications</span>
+      </Link>
     </div>
+  );
+}
+
+// Deliberately NOT rendered inside <header>: the header has a
+// backdrop-filter (for the glass effect), which makes it the containing
+// block for any `position: fixed` descendant — the bubble would then
+// pin to the header's own box instead of the viewport, and its popover
+// would render off-screen. Rendered as a sibling of <header> instead so
+// `fixed` resolves against the real viewport.
+async function ProfileBubble() {
+  const [face, faces] = await Promise.all([activeFace(), sessionFaces()]);
+  if (!face) return null;
+  const others = faces.filter((f) => f.id !== face.id);
+  const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
+  return (
+    <details className="profile-bubble">
+      <summary aria-label="Profile mode and face switching">
+        <Icon name="profile" />
+        <span className={`profile-mode-dot ${chipClass}`} aria-hidden="true" />
+      </summary>
+      <div className="profile-bubble-panel">
+        <div className="profile-bubble-heading">
+          <span className={`face-chip ${chipClass}`}>
+            {face.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"}
+          </span>
+          <strong>{face.displayName}</strong>
+          <span className="lore">@{face.handle}</span>
+        </div>
+        <p className="profile-bubble-note">
+          Switching is deliberate: it ends this face&rsquo;s pillar sessions.
+        </p>
+        {others.length === 0 ? (
+          <Link href="/login" className="profile-bubble-action">
+            Sign your other face in once <Icon name="chevron" />
+          </Link>
+        ) : (
+          others.map((p) => (
+            <form key={p.id} action={switchToFace}>
+              <input type="hidden" name="profileId" value={p.id} />
+              <button type="submit" className="profile-bubble-action">
+                Switch to {p.displayName}
+                <span>{p.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"}</span>
+              </button>
+            </form>
+          ))
+        )}
+        <div className="profile-bubble-links">
+          <Link href="/profile">Profile</Link>
+          <Link href="/settings">Settings</Link>
+          <form action={signOutSession} className="inline">
+            <button type="submit" className="linklike">Sign out</button>
+          </form>
+        </div>
+      </div>
+    </details>
   );
 }
 
@@ -106,59 +158,62 @@ async function SideNav() {
     <nav className="sidebar" aria-label="The platform">
       <form action={returnToHub}>
         <button type="submit" className="navlink navlink-button">
-          <Icon name="temple" /> The Agora
+          <span className="nav-icon"><Icon name="agora" /></span>
+          <span>The Agora
           <span className="nav-note">the platform dashboard</span>
+          </span>
         </button>
       </form>
+      <div className="nav-section-label">Explore</div>
       <Link className="navlink" href="/pillars">
-        The Seven Pillars
+        <span className="nav-icon"><Icon name="pillars" /></span><span>The Seven Pillars</span>
       </Link>
       <Link
         className="navlink"
         href="/discussions"
         title="Say it where it can't be quietly erased."
       >
-        Discussions
+        <span className="nav-icon"><Icon name="discuss" /></span><span>Discussions</span>
       </Link>
       <Link
         className="navlink"
         href="/governance"
         title="Decide together, sealed until it's fair."
       >
-        Polls &amp; Governance
+        <span className="nav-icon"><Icon name="vote" /></span><span>Polls &amp; Governance</span>
       </Link>
       <Link className="navlink" href="/circles" title="Turn talk into proof you acted.">
-        Circles
+        <span className="nav-icon"><Icon name="circles" /></span><span>Circles</span>
       </Link>
       <Link
         className="navlink"
         href="/pollinator"
         title="Workshop an idea before you defend it in public."
       >
-        The Neural Pollinator
+        <span className="nav-icon"><Icon name="hive" /></span><span>The Neural Pollinator</span>
       </Link>
       <Link
         className="navlink"
         href="/souls"
         title="Find your people; nobody watches you do it."
       >
-        Fellow Souls &amp; Messages
+        <span className="nav-icon"><Icon name="souls" /></span><span>Fellow Souls &amp; Messages</span>
       </Link>
       <Link
         className="navlink"
         href="/record"
         title="The record nobody can rewrite — including us."
       >
-        The Public Record
+        <span className="nav-icon"><Icon name="record" /></span><span>The Public Record</span>
       </Link>
       {face && (
         <Link className="navlink" href="/profile">
-          This Face&rsquo;s Profile &amp; Settings
+          <span className="nav-icon"><Icon name="profile" /></span><span>This Face&rsquo;s Profile</span>
         </Link>
       )}
       {showWorkbench && (
         <Link className="navlink" href="/moderation">
-          Moderation workbench
+          <span className="nav-icon"><Icon name="badge" /></span><span>Moderation workbench</span>
         </Link>
       )}
     </nav>
@@ -182,16 +237,18 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <input type="checkbox" id="nav-open" className="nav-toggle-box" />
         <header className="site">
           <label htmlFor="nav-open" className="nav-toggle" aria-label="Menu">
-            ☰
+            <Icon name="menu" />
           </label>
           <form action={returnToHub} className="inline">
             <button type="submit" className="linklike brand">
-              <Icon name="temple" /> AgoraNet
+              <span className="brand-mark"><Icon name="agora" /></span>
+              <span>AgoraNet<small>Civic observatory</small></span>
             </button>
           </form>
-          <Link href="/search">Search</Link>
+          <Link href="/search" className="search-door"><Icon name="search" /><span>Search the commons</span><kbd>⌘ K</kbd></Link>
           <FaceBar />
         </header>
+        <ProfileBubble />
         <div className="shell">
           <SideNav />
           <main>{children}</main>
