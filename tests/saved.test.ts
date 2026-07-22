@@ -135,3 +135,22 @@ describe("the memory current (resurfacing)", () => {
     expect(stirring.length).toBe(0);
   });
 });
+
+describe("enclosed-room access (privacy audit 2026-07-22)", () => {
+  it("refuses to save an enclosed room the face doesn't belong to", async () => {
+    // A circle-scoped discussion the saver is not a member of.
+    const circle = await db.circle.findFirst({ where: { status: "active" } });
+    if (!circle) return; // seed has circles; skip defensively
+    const room = await db.discussion.findFirst({
+      where: { circleId: circle.id },
+      select: { id: true },
+    });
+    if (!room) return;
+    const result = await saveDiscussion(db, {
+      profileId: saverId,
+      discussionId: room.id,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain("can't be saved");
+  });
+});

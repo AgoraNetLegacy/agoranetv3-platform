@@ -38,6 +38,11 @@ const nextConfig = {
   // the machine must never change what Next.js traces.
   outputFileTracingRoot: import.meta.dirname,
   poweredByHeader: false,
+  // Profile-image uploads run through Server Actions; the default body
+  // limit is 1 MB, which would reject the ratified 2 MB avatar / 5 MB
+  // banner before the handler runs. 6 MB covers both with headroom;
+  // lib/images.ts enforces the real per-kind limits (2026-07-22).
+  experimental: { serverActions: { bodySizeLimit: "6mb" } },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

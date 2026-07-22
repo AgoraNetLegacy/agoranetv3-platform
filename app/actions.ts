@@ -507,14 +507,18 @@ export async function updateFeedWellbeing(formData: FormData) {
   const face = await requireFace("settings");
   const nudgeRaw = String(formData.get("nudgeAfterMin") ?? "");
   const capRaw = String(formData.get("dailyCapMin") ?? "");
+  // "off", "", "0", or non-numeric all mean OFF (null) — never a
+  // surprise clamp to a minimum (correctness audit 2026-07-22).
+  const nudgeNum = Math.round(Number(nudgeRaw));
   const nudgeAfterMin =
-    nudgeRaw === "off" || nudgeRaw === ""
+    nudgeRaw === "off" || !Number.isFinite(nudgeNum) || nudgeNum <= 0
       ? null
-      : Math.min(120, Math.max(5, Math.round(Number(nudgeRaw)) || 5));
+      : Math.min(120, Math.max(5, nudgeNum));
+  const capNum = Math.round(Number(capRaw));
   const dailyCapMin =
-    capRaw === ""
+    capRaw.trim() === "" || !Number.isFinite(capNum) || capNum <= 0
       ? null
-      : Math.min(600, Math.max(10, Math.round(Number(capRaw)) || 10));
+      : Math.min(600, Math.max(10, capNum));
   await db.feedSettings.upsert({
     where: { profileId: face.id },
     create: { profileId: face.id, nudgeAfterMin, dailyCapMin },

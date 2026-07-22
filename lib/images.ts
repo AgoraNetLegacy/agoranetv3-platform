@@ -54,7 +54,14 @@ export async function ingestProfileImage(
   }
   let out: Buffer;
   try {
-    const img = sharp(input.bytes, { animated: false, pages: 1 });
+    // limitInputPixels caps decode allocation — a sub-1MB PNG bomb can
+    // otherwise expand to ~1GB at sharp's ~268MP default (hardening,
+    // 2026-07-22). 30MP comfortably exceeds any real avatar/banner.
+    const img = sharp(input.bytes, {
+      animated: false,
+      pages: 1,
+      limitInputPixels: 30_000_000,
+    });
     const meta = await img.metadata();
     if (!meta.width || !meta.height) throw new Error("undecodable");
     // rotate() applies EXIF orientation THEN the pipeline drops the

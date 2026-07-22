@@ -41,8 +41,13 @@ export default async function SoulWindow({
     where: { profileId: soul.id },
     select: { updatedAt: true },
   });
+  // Cache-bust coarsened to DAY granularity: millisecond upload times
+  // in public HTML are a correlation signal (two suspected faces'
+  // exact upload moments could bridge them). Day resolution refreshes
+  // the image within a day of replacement without publishing the
+  // moment (privacy audit 2026-07-22).
   const bust = images
-    .map((i) => i.updatedAt.getTime())
+    .map((i) => Math.floor(i.updatedAt.getTime() / 86_400_000))
     .sort()
     .join("-");
 

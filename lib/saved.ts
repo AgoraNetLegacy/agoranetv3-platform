@@ -15,6 +15,32 @@
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx } from "./db";
 import { getRail } from "./rails";
+import { roomAccess } from "./circles";
+import { workshopAccess } from "./chambers";
+
+/** Can this face read this thread right now? Public spaces are always
+ *  readable; enclosed rooms require current membership — the same rule
+ *  the thread page itself enforces. Load-bearing for saves: a saved
+ *  enclosed room must stop leaking the moment the face loses access
+ *  (privacy audit 2026-07-22). */
+async function canRead(
+  db: DbOrTx,
+  discussion: {
+    circleId: string | null;
+    chamberId: string | null;
+    circle?: { id: string; status: string } | null;
+  },
+  profileId: string
+): Promise<boolean> {
+  if (discussion.circleId) {
+    if (!discussion.circle) return false;
+    return (await roomAccess(db, discussion.circle, profileId)).read;
+  }
+  if (discussion.chamberId) {
+    return workshopAccess(db, discussion.chamberId, profileId);
+  }
+  return true;
+}
 
 export async function saveDiscussion(
   db: DbOrTx,
@@ -22,9 +48,19 @@ export async function saveDiscussion(
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
   const discussion = await db.discussion.findUnique({
     where: { id: input.discussionId },
-    select: { id: true },
+    select: {
+      id: true,
+      circleId: true,
+      chamberId: true,
+      circle: { select: { id: true, status: true } },
+    },
   });
   if (!discussion) return { ok: false, reason: "No such Discussion." };
+  // You can only save what you can currently read — never a handle onto
+  // an enclosed room you don't belong to.
+  if (!(await canRead(db, discussion, input.profileId))) {
+    return { ok: false, reason: "This Discussion can't be saved." };
+  }
   await db.savedDiscussion.upsert({
     where: {
       profileId_discussionId: {
@@ -90,6 +126,7 @@ export async function savedThreadsFor(
       discussion: {
         include: {
           pillar: { select: { name: true, slug: true, isMeta: true } },
+          circle: { select: { id: true, status: true } },
           posts: {
             select: { createdAt: true },
             orderBy: { createdAt: "desc" },
@@ -101,7 +138,13 @@ export async function savedThreadsFor(
     },
     orderBy: { savedAt: "desc" },
   });
-  return saves;
+  // Defense in depth: a save can outlive access (member left the room).
+  // Never surface an enclosed room the face can no longer read.
+  const readable = [];
+  for (const s of saves) {
+    if (await canRead(db, s.discussion, profileId)) readable.push(s);
+  }
+  return readable;
 }
 
 /** The memory current (§3.3): the face's saved threads that have
@@ -124,6 +167,7 @@ export async function stirringSavesFor(db: PrismaClient, profileId: string) {
       discussion: {
         include: {
           pillar: { select: { name: true, slug: true, isMeta: true } },
+          circle: { select: { id: true, status: true } },
           _count: { select: { posts: true } },
         },
       },
@@ -131,9 +175,15 @@ export async function stirringSavesFor(db: PrismaClient, profileId: string) {
   });
   const stirring = [];
   for (const s of saves) {
+    // A save can outlive access — never resurface a room the face can
+    // no longer read (privacy audit 2026-07-22).
+    if (!(await canRead(db, s.discussion, profileId))) continue;
     const fresh = await db.post.findMany({
       where: {
         discussionId: s.discussionId,
+        // Moderated posts (hidden/blurred/removed) must not inflate the
+        // "new posts / new voices" counts (correctness audit 2026-07-22).
+        status: "visible",
         createdAt: { gt: s.lastSeenAt },
       },
       select: { authorHandle: true, createdAt: true },

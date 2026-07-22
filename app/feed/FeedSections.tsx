@@ -203,17 +203,18 @@ export async function CommonsNow() {
       chamberId: null,
       OR: [
         { createdAt: { gte: cutoff } },
-        { posts: { some: { createdAt: { gte: cutoff } } } },
+        { posts: { some: { status: "visible", createdAt: { gte: cutoff } } } },
       ],
     },
     include: {
       pillar: { select: { name: true, slug: true, isMeta: true } },
       posts: {
+        where: { status: "visible" },
         select: { createdAt: true },
         orderBy: { createdAt: "desc" },
         take: 1,
       },
-      _count: { select: { posts: true } },
+      _count: { select: { posts: { where: { status: "visible" } } } },
     },
     orderBy: { createdAt: "desc" },
     take: 100,
