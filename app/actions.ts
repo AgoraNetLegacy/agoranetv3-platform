@@ -482,18 +482,20 @@ export async function clearSearchHistory() {
 
 export async function submitSaveDiscussion(formData: FormData) {
   const discussionId = String(formData.get("discussionId") ?? "");
+  const returnTo = String(formData.get("returnTo") ?? "") || `/d/${discussionId}`;
   const face = await requireFace("settings");
   const result = await saveDiscussion(db, { profileId: face.id, discussionId });
   revalidatePath(`/d/${discussionId}`);
-  backTo(`/d/${discussionId}`, result.ok ? undefined : result.reason);
+  backTo(returnTo, result.ok ? undefined : result.reason);
 }
 
 export async function submitUnsaveDiscussion(formData: FormData) {
   const discussionId = String(formData.get("discussionId") ?? "");
+  const returnTo = String(formData.get("returnTo") ?? "") || `/d/${discussionId}`;
   const face = await requireFace("settings");
   await unsaveDiscussion(db, { profileId: face.id, discussionId });
   revalidatePath(`/d/${discussionId}`);
-  backTo(`/d/${discussionId}`);
+  backTo(returnTo);
 }
 
 // ---------------------------------------------------------------- repairs
