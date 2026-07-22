@@ -84,6 +84,7 @@ import {
 import { enforceRateLimit, type RateLimitPolicyName } from "@/lib/rateLimit";
 import { recordEvent, type AnalyticsEventName } from "@/lib/analytics";
 import { asSpiritLevel } from "@/lib/spirit";
+import { saveDiscussion, unsaveDiscussion } from "@/lib/saved";
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
@@ -473,6 +474,26 @@ export async function clearSearchHistory() {
   await db.searchQuery.deleteMany({ where: { profileId: face.id } });
   revalidatePath("/search/history");
   backTo("/search/history");
+}
+
+// ------------------------------------------------------------------ saves
+// BEACON_FEED_SPEC §4 (owner-ratified 2026-07-21): per-face, private,
+// free — a bookmark in your own book, never a signal to anyone else.
+
+export async function submitSaveDiscussion(formData: FormData) {
+  const discussionId = String(formData.get("discussionId") ?? "");
+  const face = await requireFace("settings");
+  const result = await saveDiscussion(db, { profileId: face.id, discussionId });
+  revalidatePath(`/d/${discussionId}`);
+  backTo(`/d/${discussionId}`, result.ok ? undefined : result.reason);
+}
+
+export async function submitUnsaveDiscussion(formData: FormData) {
+  const discussionId = String(formData.get("discussionId") ?? "");
+  const face = await requireFace("settings");
+  await unsaveDiscussion(db, { profileId: face.id, discussionId });
+  revalidatePath(`/d/${discussionId}`);
+  backTo(`/d/${discussionId}`);
 }
 
 // ---------------------------------------------------------------- repairs

@@ -4,7 +4,8 @@ import { db } from "@/lib/db";
 import { getRail } from "@/lib/rails";
 import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
-import { submitPost, submitEdit, submitFlag, submitTip, submitPermanenceUpgrade, submitAppeal, submitRestorative } from "@/app/actions";
+import { submitPost, submitEdit, submitFlag, submitTip, submitPermanenceUpgrade, submitAppeal, submitRestorative, submitSaveDiscussion, submitUnsaveDiscussion } from "@/app/actions";
+import { isSaved, touchSavedWatermark } from "@/lib/saved";
 import { Icon, PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
@@ -420,6 +421,18 @@ export default async function DiscussionPage({
     getRail(db, "discussion.graceWindowMinutes"),
   ]);
 
+  // The save (BEACON §4): private to this face. Reading a saved thread
+  // advances its resurfacing watermark — a time and nothing else.
+  const saved = viewer
+    ? await isSaved(db, { profileId: viewer.id, discussionId: discussion.id })
+    : false;
+  if (viewer && saved) {
+    await touchSavedWatermark(db, {
+      profileId: viewer.id,
+      discussionId: discussion.id,
+    });
+  }
+
   const childrenByParent = new Map<string | null, PostWithRevisions[]>();
   for (const post of posts) {
     const key = post.parentId;
@@ -451,6 +464,21 @@ export default async function DiscussionPage({
         )}
       </p>
       <h1>{discussion.title}</h1>
+      {viewer && (
+        <form
+          action={saved ? submitUnsaveDiscussion : submitSaveDiscussion}
+          className="inline"
+        >
+          <input type="hidden" name="discussionId" value={discussion.id} />
+          <button
+            type="submit"
+            className="linklike"
+            title="Private to this face — nobody else ever sees your saves."
+          >
+            {saved ? "★ Saved · unsave" : "☆ Save for later"}
+          </button>
+        </form>
+      )}
       {discussion.question && (
         <p className="lore">
           Canonical question {discussion.question.position} ·{" "}

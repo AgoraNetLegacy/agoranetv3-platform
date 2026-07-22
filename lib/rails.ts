@@ -29,7 +29,9 @@ export interface RailDefault {
     | "members"
     | "x"
     | "actions"
-    | "lovelace";
+    | "lovelace"
+    | "posts"
+    | "cards";
   boundMin?: number; // defaults to ¼× value
   boundMax?: number; // defaults to 4× value
   description: string;
@@ -746,6 +748,43 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     unit: "actions",
     description:
       "The backstop: total write actions per burst window per face/session — 2x the most generous family wall. Nothing human meets it.",
+  },
+  // --- The Beacon Feed (BEACON_FEED_SPEC §11, owner-ratified 2026-07-21) ---
+  {
+    key: "feed.saved.resurfaceMinNewPosts",
+    value: 1,
+    unit: "posts",
+    boundMin: 1,
+    boundMax: 10,
+    description:
+      "Saved current: new posts since the face's own watermark before a saved thread resurfaces in the feed (BEACON §3.3).",
+  },
+  {
+    key: "feed.saved.maxResurfacedCards",
+    value: 5,
+    unit: "cards",
+    boundMin: 1,
+    boundMax: 20,
+    description:
+      "Saved current: the memory current's slice of one feed load — the feed still ends (BEACON §3.3).",
+  },
+  {
+    key: "feed.commons.windowHours",
+    value: 72,
+    unit: "hours",
+    boundMin: 6,
+    boundMax: 336,
+    description:
+      "The commons stream: recency window for platform-wide recently-active threads on the dashboard (BEACON §5.3).",
+  },
+  {
+    key: "feed.nudge.defaultAfterMin",
+    value: 20,
+    unit: "minutes",
+    boundMin: 5,
+    boundMax: 120,
+    description:
+      "Wellbeing: default minutes of continuous feed reading before the calm go-act nudge for faces that haven't tuned it — each face adjusts or disables in Settings (BEACON §7).",
   },
 ];
 
