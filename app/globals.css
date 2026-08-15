@@ -582,6 +582,36 @@ ul.discussions .meta { font-size: 0.78rem; color: var(--muted); margin-top: 0.2r
 .post details { font-size: 0.8rem; margin-top: 0.3rem; }
 .post details summary { cursor: pointer; color: var(--muted); }
 
+/* The chamber form is intentionally collapsible, but its entry point must
+   read like an action rather than an unexplained disclosure arrow. */
+.chamber-create { margin: 0.75rem 0 1rem; }
+.chamber-create-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  cursor: pointer;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: 1rem;
+}
+.chamber-create-summary:hover,
+.chamber-create[open] .chamber-create-summary {
+  background: var(--surface-2);
+}
+.chamber-create-summary strong { display: block; }
+.chamber-create-hint {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
 form.composer textarea {
   width: 100%;
   min-height: 5.5rem;

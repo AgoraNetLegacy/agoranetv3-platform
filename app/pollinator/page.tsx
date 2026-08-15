@@ -199,10 +199,14 @@ export default async function PollinatorPage({
 
       <h3>Create a chamber</h3>
       {viewer ? (
-        <details>
-          <summary>
-            Open a new chamber; {feePc} PC + {feeG} G (the dual-token
-            signature), live immediately
+        <details className="chamber-create">
+          <summary className="chamber-create-summary">
+            <span>
+              <strong>Start creating a chamber</strong>
+              <span className="chamber-create-hint">
+                Fill out the idea brief; {feePc} PC + {feeG} G, live immediately
+              </span>
+            </span>
           </summary>
           <form action={submitChamber} className="composer">
             <label>
