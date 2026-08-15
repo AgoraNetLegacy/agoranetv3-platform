@@ -1,27 +1,27 @@
-// Chambers — the idea incubator (Phase 7.5, Neural Pollinator/
-// NEURAL_POLLINATOR_SPEC.md, launch scope: Chambers ONLY — the
+// Chambers; the idea incubator (Phase 7.5, Neural Pollinator/
+// NEURAL_POLLINATOR_SPEC.md, launch scope: Chambers ONLY; the
 // Leaderboard and Tournament of Ideas are post-launch by owner
 // decision, and nothing here depends on them existing).
 //
-// The owner's one-line framing: chambers are fancy discussion pods —
+// The owner's one-line framing: chambers are fancy discussion pods;
 // unlike Discussions (open-air), you ENTER a chamber to see what's
 // inside. Three visibility layers (§4.3): the storefront is public and
 // free to read; the workshop is enter-to-see (a chamber-scoped
-// Discussion — threading reuses the Discussions conventions, nothing
+// Discussion; threading reuses the Discussions conventions, nothing
 // bespoke); the Arena is post-launch. ⚠ v2's "chambers" ≠ these.
 //
 // The dual-token signature (§3): the Pollinator is the first surface
-// whose fees are paid in BOTH PollCoin and Gratium — deliberately, so
+// whose fees are paid in BOTH PollCoin and Gratium; deliberately, so
 // active Pollinator souls carry a working stock of both. Creation and
 // workshop posts each charge both currencies (rails).
 //
 // Enclosure is structural, not cosmetic: membership and invites never
-// touch the public ledger (entry clears the gate in PRIVATE recording —
+// touch the public ledger (entry clears the gate in PRIVATE recording;
 // the spec publishes member COUNT and activity level, never the list);
 // workshop posts never hash-commit, never upgrade to permanence, never
 // feed Light Score, the open lens, or public search. db:verify hunts
 // for every one of those leaks. Moderation, by contrast, is the
-// standard platform path — chambers build no bespoke moderation (§7).
+// standard platform path; chambers build no bespoke moderation (§7).
 
 import { randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
@@ -40,7 +40,7 @@ export type ChamberResult<T = object> =
   | ({ ok: true } & T)
   | { ok: false; reason: string };
 
-/** Fixed UI copy — the enclosure explained at the workshop door. */
+/** Fixed UI copy; the enclosure explained at the workshop door. */
 export const WORKSHOP_ENCLOSURE_NOTE =
   "The workshop is enclosed by design: a safe space where half-formed " +
   "thinking gets worked out without the open internet watching the " +
@@ -59,7 +59,7 @@ export async function chamberMembership(
   });
 }
 
-/** Workshop access: entered souls only — reading included ("enter to
+/** Workshop access: entered souls only; reading included ("enter to
  *  see what's inside" IS the product). */
 export async function workshopAccess(
   db: DbOrTx,
@@ -70,7 +70,7 @@ export async function workshopAccess(
   return (await chamberMembership(db, chamberId, profileId)) !== null;
 }
 
-/** The storefront's honest activity signal: coarse, aggregate — the
+/** The storefront's honest activity signal: coarse, aggregate; the
  *  spec publishes activity LEVEL, never who or what (§4.3). */
 export async function chamberActivityLevel(
   db: DbOrTx,
@@ -90,11 +90,11 @@ async function touchActivity(tx: Tx, chamberId: string) {
 // -------------------------------------------------------- notifications
 
 /**
- * "Chamber activity (chambers you've entered)" — the quiet category the
+ * "Chamber activity (chambers you've entered)"; the quiet category the
  * NOTIFICATIONS spec (§1) reserves for the NEURAL_POLLINATOR. Enclosed-
  * space discipline (§6): space name + event type only; content is
  * visible on entering. Aggregated per chamber. Workshop REPLIES
- * deliberately don't notify — NOTIFICATIONS §5 gives ambient activity
+ * deliberately don't notify; NOTIFICATIONS §5 gives ambient activity
  * on followed things to the feed (the entered-chambers source).
  */
 async function notifyChamberActivity(
@@ -112,7 +112,7 @@ async function notifyChamberActivity(
       profileId: m.profileId,
       tier: "quiet",
       category: "chamber-activity",
-      title: `Chamber activity — ${chamber.title}`,
+      title: `Chamber activity; ${chamber.title}`,
       body: `${eventLabel}. Details are in the workshop.`,
       refType: "chamber",
       refId: chamber.id,
@@ -125,16 +125,16 @@ async function notifyChamberActivity(
 
 /**
  * Creation (§4.1): gate-cleared + the dual-token creation micro-fee
- * (both halves must clear — a chamber is never half-paid). The creator
+ * (both halves must clear; a chamber is never half-paid). The creator
  * sets subject, title, the storefront pitch with its required "why
  * should people care" answer (what problem, for whom, why now), the
  * public/private setting (FIXED at creation), and completes the
- * pre-convo scaffold — the platform's first-principles method
+ * pre-convo scaffold; the platform's first-principles method
  * productized: work starts oriented, not adrift.
  *
  * The workshop (a chamber-scoped Discussion, deletable class) is born
  * with the chamber; the creator is member #1. chamber.created is
- * public civic record — creating a public space is a public act; what
+ * public civic record; creating a public space is a public act; what
  * happens INSIDE stays enclosed.
  */
 export async function createChamber(
@@ -159,16 +159,16 @@ export async function createChamber(
 
   if (!title) return { ok: false, reason: "A chamber needs a title." };
   if (!subject) {
-    return { ok: false, reason: "Name the idea — one chamber, one subject." };
+    return { ok: false, reason: "Name the idea; one chamber, one subject." };
   }
   if (!pitch) {
-    return { ok: false, reason: "The storefront pitch is the chamber's public face — it can't be empty." };
+    return { ok: false, reason: "The storefront pitch is the chamber's public face; it can't be empty." };
   }
   if (!whyCare) {
     return {
       ok: false,
       reason:
-        "Why should people care — what problem, for whom, why now? A chamber that cannot answer it isn't ready to ask for attention.",
+        "Why should people care; what problem, for whom, why now? A chamber that cannot answer it isn't ready to ask for attention.",
     };
   }
   if (!solving || !needToKnow || !success) {
@@ -189,7 +189,7 @@ export async function createChamber(
 
   // The workshop Discussion needs a pillar row; chambers aren't pillar
   // surfaces, so it homes in the meta pillar. Chamber scoping overrides
-  // pillar surfaces everywhere — it never appears on pillar pages.
+  // pillar surfaces everywhere; it never appears on pillar pages.
   const metaPillar = await db.pillar.findFirstOrThrow({ where: { isMeta: true } });
 
   // Gate spend + dual fee + chamber creation share one transaction (#25).
@@ -235,16 +235,16 @@ export async function createChamber(
           creatorHandle: profile.handle,
         },
       });
-      // The creator is member #1 — a chamber's workshop is never empty
+      // The creator is member #1; a chamber's workshop is never empty
       // of its own founder.
       await tx.chamberMember.create({
         data: { chamberId: created.id, profileId: profile.id, handle: profile.handle },
       });
       // The workshop, born with the chamber: enter-to-see, deletable
-      // class (POLLINATOR §7) — the drafts are not the record.
+      // class (POLLINATOR §7); the drafts are not the record.
       await tx.discussion.create({
         data: {
-          title: `Workshop — ${title}`,
+          title: `Workshop; ${title}`,
           pillarId: metaPillar.id,
           chamberId: created.id,
           permanence: "deletable",
@@ -277,7 +277,7 @@ export async function createChamber(
 /**
  * Scaffold edits (§4.1): creator-only, "as understanding sharpens,"
  * with edit history visible inside the workshop. Enclosed working
- * material — no ledger event, like everything else inside.
+ * material; no ledger event, like everything else inside.
  */
 export async function editScaffold(
   db: PrismaClient,
@@ -292,7 +292,7 @@ export async function editScaffold(
   const chamber = await db.chamber.findUnique({ where: { id: input.chamberId } });
   if (!chamber) return { ok: false, reason: "No such chamber." };
   if (chamber.creatorProfileId !== input.profileId) {
-    return { ok: false, reason: "The scaffold is the creator's framing — only they sharpen it." };
+    return { ok: false, reason: "The scaffold is the creator's framing; only they sharpen it." };
   }
   const solving = input.solving.trim();
   const needToKnow = input.needToKnow.trim();
@@ -302,7 +302,7 @@ export async function editScaffold(
   }
 
   await db.$transaction(async (tx) => {
-    // Keep the prior version — the history is part of how the idea
+    // Keep the prior version; the history is part of how the idea
     // sharpened, visible to everyone working inside.
     await tx.chamberScaffoldRevision.create({
       data: {
@@ -330,11 +330,11 @@ export async function editScaffold(
 
 /**
  * The complete public-chamber prerequisites (owner-resolved OQ5,
- * 2026-07-09): the identity gate + carrying both tokens — no Light
+ * 2026-07-09): the identity gate + carrying both tokens; no Light
  * Score floor, no extra hurdles. Transparency instead of gatekeeping:
  * the creator's standing is public on the storefront; souls judge with
  * their own eyes. "Carrying both tokens" is read as a nonzero balance
- * in each (participation charges both) — a derived reading, flagged.
+ * in each (participation charges both); a derived reading, flagged.
  */
 export async function carriesBothTokens(
   db: DbOrTx,
@@ -348,10 +348,10 @@ export async function carriesBothTokens(
 }
 
 /**
- * Entering (§4.2–4.3): free — there is no entry fee, no unlock, no
+ * Entering (§4.2–4.3): free; there is no entry fee, no unlock, no
  * membership wall; acting (posting) costs, per platform law. Public
  * chambers: anyone meeting the prerequisites. Private chambers:
- * invited souls only. Entry clears the gate in PRIVATE recording —
+ * invited souls only. Entry clears the gate in PRIVATE recording;
  * who is inside a chamber is enclosed-space information (the
  * storefront publishes count and activity level, never the list).
  */
@@ -375,7 +375,7 @@ export async function enterChamber(
     if (!invite) {
       return {
         ok: false,
-        reason: "This chamber is private — the creator selects who gets invited.",
+        reason: "This chamber is private; the creator selects who gets invited.",
       };
     }
   }
@@ -383,12 +383,12 @@ export async function enterChamber(
     return {
       ok: false,
       reason:
-        "Chambers run on both tokens — participation inside charges PollCoin and Gratium together. Carry a working stock of both to enter (the earnable paths cover committed souls).",
+        "Chambers run on both tokens; participation inside charges PollCoin and Gratium together. Carry a working stock of both to enter (the earnable paths cover committed souls).",
     };
   }
 
   // One entry per profile per chamber: the fixed scope IS the once.
-  // PRIVATE recording — entry must not be observable from outside.
+  // PRIVATE recording; entry must not be observable from outside.
   // Gate spend + membership share one transaction (#25): a rollback no
   // longer strands the enter nullifier, so entering is retryable.
   try {
@@ -423,12 +423,12 @@ export async function enterChamber(
 
 /**
  * Private-chamber invites (§4.2): the creator selects who gets
- * invited — closed working groups, enclosed professional space. Public
+ * invited; closed working groups, enclosed professional space. Public
  * chambers need no invites (anyone meeting the prerequisites enters);
  * fellow souls share those by link (FELLOW_SOULS §3 routes through
- * "the standard invite mechanics of those surfaces" — this is it).
+ * "the standard invite mechanics of those surfaces"; this is it).
  * Enclosed like membership: private gate recording, no ledger trace.
- * No notification rides the invite yet — the NOTIFICATIONS category
+ * No notification rides the invite yet; the NOTIFICATIONS category
  * list is exhaustive by design; a chamber-invite category awaits the
  * owner's say (flagged). Pending invites surface on the Pollinator
  * page itself.
@@ -440,10 +440,10 @@ export async function inviteToChamber(
   const chamber = await db.chamber.findUnique({ where: { id: input.chamberId } });
   if (!chamber) return { ok: false, reason: "No such chamber." };
   if (chamber.isPublic) {
-    return { ok: false, reason: "Public chambers need no invites — anyone meeting the prerequisites may enter. Share the storefront." };
+    return { ok: false, reason: "Public chambers need no invites; anyone meeting the prerequisites may enter. Share the storefront." };
   }
   if (chamber.creatorProfileId !== input.profileId) {
-    return { ok: false, reason: "The creator selects who gets invited — that's what private means here." };
+    return { ok: false, reason: "The creator selects who gets invited; that's what private means here." };
   }
   const handle = input.inviteeHandle.trim().toLowerCase().replace(/^@/, "");
   const invitee = await db.profile.findUnique({ where: { handle } });
@@ -451,7 +451,7 @@ export async function inviteToChamber(
     return { ok: false, reason: "No active soul by that handle." };
   }
   if (invitee.id === input.profileId) {
-    return { ok: false, reason: "You are already inside — you built it." };
+    return { ok: false, reason: "You are already inside; you built it." };
   }
   if (await chamberMembership(db, chamber.id, invitee.id)) {
     return { ok: false, reason: "That soul has already entered." };
@@ -477,7 +477,7 @@ export async function inviteToChamber(
   });
 }
 
-/** The viewer's pending invites — visible to them alone, on the
+/** The viewer's pending invites; visible to them alone, on the
  *  Pollinator page (no notification category exists yet; flagged). */
 export async function pendingInvitesFor(db: DbOrTx, profileId: string) {
   const invites = await db.chamberInvite.findMany({
@@ -497,7 +497,7 @@ export async function pendingInvitesFor(db: DbOrTx, profileId: string) {
 
 /**
  * The dual-token workshop participation fee (§3: micro-transactions in
- * both tokens) — called by createPost inside its transaction when the
+ * both tokens); called by createPost inside its transaction when the
  * Discussion is chamber-scoped, INSTEAD of the standard reply fee.
  * Both halves clear or the post doesn't happen.
  */

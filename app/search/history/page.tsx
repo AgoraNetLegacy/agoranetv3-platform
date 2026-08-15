@@ -25,7 +25,7 @@ export default async function SearchHistoryPage() {
       </p>
       <h1>Your search history</h1>
       <p className="lore">
-        Visible to you alone, per-face, deletable — and never used to rank
+        Visible to you alone, per-face, deletable; and never used to rank
         anything. @{face.handle}&rsquo;s searches; your other face has its
         own page.
       </p>

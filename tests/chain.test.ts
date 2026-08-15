@@ -20,7 +20,7 @@ import { appendEvent } from "../lib/ledger";
 const db = new PrismaClient({ datasources: { db: { url } } });
 
 // The Cardano rail's one hard rule (TESTNET_RAILS_SPEC §6.6): testnet
-// only, by construction — a mainnet value anywhere fails loudly.
+// only, by construction; a mainnet value anywhere fails loudly.
 describe("the testnet wallet rail", () => {
   afterAll(async () => {
     await db.$disconnect();
@@ -34,7 +34,7 @@ describe("the testnet wallet rail", () => {
     expect(cardanoNetwork()).toBe("preprod");
   });
 
-  it("refuses mainnet addresses at the door — addr1… never enters the table", async () => {
+  it("refuses mainnet addresses at the door; addr1… never enters the table", async () => {
     const refused = await recordWalletLink(db, {
       profileId: "profile-a",
       cardanoAddress:
@@ -100,7 +100,7 @@ describe("the testnet wallet rail", () => {
     // head moved past the anchored seq.
     expect(s.due).toBe(false);
 
-    // The ledger moves — but the cadence hasn't elapsed: still not due.
+    // The ledger moves; but the cadence hasn't elapsed: still not due.
     await appendEvent(db, {
       actorType: "system",
       actorId: null,
@@ -143,7 +143,7 @@ describe("the testnet wallet rail", () => {
 
 // On-chain migration Slice 2: the self-custody proof is recorded ONLY
 // after the claimed hash is verified to exist on the configured testnet.
-// The verifier is injected here — no network in the fast suite.
+// The verifier is injected here; no network in the fast suite.
 describe("the self-custody proof", () => {
   const goodHash = "a".repeat(64);
   const found = async () => true;
@@ -178,7 +178,7 @@ describe("the self-custody proof", () => {
     if (!r.ok) expect(r.retryable).toBe(false);
   });
 
-  it("does NOT record a hash the testnet has never seen — retryable, wrong-testnet hint", async () => {
+  it("does NOT record a hash the testnet has never seen; retryable, wrong-testnet hint", async () => {
     const r = await recordSelfCustodyProof(
       db,
       { profileId: "profile-a", txHash: goodHash },
@@ -222,7 +222,7 @@ describe("the self-custody proof", () => {
     expect(link?.proofAt).toBeInstanceOf(Date);
   });
 
-  it("re-signing updates the proof in place — still one row per face", async () => {
+  it("re-signing updates the proof in place; still one row per face", async () => {
     const newer = "b".repeat(64);
     const r = await recordSelfCustodyProof(
       db,
@@ -240,7 +240,7 @@ describe("the self-custody proof", () => {
 
 // On-chain migration Slice 3: a donation is recorded ONLY when the
 // chain shows value locked at the donation script in that transaction.
-// The verifier is injected — no network in the fast suite.
+// The verifier is injected; no network in the fast suite.
 describe("the non-custodial donation", () => {
   const script = "addr_test1wzscript000000000000000000000000000000000000000000";
   const hash = (c: string) => c.repeat(64);
@@ -292,7 +292,7 @@ describe("the non-custodial donation", () => {
     expect(await db.testnetDonation.count()).toBe(0);
   });
 
-  it("refuses someone ELSE's donation tx — not sent by the linked wallet (F3)", async () => {
+  it("refuses someone ELSE's donation tx; not sent by the linked wallet (F3)", async () => {
     const r = await recordScriptDonation(
       db,
       { profileId: "profile-a", txHash: hash("c"), scriptAddress: script },
@@ -322,7 +322,7 @@ describe("the non-custodial donation", () => {
     expect(rows[0].network).toBe("preprod");
   });
 
-  it("recording the same tx twice stays one row — idempotent per hash", async () => {
+  it("recording the same tx twice stays one row; idempotent per hash", async () => {
     const r = await recordScriptDonation(
       db,
       { profileId: "profile-a", txHash: hash("c"), scriptAddress: script },
@@ -334,7 +334,7 @@ describe("the non-custodial donation", () => {
   });
 });
 
-// On-chain migration Slice 7: fund-auditor settlement — per case,
+// On-chain migration Slice 7: fund-auditor settlement; per case,
 // never per finding, verify-then-record, idempotent. Sender and
 // chain verifier injected; no network in the fast suite.
 describe("auditor settlement", () => {
@@ -420,7 +420,7 @@ describe("auditor settlement", () => {
     expect(row?.settlementAt).toBeInstanceOf(Date);
   });
 
-  it("is idempotent — a settled case is never paid twice", async () => {
+  it("is idempotent; a settled case is never paid twice", async () => {
     const { settleCompletedAudits } = await import("../lib/chainSettlement");
     let sendCalls = 0;
     const result = await settleCompletedAudits(
@@ -432,7 +432,7 @@ describe("auditor settlement", () => {
     expect(result.settled).toEqual([]);
   });
 
-  it("refuses to record an unconfirmed settlement — and leaves the row unsettled", async () => {
+  it("refuses to record an unconfirmed settlement; and leaves the row unsettled", async () => {
     const { settleCompletedAudits } = await import("../lib/chainSettlement");
     // A second completed audit for the same auditor, unsettled.
     const prior = await db.fundAudit.findUnique({ where: { id: auditId } });
@@ -463,7 +463,7 @@ describe("auditor settlement", () => {
   });
 });
 
-// Slice 4 carry-over: the server mirrors the chain on ITS schedule —
+// Slice 4 carry-over: the server mirrors the chain on ITS schedule;
 // a donation the browser poll lost is recovered by the sweep, and
 // nothing is double-recorded or invented. Chain access injected.
 describe("donation reconciliation", () => {
@@ -493,7 +493,7 @@ describe("donation reconciliation", () => {
       "addr_test1wzscript000000000000000000000000000000000000000000",
       {
         // A tx that paid the script AND touched the linked wallet's
-        // address listing — but was FUNDED by someone else entirely.
+        // address listing; but was FUNDED by someone else entirely.
         listTxs: async () => [foreign],
         lockedAtScript: async () => 3_000_000,
         inputAddresses: async () => ["addr_test1qzsomeoneelse00000000000000000000000000000000000"],
@@ -503,7 +503,7 @@ describe("donation reconciliation", () => {
     expect(await db.testnetDonation.findUnique({ where: { txHash: foreign } })).toBeNull();
   });
 
-  it("is idempotent — a second sweep recovers nothing and verifies nothing twice", async () => {
+  it("is idempotent; a second sweep recovers nothing and verifies nothing twice", async () => {
     const { reconcileDonations } = await import("../lib/chainReconcile");
     let verifierCalls = 0;
     const result = await reconcileDonations(
@@ -516,7 +516,7 @@ describe("donation reconciliation", () => {
       }
     );
     expect(result.recovered).toEqual([]);
-    // Both txs already have rows — the chain is never re-consulted.
+    // Both txs already have rows; the chain is never re-consulted.
     expect(verifierCalls).toBe(0);
     expect(await db.testnetDonation.count()).toBe(2);
   });

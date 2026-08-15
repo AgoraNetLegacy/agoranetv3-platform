@@ -66,7 +66,7 @@ describe("the Welcome Grant", () => {
     expect(await balanceOf(db, trueSelfId, "PC")).toBe(35);
   });
 
-  it("mints a one-time grant atomically — the second claim collides, no double-mint", async () => {
+  it("mints a one-time grant atomically; the second claim collides, no double-mint", async () => {
     const soul = await makeOnboardedSoul(db, {
       trueSelf: "grant-once-1",
       alias: "grant-once-1a",
@@ -83,7 +83,7 @@ describe("the Welcome Grant", () => {
     );
     expect(await balanceOf(db, soul.trueSelfId, "PC")).toBe(before + 7);
 
-    // The GrantClaim row is the mutex — the atomic record of "granted".
+    // The GrantClaim row is the mutex; the atomic record of "granted".
     const claim = await db.grantClaim.findUnique({
       where: { profileId_kind: { profileId: soul.trueSelfId, kind: "grant.orientation" } },
     });
@@ -121,7 +121,7 @@ describe("fees flow to the treasury", () => {
     });
     expect(result.ok).toBe(true);
     // −1 reply fee, +1 participation accrual: a genuine soul's reply is
-    // net-free until the daily ceiling saturates — the ratified intent.
+    // net-free until the daily ceiling saturates; the ratified intent.
     expect(await balanceOf(db, trueSelfId, "PC")).toBe(before - 1 + 1);
     // First fee-bearing action → +5 G (True Self journey milestone).
     expect(await balanceOf(db, trueSelfId, "G")).toBe(gBefore + 5);
@@ -378,8 +378,8 @@ describe("db:verify conservation", () => {
 });
 
 // PHASE_8_7_SPEC §3, Slice 1. The Constitution's Appendix A carries a
-// must-guardrail — "the treasury MUST NOT spend outside budgeted
-// categories" — and TREASURY_DASHBOARD §1.3 promises it is "rendered
+// must-guardrail; "the treasury MUST NOT spend outside budgeted
+// categories"; and TREASURY_DASHBOARD §1.3 promises it is "rendered
 // structurally: an outflow without a budget category cannot exist."
 // These tests are what make those two sentences true rather than
 // aspirational.
@@ -420,7 +420,7 @@ describe("the budgeted-categories must-guardrail (Constitution, Appendix A)", ()
     expect(entry?.budgetCategory).toBe("moderation-rewards");
   });
 
-  it("REFUSES an outflow with no such category — the guardrail, structurally", async () => {
+  it("REFUSES an outflow with no such category; the guardrail, structurally", async () => {
     const before = await balanceOf(db, trueSelfId, "G");
     const result = await db.$transaction((tx) =>
       payFromTreasury(tx, {
@@ -433,7 +433,7 @@ describe("the budgeted-categories must-guardrail (Constitution, Appendix A)", ()
     );
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toContain("budgeted categories");
-    // Refused means nothing moved — not a warning, not a log line.
+    // Refused means nothing moved; not a warning, not a log line.
     expect(await balanceOf(db, trueSelfId, "G")).toBeCloseTo(before, 5);
     expect(await db.economyEntry.count({ where: { budgetCategory: "slush-fund" } })).toBe(0);
   });
@@ -475,7 +475,7 @@ describe("the budgeted-categories must-guardrail (Constitution, Appendix A)", ()
   });
 
   it("fails loudly if a ratified category goes missing", async () => {
-    // A deploy that loses this category doesn't crash — payFromTreasury
+    // A deploy that loses this category doesn't crash; payFromTreasury
     // starts refusing, and moderators quietly stop being paid. Verify is
     // where that surfaces, early and loudly.
     await db.budgetCategory.update({

@@ -1,6 +1,6 @@
 // The Slice 3 donation lock, server side (ONCHAIN_ECONOMY_MIGRATION.md §5).
 // Everything here derives from the COMMITTED Aiken blueprint
-// (infra/onchain/plutus.json) — one source of truth, no copy-pasted
+// (infra/onchain/plutus.json); one source of truth, no copy-pasted
 // addresses that can drift from the compiled validator. Pure
 // serialization only: no keys, no signing, nothing custodial. The
 // mint-wallet world (lib/chainMint.ts, TESTNET_MINT_MNEMONIC) stays a
@@ -15,7 +15,7 @@ const VALIDATOR_TITLE = "donation.donation_lock.spend";
 let cached: { scriptCbor: string; address: string } | null = null;
 
 /** The donation-lock script: its double-CBOR code and its TESTNET
- *  address (network id 0 — this module never produces a mainnet
+ *  address (network id 0; this module never produces a mainnet
  *  address), both derived from the committed blueprint. */
 export async function donationScript(): Promise<{ scriptCbor: string; address: string }> {
   if (cached) return cached;
@@ -25,7 +25,7 @@ export async function donationScript(): Promise<{ scriptCbor: string; address: s
   );
   if (!validator) {
     throw new Error(
-      `${VALIDATOR_TITLE} missing from infra/onchain/plutus.json — run aiken build.`
+      `${VALIDATOR_TITLE} missing from infra/onchain/plutus.json; run aiken build.`
     );
   }
   const { serializePlutusScript, applyCborEncoding } = await import("@meshsdk/core");

@@ -1,14 +1,14 @@
-// The anchor cadence (Phase 8.6 slice 4 — TESTNET_RAILS_SPEC §3;
+// The anchor cadence (Phase 8.6 slice 4; TESTNET_RAILS_SPEC §3;
 // ARWEAVE_RECORDS' ratified daily-anchor cadence, at testnet grade).
 //
 // The internal hash-chained ledger stays the system of record; anchoring
 // writes its head hash into a public preprod transaction's metadata so an
-// external chain witnesses the history — after an anchor, silently
+// external chain witnesses the history; after an anchor, silently
 // rewriting anything before it means beating SHA-256 AND a public
 // blockchain. This module is the CADENCE brain only (pure database):
 // when an anchor is due, what was anchored, and how to record one. The
 // chain submission itself lives in lib/chainMint.ts (Node-only, never in
-// the request path) and is injected by the runner —
+// the request path) and is injected by the runner;
 // scripts/chain/anchor-ledger.ts, which joins the ops-job roster
 // (backup/drill/crush/prune) that the deployment host runs on schedule.
 //
@@ -21,7 +21,7 @@ import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 
 export interface AnchorStatus {
-  /** The ledger head — what an anchor run would witness. */
+  /** The ledger head; what an anchor run would witness. */
   headSeq: number | null;
   headHash: string | null;
   /** The most recent ledger.anchored event, if any. */
@@ -78,7 +78,7 @@ export async function anchorStatus(db: DbOrTx): Promise<AnchorStatus> {
 
 /** Record a completed anchor: the anchored row gains its external
  *  reference (the Phase 0 anchorRef field doing its job), and the
- *  ledger gains a public ledger.anchored event — so the cadence itself
+ *  ledger gains a public ledger.anchored event; so the cadence itself
  *  is auditable history, and /transparency renders from the record. */
 export async function recordAnchor(
   db: DbOrTx,

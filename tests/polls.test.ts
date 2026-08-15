@@ -72,7 +72,7 @@ async function makePoll(overrides: Partial<Parameters<typeof createPoll>[1]> = {
 }
 
 describe("voting through the gate", () => {
-  it("one vote per profile — a second attempt is refused privately", async () => {
+  it("one vote per profile; a second attempt is refused privately", async () => {
     const poll = await makePoll({ title: "One voice each?" });
     const eventsBefore = await db.ledgerEvent.count();
 
@@ -243,7 +243,7 @@ describe("consensus polls", () => {
     await closeDuePolls(db);
     const failed = await db.poll.findUniqueOrThrow({ where: { id: poll.id } });
     expect(failed.outcome).toBe("no-consensus");
-    // No Discussion was auto-created — prompted, never automatic.
+    // No Discussion was auto-created; prompted, never automatic.
     expect(await db.discussion.count({ where: { pollId: poll.id } })).toBe(0);
   });
 });

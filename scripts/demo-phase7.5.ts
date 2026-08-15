@@ -1,8 +1,8 @@
-// demo:phase7.5 — the Phase 7.5 checkpoint, end to end (BUILD_ORDER):
+// demo:phase7.5; the Phase 7.5 checkpoint, end to end (BUILD_ORDER):
 // a soul creates a PUBLIC chamber through the full scaffold, pays the
 // dual-token fee (both halves, visibly), other souls enter and work the
 // idea in the workshop, the storefront reads right (pitch, why-care,
-// creator standing, count + activity — never the list), and the
+// creator standing, count + activity; never the list), and the
 // workshop stays enclosed: nothing inside reaches the ledger, the open
 // lens, Light Score, or public search.
 //
@@ -27,7 +27,7 @@ import { makeOnboardedSoul, topUpForTests } from "../tests/helpers/souls";
 const db = new PrismaClient();
 
 function step(n: number, msg: string) {
-  console.log(`\n— ${n}. ${msg}`);
+  console.log(`\n; ${n}. ${msg}`);
 }
 
 async function main() {
@@ -47,7 +47,7 @@ async function main() {
   });
   await topUpForTests(db, creator.trueSelfId, { pc: 30, g: 30 });
 
-  step(2, "A public chamber opens through the FULL scaffold — the dual-token fee, both halves");
+  step(2, "A public chamber opens through the FULL scaffold; the dual-token fee, both halves");
   const pcBefore = await balanceOf(db, creator.trueSelfId, "PC");
   const gBefore = await balanceOf(db, creator.trueSelfId, "G");
   const created = await createChamber(db, {
@@ -57,7 +57,7 @@ async function main() {
     pitch:
       "Grocers discard edible food nightly while pantries run short by Thursday. Connect the two with a standing route.",
     whyCare:
-      "Wasted food, hungry neighbors — and the missing piece is logistics, which souls can build. Solvable now.",
+      "Wasted food, hungry neighbors; and the missing piece is logistics, which souls can build. Solvable now.",
     isPublic: true,
     scaffold: {
       solving: "Edible surplus goes to landfill while demand goes unmet.",
@@ -67,7 +67,7 @@ async function main() {
   });
   if (!created.ok) throw new Error(created.reason);
   console.log(
-    `   PollCoin: ${pcBefore.toFixed(2)} → ${(await balanceOf(db, creator.trueSelfId, "PC")).toFixed(2)} · Gratium: ${gBefore.toFixed(2)} → ${(await balanceOf(db, creator.trueSelfId, "G")).toFixed(2)} (20u each — the Pollinator's signature)`
+    `   PollCoin: ${pcBefore.toFixed(2)} → ${(await balanceOf(db, creator.trueSelfId, "PC")).toFixed(2)} · Gratium: ${gBefore.toFixed(2)} → ${(await balanceOf(db, creator.trueSelfId, "G")).toFixed(2)} (20u each; the Pollinator's signature)`
   );
   const chamberId = created.chamberId;
   const ledgered = await db.ledgerEvent.findFirst({
@@ -75,13 +75,13 @@ async function main() {
   });
   console.log(`   chamber.created on the civic ledger: ${ledgered !== null}`);
 
-  step(3, "The storefront reads right — pitch, why-care, standing, count; never the list");
+  step(3, "The storefront reads right; pitch, why-care, standing, count; never the list");
   const chamber = await db.chamber.findUniqueOrThrow({
     where: { id: chamberId },
     include: { members: true },
   });
   const constellation = await faceConstellation(db, creator.trueSelfId);
-  console.log(`   "${chamber.title}" — ${chamber.subject}`);
+  console.log(`   "${chamber.title}"; ${chamber.subject}`);
   console.log(`   why care: ${chamber.whyCare.slice(0, 60)}…`);
   console.log(
     `   creator @${chamber.creatorHandle}, Light Score public: ${constellation.pillars.length} pillar(s) with standing (a new soul reads honestly as unproven)`
@@ -90,7 +90,7 @@ async function main() {
     `   ${chamber.members.length} soul inside · activity: ${await chamberActivityLevel(db, chamber)}`
   );
 
-  step(4, "Entry = the gate + carrying both tokens — the complete prerequisite (OQ5)");
+  step(4, "Entry = the gate + carrying both tokens; the complete prerequisite (OQ5)");
   console.log(
     `   worker carries both tokens: ${await carriesBothTokens(db, worker.trueSelfId)}`
   );
@@ -100,10 +100,10 @@ async function main() {
     where: { scope: `chamber:${chamberId}:enter` },
   });
   console.log(
-    `   entered — free; clearance recorded ${enterClearance?.ledgerRecording?.toUpperCase()} (who is inside is enclosed-space information)`
+    `   entered; free; clearance recorded ${enterClearance?.ledgerRecording?.toUpperCase()} (who is inside is enclosed-space information)`
   );
 
-  step(5, "The idea gets worked in the workshop — dual-token micro-fees, threading reused");
+  step(5, "The idea gets worked in the workshop; dual-token micro-fees, threading reused");
   const workshop = await db.discussion.findFirstOrThrow({ where: { chamberId } });
   const eventsBefore = await db.ledgerEvent.count();
   const draft1 = await createPost(db, {
@@ -115,7 +115,7 @@ async function main() {
   const draft2 = await createPost(db, {
     discussionId: workshop.id,
     profileId: creator.trueSelfId,
-    body: "Three grocers on Main alone. The mover question is the real one — pantry vans sit idle mornings.",
+    body: "Three grocers on Main alone. The mover question is the real one; pantry vans sit idle mornings.",
     parentId: draft1.postId,
   });
   if (!draft2.ok) throw new Error(draft2.reason);
@@ -123,21 +123,21 @@ async function main() {
     where: { kind: "fee.chamber-post", refId: workshop.id },
   });
   console.log(
-    `   2 drafts posted · ${postFees.length} fee entries (${postFees.filter((f) => f.currency === "PC").length} PC + ${postFees.filter((f) => f.currency === "G").length} G — 1u each per post)`
+    `   2 drafts posted · ${postFees.length} fee entries (${postFees.filter((f) => f.currency === "PC").length} PC + ${postFees.filter((f) => f.currency === "G").length} G; 1u each per post)`
   );
   const sharpened = await editScaffold(db, {
     chamberId,
     profileId: creator.trueSelfId,
     solving: "Edible surplus goes to landfill while demand goes unmet.",
     needToKnow:
-      "Health rules, existing gleaners, cold-chain basics — and idle pantry-van mornings.",
+      "Health rules, existing gleaners, cold-chain basics; and idle pantry-van mornings.",
     success: "A weekly surplus-to-pantry route running without us.",
   });
   console.log(
     `   scaffold sharpened as understanding grew: ${sharpened.ok} (history visible in the workshop)`
   );
 
-  step(6, "And the workshop stays ENCLOSED — structurally");
+  step(6, "And the workshop stays ENCLOSED; structurally");
   console.log(
     `   public ledger grew by ${(await db.ledgerEvent.count()) - eventsBefore} events from all of that (drafts are not the record)`
   );
@@ -151,7 +151,7 @@ async function main() {
     postId: draft1.postId,
     profileId: worker.trueSelfId,
   });
-  console.log(`   permanence upgrade inside: refused — "${!upgrade.ok ? (upgrade as { reason: string }).reason.slice(0, 60) : "??"}…"`);
+  console.log(`   permanence upgrade inside: refused; "${!upgrade.ok ? (upgrade as { reason: string }).reason.slice(0, 60) : "??"}…"`);
   const lens = await openLens(db, 50);
   console.log(`   workshop in the open lens: ${lens.some((c) => c.discussionId === workshop.id)}`);
   const interior = await search(db, "who moves it on what schedule");
@@ -171,7 +171,7 @@ async function main() {
     profileId: creator.trueSelfId,
     title: `Closed Working Group ${stamp}`,
     subject: "A private engagement",
-    pitch: "Enclosed professional workspace — same machinery, chosen faces.",
+    pitch: "Enclosed professional workspace; same machinery, chosen faces.",
     whyCare: "The client's problem, on the client's timeline.",
     isPublic: false,
     scaffold: {

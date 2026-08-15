@@ -1,10 +1,10 @@
-// The Identus credential loop (Phase 8.6 — TESTNET_RAILS_SPEC §6.4
+// The Identus credential loop (Phase 8.6; TESTNET_RAILS_SPEC §6.4
 // step 2): a REAL issuer agent issues a W3C verifiable credential to a
 // REAL holder agent over DIDComm, and a presentation of it verifies.
 // This is the machinery that retires "the platform plays issuer."
 //
 // Also demonstrated: the §1.5 stable-subject-commitment property the
-// recovery design rests on — two issuances carrying the SAME subject
+// recovery design rests on; two issuances carrying the SAME subject
 // commitment re-derive the SAME platform nullifiers, so a re-proved
 // human gets their same identity back; nothing orphans.
 //
@@ -64,7 +64,7 @@ async function makeDid(base: string, label: string): Promise<string> {
   });
   const longForm: string = created.longFormDid ?? created.did;
 
-  // PUBLISH to the (local dev) PRISM node — verification resolves
+  // PUBLISH to the (local dev) PRISM node; verification resolves
   // signing keys through the node, so unpublished DIDs can issue but
   // never verify. Production would publish exactly the same way.
   await api(base, `/did-registrar/dids/${longForm}/publications`, {
@@ -81,7 +81,7 @@ async function makeDid(base: string, label: string): Promise<string> {
 }
 
 async function main() {
-  console.log("— The Identus credential loop (issuer ↔ holder, DIDComm v2) —");
+  console.log("; The Identus credential loop (issuer ↔ holder, DIDComm v2); ");
 
   // 0. Both agents healthy.
   const [iv, hv] = await Promise.all([
@@ -113,16 +113,16 @@ async function main() {
 
   // 3. The §1.5 heart: a STABLE SUBJECT COMMITMENT rides the credential.
   // Pass SUBJECT_COMMITMENT to simulate RECOVERY: a returning human,
-  // re-proved to the issuer, re-issued to the SAME commitment — even
+  // re-proved to the issuer, re-issued to the SAME commitment; even
   // with a brand-new holder DID, every nullifier re-derives identically.
   const isRecovery = Boolean(process.env.SUBJECT_COMMITMENT);
   const subjectCommitment =
     process.env.SUBJECT_COMMITMENT ?? randomBytes(32).toString("hex");
   console.log(
-    `  subject commitment: ${subjectCommitment.slice(0, 24)}… ${isRecovery ? "(RECOVERY — reissued to a returning human)" : "(fresh)"}`
+    `  subject commitment: ${subjectCommitment.slice(0, 24)}… ${isRecovery ? "(RECOVERY; reissued to a returning human)" : "(fresh)"}`
   );
 
-  // 3b. The 2.2.0 agent requires offers to cite a registered schema —
+  // 3b. The 2.2.0 agent requires offers to cite a registered schema;
   // register the demo humanity-credential schema on the issuer.
   const canonicalIssuerDid = issuerDid;
   const schema = await api(ISSUER, "/schema-registry/schemas", {
@@ -169,7 +169,7 @@ async function main() {
     }),
   });
 
-  // 5. Holder sees THIS offer (matched by thread id — never a stale
+  // 5. Holder sees THIS offer (matched by thread id; never a stale
   // one from an earlier run), accepts with its own DID as subject.
   const holderRecord = await poll("offer to reach holder", async () => {
     const rs = await api(HOLDER, "/issue-credentials/records");
@@ -195,7 +195,7 @@ async function main() {
     method: "POST",
     body: JSON.stringify({
       connectionId: invite.connectionId,
-      // Name exactly what we accept: our schema, from our issuer — the
+      // Name exactly what we accept: our schema, from our issuer; the
       // verifier refuses anything else. That's the gate's posture too.
       proofs: [
         {
@@ -230,7 +230,7 @@ async function main() {
   console.log("  VERIFIED: presentation cryptographically checked ✓");
 
   // 8. §1.5 in one breath: the SAME commitment re-derives the SAME
-  // platform nullifiers — a re-issued credential to a returning human
+  // platform nullifiers; a re-issued credential to a returning human
   // reconnects every identity, orphaning nothing.
   const nullifierFor = (scope: string) =>
     createHmac("sha256", "demo-derivation-context")

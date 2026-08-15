@@ -139,7 +139,7 @@ describe("inbound level", () => {
     const stillFlows = await sendMessage(db, {
       threadId: opened.threadId,
       senderProfileId: seekerId,
-      body: "Good — existing threads keep working at inbound.",
+      body: "Good; existing threads keep working at inbound.",
     });
     expect(stillFlows.ok).toBe(true);
     await setSpirit(veiledId, false);

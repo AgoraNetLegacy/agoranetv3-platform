@@ -1,6 +1,6 @@
 // The 90-day crush (ANALYTICS_SPEC §5): raw events older than the
-// retention rail become permanent aggregates — daily counts (+ distinct
-// subjects where kept) and weekly retention-cohort rows — and are then
+// retention rail become permanent aggregates; daily counts (+ distinct
+// subjects where kept) and weekly retention-cohort rows; and are then
 // DELETED. No deep behavioral archive ever accumulates. Run daily from
 // the ops cron (see docs/RUNBOOK.md §1).
 
@@ -36,7 +36,7 @@ async function main() {
   });
 
   if (!stale.length) {
-    console.log("Nothing to crush — no raw events older than the retention rail.");
+    console.log("Nothing to crush; no raw events older than the retention rail.");
     await db.$disconnect();
     return;
   }
@@ -53,7 +53,7 @@ async function main() {
 
   // Retention cohorts: a subject's cohort week is its first
   // funnel.trueself/alias week; each later week with an action.any
-  // marks a return. Computed over the events being crushed — cohort
+  // marks a return. Computed over the events being crushed; cohort
   // aggregates accumulate monotonically across crush runs.
   const cohortOf = new Map<string, string>();
   for (const ev of stale) {

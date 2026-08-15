@@ -2,16 +2,16 @@
 // Scheduled into Phase 4 by owner-delegated decision (2026-07-10,
 // BUILD_ORDER scheduling addendum).
 //
-// PollCoin accrues through positive participation — the guarantee that a
+// PollCoin accrues through positive participation; the guarantee that a
 // committed human without money can always earn a voice. Per-profile,
 // never per-human (the standing linkage rule: each face earns its own).
 //
 // THE FORMULA IS PRIVATE by ratified design: souls see their balance
 // grow, never the meter. The constants below are the v0 private weights
-// — deliberately NOT rails, deliberately never rendered anywhere.
+//; deliberately NOT rails, deliberately never rendered anywhere.
 // What IS public: the input categories (participation, streaks) and the
 // ceilings, which are rails. The ceilings are the load-bearing guardrail
-// — capped, this is a civic allowance earned by presence, not an
+//; capped, this is a civic allowance earned by presence, not an
 // engagement treadmill. Sentinel anti-farming joins when Sentinel
 // exists; until then the ceilings do exactly what the spec says they do.
 
@@ -43,7 +43,7 @@ async function accruedSince(
 
 /**
  * Accrue for one qualifying participation action. Call inside the
- * action's transaction, after its fee — so a reply is net-positive for
+ * action's transaction, after its fee; so a reply is net-positive for
  * a genuine soul until the day's ceiling saturates, which is the point.
  */
 export async function accrueForAction(tx: Tx, profileId: string): Promise<void> {
@@ -52,7 +52,7 @@ export async function accrueForAction(tx: Tx, profileId: string): Promise<void> 
   const weekStart = new Date(dayStart.getTime() - 6 * DAY_MS); // rolling 7 days
 
   // Serialize this soul's concurrent qualifying actions on today's counter
-  // row FIRST — before any read. The upsert compiles to an atomic INSERT …
+  // row FIRST; before any read. The upsert compiles to an atomic INSERT …
   // ON CONFLICT DO UPDATE that acquires the row's write lock (held to
   // commit), so two actions racing near the ceiling can no longer both read
   // a pre-grant total and both grant past the cap. Taking the write before

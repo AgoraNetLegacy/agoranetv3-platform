@@ -6,12 +6,12 @@ import { KIND_CATEGORIES } from "@/lib/transparency";
 export const dynamic = "force-dynamic";
 
 // Drill-down (TREASURY_DASHBOARD §6.1, owner-ratified): the individual
-// pseudonymous entries behind every dashboard figure — verification is
+// pseudonymous entries behind every dashboard figure; verification is
 // real rather than theatrical. NO actor renders here, ever: economy
 // rows' profile ids are Phase A operator space, and the dashboard never
 // creates a correlation surface beyond what the public ledger exposes.
 // Aggregate-only categories (stipends, rewards) have no drill-down at
-// all — moderator anonymity beats itemization (§2.2).
+// all; moderator anonymity beats itemization (§2.2).
 export default async function EntriesPage({
   searchParams,
 }: {
@@ -54,7 +54,7 @@ export default async function EntriesPage({
       </p>
       <h1>{category}</h1>
       <p className="lore">
-        {total} entr{total === 1 ? "y" : "ies"} — pseudonymized: what moved
+        {total} entr{total === 1 ? "y" : "ies"}; pseudonymized: what moved
         and when, never who. Social-action fees are additionally blinded at
         the source (no counterparty reference exists on the row at all).
       </p>

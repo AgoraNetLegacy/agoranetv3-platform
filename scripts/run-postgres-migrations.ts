@@ -1,6 +1,6 @@
 // Deploy Postgres migrations over the non-pooled connection when one is
 // configured (DATABASE_SETUP.md). `prisma migrate deploy` never drifts a
-// schema — it only applies the checked-in migration history.
+// schema; it only applies the checked-in migration history.
 import { spawnSync } from "child_process";
 import { resolve } from "path";
 import { loadEnvConfig } from "@next/env";

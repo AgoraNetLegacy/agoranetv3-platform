@@ -1,4 +1,4 @@
-// db:validate:postgres — the parity check that keeps the dual-provider
+// db:validate:postgres; the parity check that keeps the dual-provider
 // promise honest (DATABASE_SETUP.md, v2 reuse). The two schema files'
 // model definitions must be BYTE-IDENTICAL from the first model onward;
 // only the preamble (datasource + header comments) may differ. Runs in

@@ -3,8 +3,8 @@ import { JourneySteps } from "@/components/JourneySteps";
 
 export const dynamic = "force-dynamic";
 
-// Stage 3 — True Self creation. A chosen handle: "true" means singular,
-// durable, and accountable — not legal-name (owner-confirmed 2026-07-06).
+// Stage 3; True Self creation. A chosen handle: "true" means singular,
+// durable, and accountable; not legal-name (owner-confirmed 2026-07-06).
 export default async function TrueSelfPage({
   searchParams,
 }: {
@@ -16,12 +16,12 @@ export default async function TrueSelfPage({
       <JourneySteps current="trueself" />
       <h2>Create your True Self</h2>
       <p>
-        Every human gets exactly one True Self — and the check that
+        Every human gets exactly one True Self; and the check that
         enforces this is blind: it can tell someone is trying twice
         without ever learning who they are. Naming has two layers: a{" "}
-        <strong>display name</strong> (free-form — real names welcome,
+        <strong>display name</strong> (free-form; real names welcome,
         duplicates allowed, changeable) and a unique{" "}
-        <strong>@handle</strong> — your permanent signature on every
+        <strong>@handle</strong>; your permanent signature on every
         record, never recycled, never transferred.
       </p>
       {m && <div className="notice">{m}</div>}

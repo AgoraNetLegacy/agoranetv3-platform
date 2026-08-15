@@ -1,4 +1,4 @@
-// Light Score v3 (Phase 7 — LIGHT_SCORE_EXTENSION_SPEC) and the Picture
+// Light Score v3 (Phase 7; LIGHT_SCORE_EXTENSION_SPEC) and the Picture
 // repair loop (DASHBOARD §6.5). The invariants under test: per-face,
 // per-pillar, never summed (the anti-sum guard THROWS); insight over
 // volume (per-discussion cap); members'-room posts never feed standing;
@@ -154,7 +154,7 @@ describe("the constellation (derivation)", () => {
     });
     const room = await db.discussion.create({
       data: {
-        title: "Members' room — Quiet Hands",
+        title: "Members' room; Quiet Hands",
         pillarId: compassionId,
         circleId: circle.id,
         permanence: "deletable",
@@ -230,7 +230,7 @@ describe("the Picture repair loop", () => {
     expect(submitted.ok).toBe(true);
     if (!submitted.ok) return;
 
-    // One open repair per soul per domain — the structural anti-spam.
+    // One open repair per soul per domain; the structural anti-spam.
     const dup = await submitRepair(db, {
       domainId: domain.id,
       profileId: authorId,
@@ -310,7 +310,7 @@ describe("the Picture repair loop", () => {
     expect(after.get(domain.id)!.lastRepairedAt).toBeTruthy();
   });
 
-  it("declines quietly when consensus fails — honest misses stay safe", async () => {
+  it("declines quietly when consensus fails; honest misses stay safe", async () => {
     const domain = await db.domain.findFirstOrThrow({
       where: { pillarId: hopeId, position: 1 },
     });
@@ -323,7 +323,7 @@ describe("the Picture repair loop", () => {
     expect(submitted.ok).toBe(true);
     if (!submitted.ok) return;
 
-    // One vote to decline (position 2) — Adopt cannot lead.
+    // One vote to decline (position 2); Adopt cannot lead.
     const decline = await db.pollOption.findFirstOrThrow({
       where: { pollId: submitted.pollId, position: 2 },
     });
@@ -348,7 +348,7 @@ describe("the Picture repair loop", () => {
       where: { id: submitted.repairId },
     });
     expect(repair.status).toBe("declined");
-    // No revision, no credit, no deduction — nothing.
+    // No revision, no credit, no deduction; nothing.
     expect((await currentPicture(db, domain.id)).version).toBe(1);
     expect(
       await db.lightScoreAdjustment.count({

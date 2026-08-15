@@ -18,7 +18,7 @@ describe("the canon (7 pillars × 7 lenses = 49 questions)", () => {
     }
   });
 
-  it("marks The Agora — and only The Agora — as the meta-pillar", () => {
+  it("marks The Agora; and only The Agora; as the meta-pillar", () => {
     const meta = PILLARS.filter((p) => p.isMeta);
     expect(meta).toHaveLength(1);
     expect(meta[0].slug).toBe("agoranet");

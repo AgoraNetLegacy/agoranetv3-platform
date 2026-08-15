@@ -12,7 +12,7 @@ import { JourneySteps } from "@/components/JourneySteps";
 
 export const dynamic = "force-dynamic";
 
-// Stage 4 — the two blocking acknowledgments, in order. Written plainly,
+// Stage 4; the two blocking acknowledgments, in order. Written plainly,
 // not as legal wallpaper; they cannot be scrolled past (ONBOARDING §2.4).
 export default async function ConsentsPage({
   searchParams,
@@ -41,7 +41,7 @@ export default async function ConsentsPage({
     return (
       <div className="ceremony">
         <JourneySteps current="consents" />
-        <h2>Permanence — read before your first post</h2>
+        <h2>Permanence; read before your first post</h2>
         <p>{PERMANENCE_CONSENT.text}</p>
         <form action={acknowledgeConsent}>
           <input type="hidden" name="kind" value="permanence" />
@@ -55,11 +55,11 @@ export default async function ConsentsPage({
   return (
     <div className="ceremony">
       <JourneySteps current="consents" />
-      <h2>The Constitution — the rules of this space</h2>
+      <h2>The Constitution; the rules of this space</h2>
       <p>{CONSTITUTION_ACK.summary}</p>
       <p className="interim-note">
         <Link href="/constitution">Read the full Constitution →</Link>{" "}
-        It is public and free to read, before and after you agree — as is{" "}
+        It is public and free to read, before and after you agree; as is{" "}
         <Link href="/rules">every written rule</Link>. This acknowledgment
         names version {CONSTITUTION_ACK.version}.
       </p>

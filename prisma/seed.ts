@@ -1,5 +1,5 @@
 // Seed the platform's data-as-law: the canon (7 pillars × 7 lenses = 49
-// questions), the 49 canonical Discussions (permanent spaces — the civic
+// questions), the 49 canonical Discussions (permanent spaces; the civic
 // spine), the rails (every number as data), and the rulebook. Every
 // seeding is written to the Civic Ledger. Idempotent per section:
 // refuses to double-seed rather than duplicating (the ledger is
@@ -17,7 +17,7 @@ const db = new PrismaClient();
 async function seedCanon() {
   const existing = await db.pillar.count();
   if (existing > 0) {
-    console.log(`Canon already seeded (${existing} pillars) — skipping.`);
+    console.log(`Canon already seeded (${existing} pillars); skipping.`);
     return;
   }
 
@@ -74,16 +74,16 @@ async function seedCanon() {
     }
   }
 
-  console.log(`Seeded ${PILLARS.length} pillars, ${position} questions — every seeding on the ledger.`);
+  console.log(`Seeded ${PILLARS.length} pillars, ${position} questions; every seeding on the ledger.`);
 }
 
-// The 49 canonical Discussions — platform-created permanent spaces,
-// 1:1 with the canon questions ("Canonical question threads: Permanent —
+// The 49 canonical Discussions; platform-created permanent spaces,
+// 1:1 with the canon questions ("Canonical question threads: Permanent;
 // ratified (owner, 2026-07-07) … they're the civic spine", DISCUSSIONS §8).
 async function seedCanonicalDiscussions() {
   const existing = await db.discussion.count();
   if (existing > 0) {
-    console.log(`Discussions already seeded (${existing}) — skipping.`);
+    console.log(`Discussions already seeded (${existing}); skipping.`);
     return;
   }
   const questions = await db.question.findMany({
@@ -143,7 +143,7 @@ async function seedRails() {
   console.log(
     seeded > 0
       ? `Seeded ${seeded} new rail(s) (${RAIL_DEFAULTS.length} total defined).`
-      : `Rails already seeded (${RAIL_DEFAULTS.length}) — nothing new.`
+      : `Rails already seeded (${RAIL_DEFAULTS.length}); nothing new.`
   );
 }
 
@@ -151,7 +151,7 @@ async function seedRails() {
 async function seedRulebook() {
   const existing = await db.rule.count();
   if (existing > 0) {
-    console.log(`Rulebook already seeded (${existing} rules) — skipping.`);
+    console.log(`Rulebook already seeded (${existing} rules); skipping.`);
     return;
   }
   for (const rule of RULEBOOK) {
@@ -165,7 +165,7 @@ async function seedRulebook() {
   console.log(`Seeded ${RULEBOOK.length} rulebook rules.`);
 }
 
-// The domain layer (Phase 7 — the canon reconciliation's second ring):
+// The domain layer (Phase 7; the canon reconciliation's second ring):
 // 56 domains, each with its Picture as revision 1 of a living content
 // object (DASHBOARD §6.5) and its Opening-Question thread as a permanent
 // platform Discussion. Every seeding on the ledger; the 16 derived-draft
@@ -173,7 +173,7 @@ async function seedRulebook() {
 async function seedDomains() {
   const existing = await db.domain.count();
   if (existing > 0) {
-    console.log(`Domains already seeded (${existing}) — skipping.`);
+    console.log(`Domains already seeded (${existing}); skipping.`);
     return;
   }
   let domains = 0;
@@ -200,7 +200,7 @@ async function seedDomains() {
           extras: JSON.stringify(d.extras),
         },
       });
-      // The Picture, version 1 — the corpus text, verbatim.
+      // The Picture, version 1; the corpus text, verbatim.
       await db.pictureRevision.create({
         data: { domainId: domain.id, version: 1, body: d.picture },
       });
@@ -249,7 +249,7 @@ async function main() {
   await seedRails();
   await seedRulebook();
   await seedDomains();
-  // The budget categories the treasury may spend within — TOKENOMICS §3's
+  // The budget categories the treasury may spend within; TOKENOMICS §3's
   // three outflows, seeded as data so the Constitution's must-guardrail
   // has something to bind to (PHASE_8_7_SPEC §3, Slice 1).
   const { seedBudgetCategories } = await import("../lib/budget");

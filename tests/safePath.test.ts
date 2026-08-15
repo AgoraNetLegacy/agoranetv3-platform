@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { safePath } from "../lib/safePath";
 
-describe("safePath — open-redirect guard (CWE-601)", () => {
+describe("safePath; open-redirect guard (CWE-601)", () => {
   it("allows same-origin relative paths through unchanged", () => {
     expect(safePath("/verify/seed", "/")).toBe("/verify/seed");
     expect(safePath("/", "/x")).toBe("/");

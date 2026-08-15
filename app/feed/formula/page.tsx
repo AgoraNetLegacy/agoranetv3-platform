@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 // The published formula (FEED_AND_SEARCH §1.1/§2.2): nothing on the feed
 // is ranked by a formula a soul can't read. Human-readable, versioned,
-// and rendered live from the rails — the page can never drift from the
+// and rendered live from the rails; the page can never drift from the
 // code because both read the same numbers.
 export default async function FormulaPage() {
   const [wC, wT, wS, halfLife, resurfaceMin, maxCards] = await Promise.all([
@@ -24,7 +24,7 @@ export default async function FormulaPage() {
       <p>
         <Link href="/feed">← The feed</Link>
       </p>
-      <h1>The open lens formula — {FEED_FORMULA_VERSION}</h1>
+      <h1>The open lens formula; {FEED_FORMULA_VERSION}</h1>
       <p>
         The &ldquo;Popular now&rdquo; stream is ranked by exactly this, for
         everyone, with no personalization:
@@ -37,16 +37,16 @@ export default async function FormulaPage() {
         <li>
           <strong>Unique contributors</strong> (weighted highest, ×{wC}):
           distinct souls who posted in the discussion inside the activity
-          window — breadth of real participation.
+          window; breadth of real participation.
         </li>
         <li>
           <strong>Unique tippers</strong> (×{wT}): distinct souls who put
-          real Gratium behind a post there — ten 1-Gratium tippers outrank
+          real Gratium behind a post there; ten 1-Gratium tippers outrank
           one 50-Gratium whale, always.
         </li>
         <li>
           <strong>Sourced posts</strong> (×{wS}): posts carrying a typed,
-          inspectable source object — evidence density.
+          inspectable source object; evidence density.
         </li>
         <li>
           <strong>Recency decay</strong>: the whole score halves every{" "}
@@ -57,11 +57,11 @@ export default async function FormulaPage() {
       </ul>
       <h3>What is never an input</h3>
       <ul>
-        <li>Views, impressions, dwell time, scroll depth — the platform does not measure them.</li>
-        <li>Your identity, history, or behavior — same query, same results, for everyone.</li>
-        <li>Payment — paid visibility is rejected on principle, by platform law.</li>
+        <li>Views, impressions, dwell time, scroll depth; the platform does not measure them.</li>
+        <li>Your identity, history, or behavior; same query, same results, for everyone.</li>
+        <li>Payment; paid visibility is rejected on principle, by platform law.</li>
       </ul>
-      <h3>The saved-current resurfacing formula — beacon-resurface-v1</h3>
+      <h3>The saved-current resurfacing formula; beacon-resurface-v1</h3>
       <p>
         &ldquo;Saved &amp; stirring&rdquo; surfaces a thread <em>you</em>{" "}
         saved only when it has genuinely grown since you last read it,
@@ -75,11 +75,11 @@ export default async function FormulaPage() {
         <li>
           A saved thread needs at least {resurfaceMin} new post
           {resurfaceMin === 1 ? "" : "s"} to resurface, and at most{" "}
-          {maxCards} resurfaced threads ride one feed load — the feed
+          {maxCards} resurfaced threads ride one feed load; the feed
           still ends. (Both are rails.)
         </li>
         <li>
-          The only personal signal is your own watermark — the moment
+          The only personal signal is your own watermark; the moment
           you last read the thread. A time, and nothing else. Your saves
           are private to your face, never a ranking input for anyone
           else, and never counted or shown to authors.
@@ -88,7 +88,7 @@ export default async function FormulaPage() {
       <h3>Versioning &amp; governance</h3>
       <p className="lore">
         This is <strong>{FEED_FORMULA_VERSION}</strong>. Changes are
-        announced, dated, and diffable — the weights above are rails
+        announced, dated, and diffable; the weights above are rails
         (poll-adjustable within bounds), and the ratified future is
         community tunability by governance poll: new lenses are just new
         published formulas plugged into the same machinery. Exact starting

@@ -1,5 +1,5 @@
 // Anchor the civic ledger's head hash into a preprod transaction's
-// metadata (TESTNET_RAILS_SPEC §3) — CADENCE-AWARE since slice 4: this
+// metadata (TESTNET_RAILS_SPEC §3); CADENCE-AWARE since slice 4: this
 // script is idempotent and joins the ops-job roster (backup/drill/
 // crush/prune) the deployment host runs on schedule. Run daily; it
 // anchors only when the anchor.cadenceHours rail has elapsed AND the
@@ -28,7 +28,7 @@ async function main() {
         status.lastAnchor && status.headSeq <= status.lastAnchor.anchoredSeq
           ? `ledger has not moved since seq ${status.lastAnchor.anchoredSeq} was anchored`
           : `cadence (${status.cadenceHours}h) has not elapsed since ${status.lastAnchor?.at.toISOString()}`;
-      console.log(`ANCHOR_SKIP: not due — ${why}.`);
+      console.log(`ANCHOR_SKIP: not due; ${why}.`);
       return;
     }
 

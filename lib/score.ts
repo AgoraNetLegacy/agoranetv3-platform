@@ -1,5 +1,5 @@
-// Light Score — the pure engine (no I/O), PORTED DELIBERATELY from v2
-// (declared reuse — LIGHT_SCORE_EXTENSION_SPEC: "v2's Light Score was one
+// Light Score; the pure engine (no I/O), PORTED DELIBERATELY from v2
+// (declared reuse; LIGHT_SCORE_EXTENSION_SPEC: "v2's Light Score was one
 // of its strongest, best-tested systems and is reused with its design
 // untouched"). What changed in the port, stated plainly:
 //
@@ -7,7 +7,7 @@
 //    constants; the shipped rail values ARE the v2 constants (answer 5,
 //    debate 1, per-discussion participation cap 10).
 //  - v2's votes-received inputs (agree/insightful/disagree) do not exist
-//    in v3 — the platform replaced post-voting with tips, and tips are
+//    in v3; the platform replaced post-voting with tips, and tips are
 //    DELIBERATELY not a score input (LIGHT_SCORE §3: the buy-reputation
 //    loop). The disagreement-neutral principle those inputs encoded
 //    survives structurally: nothing in v3 scores positions at all.
@@ -16,7 +16,7 @@
 //  - Insight over volume: participation points are capped PER DISCUSSION
 //    so raw volume can't be farmed.
 //  - Disagreement is NEUTRAL, never punitive.
-//  - Per-face, per-pillar — the caller derives one pillar at a time; the
+//  - Per-face, per-pillar; the caller derives one pillar at a time; the
 //    anti-sum guard lives in lib/lightScore.ts.
 
 export interface ScoreWeights {
@@ -28,7 +28,7 @@ export interface ScoreWeights {
 /** One discussion's worth of a face's contributions within a pillar. */
 export interface DiscussionContribution {
   discussionId: string;
-  answers: number; // top-level posts — the substantive contribution
+  answers: number; // top-level posts; the substantive contribution
   debatePosts: number; // threaded replies
 }
 

@@ -1,4 +1,4 @@
-// The Civic Ledger — v3 reimplementation of the v2 pattern (declared reuse,
+// The Civic Ledger; v3 reimplementation of the v2 pattern (declared reuse,
 // DUAL_IDENTITY_MODULE.md §9).
 //
 // Rules:
@@ -7,7 +7,7 @@
 // 2. Every event's entryHash commits to the previous event's hash,
 //    forming a verifiable chain back to GENESIS.
 // 3. Pseudonym-only (DUAL_IDENTITY §1.2 invariant 3): no Human id, no
-//    Profile db id — only pseudonyms, nullifiers, commitments. db:verify
+//    Profile db id; only pseudonyms, nullifiers, commitments. db:verify
 //    scans the whole chain for leaks and fails loudly.
 // 4. When on-chain anchoring arrives (Phase 9, Arweave/Midnight), batches
 //    of entryHashes are anchored; nothing in this module changes.
@@ -19,7 +19,7 @@ export const GENESIS_HASH = "GENESIS";
 
 export interface LedgerEventInput {
   actorType: "system" | "soul" | "founder" | "moderator";
-  /** A pseudonym, or null for system events — never an internal db id. */
+  /** A pseudonym, or null for system events; never an internal db id. */
   actorId?: string | null;
   eventType: string;
   payload: Record<string, unknown>;
@@ -78,7 +78,7 @@ export async function appendEvent(db: DbOrTx, input: LedgerEventInput) {
 
 /**
  * Identity-leak guard (v2's findForbiddenId, reimplemented). The public
- * ledger must speak only in pseudonyms — never a Human id, never a raw
+ * ledger must speak only in pseudonyms; never a Human id, never a raw
  * Profile db id. Scans an event's actorId and canonical payload for any
  * forbidden identifier and returns the first one found, or null if the
  * event is clean. db:verify runs this over the whole chain so the leak

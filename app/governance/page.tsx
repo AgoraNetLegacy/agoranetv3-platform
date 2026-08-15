@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 // Polls & Governance, findable by name (PRESENTATION_SPEC §1.3): a
 // direct index into the seven Governance rooms and the open public
 // polls. Nothing here bypasses pillar parking or the sealed-tally
-// rules — every link walks through the same doors as always.
+// rules; every link walks through the same doors as always.
 export default async function GovernanceIndex() {
   await closeDuePolls(db);
 
@@ -31,7 +31,7 @@ export default async function GovernanceIndex() {
           <h4>Decide together, sealed until it&rsquo;s fair</h4>
           <p>
             <strong>Ordinary polls</strong> take the commons&rsquo;
-            temperature — anyone verified can open one, anyone can vote.{" "}
+            temperature; anyone verified can open one, anyone can vote.{" "}
             <strong>Governance polls</strong> bind: they change the
             platform&rsquo;s own rules, moving a rail within its
             published bounds.
@@ -40,15 +40,15 @@ export default async function GovernanceIndex() {
             Three laws hold everywhere: tallies stay{" "}
             <strong>sealed until close</strong>, so no early count can
             herd the undecided; the close itself is{" "}
-            <strong>candle-committed</strong> — drawn randomly inside a
+            <strong>candle-committed</strong>; drawn randomly inside a
             published window, so nobody can snipe the ending; and{" "}
-            <strong>one profile is one vote</strong> — money can pay a
+            <strong>one profile is one vote</strong>; money can pay a
             small casting fee, but it never buys outcome weight. Paid
             visibility and weighted votes are rejected on principle.
           </p>
           <p>
             Every pillar has its own Governance room, and everything
-            written there is permanent public record — permanence is a
+            written there is permanent public record; permanence is a
             place you knowingly walk into. Results, once closed, are
             civic records: searchable, anchored, and beyond quiet
             revision.
@@ -63,7 +63,7 @@ export default async function GovernanceIndex() {
         never buys outcome weight.
       </p>
 
-      <h3>The Governance rooms — one per pillar</h3>
+      <h3>The Governance rooms; one per pillar</h3>
       <p className="lore">
         Beyond each door, everything written is permanent public record.
         Permanence is a place you knowingly walk into.

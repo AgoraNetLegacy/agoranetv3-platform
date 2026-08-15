@@ -1,4 +1,4 @@
-// Test fixture ONLY — used by tests/verify.test.ts to prove the
+// Test fixture ONLY; used by tests/verify.test.ts to prove the
 // identity-leak guard catches a correctly-chained event that names an
 // internal id. This is the attack db:verify exists to catch; nothing in
 // the application ever does this.

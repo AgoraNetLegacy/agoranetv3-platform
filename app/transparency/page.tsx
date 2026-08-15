@@ -13,8 +13,8 @@ import { Icon } from "@/components/Icon";
 export const dynamic = "force-dynamic";
 
 // The transparency dashboard (TREASURY_DASHBOARD_SPEC): public, free, no
-// account — the platform's proof-of-integrity artifact. When AgoraNet
-// says "no ads, no data sales — participation fees fund everything,"
+// account; the platform's proof-of-integrity artifact. When AgoraNet
+// says "no ads, no data sales; participation fees fund everything,"
 // this page is where that claim is checkable, by anyone, forever.
 function CategoryTable({
   totals,
@@ -30,7 +30,7 @@ function CategoryTable({
   );
   const categories = Object.entries(totals).sort(([a], [b]) => a.localeCompare(b));
   if (categories.length === 0) {
-    return <p className="lore">No flows in this direction yet — an honest zero.</p>;
+    return <p className="lore">No flows in this direction yet; an honest zero.</p>;
   }
   return (
     <table className="books">
@@ -49,7 +49,7 @@ function CategoryTable({
               {category}
               {aggregateOnly.has(category) && (
                 <div className="lore">
-                  aggregate only — itemizing would identify badge holders
+                  aggregate only; itemizing would identify badge holders
                   (moderator anonymity beats itemization, by ratified law)
                 </div>
               )}
@@ -59,7 +59,7 @@ function CategoryTable({
             <td>
               {drillDown && !aggregateOnly.has(category) ? (
                 <Link href={`/transparency/entries?category=${encodeURIComponent(category)}`}>
-                  {t.entries} — inspect →
+                  {t.entries}; inspect →
                 </Link>
               ) : (
                 t.entries
@@ -100,7 +100,7 @@ export default async function TransparencyPage() {
       <h1><Icon name="temple" /> The transparency dashboard</h1>
       <p>
         Every fee on this platform flows to the treasury, and this page is
-        the answer to &ldquo;where did the money go&rdquo; — readable by
+        the answer to &ldquo;where did the money go&rdquo;; readable by
         anyone on the internet, no account, forever. Three questions, one
         surface: <strong>what came in, what went out, and what have the
         operators done.</strong>
@@ -108,7 +108,7 @@ export default async function TransparencyPage() {
       <p className="lore">
         Snapshot taken {snapshot.takenAt.toLocaleString()} (UTC day {snapshot.day}).
         Published schedule: aggregates refresh once per {cadenceHours}-hour
-        cycle — the lag is a stated property, not an ambiguity. The{" "}
+        cycle; the lag is a stated property, not an ambiguity. The{" "}
         <Link href="/ledger">civic ledger</Link> underneath stays live at all
         times, and every drill-down reaches current state.{" "}
         <Link href="/transparency/export">Export (CSV) →</Link>
@@ -123,7 +123,7 @@ export default async function TransparencyPage() {
       <ul className="discussions">
         <li>
           <strong>The demo token.</strong> PollCoin Demo (dPOLL) is a real
-          asset on Cardano {cardanoNet} — explicitly test-grade, no value,
+          asset on Cardano {cardanoNet}; explicitly test-grade, no value,
           ever.{" "}
           {dpollPolicy ? (
             <a href={`${explorer}/tokenPolicy/${dpollPolicy}`}>
@@ -138,19 +138,19 @@ export default async function TransparencyPage() {
           <Link href="/ledger">civic ledger</Link>&rsquo;s head hash is
           witnessed by a public {cardanoNet} transaction on a{" "}
           {anchors.cadenceHours}-hour rhythm (a rail) whenever the ledger
-          has moved — after an anchor, silently rewriting history here
+          has moved; after an anchor, silently rewriting history here
           means beating a public blockchain too.{" "}
           {anchors.lastAnchor ? (
             <>
               Latest: seq {anchors.lastAnchor.anchoredSeq} anchored{" "}
-              {anchors.lastAnchor.at.toLocaleString()} —{" "}
+              {anchors.lastAnchor.at.toLocaleString()}; {" "}
               <a href={`${explorer}/transaction/${anchors.lastAnchor.txHash}`}>
                 verify the transaction →
               </a>
             </>
           ) : (
             <span className="meta">
-              No anchor recorded on this database yet — the first cadence
+              No anchor recorded on this database yet; the first cadence
               run writes it, and it will be linked here.
             </span>
           )}
@@ -167,11 +167,11 @@ export default async function TransparencyPage() {
           <strong>The one-per-scope law, as math (the nullifier half).</strong>{" "}
           A Midnight {midnightNet} testnet contract proves the nullifier
           half of the gate&rsquo;s one-voice-per-scope rule with
-          zero-knowledge proofs — a spent nullifier is publicly auditable,
+          zero-knowledge proofs; a spent nullifier is publicly auditable,
           linkable to no one, and a second act by the same subject is
           refused by the chain itself. What it does not yet do on its own is
           bind each subject to a single human (the identity-commitment step
-          that stops a fresh secret from being minted) — that half is the
+          that stops a fresh secret from being minted); that half is the
           remaining Phase B/C cutover work.{" "}
           {midnightContract ? (
             <>
@@ -183,7 +183,7 @@ export default async function TransparencyPage() {
             <span className="meta">(not configured in this environment)</span>
           )}{" "}
           Honest scope: proofs run through a local dev proof server in
-          20–60 seconds — a working demonstration, not yet consumer UX.
+          20–60 seconds; a working demonstration, not yet consumer UX.
         </li>
         <li>
           <strong>What does NOT run on chain today,</strong> so nothing
@@ -191,7 +191,7 @@ export default async function TransparencyPage() {
           an operator-held secret (the Phase A disclosure stays up);
           PollCoin and Gratium balances are database rows; DM keys are
           operator-escrowed as disclosed in every thread. Each claim
-          upgrades only when its layer truly lands — never before.
+          upgrades only when its layer truly lands; never before.
         </li>
       </ul>
 
@@ -212,27 +212,27 @@ export default async function TransparencyPage() {
         Phase 9 boundary for independent verification.
       </p>
 
-      <h3>What came in — by source</h3>
+      <h3>What came in; by source</h3>
       <CategoryTable totals={inflows} drillDown />
       <p className="lore">
         Deposits are held pending their case's outcome: refunds appear
         under outflows, so the net of the two is what bad faith actually
-        forfeited. Vote-fee entries carry no poll reference by design —
+        forfeited. Vote-fee entries carry no poll reference by design;
         sealed means sealed.
       </p>
 
-      <h3>What went out — by budget category</h3>
+      <h3>What went out; by budget category</h3>
       <CategoryTable totals={outflows} drillDown />
       <p className="lore">
         The Constitution&rsquo;s must-guardrail, rendered structurally: an
-        outflow without a budget category cannot exist — an unmapped flow
+        outflow without a budget category cannot exist; an unmapped flow
         fails this page loudly rather than rendering as &ldquo;misc&rdquo;.
         Per-category budget amounts await the ratified launch budget
         (TREASURY_DASHBOARD §7.1); utilization-vs-budget renders here the
         day they exist.
       </p>
 
-      <h3>Issuance — the internal era&rsquo;s faucet, in the open</h3>
+      <h3>Issuance; the internal era&rsquo;s faucet, in the open</h3>
       <CategoryTable totals={issuance} />
       <p className="lore">
         Welcome Grants and participation accrual mint new internal units
@@ -240,10 +240,10 @@ export default async function TransparencyPage() {
         money story has no dark corners.
       </p>
 
-      <h3>What have the operators done — the admin action log</h3>
+      <h3>What have the operators done; the admin action log</h3>
       {adminEvents.length === 0 ? (
         <p className="lore">
-          No privileged operator actions have been recorded — an honest
+          No privileged operator actions have been recorded; an honest
           empty log, not a missing one. When the operator console exists,
           every privileged action lands on the civic ledger reason-coded
           and individually attributed, including every break-glass use,

@@ -94,12 +94,12 @@ function backTo(path: string, message?: string): never {
 
 // Every write action passes a wall from the consolidated W4 schedule
 // (lib/rateLimit.ts) plus the global backstop. Identifiers are HMAC-hashed
-// before any bucket row exists — nothing here stores who acted.
+// before any bucket row exists; nothing here stores who acted.
 
 // Feature vitals fall out of the same policy families the W4 schedule
 // names: one count per family (never a query trail), plus the
 // subject-keyed retention signal. Face-switching is a session mechanic,
-// not a feature — deliberately unmeasured.
+// not a feature; deliberately unmeasured.
 const MEASURED_FAMILIES = new Set<RateLimitPolicyName>([
   "posting", "votes", "economy", "creation", "flags",
   "moderation", "appeals", "social", "dmMessages", "settings",
@@ -118,8 +118,8 @@ async function requireFace(policy?: RateLimitPolicyName) {
 }
 
 /** Walls for surfaces that exist before any face does (verification,
- *  registration, sign-in): keyed on the browser session and — behind a
- *  declared proxy — the client address. */
+ *  registration, sign-in): keyed on the browser session and; behind a
+ *  declared proxy; the client address. */
 async function limitArrival(policy: RateLimitPolicyName): Promise<void> {
   const sessionId = await ensureSessionId();
   await enforceRateLimit(db, policy, `session:${sessionId}`);
@@ -168,7 +168,7 @@ export async function submitTip(formData: FormData) {
 
   const result = await tip(db, { postId, tipperProfileId: face.id, amount });
   revalidatePath(`/d/${discussionId}`);
-  backTo(`/d/${discussionId}`, result.ok ? "Tip sent — appreciation that costs something means something." : result.reason);
+  backTo(`/d/${discussionId}`, result.ok ? "Tip sent; appreciation that costs something means something." : result.reason);
 }
 
 export async function submitPermanenceUpgrade(formData: FormData) {
@@ -181,7 +181,7 @@ export async function submitPermanenceUpgrade(formData: FormData) {
   backTo(
     `/d/${discussionId}`,
     result.ok
-      ? "Your words are now permanent record — hash-committed to the ledger."
+      ? "Your words are now permanent record; hash-committed to the ledger."
       : result.reason
   );
 }
@@ -190,7 +190,7 @@ export async function completeOrientation(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "");
   const face = await requireFace("settings");
   // One-time orientation grant, minted atomically: the GrantClaim primary
-  // key means concurrent completeOrientation requests can't double-mint —
+  // key means concurrent completeOrientation requests can't double-mint;
   // exactly one wins the claim, the rest collide (P2002) and no-op.
   let granted = false;
   try {
@@ -207,7 +207,7 @@ export async function completeOrientation(formData: FormData) {
     if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002")) {
       throw err;
     }
-    // Already oriented (or a concurrent request won the claim) — not an error.
+    // Already oriented (or a concurrent request won the claim); not an error.
   }
   if (granted) await recordEvent(db, "funnel.oriented", face.id);
   redirect(`/verify/seed${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`);
@@ -273,7 +273,7 @@ export async function submitVote(formData: FormData) {
 
   const result = await castVote(db, { pollId, profileId: face.id, optionIds });
   revalidatePath(`/polls/${pollId}`);
-  backTo(`/polls/${pollId}`, result.ok ? "Your vote is in — one voice, counted once." : result.reason);
+  backTo(`/polls/${pollId}`, result.ok ? "Your vote is in; one voice, counted once." : result.reason);
 }
 
 export async function startPollDiscussion(formData: FormData) {
@@ -344,7 +344,7 @@ export async function submitScaffoldEdit(formData: FormData) {
   revalidatePath(`/pollinator/${chamberId}/workshop`);
   backTo(
     `/pollinator/${chamberId}/workshop`,
-    result.ok ? "Scaffold sharpened — the prior version stays in the history." : result.reason
+    result.ok ? "Scaffold sharpened; the prior version stays in the history." : result.reason
   );
 }
 
@@ -360,7 +360,7 @@ export async function submitChamberInvite(formData: FormData) {
   backTo(
     `/pollinator/${chamberId}/workshop`,
     result.ok
-      ? "Invited — they'll find it waiting on their Pollinator page."
+      ? "Invited; they'll find it waiting on their Pollinator page."
       : result.reason
   );
 }
@@ -388,7 +388,7 @@ export async function saveFeedSources(formData: FormData) {
   const fellowSouls = formData.get("fellowSouls") === "on";
 
   await db.$transaction(async (tx) => {
-    // Replace this face's chosen sources with the submitted set —
+    // Replace this face's chosen sources with the submitted set;
     // one screen, adjustable anytime. (Domain/poll rows can only be
     // UNCHECKED here; they're added from their own pages.)
     await tx.feedSource.deleteMany({
@@ -408,7 +408,7 @@ export async function saveFeedSources(formData: FormData) {
       await tx.feedSource.create({ data: { profileId: face.id, kind: "pillar", refId } });
     }
     for (const refId of circleIds) {
-      // Members only — a circle source you left does nothing, but keep
+      // Members only; a circle source you left does nothing, but keep
       // the choice honest at write time.
       const member = await tx.circleMember.findFirst({
         where: { circleId: refId, profileId: face.id, leftAt: null },
@@ -418,7 +418,7 @@ export async function saveFeedSources(formData: FormData) {
       }
     }
     for (const refId of chamberIds) {
-      // Entered souls only — a workshop feeds no one who isn't inside.
+      // Entered souls only; a workshop feeds no one who isn't inside.
       const member = await tx.chamberMember.findUnique({
         where: { chamberId_profileId: { chamberId: refId, profileId: face.id } },
       });
@@ -443,7 +443,7 @@ export async function saveFeedSources(formData: FormData) {
     });
   });
   revalidatePath("/feed");
-  backTo("/feed/sources", "Sources saved — this feed is yours.");
+  backTo("/feed/sources", "Sources saved; this feed is yours.");
 }
 
 export async function followInFeed(formData: FormData) {
@@ -479,7 +479,7 @@ export async function clearSearchHistory() {
 
 // ------------------------------------------------------------------ saves
 // BEACON_FEED_SPEC §4 (owner-ratified 2026-07-21): per-face, private,
-// free — a bookmark in your own book, never a signal to anyone else.
+// free; a bookmark in your own book, never a signal to anyone else.
 
 export async function submitSaveDiscussion(formData: FormData) {
   const discussionId = String(formData.get("discussionId") ?? "");
@@ -500,14 +500,14 @@ export async function submitUnsaveDiscussion(formData: FormData) {
 }
 
 /** Beacon wellbeing (BEACON_FEED_SPEC §7): the nudge threshold and the
- *  daily cap are the face's own choice — calm defaults, fully
+ *  daily cap are the face's own choice; calm defaults, fully
  *  adjustable, per face. "off"/"" mean exactly that; the server stores
  *  thresholds and measures nothing. */
 export async function updateFeedWellbeing(formData: FormData) {
   const face = await requireFace("settings");
   const nudgeRaw = String(formData.get("nudgeAfterMin") ?? "");
   const capRaw = String(formData.get("dailyCapMin") ?? "");
-  // "off", "", "0", or non-numeric all mean OFF (null) — never a
+  // "off", "", "0", or non-numeric all mean OFF (null); never a
   // surprise clamp to a minimum (correctness audit 2026-07-22).
   const nudgeNum = Math.round(Number(nudgeRaw));
   const nudgeAfterMin =
@@ -565,7 +565,7 @@ export async function submitProfileImage(formData: FormData) {
   if (file.size > cap) {
     backTo(
       "/profile",
-      `Too large — the ${kind} limit is ${Math.round(cap / 1024 / 1024)} MB.`
+      `Too large; the ${kind} limit is ${Math.round(cap / 1024 / 1024)} MB.`
     );
   }
   const bytes = Buffer.from(await file.arrayBuffer());
@@ -589,7 +589,7 @@ export async function submitRemoveProfileImage(formData: FormData) {
     });
   }
   revalidatePath("/profile");
-  backTo("/profile", "Removed — the generated mark stands in.");
+  backTo("/profile", "Removed; the generated mark stands in.");
 }
 
 // ---------------------------------------------------------------- repairs
@@ -612,7 +612,7 @@ export async function submitRepair(formData: FormData) {
   backTo(
     path,
     result.ok
-      ? "Repair submitted — the governance poll deciding it is open in this pillar's room."
+      ? "Repair submitted; the governance poll deciding it is open in this pillar's room."
       : result.reason
   );
 }
@@ -629,7 +629,7 @@ export async function submitPurposeEdit(formData: FormData) {
     problem: String(formData.get("problem") ?? "") || null,
   });
   revalidatePath(`/circles/${circleId}`);
-  backTo(`/circles/${circleId}`, result.ok ? "Purpose amended — the prior version stays on the record." : result.reason);
+  backTo(`/circles/${circleId}`, result.ok ? "Purpose amended; the prior version stays on the record." : result.reason);
 }
 
 export async function submitJoinCircle(formData: FormData) {
@@ -644,7 +644,7 @@ export async function submitJoinCircle(formData: FormData) {
     backTo(`/circles/${circleId}/join`, result.reason);
   }
   revalidatePath(`/circles/${circleId}`);
-  backTo(`/circles/${circleId}`, result.ok ? "You are in — the Circle is its members." : result.reason);
+  backTo(`/circles/${circleId}`, result.ok ? "You are in; the Circle is its members." : result.reason);
 }
 
 export async function submitLeaveCircle(formData: FormData) {
@@ -652,7 +652,7 @@ export async function submitLeaveCircle(formData: FormData) {
   const circleId = String(formData.get("circleId") ?? "");
   const result = await leaveCircle(db, { circleId, profileId: face.id });
   revalidatePath(`/circles/${circleId}`);
-  backTo(`/circles/${circleId}`, result.ok ? "You left — logged as public record, like joining." : result.reason);
+  backTo(`/circles/${circleId}`, result.ok ? "You left; logged as public record, like joining." : result.reason);
 }
 
 export async function submitOffer(formData: FormData) {
@@ -697,7 +697,7 @@ export async function submitActionEntry(formData: FormData) {
   backTo(
     `/circles/${circleId}`,
     result.ok
-      ? "Logged — permanent public record, awaiting co-signers."
+      ? "Logged; permanent public record, awaiting co-signers."
       : result.reason
   );
 }
@@ -712,12 +712,12 @@ export async function submitAttest(formData: FormData) {
   revalidatePath(`/circles/${circleId}`);
   backTo(
     `/circles/${circleId}`,
-    result.ok ? "Attested — your pseudonymous reputation is on it, permanently." : result.reason
+    result.ok ? "Attested; your pseudonymous reputation is on it, permanently." : result.reason
   );
 }
 
 /** Binding stewardship polls (CIRCLES §7): the form picks the decision,
- *  this action composes the poll — consensus type, Adopt/Decline, the
+ *  this action composes the poll; consensus type, Adopt/Decline, the
  *  Circle's own bar. */
 export async function submitStewardshipPoll(formData: FormData) {
   const face = await requireFace("creation");
@@ -780,7 +780,7 @@ export async function submitFellowRequest(formData: FormData) {
     toHandle: String(formData.get("handle") ?? ""),
     note: String(formData.get("note") ?? ""),
   });
-  backTo("/souls", result.ok ? "Request sent — it waits quietly; no clock ticks at them." : result.reason);
+  backTo("/souls", result.ok ? "Request sent; it waits quietly; no clock ticks at them." : result.reason);
 }
 
 export async function submitRequestResponse(formData: FormData) {
@@ -795,7 +795,7 @@ export async function submitRequestResponse(formData: FormData) {
     "/souls",
     result.ok
       ? accept
-        ? "Fellow souls — DMs now land direct."
+        ? "Fellow souls; DMs now land direct."
         : "Declined, quietly. They are not told."
       : result.reason
   );
@@ -816,7 +816,7 @@ export async function submitBlock(formData: FormData) {
     blockerProfileId: face.id,
     blockedHandle: String(formData.get("handle") ?? ""),
   });
-  backTo("/souls", result.ok ? "Blocked, quietly — they are never told." : result.reason);
+  backTo("/souls", result.ok ? "Blocked, quietly; they are never told." : result.reason);
 }
 
 export async function submitUnblock(formData: FormData) {
@@ -857,7 +857,7 @@ export async function submitDeclineThread(formData: FormData) {
     threadId: String(formData.get("threadId") ?? ""),
     profileId: face.id,
   });
-  backTo("/souls", result.ok ? "Declined — the thread is closed, quietly." : result.reason);
+  backTo("/souls", result.ok ? "Declined; the thread is closed, quietly." : result.reason);
 }
 
 export async function submitThreadMute(formData: FormData) {
@@ -878,7 +878,7 @@ export async function submitThreadDelete(formData: FormData) {
     threadId: String(formData.get("threadId") ?? ""),
     profileId: face.id,
   });
-  backTo("/souls", result.ok ? "Deleted for you — their copy is theirs." : result.reason);
+  backTo("/souls", result.ok ? "Deleted for you; their copy is theirs." : result.reason);
 }
 
 export async function submitDmReport(formData: FormData) {
@@ -894,7 +894,7 @@ export async function submitDmReport(formData: FormData) {
   backTo(
     `/dm/${threadId}`,
     result.ok
-      ? "Reported — the excerpt goes to a random adjudicator; deposit rules apply as everywhere."
+      ? "Reported; the excerpt goes to a random adjudicator; deposit rules apply as everywhere."
       : result.reason
   );
 }
@@ -907,7 +907,7 @@ export async function equipOffer(formData: FormData) {
     offerId: String(formData.get("offerId") ?? ""),
     profileId: face.id,
   });
-  backTo("/moderation", result.ok ? "Badge equipped — 48 hours on the bench." : result.reason);
+  backTo("/moderation", result.ok ? "Badge equipped; 48 hours on the bench." : result.reason);
 }
 
 export async function passOffer(formData: FormData) {
@@ -916,7 +916,7 @@ export async function passOffer(formData: FormData) {
     offerId: String(formData.get("offerId") ?? ""),
     profileId: face.id,
   });
-  backTo("/moderation", "Passed, freely — the next draw is just as random.");
+  backTo("/moderation", "Passed, freely; the next draw is just as random.");
 }
 
 export async function submitCaseRuling(formData: FormData) {
@@ -966,7 +966,7 @@ export async function submitAppeal(formData: FormData) {
   backTo(
     `/d/${discussionId}`,
     result.ok
-      ? "Appeal filed — fresh eyes (or the Tribunal) will review. Deposit returns if the ruling changes."
+      ? "Appeal filed; fresh eyes (or the Tribunal) will review. Deposit returns if the ruling changes."
       : result.reason
   );
 }
@@ -981,7 +981,7 @@ export async function submitRestorative(formData: FormData) {
   });
   backTo(
     `/d/${discussionId}`,
-    result.ok ? "Correction appended where the harm happened — strike reduced." : result.reason
+    result.ok ? "Correction appended where the harm happened; strike reduced." : result.reason
   );
 }
 
@@ -1027,7 +1027,7 @@ export async function createTrueSelf(formData: FormData) {
   await recordEvent(db, "funnel.trueself", result.profileId);
 
   // Sign the new face in and make it active. The world turns from blue
-  // to white here — becoming a participant is visible (§2.4).
+  // to white here; becoming a participant is visible (§2.4).
   const sessionId = await ensureSessionId();
   await addFace(db, { sessionId, profileId: result.profileId });
   await switchFace(db, { sessionId, fromProfileId: null, toProfileId: result.profileId });
@@ -1089,23 +1089,23 @@ export async function updateDisplayName(formData: FormData) {
   const face = await requireFace("settings");
   const result = await changeDisplayName(db, { profileId: face.id, displayName });
   revalidatePath("/", "layout");
-  backTo("/settings", result.ok ? "Display name updated (live surfaces only — permanent records keep the name they were written under)." : result.reason);
+  backTo("/settings", result.ok ? "Display name updated (live surfaces only; permanent records keep the name they were written under)." : result.reason);
 }
 
 /** The profile window (Phase 8.5, PRESENTATION_SPEC §5.2): about-me is
- *  live-surface content — editable anytime, never permanent record. */
+ *  live-surface content; editable anytime, never permanent record. */
 export async function updateProfileBio(formData: FormData) {
   const face = await requireFace("settings");
   const bio = String(formData.get("bio") ?? "").slice(0, 2000);
   const bioPlace = String(formData.get("bioPlace") ?? "").slice(0, 120);
   await db.profile.update({ where: { id: face.id }, data: { bio, bioPlace } });
   revalidatePath("/profile");
-  backTo("/profile", "Saved — live surfaces only, never the permanent record.");
+  backTo("/profile", "Saved; live surfaces only, never the permanent record.");
 }
 
 /** The testnet wallet link (Phase 8.6, TESTNET_RAILS_SPEC §6.3): the
  *  active face records which TESTNET address it connected. Mainnet is
- *  refused inside recordWalletLink — addr1… never enters the table. */
+ *  refused inside recordWalletLink; addr1… never enters the table. */
 export async function submitWalletLink(formData: FormData) {
   const face = await requireFace("settings");
   const { recordWalletLink } = await import("@/lib/chain");
@@ -1127,7 +1127,7 @@ export async function submitWalletLink(formData: FormData) {
 
 /** On-chain migration Slice 2: record the self-custody proof tx the
  *  soul's own wallet signed and submitted. Returns a result instead of
- *  redirecting — the client POLLS while the tx propagates (the server
+ *  redirecting; the client POLLS while the tx propagates (the server
  *  verifies the hash exists on the configured testnet before recording;
  *  see recordSelfCustodyProof). */
 export async function submitSelfCustodyProof(formData: FormData) {
@@ -1143,7 +1143,7 @@ export async function submitSelfCustodyProof(formData: FormData) {
 
 /** On-chain migration Slice 3: record a donation the soul's own wallet
  *  locked at the donation-lock script. The script address comes from
- *  the committed blueprint server-side — never from the client, so a
+ *  the committed blueprint server-side; never from the client, so a
  *  tampered browser can't have us verify against the wrong script.
  *  Returns a result for client polling, like the Slice 2 proof. */
 export async function submitScriptDonation(formData: FormData) {
@@ -1160,7 +1160,7 @@ export async function submitScriptDonation(formData: FormData) {
   return result;
 }
 
-/** §5.1 + §2.2: the switch animation is a per-face choice — flip
+/** §5.1 + §2.2: the switch animation is a per-face choice; flip
  *  (default), crossfade, or instant. By choice, never by detection. */
 export async function setSwitchAnimation(formData: FormData) {
   const method = String(formData.get("method") ?? "flip");
@@ -1174,7 +1174,7 @@ export async function setSwitchAnimation(formData: FormData) {
 }
 
 /** Spirit Mode (owner-ruled 2026-07-21): the bubble dot flips the veil
- *  on/off at will; the level itself is a Settings choice. No redirect —
+ *  on/off at will; the level itself is a Settings choice. No redirect;
  *  the toggle must not yank the soul off the page they're reading. */
 export async function toggleSpiritMode() {
   const face = await requireFace("settings");

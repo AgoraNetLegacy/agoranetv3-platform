@@ -1,15 +1,15 @@
-// Phase 8.6 slice 3 — deploy + exercise the nullifier contract on Midnight
+// Phase 8.6 slice 3; deploy + exercise the nullifier contract on Midnight
 // testnet through the local dev proof server (TESTNET_RAILS_SPEC §6.4 step 3).
 //
 // What this proves, in gate vocabulary (lib/gate.ts):
-//   1. CLEARED — a subject spends a nullifier in a scope; the ledger Set
+//   1. CLEARED; a subject spends a nullifier in a scope; the ledger Set
 //      records the opaque hash and nothing else.
-//   2. DUPLICATE — the same subject in the same scope is refused by the
+//   2. DUPLICATE; the same subject in the same scope is refused by the
 //      contract's member-check, with nobody learning who tried.
-//   3. The collision guard — the same scope string through the per-profile
+//   3. The collision guard; the same scope string through the per-profile
 //      and per-human doors yields DIFFERENT nullifiers (distinct kind tags),
 //      exactly as lib/nullifier.ts folds ScopeKind into its HMAC.
-//   4. The derivation is public math — pureCircuits.nullifierFor re-derives
+//   4. The derivation is public math; pureCircuits.nullifierFor re-derives
 //      the on-chain value locally from (kind tag, scope, secret), the §1.5
 //      recovery property carried onto the chain rail.
 //
@@ -18,7 +18,7 @@
 // promise (scout appendix, honesty edit 3).
 //
 // Wallet/provider wiring adapted from midnightntwrk/example-counter
-// (Apache-2.0, Midnight Foundation) — the official reference for the
+// (Apache-2.0, Midnight Foundation); the official reference for the
 // wallet-sdk facade + midnight-js 4.1.1 pairing pinned in package.json.
 //
 // Secrets (MIDNIGHT_DEPLOY_SEED, MIDNIGHT_SUBJECT_COMMITMENT) live ONLY in
@@ -26,7 +26,7 @@
 //
 //   cd infra/midnight && npm run exercise
 //
-// First run prints the wallet's unshielded address and waits — that is the
+// First run prints the wallet's unshielded address and waits; that is the
 // owner's ONE faucet moment (tNIGHT to that address; dust registration then
 // happens programmatically). Re-runs reuse MIDNIGHT_NULLIFIER_CONTRACT from
 // .env and skip deployment.
@@ -61,14 +61,14 @@ import * as path from "node:path";
 import { Contract, ledger, pureCircuits } from "./contract/build/contract/index.js";
 
 // GraphQL subscriptions (wallet sync) need a WebSocket global in Node.
-// @ts-expect-error — assigned for apollo's benefit
+// @ts-expect-error; assigned for apollo's benefit
 globalThis.WebSocket = WebSocket;
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const BUILD_DIR = path.join(HERE, "contract", "build");
 
 // ---------------------------------------------------------------------------
-// .env — the platform repo's single gitignored secrets home (§6.1).
+// .env; the platform repo's single gitignored secrets home (§6.1).
 // ---------------------------------------------------------------------------
 
 function loadEnv(): Record<string, string> {
@@ -84,7 +84,7 @@ function loadEnv(): Record<string, string> {
 const env = loadEnv();
 
 // The one hard rule, mirrored from lib/chain.ts (§6.6): testnet only, by
-// construction — a mainnet value anywhere fails loudly.
+// construction; a mainnet value anywhere fails loudly.
 const MIDNIGHT_TESTNETS = new Set(["preview", "preprod", "undeployed"]);
 
 function midnightNetwork(): "preview" | "preprod" | "undeployed" {
@@ -115,7 +115,7 @@ const NETWORKS = {
     indexer: "http://127.0.0.1:8088/api/v3/graphql",
     indexerWS: "ws://127.0.0.1:8088/api/v3/graphql/ws",
     node: "http://127.0.0.1:9944",
-    faucet: "(local standalone — fund via genesis wallet)",
+    faucet: "(local standalone; fund via genesis wallet)",
   },
 } as const;
 
@@ -127,7 +127,7 @@ const config = {
 };
 
 // ---------------------------------------------------------------------------
-// Canonicalization — scope strings and kind tags, exactly as the contract
+// Canonicalization; scope strings and kind tags, exactly as the contract
 // folds them (and as lib/nullifier.ts folds their Phase A twins).
 // ---------------------------------------------------------------------------
 
@@ -147,7 +147,7 @@ const KIND_PER_PROFILE = pad32("agoranet:kind:per-profile");
 const KIND_PER_HUMAN = pad32("agoranet:kind:per-human");
 
 // ---------------------------------------------------------------------------
-// Wallet (adapted from example-counter's api.ts — Apache-2.0).
+// Wallet (adapted from example-counter's api.ts; Apache-2.0).
 // ---------------------------------------------------------------------------
 
 interface WalletContext {
@@ -200,12 +200,12 @@ async function buildWallet(seed: string): Promise<WalletContext> {
   });
   await wallet.start(shieldedSecretKeys, dustSecretKey);
   tick(`wallet started (network: ${getNetworkId()})`);
-  console.log(`\n  Unshielded address (the faucet target — tNIGHT goes here):`);
+  console.log(`\n  Unshielded address (the faucet target; tNIGHT goes here):`);
   console.log(`  ${unshieldedKeystore.getBech32Address()}`);
   console.log(`  Faucet: ${config.faucet}`);
 
   step("Syncing with network");
-  // Progress heartbeat — a fresh wallet's first sync can run minutes; the
+  // Progress heartbeat; a fresh wallet's first sync can run minutes; the
   // difference between "slow" and "stuck" must be visible in the log.
   const heartbeat = wallet
     .state()
@@ -214,7 +214,7 @@ async function buildWallet(seed: string): Promise<WalletContext> {
       const big = (_: string, v: unknown) => (typeof v === "bigint" ? v.toString() : v);
       const p = (x: any) => JSON.stringify(x ?? "?", big);
       // The facade reports synced only when ALL THREE sub-wallets are
-      // strictly complete — dust included (it syncs via the node RPC's
+      // strictly complete; dust included (it syncs via the node RPC's
       // websocket, a separate connection from the indexer).
       console.log(
         `  … sync heartbeat: isSynced=${s.isSynced}` +
@@ -231,10 +231,10 @@ async function buildWallet(seed: string): Promise<WalletContext> {
   );
   heartbeat.unsubscribe();
   const balance = synced.unshielded.balances[unshieldedToken().raw] ?? 0n;
-  tick(`synced — ${balance.toLocaleString()} tNIGHT`);
+  tick(`synced; ${balance.toLocaleString()} tNIGHT`);
 
   if (balance === 0n) {
-    step("Waiting for tNIGHT (the faucet moment — paste the address above into the faucet)");
+    step("Waiting for tNIGHT (the faucet moment; paste the address above into the faucet)");
     const funded: bigint = await Rx.firstValueFrom(
       wallet.state().pipe(
         Rx.throttleTime(10_000),
@@ -243,7 +243,7 @@ async function buildWallet(seed: string): Promise<WalletContext> {
         Rx.filter((b: bigint) => b > 0n)
       )
     );
-    tick(`funded — ${funded.toLocaleString()} tNIGHT`);
+    tick(`funded; ${funded.toLocaleString()} tNIGHT`);
   }
 
   await registerForDustGeneration(wallet, unshieldedKeystore);
@@ -252,7 +252,7 @@ async function buildWallet(seed: string): Promise<WalletContext> {
 
 // tNIGHT does not pay fees directly: registered NIGHT UTXOs generate DUST
 // (the non-transferable fee token) over time. This designation is the
-// programmatic half of the faucet moment — no wallet clicking needed.
+// programmatic half of the faucet moment; no wallet clicking needed.
 async function registerForDustGeneration(
   wallet: WalletFacade,
   unshieldedKeystore: UnshieldedKeystore
@@ -284,10 +284,10 @@ async function registerForDustGeneration(
       Rx.filter((s: any) => s.dust.balance(new Date()) > 0n)
     )
   );
-  tick("dust available — fees covered");
+  tick("dust available; fees covered");
 }
 
-// Sign unshielded offers with the correct proof marker — works around the
+// Sign unshielded offers with the correct proof marker; works around the
 // wallet SDK's signRecipe hardcoding 'pre-proof' (example-counter's fix).
 function signTransactionIntents(
   tx: { intents?: Map<number, any> },
@@ -359,7 +359,7 @@ async function configureProviders(ctx: WalletContext) {
 }
 
 // ---------------------------------------------------------------------------
-// The contract binding — subjectSecret is the WITNESS: it rides the proof,
+// The contract binding; subjectSecret is the WITNESS: it rides the proof,
 // never the chain. Private state holds the hex commitment (slice 2's stable
 // subject commitment, §1.5) and the witness hands its bytes to the circuit.
 // ---------------------------------------------------------------------------
@@ -384,7 +384,7 @@ async function timed<T>(label: string, fn: () => Promise<T>): Promise<T> {
 }
 
 async function main() {
-  console.log("AgoraNet nullifier contract — Midnight testnet exercise (8.6 slice 3)");
+  console.log("AgoraNet nullifier contract; Midnight testnet exercise (8.6 slice 3)");
   console.log(`network: ${network} · proof server: ${config.proofServer} (dev-grade; 20–60s per proof is normal)`);
 
   const seed = env.MIDNIGHT_DEPLOY_SEED;
@@ -397,7 +397,7 @@ async function main() {
   const commitment = env.MIDNIGHT_SUBJECT_COMMITMENT;
   if (!commitment || commitment.length !== 64) {
     throw new Error(
-      "MIDNIGHT_SUBJECT_COMMITMENT (64 hex chars) is required in the platform .env — " +
+      "MIDNIGHT_SUBJECT_COMMITMENT (64 hex chars) is required in the platform .env; " +
         "the demo's stable subject commitment (§1.5). Generate one:  openssl rand -hex 32"
     );
   }
@@ -420,7 +420,7 @@ async function main() {
       })
     );
   } else {
-    step("Deploying the nullifier contract (proof + submit — patience)");
+    step("Deploying the nullifier contract (proof + submit; patience)");
     contract = await timed("deployed", () =>
       deployContract(providers as any, {
         compiledContract: nullifierCompiledContract,
@@ -433,19 +433,19 @@ async function main() {
   }
   const contractAddress = contract.deployTxData.public.contractAddress;
 
-  // A fresh per-run scope plays the role of one poll/action; the secret—the
-  // subject—stays fixed, exactly like one soul acting in one scope.
+  // A fresh per-run scope plays the role of one poll/action; the secret; the
+  // subject; stays fixed, exactly like one soul acting in one scope.
   const runScope = `demo-poll:${Date.now()}`;
   const runScopeB = scopeBytes(runScope);
   const secret = new Uint8Array(Buffer.from(commitment, "hex"));
 
-  // 1. CLEARED — first act in the scope.
-  step(`spendPerProfile("${runScope}") — expecting CLEARED`);
-  const tx1 = await timed("CLEARED — nullifier spent on-chain", () => contract.callTx.spendPerProfile(runScopeB));
+  // 1. CLEARED; first act in the scope.
+  step(`spendPerProfile("${runScope}"); expecting CLEARED`);
+  const tx1 = await timed("CLEARED; nullifier spent on-chain", () => contract.callTx.spendPerProfile(runScopeB));
   console.log(`    tx ${tx1.public.txId} · block ${tx1.public.blockHeight}`);
 
-  // 2. DUPLICATE — the same subject, the same scope, refused by math.
-  step(`spendPerProfile("${runScope}") again — expecting DUPLICATE refusal`);
+  // 2. DUPLICATE; the same subject, the same scope, refused by math.
+  step(`spendPerProfile("${runScope}") again; expecting DUPLICATE refusal`);
   let duplicateRefused = false;
   try {
     await contract.callTx.spendPerProfile(runScopeB);
@@ -453,16 +453,16 @@ async function main() {
     duplicateRefused = String(e?.message ?? e).includes("DUPLICATE");
     if (!duplicateRefused) throw e;
   }
-  if (!duplicateRefused) throw new Error("second spend was NOT refused — one-per-scope failed!");
-  tick("DUPLICATE — refused by the contract's member-check, no identity revealed");
+  if (!duplicateRefused) throw new Error("second spend was NOT refused; one-per-scope failed!");
+  tick("DUPLICATE; refused by the contract's member-check, no identity revealed");
 
-  // 3. The collision guard — same scope string, per-human door: DIFFERENT
+  // 3. The collision guard; same scope string, per-human door: DIFFERENT
   // kind tag, different nullifier, so it clears.
-  step(`spendPerHuman("${runScope}") — same scope, other kind: expecting CLEARED`);
-  const tx2 = await timed("CLEARED — kinds can never collide", () => contract.callTx.spendPerHuman(runScopeB));
+  step(`spendPerHuman("${runScope}"); same scope, other kind: expecting CLEARED`);
+  const tx2 = await timed("CLEARED; kinds can never collide", () => contract.callTx.spendPerHuman(runScopeB));
   console.log(`    tx ${tx2.public.txId} · block ${tx2.public.blockHeight}`);
 
-  // 4. Public math — re-derive both nullifiers locally and find them (and
+  // 4. Public math; re-derive both nullifiers locally and find them (and
   // only them, for this run) in the public ledger Set.
   step("Verifying the ledger Set against local re-derivation (pureCircuits)");
   const expectedProfile = pureCircuits.nullifierFor(KIND_PER_PROFILE, runScopeB, secret);
@@ -479,7 +479,7 @@ async function main() {
   console.log(`    per-profile: ${Buffer.from(expectedProfile).toString("hex").slice(0, 24)}…`);
   console.log(`    per-human:   ${Buffer.from(expectedHuman).toString("hex").slice(0, 24)}…`);
 
-  console.log(`\nEXERCISE_OK — contract ${contractAddress}`);
+  console.log(`\nEXERCISE_OK; contract ${contractAddress}`);
   console.log("The gate's one-per-scope law now holds on a public testnet by math, not policy.");
   process.exit(0);
 }

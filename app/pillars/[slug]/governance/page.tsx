@@ -10,7 +10,7 @@ import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
-// The Governance room — one per pillar, the flagship permanent space
+// The Governance room; one per pillar, the flagship permanent space
 // (DISCUSSIONS §8). Everything in this room is permanent record;
 // governance polls are always sealed and close by candle (POLLS §8).
 export default async function GovernanceRoom({
@@ -56,11 +56,11 @@ export default async function GovernanceRoom({
           ← <PillarMark slug={pillar.slug} /> {pillar.name}
         </Link>
       </p>
-      <h1><Icon name="temple" /> {pillar.name} — Governance room</h1>
+      <h1><Icon name="temple" /> {pillar.name}; Governance room</h1>
       <div className="door-banner">
         <Icon name="temple" /> <strong>You are standing in the permanent room.</strong>{" "}
         Everything here is permanent record. Governance polls are always
-        sealed — no running tally for anyone — and close by candle: the
+        sealed; no running tally for anyone; and close by candle: the
         true end is drawn at random inside the final stretch, committed in
         advance, revealed with the results.
       </div>
@@ -85,7 +85,7 @@ export default async function GovernanceRoom({
             </div>
           </li>
         ))}
-        {polls.length === 0 && <li>No governance polls yet — open the first.</li>}
+        {polls.length === 0 && <li>No governance polls yet; open the first.</li>}
       </ul>
 
       {discussions.length > 0 && (

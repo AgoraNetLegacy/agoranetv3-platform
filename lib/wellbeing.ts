@@ -1,6 +1,6 @@
 // Beacon wellbeing (BEACON_FEED_SPEC §7, v2 decision 3 carried
 // forward): calm pacing as a per-face CHOICE. The platform measures
-// nothing — the nudge and the cap run entirely in the soul's own
+// nothing; the nudge and the cap run entirely in the soul's own
 // browser; the server only stores the face's chosen thresholds.
 
 import type { DbOrTx } from "./db";

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 // State of the Commons (ANALYTICS_SPEC §4, owner-ratified): radical
 // transparency applied to growth itself. Aggregate-only, public, no
-// account — growth is public whether it's fast or slow, the same
+// account; growth is public whether it's fast or slow, the same
 // honesty the treasury page applies to money. Placement: its own page,
 // linked from the transparency dashboard (flagged as cosmetic in
 // DECISIONS_PENDING).
@@ -67,7 +67,7 @@ export default async function CommonsPage() {
       <h1><Icon name="sprout" /> State of the Commons</h1>
       <p>
         Is the platform working? The honest numbers, public whether they
-        flatter or not — the same transparency the{" "}
+        flatter or not; the same transparency the{" "}
         <Link href="/transparency">treasury page</Link> applies to money,
         applied to growth. Everything here is an aggregate: the platform
         measures its <em>product</em>, never its <em>people</em>.
@@ -115,7 +115,7 @@ export default async function CommonsPage() {
         </div>
       </div>
 
-      <h3>The doorway — onboarding funnel</h3>
+      <h3>The doorway; onboarding funnel</h3>
       <table className="books">
         <thead>
           <tr>
@@ -133,11 +133,11 @@ export default async function CommonsPage() {
         </tbody>
       </table>
       <p className="lore">
-        Counts, not people: an event here is a name and a moment — no
+        Counts, not people: an event here is a name and a moment; no
         profiles, no trails, nothing to join. Raw events are crushed into
         these aggregates and deleted on a 90-day cycle (
         <em>shortening</em> that window is always allowed; lengthening it
-        is structurally capped). Analytics never feeds ranking — the feed
+        is structurally capped). Analytics never feeds ranking; the feed
         formula is <Link href="/feed/formula">published</Link> and this
         pipeline is forbidden to touch it.
       </p>

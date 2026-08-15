@@ -5,7 +5,7 @@ import { getRail } from "@/lib/rails";
 
 export const dynamic = "force-dynamic";
 
-// The Alias ceremony (ONBOARDING §3) — deliberately decoupled: initiated
+// The Alias ceremony (ONBOARDING §3); deliberately decoupled: initiated
 // with the credential (the interim wallet-side path), never from inside
 // a True Self session's settings. The §3.6 disclosures are blocking.
 export default async function AliasPage({
@@ -29,10 +29,10 @@ export default async function AliasPage({
       </p>
       {early && (
         <div className="notice">
-          <strong>The platform is young — read this honestly.</strong> An
+          <strong>The platform is young; read this honestly.</strong> An
           Alias hides you in a crowd, and right now the crowd is small
           (fewer than {smallPopulation} active souls). In a small
-          population, patterns identify people regardless of cryptography —
+          population, patterns identify people regardless of cryptography;
           &ldquo;the only soul active in both of two niche places&rdquo; is
           a signature. Your Alias is still unlinkable in every record we
           keep; the crowd it hides in simply hasn&rsquo;t arrived yet. This
@@ -42,13 +42,13 @@ export default async function AliasPage({
       <p>
         Your second face: for the argument you can't afford professionally,
         the report you can't sign, the struggle you won't wear publicly.
-        Every human gets exactly one — and the check that enforces this is
+        Every human gets exactly one; and the check that enforces this is
         blind: it can tell someone is trying twice without learning who.
-        This ceremony asks for your Humanity Credential — not your
-        signed-in account — so the platform only ever sees a fresh,
+        This ceremony asks for your Humanity Credential; not your
+        signed-in account; so the platform only ever sees a fresh,
         unattributable registration arrive.
       </p>
-      <h3>Read this first — it's the honest part</h3>
+      <h3>Read this first; it's the honest part</h3>
       <ol className="disclosure-list">
         {ALIAS_DISCLOSURES.items.map((item, i) => (
           <li key={i}>{item}</li>
@@ -65,7 +65,7 @@ export default async function AliasPage({
           <input type="text" name="displayName" required maxLength={60} />
         </label>
         <label>
-          Alias @handle (unique, eternal — and unlike your True Self's)
+          Alias @handle (unique, eternal; and unlike your True Self's)
           <input type="text" name="handle" required maxLength={30} />
         </label>
         <label>

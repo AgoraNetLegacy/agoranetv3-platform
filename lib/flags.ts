@@ -1,10 +1,10 @@
-// Flag capture — Phase 1 is queue-only: flags accumulate for Phase 5's
+// Flag capture; Phase 1 is queue-only: flags accumulate for Phase 5's
 // adjudicators (BUILD_ORDER Phase 1). A flag cites a rulebook rule (the
 // case category, MODERATION §3.1).
 //
 // A flag's existence is never public: the public sees only outcomes
 // (triangle of blindness, MODERATION §3.2), so the gate runs in PRIVATE
-// recording mode — humanity and one-flag-per-profile-per-content are
+// recording mode; humanity and one-flag-per-profile-per-content are
 // enforced, but no ledger event exists. The flag is keyed by nullifier
 // for Phase 5's nullifier-keyed handling; the reporter's profile id
 // stays in Phase A operator space (deposit refunds will need it) and is
@@ -35,7 +35,7 @@ export async function fileFlag(
   if (!post) return { ok: false, reason: "No such post." };
 
   const rule = await db.rule.findUnique({ where: { id: input.ruleId } });
-  if (!rule) return { ok: false, reason: "Unknown rule — flags cite the rulebook." };
+  if (!rule) return { ok: false, reason: "Unknown rule; flags cite the rulebook." };
 
   // Gate and feature write share ONE transaction (#25): if anything below
   // rolls back, the humanity spend rolls back with it, so a retry is clean
@@ -55,7 +55,7 @@ export async function fileFlag(
       return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     }
 
-    // The refundable deposit — but flagging is NEVER blocked by an
+    // The refundable deposit; but flagging is NEVER blocked by an
     // empty balance (DISCUSSIONS §7): a zero-balance soul flags without
     // a deposit; pattern penalties fall back to rate-limiting, not debt.
     const depositAmount = await getRail(tx, "moderation.flagDeposit");
@@ -82,7 +82,7 @@ export async function fileFlag(
         depositHeld: depositTaken,
       },
     });
-    // Phase 5: the flag meets its adjudicators — open or join the
+    // Phase 5: the flag meets its adjudicators; open or join the
     // post's case; content blurs (or full-hides in the expedited lane).
     const { openOrJoinCase } = await import("./moderation");
     await openOrJoinCase(tx, {
@@ -103,16 +103,16 @@ export async function fileFlag(
 /**
  * Report a mission payment (Phase 8.7, owner-ruled 2026-07-16).
  *
- * FUND_INTEGRITY §3.4 calls the freeze "the module's real teeth" — but a
+ * FUND_INTEGRITY §3.4 calls the freeze "the module's real teeth"; but a
  * case had no way to START. `Flag` accepted a post XOR a DM excerpt, and
  * a payment is neither. This is the missing door, and it was left unbuilt
  * until the owner ruled rather than guessed at (DECISIONS_PENDING #17).
  *
  * The evidence is the payment itself: its stated purpose, its amount, who
- * proposed it, who co-signed, and where it went — all already public on
+ * proposed it, who co-signed, and where it went; all already public on
  * the civic ledger. Nothing is blurred, unlike a post: **you cannot
  * un-see a payment, and pretending otherwise would be theatre.** The
- * consequence lives elsewhere — an upheld R3.4 ruling freezes whatever
+ * consequence lives elsewhere; an upheld R3.4 ruling freezes whatever
  * that chamber has not yet paid out (`applyReleaseFreeze`).
  *
  * Same deposit, same triangle of blindness, same rulebook as every other
@@ -131,7 +131,7 @@ export async function fileReleaseFlag(
   if (!release) return { ok: false, reason: "No such release." };
 
   const rule = await db.rule.findUnique({ where: { id: input.ruleId } });
-  if (!rule) return { ok: false, reason: "Unknown rule — flags cite the rulebook." };
+  if (!rule) return { ok: false, reason: "Unknown rule; flags cite the rulebook." };
 
   try {
     return await db.$transaction(async (tx) => {

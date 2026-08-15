@@ -1,12 +1,12 @@
-// Search (Phase 7 — FEED_AND_SEARCH_SPEC §4): active lookup, "I know
+// Search (Phase 7; FEED_AND_SEARCH_SPEC §4): active lookup, "I know
 // what I'm looking for." Nine entity types, visibility-scoped at the
-// query — the deliberate exclusions are structural, not filtered
+// query; the deliberate exclusions are structural, not filtered
 // after the fact: members'-room and DM content never enter a public
 // query; moderator identity exists in no searchable surface; nothing
 // cross-persona exists to leak.
 //
 // Rules (§4.2): free for everyone including signed-out readers; ranking
-// is published (match quality + substance signals — never engagement,
+// is published (match quality + substance signals; never engagement,
 // never personalization: same query, same results, for everyone);
 // search history is per-profile, visible, deletable, never a ranking
 // input.
@@ -27,15 +27,15 @@ export const ENTITY_TYPES = [
 export type EntityType = (typeof ENTITY_TYPES)[number];
 
 export const ENTITY_LABELS: Record<EntityType, string> = {
-  content: "Content — Discussions, replies, Circle pages, Chamber storefronts",
-  souls: "Souls — lookup by @handle or display name",
-  "fellow-souls": "Fellow souls — within your own list",
-  places: "Places — Circles working in a city or region",
-  canon: "Pillars & canon — the 49 questions and 56 domains",
-  "civic-records": "Civic records — governance results, the rulebook, treasury days",
-  polls: "Polls — by status",
-  sources: "Sources — every conversation citing a study or article",
-  help: "Help — how the platform works, fees, rules",
+  content: "Content; Discussions, replies, Circle pages, Chamber storefronts",
+  souls: "Souls; lookup by @handle or display name",
+  "fellow-souls": "Fellow souls; within your own list",
+  places: "Places; Circles working in a city or region",
+  canon: "Pillars & canon; the 49 questions and 56 domains",
+  "civic-records": "Civic records; governance results, the rulebook, treasury days",
+  polls: "Polls; by status",
+  sources: "Sources; every conversation citing a study or article",
+  help: "Help; how the platform works, fees, rules",
 };
 
 export interface SearchHit {
@@ -73,7 +73,7 @@ function dateWhere(filters: SearchFilters) {
 }
 
 /** The whole public index, one query in. viewerProfileId personalizes
- *  NOTHING about ranking — it only unlocks the viewer's own private
+ *  NOTHING about ranking; it only unlocks the viewer's own private
  *  scopes (their fellow-souls list) and annotates relationships. */
 export async function search(
   db: PrismaClient,
@@ -86,8 +86,8 @@ export async function search(
   const hits: SearchHit[] = [];
   const created = dateWhere(filters);
 
-  // 1 — Content: public Discussions + visible replies in them + public
-  // Circle pages + Chamber STOREFRONTS (never workshop interiors —
+  // 1; Content: public Discussions + visible replies in them + public
+  // Circle pages + Chamber STOREFRONTS (never workshop interiors;
   // FEED_AND_SEARCH §4.1: a soul searching inside a space they entered
   // is in-space search, on the workshop page). Members' rooms, workshops,
   // and DMs are structurally absent: the discussion and post queries
@@ -186,28 +186,28 @@ export async function search(
         snippet: c.isPublic ? c.whyCare.slice(0, 180) : undefined,
         badge: c.isPublic
           ? `🐝 Chamber storefront · ${c.members.length} soul${c.members.length === 1 ? "" : "s"} inside`
-          : "🐝 Chamber · private — invite-only",
+          : "🐝 Chamber · private; invite-only",
         score: 2 + (c.isPublic ? c.members.length : 0),
       });
     }
   }
 
-  // 2 — Souls: lookup, not discovery-of-persons. Display names duplicate
+  // 2; Souls: lookup, not discovery-of-persons. Display names duplicate
   // freely; @handles disambiguate. Every active profile passed the gate
-  // (verified human). NOTHING here derives from the other face — no such
+  // (verified human). NOTHING here derives from the other face; no such
   // data exists to derive from.
   if (want(filters, "souls")) {
     const profiles = await db.profile.findMany({
       where: {
         status: "active",
-        // Spirit Mode: every level of the veil covers discovery — a
+        // Spirit Mode: every level of the veil covers discovery; a
         // veiled soul simply isn't in this lane (lib/spirit.ts).
         spiritActive: false,
         OR: [{ handle: { contains: q.toLowerCase().replace(/^@/, "") } }, { displayName: { contains: q } }],
       },
       take: LIMIT_PER_TYPE,
     });
-    // The viewer's own bonds annotate their results — visible to them
+    // The viewer's own bonds annotate their results; visible to them
     // alone (§4.1.2 "your own fellow-soul relationship if one exists").
     const bonds = viewerProfileId
       ? await db.fellowSoulBond.findMany({
@@ -229,7 +229,7 @@ export async function search(
     }
   }
 
-  // 3 — Fellow souls: the viewer's own list, private to them, per-face.
+  // 3; Fellow souls: the viewer's own list, private to them, per-face.
   if (want(filters, "fellow-souls") && viewerProfileId) {
     const bonds = await db.fellowSoulBond.findMany({
       where: { OR: [{ aProfileId: viewerProfileId }, { bProfileId: viewerProfileId }] },
@@ -247,13 +247,13 @@ export async function search(
         type: "fellow-souls",
         title: `${p.displayName} @${p.handle}`,
         href: "/souls",
-        badge: "your fellow soul — only you see this result",
+        badge: "your fellow soul; only you see this result",
         score: 3,
       });
     }
   }
 
-  // 4 — Places: Circles are place-aware; a city surfaces its initiatives.
+  // 4; Places: Circles are place-aware; a city surfaces its initiatives.
   if (want(filters, "places")) {
     const circles = await db.circle.findMany({
       where: { placeTag: { contains: q } },
@@ -272,7 +272,7 @@ export async function search(
     }
   }
 
-  // 5 — Pillars & canon: the 49 questions, the 56 domains, the pillar
+  // 5; Pillars & canon: the 49 questions, the 56 domains, the pillar
   // identities and their breakdown content.
   if (want(filters, "canon")) {
     const [pillars, questions, domains] = await Promise.all([
@@ -307,7 +307,7 @@ export async function search(
     for (const p of pillars) {
       hits.push({
         type: "canon",
-        title: `${p.icon} ${p.name} — ${p.classicalName}, ${p.loreName}`,
+        title: `${p.icon} ${p.name}; ${p.classicalName}, ${p.loreName}`,
         href: `/pillars/${p.slug}`,
         badge: "pillar",
         score: 4,
@@ -334,7 +334,7 @@ export async function search(
     }
   }
 
-  // 6 — Civic records: governance results, the rulebook, treasury days.
+  // 6; Civic records: governance results, the rulebook, treasury days.
   // Radical transparency means the record is SEARCHABLE.
   if (want(filters, "civic-records")) {
     const [govPolls, rules, snapshots] = await Promise.all([
@@ -367,7 +367,7 @@ export async function search(
     for (const r of rules) {
       hits.push({
         type: "civic-records",
-        title: `${r.id} — ${r.title}`,
+        title: `${r.id}; ${r.title}`,
         href: `/moderation`,
         snippet: r.summary.slice(0, 180),
         badge: `rulebook · tier ${r.tier}`,
@@ -377,7 +377,7 @@ export async function search(
     for (const s of snapshots) {
       hits.push({
         type: "civic-records",
-        title: `Treasury snapshot — ${s.day}`,
+        title: `Treasury snapshot; ${s.day}`,
         href: "/transparency",
         badge: "treasury dashboard",
         score: 2,
@@ -385,7 +385,7 @@ export async function search(
     }
   }
 
-  // 7 — Polls by status.
+  // 7; Polls by status.
   if (want(filters, "polls")) {
     const polls = await db.poll.findMany({
       where: {
@@ -403,13 +403,13 @@ export async function search(
         type: "polls",
         title: p.title,
         href: `/polls/${p.id}`,
-        badge: `${p.pillar.icon} ${p.status === "open" ? `open — closes ${p.nominalCloseAt.toLocaleDateString()}` : "closed"}${p.isGovernance ? " · governance" : ""}`,
+        badge: `${p.pillar.icon} ${p.status === "open" ? `open; closes ${p.nominalCloseAt.toLocaleDateString()}` : "closed"}${p.isGovernance ? " · governance" : ""}`,
         score: p.status === "open" ? 3 : 2,
       });
     }
   }
 
-  // 8 — Sources: find every conversation citing a given study/article —
+  // 8; Sources: find every conversation citing a given study/article;
   // the research capability.
   if (want(filters, "sources")) {
     const sources = await db.sourceObject.findMany({
@@ -438,7 +438,7 @@ export async function search(
     }
   }
 
-  // 9 — Help & platform docs: how things work, fees, rules — the rails
+  // 9; Help & platform docs: how things work, fees, rules; the rails
   // ARE the honest documentation of every number.
   if (want(filters, "help")) {
     const rails = await db.rail.findMany({
@@ -463,7 +463,7 @@ export async function search(
 }
 
 /** Record a query in the soul's own history (§4.2): visible to them,
- *  deletable, never used to rank anything — including by us. */
+ *  deletable, never used to rank anything; including by us. */
 export async function recordSearch(db: PrismaClient, profileId: string, query: string) {
   const q = query.trim();
   if (!q) return;

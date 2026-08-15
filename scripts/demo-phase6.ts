@@ -1,8 +1,8 @@
-// demo:phase6 — the Phase 6 checkpoint, end to end (BUILD_ORDER):
+// demo:phase6; the Phase 6 checkpoint, end to end (BUILD_ORDER):
 // a Circle forms (25u fee, thin founder), souls join (Alias warned at a
 // small, place-tagged community), the members' room deliberates, a
 // Circle-restricted poll decides, an action is logged, attested by 2+
-// members, and the attested action lands on the public ledger — with
+// members, and the attested action lands on the public ledger; with
 // Light Score credits recorded for the Phase 7 engine.
 //
 // Run: npm run demo:phase6   (uses the dev database; seed first)
@@ -26,7 +26,7 @@ import { makeOnboardedSoul, topUpForTests } from "../tests/helpers/souls";
 const db = new PrismaClient();
 
 function step(n: number, msg: string) {
-  console.log(`\n— ${n}. ${msg}`);
+  console.log(`\n; ${n}. ${msg}`);
 }
 
 async function main() {
@@ -67,12 +67,12 @@ async function main() {
     `   fee paid: ${before.toFixed(2)} → ${(await balanceOf(db, founder.trueSelfId, "PC")).toFixed(2)} PC · circle.formed on the ledger`
   );
 
-  step(3, "Discovery: transparent values-alignment — the why is shown, always");
+  step(3, "Discovery: transparent values-alignment; the why is shown, always");
   const reasons = await alignmentPillarsFor(db, helper.trueSelfId);
   console.log(
     reasons.has(pillar.id)
       ? `   surfaced to the helper because ${reasons.get(pillar.id)}`
-      : "   (helper has no alignment yet — browse/filter still finds the circle)"
+      : "   (helper has no alignment yet; browse/filter still finds the circle)"
   );
 
   step(4, "Joining: True Self joins plainly; the Alias face gets the §5 warning");
@@ -82,11 +82,11 @@ async function main() {
   console.log(`   alias join needs the warning? ${warned}`);
   console.log(`   the warning, verbatim: "${ALIAS_SMALL_COMMUNITY_WARNING}"`);
   const refusedQuietly = await joinCircle(db, { circleId, profileId: witness.aliasId });
-  console.log(`   without acceptance: refused (${!refusedQuietly.ok}) — informed choice, never a wall`);
-  // The witness chooses their True Self instead — the warning did its job.
+  console.log(`   without acceptance: refused (${!refusedQuietly.ok}); informed choice, never a wall`);
+  // The witness chooses their True Self instead; the warning did its job.
   const witnessJoin = await joinCircle(db, { circleId, profileId: witness.trueSelfId });
   if (!witnessJoin.ok) throw new Error(witnessJoin.reason);
-  console.log("   witness joined as True Self instead — 3 members");
+  console.log("   witness joined as True Self instead; 3 members");
 
   step(5, "The members' room deliberates (Circle-scoped Discussion, members-only)");
   const room = await db.discussion.findFirstOrThrow({ where: { circleId } });
@@ -137,7 +137,7 @@ async function main() {
   });
   await closeDuePolls(db);
   const closed = await db.poll.findUniqueOrThrow({ where: { id: poll.pollId } });
-  console.log(`   outcome: ${closed.outcome} — and the ledger holds only a contentHash, never the question`);
+  console.log(`   outcome: ${closed.outcome}; and the ledger holds only a contentHash, never the question`);
 
   step(8, "THE ACTION LOG: logged → attested (2+) → the public civic ledger");
   const logged = await logAction(db, {
@@ -176,7 +176,7 @@ async function main() {
     console.log(`   seq ${ev.seq} · ${ev.eventType} · ${ev.actorId ?? "system"}`);
   }
 
-  step(10, "Light Score crediting — recorded for the Phase 7 engine");
+  step(10, "Light Score crediting; recorded for the Phase 7 engine");
   const credits = await db.lightScoreAdjustment.findMany({
     where: { refId: logged.entryId },
   });

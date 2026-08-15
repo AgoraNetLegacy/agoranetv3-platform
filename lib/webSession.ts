@@ -1,7 +1,7 @@
 // Web plumbing for SoulSessions: one cookie names the browser's session
 // row; the session knows which faces are signed in and which is active.
 // Secrets (credential, access keys) are handed to the soul through
-// one-time httpOnly cookies rendered exactly once — never query strings,
+// one-time httpOnly cookies rendered exactly once; never query strings,
 // which leak into history and logs (DUAL_IDENTITY §7.1 vector 4).
 
 import { cookies, headers } from "next/headers";
@@ -17,7 +17,7 @@ const FLIP_COOKIE = "agoranet-flip";
 // local http://localhost still works.
 const SECURE_COOKIE = process.env.NODE_ENV === "production";
 
-// Owner ruling 2026-07-23: sessions persist across browser restarts —
+// Owner ruling 2026-07-23: sessions persist across browser restarts;
 // re-pasting the access key every launch was the wrong friction. 400 days
 // is the browser-enforced ceiling (Chrome caps cookie lifetime there), so
 // this is "as close to never-expiring as cookies allow". The SoulSession
@@ -72,7 +72,7 @@ export async function sessionFaces() {
 
 /** The client address for rate-limit keying, ONLY behind a declared
  *  proxy (TRUST_PROXY=true) where x-forwarded-for is trustworthy. The
- *  value feeds an HMAC and is never stored or logged raw — minimal-log
+ *  value feeds an HMAC and is never stored or logged raw; minimal-log
  *  discipline (DUAL_IDENTITY §7.1 vector 4). */
 export async function clientAddress(): Promise<string | null> {
   if (process.env.TRUST_PROXY !== "true") return null;
@@ -100,7 +100,7 @@ export async function clearOneTimeSecret(): Promise<void> {
 }
 
 /** Mark that the next page load is a change of face: the page arrives
- *  as the card flip (PRESENTATION_SPEC §2.2). Short-lived by design —
+ *  as the card flip (PRESENTATION_SPEC §2.2). Short-lived by design;
  *  it self-expires so a refresh moments later doesn't replay the turn. */
 export async function markFaceFlip(): Promise<void> {
   const jar = await cookies();

@@ -1,7 +1,7 @@
 // Server-side parking enforcement shared by every in-pillar page
 // (DASHBOARD §3.2: a pillar's dashboard and every sub-page reached from
 // it count as being "in" the pillar). Readers park nothing; an active
-// face takes the lot or is blocked by its sibling — and the blocked
+// face takes the lot or is blocked by its sibling; and the blocked
 // message names the holder plainly, because this is the protection
 // working, not an error.
 
@@ -50,7 +50,7 @@ export function BlockedPanel({
       <h2><Icon name="parking" /> This pillar is parked by your other face</h2>
       <p>
         Your {heldByFace} (<strong>{heldByHandle}</strong>) currently
-        holds the {pillarName} lot. One face per pillar at a time — this is
+        holds the {pillarName} lot. One face per pillar at a time; this is
         the parking rule protecting you, not an error.
       </p>
       <p>The one path forward: end that face's session in this pillar, then re-enter.</p>

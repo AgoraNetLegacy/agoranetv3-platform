@@ -2,8 +2,8 @@
 // Copies the demo database (run `npm run demo:phase0` first) to a scratch
 // file and attacks it twice:
 //
-//   Attack 1 — rewrite history: change one ledger payload in place.
-//   Attack 2 — identity leak: append a *correctly chained* event that
+//   Attack 1; rewrite history: change one ledger payload in place.
+//   Attack 2; identity leak: append a *correctly chained* event that
 //              names an internal Human id (the leak-for-test fixture).
 //
 // Both times, db:verify must exit 1 and say exactly what broke.
@@ -35,7 +35,7 @@ function verify(): number {
 
 function main() {
   if (!existsSync(DEMO_DB)) {
-    console.error("Run `npm run demo:phase0` first — it builds the demo database.");
+    console.error("Run `npm run demo:phase0` first; it builds the demo database.");
     process.exit(1);
   }
 
@@ -58,8 +58,8 @@ function main() {
   banner("Verdict");
   const caught1 = attack1 === 1;
   const caught2 = attack2 === 1;
-  console.log(`Attack 1 (tampered history): ${caught1 ? "CAUGHT — verify failed loudly ✓" : "NOT CAUGHT ✗"}`);
-  console.log(`Attack 2 (identity leak):    ${caught2 ? "CAUGHT — verify failed loudly ✓" : "NOT CAUGHT ✗"}`);
+  console.log(`Attack 1 (tampered history): ${caught1 ? "CAUGHT; verify failed loudly ✓" : "NOT CAUGHT ✗"}`);
+  console.log(`Attack 2 (identity leak):    ${caught2 ? "CAUGHT; verify failed loudly ✓" : "NOT CAUGHT ✗"}`);
   process.exit(caught1 && caught2 ? 0 : 1);
 }
 

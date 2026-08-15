@@ -1,5 +1,5 @@
 // Dev tool: mint a fully onboarded review soul on the dev database and
-// print its access keys ONCE, to the terminal — for owner checkpoint
+// print its access keys ONCE, to the terminal; for owner checkpoint
 // walkthroughs when the previous session's 24h SoulSession has expired.
 // Dev-database convenience only; the real ceremony lives at /verify.
 //

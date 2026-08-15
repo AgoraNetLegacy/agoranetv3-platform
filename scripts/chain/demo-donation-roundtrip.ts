@@ -1,4 +1,4 @@
-// On-chain migration Slice 3 — the donation-lock roundtrip, headless.
+// On-chain migration Slice 3; the donation-lock roundtrip, headless.
 // Proves the validator on the REAL preprod chain with the dev wallet
 // playing both parts: donate → (try to collect EARLY: must be refused)
 // → wait out the lock → collect. Nothing here touches a soul's wallet;
@@ -31,7 +31,7 @@ async function main() {
 
   // The chain's own clock: the latest block's slot, straight from
   // Blockfrost. Mesh's local ms→slot mapping drifts tens of seconds
-  // from the node's — never infer "the window is open" from wallclock.
+  // from the node's; never infer "the window is open" from wallclock.
   const latestSlot = async (): Promise<number> => {
     const res = await fetch(
       `https://cardano-${net}.blockfrost.io/api/v0/blocks/latest`,
@@ -89,12 +89,12 @@ async function main() {
     console.log("Collateral ready.");
   }
 
-  // The collect builder — MeshTxBuilder, mirroring Mesh's own vesting
+  // The collect builder; MeshTxBuilder, mirroring Mesh's own vesting
   // withdraw example (the pattern this slice adapts). The legacy
   // Transaction wrapper mis-serializes this input pattern; the modern
   // builder is the supported road. `invalidBeforeSlot` becomes the
   // validity-range start the validator reads as "earliest this tx can
-  // exist." Live protocol params via the fetcher — stale cost models
+  // exist." Live protocol params via the fetcher; stale cost models
   // fail ScriptIntegrityHash at the node.
   const buildCollect = async (invalidBeforeSlot: number) => {
     const { MeshTxBuilder } = await import("@meshsdk/core");
@@ -125,15 +125,15 @@ async function main() {
   };
 
   // --- 3. The negative proof: a NODE-VALID transaction (validity
-  // window already open) whose lower bound sits BEFORE the unlock —
+  // window already open) whose lower bound sits BEFORE the unlock;
   // so the refusal can only come from the validator's own rule.
-  // If it ever succeeds, the lock is broken — fail loudly.
+  // If it ever succeeds, the lock is broken; fail loudly.
   if (Date.now() < unlockAfter - 15_000) {
     try {
       const early = await buildCollect((await latestSlot()) - 60);
       await wallet.submitTx(await wallet.signTx(early));
       throw new Error(
-        "EARLY COLLECT WAS ACCEPTED — the time lock is NOT enforced. Do not ship this."
+        "EARLY COLLECT WAS ACCEPTED; the time lock is NOT enforced. Do not ship this."
       );
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -143,7 +143,7 @@ async function main() {
   }
 
   // --- 4. Wait until the CHAIN's latest slot has passed the collect
-  // window's opening — the node's clock, not ours.
+  // window's opening; the node's clock, not ours.
   const startSlot = Number(resolveSlotNo(net, unlockAfter + 1000));
   console.log(`Waiting for the chain to pass slot ${startSlot}…`);
   for (let now = await latestSlot(); now <= startSlot + 1; now = await latestSlot()) {
@@ -163,7 +163,7 @@ async function main() {
   console.log(
     seen
       ? `ROUNDTRIP COMPLETE. donate=${donateHash} collect=${collectHash}`
-      : `Collect submitted but not yet indexed — check ${collectHash} on ${net} manually.`
+      : `Collect submitted but not yet indexed; check ${collectHash} on ${net} manually.`
   );
 }
 

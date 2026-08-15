@@ -1,11 +1,11 @@
-// AgoraNet v3 — PostgreSQL schema (staging + production).
+// AgoraNet v3; PostgreSQL schema (staging + production).
 //
 // Dual-provider from Phase 8 (DATABASE_SETUP.md): this file and
-// prisma/schema.prisma keep their model definitions BYTE-IDENTICAL —
+// prisma/schema.prisma keep their model definitions BYTE-IDENTICAL;
 // only the preamble above the first model differs. Drift fails the
 // build via `npm run db:validate:postgres`. Migrations for this
 // provider live in prisma/postgresql/migrations (consolidated init,
-// then tracked 1:1 with SQLite — the v2 pattern).
+// then tracked 1:1 with SQLite; the v2 pattern).
 
 datasource db {
   provider = "postgresql"
@@ -17,16 +17,16 @@ generator client {
 }
 
 // ------------------------------------------------------------------
-// Identity (Phase A trust model — DUAL_IDENTITY_MODULE.md §10)
+// Identity (Phase A trust model; DUAL_IDENTITY_MODULE.md §10)
 //
 // In Phase A the platform holds the human↔profile mapping. That link is
 // operator-trusted and honestly disclosed (lib/gate.ts carries the
 // disclosure). These rows are INTERNAL: their ids are forbidden from the
-// public ledger — db:verify scans every event for them and fails loudly.
+// public ledger; db:verify scans every event for them and fails loudly.
 // ------------------------------------------------------------------
 
 // Phase 8.6 (TESTNET_RAILS_SPEC §6.3): which Cardano TESTNET address a
-// face has connected. Per-face, like everything — a wallet link is
+// face has connected. Per-face, like everything; a wallet link is
 // identity-adjacent, and the two faces' wallets must never share a row.
 // Testnet-only by construction: the recording path refuses mainnet
 // addresses, and nothing here custodies anything.
@@ -34,7 +34,7 @@ model TestnetWalletLink {
   id             String    @id @default(cuid())
   profileId      String    @unique
   cardanoAddress String
-  network        String // "preprod" | "preview" — never "mainnet", enforced at write
+  network        String // "preprod" | "preview"; never "mainnet", enforced at write
   connectedAt    DateTime  @default(now())
   // On-chain migration Slice 2: the user-signed self-custody proof tx.
   // Recorded only after the hash is CONFIRMED to exist on the configured
@@ -45,7 +45,7 @@ model TestnetWalletLink {
 
 // On-chain migration Slice 3: donations a face's OWN wallet sent to the
 // donation-lock SCRIPT address on a Cardano testnet. The platform never
-// possessed these funds — each row is recorded only after the chain
+// possessed these funds; each row is recorded only after the chain
 // shows value locked at the script. The internal double-entry economy
 // remains the system of record; this table mirrors a boundary event.
 model TestnetDonation {
@@ -54,7 +54,7 @@ model TestnetDonation {
   txHash        String   @unique
   lovelace      Int
   scriptAddress String
-  network       String // "preprod" | "preview" — never "mainnet", enforced at write
+  network       String // "preprod" | "preview"; never "mainnet", enforced at write
   createdAt     DateTime @default(now())
 }
 
@@ -70,7 +70,7 @@ model Human {
 
 model Profile {
   id           String        @id @default(cuid())
-  // NULL for every Alias — deliberately. One-Alias-per-human is enforced
+  // NULL for every Alias; deliberately. One-Alias-per-human is enforced
   // by the alias-registration nullifier spend, never by a stored link;
   // no database row connects a soul's two faces (DUAL_IDENTITY §1.2).
   // The True Self keeps its Human link: recovery routes through the
@@ -79,7 +79,7 @@ model Profile {
   human        Human?        @relation(fields: [humanId], references: [id])
   face         String // "TRUE_SELF" | "ALIAS"
   // Two-layer naming (owner-ratified 2026-07-10, ONBOARDING Stage 3.4):
-  // the @handle is the attribution key — unique across one flat global
+  // the @handle is the attribution key; unique across one flat global
   // taken-list (all profiles, both faces, PLUS HandleTombstone), never
   // recycled. Stored lowercase. The display name is free-form: duplicates
   // allowed, real names welcome, changeable behind a rate rail.
@@ -87,7 +87,7 @@ model Profile {
   displayName  String
   displayNameChangedAt DateTime?
   // Per-face login secret, held soul-side, hash stored. Each face signs
-  // in with its own key — login never routes through the Human.
+  // in with its own key; login never routes through the Human.
   accessKeyHash String       @unique
   // Aliases are born PENDING and activate at a randomized, cohort-batched
   // moment (ONBOARDING §3.3–3.4); True Selves are born active.
@@ -96,9 +96,9 @@ model Profile {
   rateLimitedUntil DateTime?
   readOnlyUntil    DateTime?
   activateAt   DateTime?
-  // Coarse join period only — never a precise timestamp (§3.5).
+  // Coarse join period only; never a precise timestamp (§3.5).
   joinedPeriod String
-  // Phase 8.5, PRESENTATION_SPEC §5.2 — the profile window: about-me is
+  // Phase 8.5, PRESENTATION_SPEC §5.2; the profile window: about-me is
   // LIVE-surface content (editable anytime, never permanent record).
   // Place follows the ratified "place yourself on the map, never
   // someone else" rule; the Alias composer carries the ceremony's
@@ -106,18 +106,18 @@ model Profile {
   bio          String        @default("")
   bioPlace     String        @default("")
   // §5.1 + §2.2: the face-switch animation is a per-face settings
-  // choice — "flip" (default) | "crossfade" | "instant". Motion needs
+  // choice; "flip" (default) | "crossfade" | "instant". Motion needs
   // are served by choice, not detection.
   switchAnimation String     @default("flip")
   // Spirit Mode (owner-ruled 2026-07-21): a per-face visibility veil,
   // toggled at will from the bubble dot. The LEVEL is chosen in
   // Settings; all three are available, discovery-only is the default:
-  //   "discovery" — hidden from the search Souls lane
-  //   "inbound"   — discovery + no new fellow-soul requests or DM
+  //   "discovery"; hidden from the search Souls lane
+  //   "inbound"; discovery + no new fellow-soul requests or DM
   //                 threads can reach this face
-  //   "ghost"     — inbound + fellows see the soul walking unseen and
+  //   "ghost"; inbound + fellows see the soul walking unseen and
   //                 messages into existing threads are refused
-  // Refusals are QUIET — the same neutral wording as a block (§5.2),
+  // Refusals are QUIET; the same neutral wording as a block (§5.2),
   // so spirit mode is never itself a signal.
   spiritActive  Boolean      @default(false)
   spiritLevel   String       @default("discovery")
@@ -132,9 +132,9 @@ model Profile {
 }
 
 // Handles are never recycled: revocation (hatching), deletion, or
-// abandonment tombstones the handle permanently — the permanent record's
+// abandonment tombstones the handle permanently; the permanent record's
 // attribution never silently changes owners. The taken-list = live
-// handles ∪ tombstones, and records only THAT a string is claimed —
+// handles ∪ tombstones, and records only THAT a string is claimed;
 // zero ownership/linkage information.
 model HandleTombstone {
   handle        String   @id // lowercase
@@ -145,7 +145,7 @@ model HandleTombstone {
 // ------------------------------------------------------------------
 // The internal economy (TOKENOMICS_SPEC.md; amounts from
 // ECONOMIC_STARTING_DEFAULTS.md as rails). Both currencies live as
-// per-profile internal balances — fast, free, and no funding trail
+// per-profile internal balances; fast, free, and no funding trail
 // between a soul's two faces (each face's balances are its own). The
 // chain appears only at Phase 9's explicit boundaries. Money never
 // buys outcome weight; fees gate the doing, never the result.
@@ -164,11 +164,11 @@ model TreasuryBalance {
   amount   Float  @default(0)
 }
 
-// The money ledger — internal double-entry record of every flow
+// The money ledger; internal double-entry record of every flow
 // (Phase A operator space; the public sees the treasury through the
 // raw inspection page now and daily snapshots at Phase 7). Every entry
 // moves value between exactly two of: a profile, the treasury, or
-// issuance (grants mint from "issuance" — the internal era's faucet,
+// issuance (grants mint from "issuance"; the internal era's faucet,
 // accounted honestly).
 model EconomyEntry {
   id            String   @id @default(cuid())
@@ -184,8 +184,8 @@ model EconomyEntry {
   // The Constitution's must-guardrail, made structural (Appendix A:
   // "The treasury MUST NOT spend outside budgeted categories"). Every
   // entry with fromTreasury=true carries an active category; inflows
-  // and issuance grants carry none. Enforced in payFromTreasury() —
-  // the single door money leaves by — and pinned by db:verify, so no
+  // and issuance grants carry none. Enforced in payFromTreasury();
+  // the single door money leaves by; and pinned by db:verify, so no
   // future call site can bypass the rule by forgetting it.
   budgetCategory String?
   category       BudgetCategory? @relation(fields: [budgetCategory], references: [name])
@@ -193,7 +193,7 @@ model EconomyEntry {
 }
 
 // The budget categories the treasury may spend within (PLATFORM_
-// CONSTITUTION Appendix A must-guardrail; TREASURY_DASHBOARD §1.3 —
+// CONSTITUTION Appendix A must-guardrail; TREASURY_DASHBOARD §1.3;
 // "an outflow without a budget category cannot exist"). Shipped seeded
 // with exactly the three outflows TOKENOMICS §3's treasury loop already
 // names, so this table describes what the platform does rather than
@@ -206,7 +206,7 @@ model BudgetCategory {
   // Null = uncapped (the shipped default for the three service
   // categories, whose amounts are already rail-governed per-action).
   // FUND_INTEGRITY_SPEC §3.6 proposes promoting cap ceilings to
-  // Class 2 — not built here; the column exists so the guardrail has
+  // Class 2; not built here; the column exists so the guardrail has
   // somewhere to land without a later migration.
   cap         Float?
   active      Boolean        @default(true)
@@ -222,7 +222,7 @@ model Tip {
   id              String   @id @default(cuid())
   postId          String
   post            Post     @relation(fields: [postId], references: [id])
-  tipperProfileId String // operator space — never displayed
+  tipperProfileId String // operator space; never displayed
   amount          Float // gross, in G
   createdAt       DateTime @default(now())
 }
@@ -237,7 +237,7 @@ model SourceObject {
 }
 
 // A typed source tag on a post, with the sharer's vouch choice (§10.2):
-// "vouched" (reputation-staked) or "unverified" (labeled, stake-free —
+// "vouched" (reputation-staked) or "unverified" (labeled, stake-free;
 // legitimate by design).
 model PostSource {
   id            String       @id @default(cuid())
@@ -248,14 +248,14 @@ model PostSource {
   kind          String // "study" | "news" | "primary" | "book" | "experience" | "other"
   vouch         String // "vouched" | "unverified"
   sharerProfileId String // operator space
-  sharerHandle  String // public — vouches are by name (§10.2)
+  sharerHandle  String // public; vouches are by name (§10.2)
   createdAt     DateTime     @default(now())
 
   @@unique([postId, sourceId])
 }
 
 // The values seed (ONBOARDING Stage 5): per-profile answers to the seven
-// OUSIA questions. Matchmaking-only — the ratified conservative default;
+// OUSIA questions. Matchmaking-only; the ratified conservative default;
 // never rendered publicly (private → public later is a choice, the
 // reverse is a breach).
 model ValuesAnswer {
@@ -286,10 +286,10 @@ model ConsentAck {
 // Sessions & the parking rule (SEVEN_PILLAR_DASHBOARD_SPEC §3).
 //
 // A SoulSession is one browser/device context. It is the ONLY place a
-// soul's two faces ever co-occur — which is what lets the backend
+// soul's two faces ever co-occur; which is what lets the backend
 // enforce the per-pillar lock without any durable identity link. These
 // rows are ephemeral by design: short retention, purged on expiry
-// (DUAL_IDENTITY §7.2 — minimal, segregated, short-retention).
+// (DUAL_IDENTITY §7.2; minimal, segregated, short-retention).
 // ------------------------------------------------------------------
 
 model SoulSession {
@@ -297,7 +297,7 @@ model SoulSession {
   createdAt       DateTime      @default(now())
   expiresAt       DateTime
   lastSeenAt      DateTime      @default(now())
-  // The face currently selected in this session — explicit and visible,
+  // The face currently selected in this session; explicit and visible,
   // never an ambient default (DASHBOARD §3.3.1).
   activeProfileId String?
   lastSwitchAt    DateTime? // face-switch cooldown anchor
@@ -327,18 +327,18 @@ model PillarLock {
 
 // ------------------------------------------------------------------
 // The gate (DUAL_IDENTITY_MODULE.md §3.3): pending → proof → cleared.
-// Application code never branches on identity — only on clearance.
+// Application code never branches on identity; only on clearance.
 // ------------------------------------------------------------------
 
 model GateRequest {
   id              String    @id @default(cuid())
   profileId       String
   profile         Profile   @relation(fields: [profileId], references: [id])
-  scope           String // e.g. "poll:{id}:face" — namespaces the nullifier
-  scopeKind       String // "per-profile" | "per-human" (§4.2 — both from day one)
-  // "pseudonymous": clearance lands on the public ledger (the default —
+  scope           String // e.g. "poll:{id}:face"; namespaces the nullifier
+  scopeKind       String // "per-profile" | "per-human" (§4.2; both from day one)
+  // "pseudonymous": clearance lands on the public ledger (the default;
   // civic actions are public record). "private": no public event at all;
-  // for actions whose existence must not be observable (flags — the
+  // for actions whose existence must not be observable (flags; the
   // triangle of blindness, MODERATION §3.2: the public sees only
   // outcomes). The gate still enforces humanity + one-per-scope.
   ledgerRecording String    @default("pseudonymous") // "pseudonymous" | "private"
@@ -363,7 +363,7 @@ model NullifierSpend {
 // milestones (grant.orientation / grant.seed / grant.first-action) raced
 // under concurrency and could mint issuance twice. This constraint makes
 // "grant once" an atomic invariant, not a hopeful check (grantOnce,
-// lib/economy.ts) — the winning insert grants, the loser collides.
+// lib/economy.ts); the winning insert grants, the loser collides.
 model GrantClaim {
   profileId String
   kind      String
@@ -372,7 +372,7 @@ model GrantClaim {
   @@id([profileId, kind])
 }
 
-// One row per (profile, UTC day) — the authoritative accrual counter.
+// One row per (profile, UTC day); the authoritative accrual counter.
 // accrueForAction locks this row first, so a soul's concurrent qualifying
 // actions serialize on it and the daily/weekly ceilings become a hard
 // invariant instead of a read-then-grant race (lib/accrual.ts).
@@ -385,9 +385,9 @@ model AccrualDay {
 }
 
 // ------------------------------------------------------------------
-// The Civic Ledger — append-only, hash-chained (v2 pattern, reimplemented).
+// The Civic Ledger; append-only, hash-chained (v2 pattern, reimplemented).
 // Nothing edits or deletes rows; corrections are new amendment events.
-// Speaks only in pseudonyms and nullifiers — never an internal id.
+// Speaks only in pseudonyms and nullifiers; never an internal id.
 // ------------------------------------------------------------------
 
 model LedgerEvent {
@@ -395,7 +395,7 @@ model LedgerEvent {
   prevHash   String    @unique // entryHash of the previous event ("GENESIS" for seq 1)
   entryHash  String    @unique // sha256(prevHash | eventType | canonical payload)
   actorType  String // "system" | "soul" | "founder" | "moderator"
-  actorId    String? // a pseudonym or null — never a Human/Profile db id
+  actorId    String? // a pseudonym or null; never a Human/Profile db id
   eventType  String // e.g. "genesis", "pillar.seeded", "gate.cleared"
   payload    String // canonical JSON string
   createdAt  DateTime  @default(now())
@@ -440,7 +440,7 @@ model Question {
 }
 
 // ------------------------------------------------------------------
-// Domains — the second ring (Phase 7; SEVEN_PILLAR_DASHBOARD_SPEC §5.3
+// Domains; the second ring (Phase 7; SEVEN_PILLAR_DASHBOARD_SPEC §5.3
 // + the canon reconciliation, owner-ratified 2026-07-07: each pillar's
 // 8 domain Opening Questions become permanent platform threads, with the
 // breakdown content as the reference material behind each card).
@@ -464,9 +464,9 @@ model Domain {
   forwardMarker             String
   stoicPrinciple            String
   stoicLens                 String
-  openForRepair             String // JSON string[] — the repair questions
+  openForRepair             String // JSON string[]; the repair questions
   inService                 String? // Agora only: the built answer
-  extras                    String // JSON {label, body}[] — rare additional bullets
+  extras                    String // JSON {label, body}[]; rare additional bullets
 
   discussion Discussion?
   revisions  PictureRevision[]
@@ -476,7 +476,7 @@ model Domain {
   @@unique([pillarId, position])
 }
 
-// The Picture as a living content object (DASHBOARD §6.5 — new for v3):
+// The Picture as a living content object (DASHBOARD §6.5; new for v3):
 // versioned, with a public dated history. Version 1 is the corpus
 // Picture verbatim; every later version traces to exactly one accepted
 // repair. Append-only in practice: revisions are never edited or
@@ -495,19 +495,19 @@ model PictureRevision {
 }
 
 // A formal Repair (§6.5): any verified soul may challenge the Picture.
-// Acceptance is decided the way the platform decides everything — a
+// Acceptance is decided the way the platform decides everything; a
 // governance poll (DASHBOARD §6.3: Polls are the resolution mechanism
 // this spec assumes), system-opened in the pillar's Governance room,
 // consensus-typed at the platform bar. Submission is free (reading the
 // fee lattice strictly: repairs are not priced); accepted repairs credit
-// Light Score (LIGHT_SCORE §2), rejected ones cost nothing — honest
+// Light Score (LIGHT_SCORE §2), rejected ones cost nothing; honest
 // misses stay safe (§5.2).
 model PictureRepair {
   id                String    @id @default(cuid())
   domainId          String
   domain            Domain    @relation(fields: [domainId], references: [id])
   authorProfileId   String // Phase A operator space
-  authorHandle      String // public — repairs are civic contributions
+  authorHandle      String // public; repairs are civic contributions
   authorDisplayName String // frozen at submission (naming ruling)
   challenge         String // what the current Picture gets wrong
   proposedText      String // the full replacement Picture text
@@ -519,7 +519,7 @@ model PictureRepair {
 }
 
 // ------------------------------------------------------------------
-// Rails — every number is data, never a literal (build law; values from
+// Rails; every number is data, never a literal (build law; values from
 // Economics/ECONOMIC_STARTING_DEFAULTS.md, testing defaults in u).
 // Poll-adjustable within bounds when governance arrives (Phase 3+);
 // unless a spec says otherwise, bounds are [¼×, 4×] of the default.
@@ -537,7 +537,7 @@ model Rail {
 // ------------------------------------------------------------------
 // The rulebook as data (CONTENT_MODERATION_RULEBOOK.md, complete v1).
 // Flags cite a rule; rulings (Phase 5) cite a rule. Amendments are
-// governance events later — for now the seed is the legislation.
+// governance events later; for now the seed is the legislation.
 // ------------------------------------------------------------------
 
 model Rule {
@@ -559,16 +559,16 @@ model Discussion {
   title      String
   pillarId   String
   pillar     Pillar    @relation(fields: [pillarId], references: [id])
-  // Circle-scoped Discussion (Phase 6 — the members' room, CIRCLES §2.2):
-  // the Discussion primitive, reused. Members-only, deletable class —
+  // Circle-scoped Discussion (Phase 6; the members' room, CIRCLES §2.2):
+  // the Discussion primitive, reused. Members-only, deletable class;
   // the working conversation is NOT the permanent record (§2.3), so no
   // ledger commits and no permanence upgrades inside it.
   circleId   String?
   circle     Circle?   @relation(fields: [circleId], references: [id])
-  // Chamber-scoped Discussion (Phase 7.5 — the workshop, POLLINATOR
+  // Chamber-scoped Discussion (Phase 7.5; the workshop, POLLINATOR
   // §4.3 layer 2): the same reuse. Enter-to-see, deletable class
   // (POLLINATOR §7: "standard deletable-with-due-process"), no ledger
-  // commits, no permanence upgrades — the enclosed drafts are not the
+  // commits, no permanence upgrades; the enclosed drafts are not the
   // record; the Arena (post-launch) is where a chamber's case goes
   // public. Homed in the meta pillar (a Discussion needs a pillar row;
   // chamber scoping overrides pillar surfaces everywhere).
@@ -586,7 +586,7 @@ model Discussion {
   poll       Poll?     @relation(fields: [pollId], references: [id])
   // "permanent-canonical" (platform-created, ratified permanent);
   // "permanent-governance" (lives in a pillar's Governance room);
-  // "permanent-creator" (paid at creation only, immutable — labeled
+  // "permanent-creator" (paid at creation only, immutable; labeled
   // distinctly, DISCUSSIONS §8); "deletable" (soul-created spaces).
   permanence String
   createdAt  DateTime  @default(now())
@@ -595,7 +595,7 @@ model Discussion {
 }
 
 // ------------------------------------------------------------------
-// Polls (POLLS_SPEC.md, fully ratified) — one profile, one vote, no
+// Polls (POLLS_SPEC.md, fully ratified); one profile, one vote, no
 // weight mechanics of any kind. Sealed-until-close is the platform
 // default; governance polls are always sealed and close by candle.
 // ------------------------------------------------------------------
@@ -604,23 +604,23 @@ model Poll {
   id               String       @id @default(cuid())
   pillarId         String
   pillar           Pillar       @relation(fields: [pillarId], references: [id])
-  creatorProfileId String // Phase A operator space — never public
+  creatorProfileId String // Phase A operator space; never public
   creatorHandle    String // the attribution key, frozen at creation
   title            String
   description      String?
   type             String // "single" | "multi" | "consensus"
   consensusThreshold Float? // consensus polls: 0.5–1.0, creator-set
   // Vote-visibility mode, stated plainly BEFORE a soul votes (§2):
-  // "public" (choice visibly attached, on this poll's page only — no
+  // "public" (choice visibly attached, on this poll's page only; no
   // cross-poll dossier is ever compiled) | "pseudonymous" (ballots
   // keyed by nullifier only; aggregate results, never who chose what).
   mode             String
   isGovernance     Boolean      @default(false)
   // Ordinary polls only: creator may show a live tally. Governance
-  // polls are always sealed — no option (§4.7).
+  // polls are always sealed; no option (§4.7).
   liveTally        Boolean      @default(false)
   // Circle-restricted visibility (consumed in Phase 6): scoped to the
-  // Circle's membership; ALWAYS per-profile (the §7 sharp rule — the
+  // Circle's membership; ALWAYS per-profile (the §7 sharp rule; the
   // vote scope is per-profile everywhere, so nothing changes here).
   visibilityScope  String       @default("public") // "public" | "circle" | "chamber"
   circleRef        String?
@@ -631,7 +631,7 @@ model Poll {
   circleAction     String?
   // Chamber-restricted polls (NEURAL_POLLINATOR §9.1): a LARGE mission
   // release is authorized by "a binding stewardship-style poll... members
-  // vote, auto-executes on passage" — the Circle pattern above, pointed
+  // vote, auto-executes on passage"; the Circle pattern above, pointed
   // at a chamber. §9.1 called this "reusing Circle machinery already
   // built"; the machinery was built for Circles only, so Phase 8.7
   // Slice 5 extends the same shape rather than inventing a second one.
@@ -662,14 +662,14 @@ model PollOption {
   poll     Poll     @relation(fields: [pollId], references: [id])
   label    String
   position Int
-  // Set once, at close, from counted ballots — never maintained live.
+  // Set once, at close, from counted ballots; never maintained live.
   tally    Int?
   choices  BallotChoice[]
 
   @@unique([pollId, position])
 }
 
-// One ballot per profile per poll, enforced by the gate's nullifier —
+// One ballot per profile per poll, enforced by the gate's nullifier;
 // which is also the ballot's key. In PSEUDONYMOUS mode no profile is
 // attached, ever (DUAL_IDENTITY §4.3: keyed by nullifier only). In
 // PUBLIC mode the voter's handle is attached by design and published
@@ -679,9 +679,9 @@ model Ballot {
   pollId      String
   poll        Poll           @relation(fields: [pollId], references: [id])
   nullifier   String
-  voterProfileId String? // public mode only — Phase A operator space
-  voterHandle    String? // public mode only — published post-close
-  voterDisplayName String? // public mode only — frozen at cast
+  voterProfileId String? // public mode only; Phase A operator space
+  voterHandle    String? // public mode only; published post-close
+  voterDisplayName String? // public mode only; frozen at cast
   castAt      DateTime       @default(now())
   counted     Boolean?
   choices     BallotChoice[]
@@ -706,7 +706,7 @@ model Post {
   parent       Post?          @relation("Thread", fields: [parentId], references: [id])
   replies      Post[]         @relation("Thread")
   // The author's internal profile id stays in Phase A operator space;
-  // everything public (pages, ledger) speaks the @handle — the eternal
+  // everything public (pages, ledger) speaks the @handle; the eternal
   // attribution key. Permanent-class content freezes the display name
   // as it was at composition (naming ruling 2026-07-10); live surfaces
   // show the current one.
@@ -745,18 +745,18 @@ model PostRevision {
 }
 
 // ------------------------------------------------------------------
-// Flag capture — queue only in Phase 1; adjudication arrives Phase 5.
+// Flag capture; queue only in Phase 1; adjudication arrives Phase 5.
 // A flag's existence is never public (triangle of blindness). The
 // reporter's profile id is Phase A operator space (deposit refunds
-// need it later); moderators never see it — Phase 5 case files are
+// need it later); moderators never see it; Phase 5 case files are
 // built nullifier-keyed.
 // ------------------------------------------------------------------
 
 model Flag {
   id                String   @id @default(cuid())
   // Exactly one evidence pointer: a public post, a DM excerpt the
-  // recipient revealed (Phase 6.5 — FELLOW_SOULS §5.1), or a mission
-  // release (Phase 8.7, owner-ruled 2026-07-16 — FUND_INTEGRITY §3.4's
+  // recipient revealed (Phase 6.5; FELLOW_SOULS §5.1), or a mission
+  // release (Phase 8.7, owner-ruled 2026-07-16; FUND_INTEGRITY §3.4's
   // freeze needed a way for a case to START, and a payment is neither a
   // post nor a message).
   postId            String?
@@ -769,7 +769,7 @@ model Flag {
   rule              Rule     @relation(fields: [ruleId], references: [id])
   note              String?
   reporterProfileId String
-  nullifier         String // gate nullifier — keys the flag for Phase 5 handling
+  nullifier         String // gate nullifier; keys the flag for Phase 5 handling
   status            String   @default("queued") // "queued" | "in-case" | "refunded" | "forfeited" | "settled"
   depositHeld       Float    @default(0) // 0 when filed at zero balance
   caseId            String?
@@ -778,7 +778,7 @@ model Flag {
 }
 
 // ------------------------------------------------------------------
-// Moderation Live (Phase 5 — MODERATION_SPEC.md + the rulebook).
+// Moderation Live (Phase 5; MODERATION_SPEC.md + the rulebook).
 // Sortition, 48-hour badges, fact-finding-only rulings, consequences
 // auto-applied, the triangle of blindness throughout: rulings are
 // nullifier-keyed in every public record; moderator identity exists
@@ -789,7 +789,7 @@ model Flag {
 model ModCase {
   id          String   @id @default(cuid())
   // Evidence: a public post, a revealed DM excerpt (Phase 6.5), or a
-  // mission release (Phase 8.7) — exactly one. DM cases carry no content
+  // mission release (Phase 8.7); exactly one. DM cases carry no content
   // actions (nothing public to blur or tombstone); consequences are
   // personal, and the triangle of blindness holds identically. Release
   // cases likewise blur nothing: the evidence IS a public payment, and
@@ -829,7 +829,7 @@ model Ruling {
   // The public/audit key (v2 sealed-vote pattern): derived per-profile
   // for scope ruling:{caseId}, recorded on the ledger. NEVER a handle.
   moderatorNullifier String
-  // Operator space only — pays the reward, feeds the rating, routes
+  // Operator space only; pays the reward, feeds the rating, routes
   // supervision. Never rendered, never in events (db:verify enforces).
   moderatorProfileId String
   verdict            String // "uphold" | "decline" | "no-rule-fits" | "escalate"
@@ -856,13 +856,13 @@ model BadgeTerm {
   offer          BadgeOffer @relation(fields: [offerId], references: [id])
   profileId      String
   startedAt      DateTime   @default(now())
-  endsAt         DateTime // hard 48h cutoff — access revokes sharply
+  endsAt         DateTime // hard 48h cutoff; access revokes sharply
   casesCompleted Int        @default(0)
   gratiumEarned  Float      @default(0)
 }
 
 // Strikes: the record is permanent; the ACTIVE count decays (6-month
-// rail — one redemption clock shared with Light Score deductions).
+// rail; one redemption clock shared with Light Score deductions).
 model Strike {
   id          String    @id @default(cuid())
   profileId   String
@@ -875,11 +875,11 @@ model Strike {
 }
 
 // Recorded now, consumed by Phase 7's Light Score engine. Pillar-scoped
-// (never global — the no-universal-score invariant). Deductions decay on
-// the strike clock; Circle-action credits (Phase 6) carry no decay here —
+// (never global; the no-universal-score invariant). Deductions decay on
+// the strike clock; Circle-action credits (Phase 6) carry no decay here;
 // credit decay policy belongs to the Phase 7 engine (LIGHT_SCORE §OQ4).
 // refType/refId name the cause for the explainable score-change log
-// ("attested action in Circle X" — LIGHT_SCORE §6).
+// ("attested action in Circle X"; LIGHT_SCORE §6).
 model LightScoreAdjustment {
   id        String   @id @default(cuid())
   profileId String
@@ -902,7 +902,7 @@ model TribunalSeat {
 // ------------------------------------------------------------------
 // Notifications (NOTIFICATIONS_SPEC.md): two tiers, per-persona, the
 // quietest functional defaults. No streaks, no nags, no re-notification
-// — the category list is exhaustive by design.
+//; the category list is exhaustive by design.
 // ------------------------------------------------------------------
 
 model Notification {
@@ -925,9 +925,9 @@ model Notification {
 }
 
 // ------------------------------------------------------------------
-// Circles (Phase 6 — Circles/CIRCLES_SPEC.md): the action layer.
+// Circles (Phase 6; Circles/CIRCLES_SPEC.md): the action layer.
 // Purpose and action are radically public; deliberation is the members'
-// room. Membership is per-profile, never per-human (§1.1) — the platform
+// room. Membership is per-profile, never per-human (§1.1); the platform
 // neither knows nor asks whether a human's other face is present, and
 // both faces of one human MAY share a Circle (§7 accepts this cost).
 // Almost everything reuses: the room is a Circle-scoped Discussion,
@@ -938,17 +938,17 @@ model Notification {
 model Circle {
   id       String  @id @default(cuid())
   name     String
-  // The purpose statement — public, versioned (§2.3): edits keep
+  // The purpose statement; public, versioned (§2.3): edits keep
   // history; a Circle can't quietly rewrite what it claimed to be.
   purpose  String
   // Focus tags (§2.1): at least one of pillar / place / problem,
-  // enforced in code. Place tags stay city/region granularity — the
+  // enforced in code. Place tags stay city/region granularity; the
   // machine-harvestable index is never finer (§OQ7, owner-amended);
   // free text inside the Circle may name venues for coordination.
   pillarId String?
   pillar   Pillar? @relation(fields: [pillarId], references: [id])
   // Optional domain-level tag within the pillar (CIRCLES §2.1 "optionally
-  // a specific domain within it") — the Phase 6 flag resolves here, now
+  // a specific domain within it"); the Phase 6 flag resolves here, now
   // that domains are data. Always a domain OF the tagged pillar
   // (enforced in code).
   domainId String?
@@ -957,14 +957,14 @@ model Circle {
   problem  String?
   // The founder role is deliberately thin (§3.3): edits purpose and
   // tags, nothing else. Succession/replacement is an internal Poll.
-  founderProfileId String // Phase A operator space — never public
+  founderProfileId String // Phase A operator space; never public
   founderHandle    String // the attribution key, public
   // Rails, not rules (§1.6): per-Circle dials, adjustable by internal
   // Poll within platform-set bounds (the circle.* rails).
   attestationThreshold Int   @default(2)
   removalBarPercent    Float @default(60)
   // "inactive" is a DERIVED label (quiet past the circle.inactivityDays
-  // rail — auto-applied, auto-lifted when activity returns), never
+  // rail; auto-applied, auto-lifted when activity returns), never
   // stored. Closed is by internal Poll only; all states preserve the
   // public page and action log forever (§8).
   status         String   @default("active") // "active" | "closed"
@@ -990,26 +990,26 @@ model CirclePurposeRevision {
   editedAt   DateTime @default(now())
 }
 
-// Membership history — join/leave are public record (§2.3), so departed
+// Membership history; join/leave are public record (§2.3), so departed
 // members keep a row (leftAt set) rather than vanishing. Active
 // membership = leftAt null; one active row per (circle, profile),
-// enforced in code inside the join transaction (rejoining is allowed —
+// enforced in code inside the join transaction (rejoining is allowed;
 // each join is its own gate-cleared action).
 model CircleMember {
   id        String    @id @default(cuid())
   circleId  String
   circle    Circle    @relation(fields: [circleId], references: [id])
   profileId String // operator space
-  handle    String // public — the membership list speaks in pseudonyms
+  handle    String // public; the membership list speaks in pseudonyms
   joinedAt  DateTime  @default(now())
   leftAt    DateTime?
 }
 
-// The action log (§6) — the heart of the feature. Entries are permanent
+// The action log (§6); the heart of the feature. Entries are permanent
 // public record: no edit, no delete, ever; a mistake is corrected by a
 // later entry that references it (correctionOfId), exactly like a
 // ledger, because it is one. attestedAt latches when attestations reach
-// the Circle's threshold — the state that counts for Light Score and
+// the Circle's threshold; the state that counts for Light Score and
 // pillar surfacing.
 model ActionEntry {
   id                String        @id @default(cuid())
@@ -1019,8 +1019,8 @@ model ActionEntry {
   authorHandle      String
   authorDisplayName String // frozen at composition (naming ruling)
   body              String // what was done
-  didAt             String? // when — coarse, the author's words
-  place             String? // where — coarse; never someone else's location
+  didAt             String? // when; coarse, the author's words
+  place             String? // where; coarse; never someone else's location
   correctionOfId    String?
   correctionOf      ActionEntry?  @relation("Correction", fields: [correctionOfId], references: [id])
   corrections       ActionEntry[] @relation("Correction")
@@ -1032,20 +1032,20 @@ model ActionEntry {
 
 // A co-signature: N verified humans publicly staking their pseudonymous
 // reputations on this claim at time T, permanently (§6.2). One per
-// member per entry — the gate's per-entry scope enforces it, this
+// member per entry; the gate's per-entry scope enforces it, this
 // unique re-checks it.
 model Attestation {
   id                String      @id @default(cuid())
   entryId           String
   entry             ActionEntry @relation(fields: [entryId], references: [id])
   attestorProfileId String // operator space
-  attestorHandle    String // public — attestors are visible by design
+  attestorHandle    String // public; attestors are visible by design
   createdAt         DateTime    @default(now())
 
   @@unique([entryId, attestorProfileId])
 }
 
-// The resource board (§5): members-only listings — skills, tools, time,
+// The resource board (§5): members-only listings; skills, tools, time,
 // pledges. Living statements, editable and retractable; money never
 // transits the platform (§1.4). An offer becomes part of the permanent
 // record only when a logged action references it (ActionEntryPledge
@@ -1065,7 +1065,7 @@ model ResourceOffer {
 }
 
 // What an action drew on (§5, §6.1): the offer as it read when the
-// entry was logged — offers stay editable, the record does not.
+// entry was logged; offers stay editable, the record does not.
 model ActionEntryPledge {
   entryId String
   entry   ActionEntry   @relation(fields: [entryId], references: [id])
@@ -1077,23 +1077,23 @@ model ActionEntryPledge {
 }
 
 // ------------------------------------------------------------------
-// Chambers (Phase 7.5 — Neural Pollinator/NEURAL_POLLINATOR_SPEC.md,
+// Chambers (Phase 7.5; Neural Pollinator/NEURAL_POLLINATOR_SPEC.md,
 // launch scope: Chambers ONLY; Leaderboard/Tournament are post-launch
-// by owner decision, and nothing here may depend on them existing —
+// by owner decision, and nothing here may depend on them existing;
 // the model just must not preclude them: the public/private flag, the
 // storefront, and the per-layer permanence classes are the
 // load-bearing pieces).
 //
 // One chamber, one idea. Three visibility layers (§4.3): the
 // STOREFRONT is public and free to read (a private chamber's is
-// minimal — name + private marker, §10.6 interim); the WORKSHOP is
-// enter-to-see (a chamber-scoped Discussion — reuse, not
+// minimal; name + private marker, §10.6 interim); the WORKSHOP is
+// enter-to-see (a chamber-scoped Discussion; reuse, not
 // reinvention); the ARENA is post-launch. ⚠ v2's "chambers" (pillar
 // containers) ≠ these Chambers. Never merge.
 //
 // Membership is per-profile, never per-human, and NOT public record:
 // the spec publishes member COUNT and activity level on the
-// storefront, never the list — entry clears the gate in private
+// storefront, never the list; entry clears the gate in private
 // recording (unlike Circles, whose spec makes joins public). The
 // first dual-token surface: creation and workshop posts charge both
 // PollCoin and Gratium (the §3 signature).
@@ -1103,16 +1103,16 @@ model Chamber {
   id      String  @id @default(cuid())
   title   String
   // The chamber's subject: a topic, question, inquiry, initiative, or
-  // proposal (§4.1) — one idea being worked toward viability.
+  // proposal (§4.1); one idea being worked toward viability.
   subject String
   // The storefront pitch (§4.1) plus the required "why should people
   // care" field (owner-ratified 2026-07-08): what problem, for whom,
-  // why now — a chamber that cannot answer it isn't ready to ask for
+  // why now; a chamber that cannot answer it isn't ready to ask for
   // attention.
   pitch   String
   whyCare String
   // Public/private, FIXED at creation (§4.1; conversion is the §10.6
-  // lifecycle open item — not built). Private chambers never qualify
+  // lifecycle open item; not built). Private chambers never qualify
   // for the tournament (owner-ratified); no conversion path is needed
   // for competition because competition is not what they're for.
   isPublic Boolean
@@ -1123,8 +1123,8 @@ model Chamber {
   scaffoldSolving    String // 1. What are we solving?
   scaffoldNeedToKnow String // 2. What do we need to know?
   scaffoldSuccess    String // 3. What does success look like?
-  creatorProfileId String // Phase A operator space — never public
-  // Public attribution — and the creator's Light Score is public
+  creatorProfileId String // Phase A operator space; never public
+  // Public attribution; and the creator's Light Score is public
   // record on public-chamber storefronts (owner addition, 2026-07-09):
   // a bad-standing creator can still build, but never behind a curtain.
   creatorHandle String
@@ -1132,42 +1132,42 @@ model Chamber {
   lastActivityAt DateTime @default(now())
 
   // Mission funding (NEURAL_POLLINATOR §9.1, owner-designed 2026-07-13).
-  // A Chamber may declare it's raising toward its stated mission — it
+  // A Chamber may declare it's raising toward its stated mission; it
   // already IS a stated mission (the scaffold, the storefront's "why
   // should people care"), which is what makes it the right container for
   // a real financial stake, unlike a poll's bare yes/no.
   //
-  // Chambers may hold funds; CIRCLES may not — CIRCLES_SPEC Principle 4
+  // Chambers may hold funds; CIRCLES may not; CIRCLES_SPEC Principle 4
   // is a hard scope guard ("the action layer does not quietly become a
   // treasury"). This is why funding routes here (owner ruling,
   // 2026-07-16). Never add a balance to a Circle.
   raisingForMission Boolean @default(false)
-  // THE FUNDING PLAN (FUND_INTEGRITY §3.1, Tier 0 — "procurement due
+  // THE FUNDING PLAN (FUND_INTEGRITY §3.1, Tier 0; "procurement due
   // diligence"). A chamber cannot ask for money without answering these
   // three, and they are first-class fields for the same reason the
   // scaffold is: a plan buried in a post is a plan nobody can hold you
   // to.
   //
-  // Tier 0 is not a gate bolted on here — it is what a Chamber ALREADY
+  // Tier 0 is not a gate bolted on here; it is what a Chamber ALREADY
   // IS. The scaffold and the public workshop are the dissection; these
   // three only point that existing machinery at money. That is why
   // funding routes through Chambers and nothing else (owner ruling,
   // 2026-07-16).
   //
   // Null until the chamber declares it's raising; required at that
-  // moment, and revisable after with visible history — see
+  // moment, and revisable after with visible history; see
   // ChamberFundingRevision for why the history is not optional.
   fundingRecipient  String? // who is funded, in what capacity
   fundingEvidence   String? // how a donor can check that claim
-  fundingBreakdown  String? // itemized spend — becomes the release plan
+  fundingBreakdown  String? // itemized spend; becomes the release plan
   raisingDeclaredAt DateTime?
   // §9.1: "Both numbers are rails, adjustable per chamber within
-  // bounds." This dial is THIS chamber's own (bounds [2,8] per §9.1) —
+  // bounds." This dial is THIS chamber's own (bounds [2,8] per §9.1);
   // NOT Appendix A's Circle attestation dial, which is floor-2 with no
   // ceiling and governs action logs, never money. The shared default of
   // 2 carries CIRCLES_SPEC's reasoning verbatim: a floor of 2 exists so
   // "attested" always means more than one voice. The CEILING is this
-  // dial's own, doing work Circles never needed — on a Circle log an
+  // dial's own, doing work Circles never needed; on a Circle log an
   // unreachable threshold just means nothing gets attested, but on
   // escrow it STRANDS FUNDS (a chamber that set 50 could never release
   // its own money).
@@ -1189,14 +1189,14 @@ model Chamber {
 // against this plan.** If it could change silently after the money
 // arrived, "here's what we'll do with it" would be a bait-and-switch
 // with no evidence left behind. Donors can always see what they gave
-// against — that is what makes §9.1's "genuine transfer, no auto-return"
+// against; that is what makes §9.1's "genuine transfer, no auto-return"
 // a fair bargain rather than a trap.
-// Fund Auditors (FUND_INTEGRITY §3.5, Tier 4 — the minimal seed of
+// Fund Auditors (FUND_INTEGRITY §3.5, Tier 4; the minimal seed of
 // Human Links' Auditor role, pulled forward from parked scope by owner
 // ruling 2026-07-16).
 //
 // BADGE-SHAPED, NOT TRIBUNAL-SHAPED (owner decision): auditing released
-// money is periodic sampling, not reactive adjudication — that is badge
+// money is periodic sampling, not reactive adjudication; that is badge
 // work. Drawn by lot per sampling round, short term, and **paid per
 // case, NEVER per finding**: an auditor paid for finding problems will
 // find problems. The pay is for looking.
@@ -1204,7 +1204,7 @@ model Chamber {
 // An audit ANSWERS "who watches the watchers" only if it cannot itself
 // punish. A finding is a public signal, never a penalty: consequences
 // travel the same due-process road as everything else (a ruling), which
-// is the same discipline Sentinel already follows — "anomalies never
+// is the same discipline Sentinel already follows; "anomalies never
 // punish."
 model FundAudit {
   id            String   @id @default(cuid())
@@ -1215,14 +1215,14 @@ model FundAudit {
   expiresAt     DateTime // unanswered passes automatically, like a badge offer
   // "offered" | "accepted" | "passed" | "expired" | "completed"
   status        String   @default("offered")
-  // "clean" | "concern" — recorded only on completion. Both pay the
+  // "clean" | "concern"; recorded only on completion. Both pay the
   // same, deliberately.
   finding       String?
   note          String?
   completedAt   DateTime?
   gratiumEarned Float    @default(0)
   // On-chain migration Slice 7: the per-case settlement mirrored onto
-  // the testnet rail — recorded only after the chain shows the auditor
+  // the testnet rail; recorded only after the chain shows the auditor
   // paid. Internal points remain the system of record.
   settlementTxHash String?
   settlementAt     DateTime?
@@ -1242,7 +1242,7 @@ model ChamberFundingRevision {
 }
 
 // The per-chamber mission balance (§9.1: "Raised funds accumulate in a
-// per-chamber balance — the same architectural shape as the
+// per-chamber balance; the same architectural shape as the
 // platform-wide TreasuryBalance, scoped to one chamber"). Deliberately
 // mirrors TreasuryBalance's shape, for the same reason: a balance is
 // always the sum of its entries, and db:verify re-derives it.
@@ -1266,7 +1266,7 @@ model ChamberBalance {
 // the attestation, and an upheld Tribunal ruling freezes in the ruling's
 // own transaction. There is no operator "execute" step to withhold a
 // valid release, and none to freeze funds someone simply doesn't want
-// paid. The guarantee is the ABSENCE of that code path — the same shape
+// paid. The guarantee is the ABSENCE of that code path; the same shape
 // as ADMIN_OPS §1's allowlist.
 model MissionRelease {
   id        String  @id @default(cuid())
@@ -1274,10 +1274,10 @@ model MissionRelease {
   chamber   Chamber @relation(fields: [chamberId], references: [id])
   currency  String // "PC" | "G"
   amount    Float
-  // "for Z" — what this money is for, stated at proposal. Above the
+  // "for Z"; what this money is for, stated at proposal. Above the
   // Tier-0 threshold this is a milestone from the funding Chamber's
   // spend breakdown (FUND_INTEGRITY §3.1/§3.3); below it, a plain
-  // purpose. Frozen at proposal either way — the claim being attested
+  // purpose. Frozen at proposal either way; the claim being attested
   // must not move after signatures land on it.
   purpose   String
   // Who receives. Individual profiles, never a Circle (Principle 4).
@@ -1290,7 +1290,7 @@ model MissionRelease {
   state       String   @default("proposed")
   releasedAt  DateTime?
   frozenAt    DateTime?
-  // The ruling that froze it — the freeze's public justification, so a
+  // The ruling that froze it; the freeze's public justification, so a
   // frozen release always cites its due process rather than a decision
   // someone made quietly.
   frozenByRulingId String?
@@ -1306,21 +1306,21 @@ model MissionRelease {
 
 // A co-signature on a release: N verified humans publicly staking their
 // pseudonymous reputations that this spend is legitimate. A direct reuse
-// of the Attestation shape (Circle action logs) pointed at money — same
+// of the Attestation shape (Circle action logs) pointed at money; same
 // primitive, same honesty. What it proves is narrow and still valuable:
-// members vouched, permanently — never "the platform verified this."
+// members vouched, permanently; never "the platform verified this."
 model ReleaseAttestation {
   id                String         @id @default(cuid())
   releaseId         String
   release           MissionRelease @relation(fields: [releaseId], references: [id])
   attestorProfileId String // operator space
-  attestorHandle    String // public — attestors are visible by design
+  attestorHandle    String // public; attestors are visible by design
   createdAt         DateTime       @default(now())
 
   @@unique([releaseId, attestorProfileId])
 }
 
-// Prior scaffold versions, kept on every creator edit — the history is
+// Prior scaffold versions, kept on every creator edit; the history is
 // visible inside the workshop (§4.1), not on the public storefront.
 model ChamberScaffoldRevision {
   id         String   @id @default(cuid())
@@ -1333,10 +1333,10 @@ model ChamberScaffoldRevision {
 }
 
 // Entered souls (§4.2): prerequisites are the identity gate + carrying
-// both tokens — the complete definition (owner-resolved OQ5,
+// both tokens; the complete definition (owner-resolved OQ5,
 // 2026-07-09: no Light Score floor, no extra hurdles). Handles are
 // visible INSIDE the workshop (participants see each other); the row
-// itself is enclosed-space data — never on the ledger, never public.
+// itself is enclosed-space data; never on the ledger, never public.
 model ChamberMember {
   id        String   @id @default(cuid())
   chamberId String
@@ -1355,7 +1355,7 @@ model ChamberInvite {
   id        String   @id @default(cuid())
   chamberId String
   chamber   Chamber  @relation(fields: [chamberId], references: [id])
-  profileId String // invitee — operator space
+  profileId String // invitee; operator space
   handle    String
   createdAt DateTime @default(now())
 
@@ -1363,21 +1363,21 @@ model ChamberInvite {
 }
 
 // ------------------------------------------------------------------
-// Fellow Souls & Direct Messages (Phase 6.5 —
+// Fellow Souls & Direct Messages (Phase 6.5;
 // Fellow Souls and DMs/FELLOW_SOULS_AND_DM_SPEC.md).
 //
 // The governing constraint: two personas, two lives. A friend graph is
 // one of the most re-identifiable structures in existence, so the
 // answer is structural (§4): graphs are PRIVATE (your list is visible
 // to you alone, no counts, no third-party relationships), there is no
-// suggestion engine ever, and everything is per-profile — a human's
+// suggestion engine ever, and everything is per-profile; a human's
 // two faces have two disjoint social worlds. NOTHING in this section
 // ever reaches the public ledger: social actions clear the gate in
 // PRIVATE recording mode, and db:verify hunts for leaks.
 // ------------------------------------------------------------------
 
 // Per-profile DM keypair (X25519). Phase A: the private key is held
-// encrypted under DM_MASTER_SECRET — operator-escrowed, the gate's
+// encrypted under DM_MASTER_SECRET; operator-escrowed, the gate's
 // exact trust posture, disclosed verbatim in the DM UI. Phase 9 moves
 // private keys into the soul's wallet (true E2E; platform keeps only
 // the public half).
@@ -1448,7 +1448,7 @@ model DmMessage {
 // Recipient-side reporting (§5.1): the recipient reveals a specific
 // excerpt to moderation as flag evidence. The plaintext is frozen here
 // at reveal time and feeds the standard case path; reporter and sender
-// ids are Phase A operator space — the case file shows the words and
+// ids are Phase A operator space; the case file shows the words and
 // the accused's standing, never a handle (triangle of blindness).
 model DmExcerpt {
   id                String    @id @default(cuid())
@@ -1462,7 +1462,7 @@ model DmExcerpt {
   cases             ModCase[]
 }
 
-// Blocking (§5.2): one-way, per-persona, quiet — the blocked soul is
+// Blocking (§5.2): one-way, per-persona, quiet; the blocked soul is
 // never notified and cannot DM or request. Private like everything
 // else here.
 model Block {
@@ -1475,22 +1475,22 @@ model Block {
 }
 
 // ------------------------------------------------------------------
-// Feed & Search (Phase 7 — Feed and Search/FEED_AND_SEARCH_SPEC.md).
+// Feed & Search (Phase 7; Feed and Search/FEED_AND_SEARCH_SPEC.md).
 //
 // The law of this surface: chosen, not inferred; per-persona,
 // absolutely. All feed state and all search history are PER-PROFILE,
 // stored separately, never aggregated per-human, never public, and
 // never inputs to any ranking (§4.2, §6). None of it ever reaches the
-// public ledger — these are reading-surface preferences, not civic
+// public ledger; these are reading-surface preferences, not civic
 // actions.
 // ------------------------------------------------------------------
 
 // One explicit subscription (§2.1). Kinds: "pillar" | "domain" |
 // "discussion" | "circle" | "chamber" (entered chambers, Phase 7.5) |
-// "poll" | "fellow-souls" (refId null — the
+// "poll" | "fellow-souls" (refId null; the
 // Phase 6.5 source, OFF by default: absence of the row means off).
 // Discussion follows also arise implicitly from participation
-// (join = follow, DISCUSSIONS §3) — computed at read time, not stored.
+// (join = follow, DISCUSSIONS §3); computed at read time, not stored.
 model FeedSource {
   id        String   @id @default(cuid())
   profileId String
@@ -1502,9 +1502,9 @@ model FeedSource {
 }
 
 // Per-profile feed settings: the open lens and the balanced-diet default
-// (§2.2, §3 — the default expresses the platform's values; the soul can
+// (§2.2, §3; the default expresses the platform's values; the soul can
 // turn both off). caughtUpAt is the read position behind "you're caught
-// up" — a designed moment, not a failure state.
+// up"; a designed moment, not a failure state.
 model FeedSettings {
   profileId    String    @id
   openLens     Boolean   @default(true)
@@ -1527,10 +1527,10 @@ model SearchQuery {
 }
 
 // ------------------------------------------------------------------
-// Treasury daily snapshots (Phase 7 — TREASURY_DASHBOARD_SPEC §6.2,
+// Treasury daily snapshots (Phase 7; TREASURY_DASHBOARD_SPEC §6.2,
 // owner-ratified: daily cadence over live updates). Each snapshot is
 // timestamped; the schedule is published on the page. The snapshot is a
-// VIEW over the books — db:verify re-derives it and fails loudly on
+// VIEW over the books; db:verify re-derives it and fails loudly on
 // drift (§3: never a separate bookkeeping system).
 // ------------------------------------------------------------------
 
@@ -1539,14 +1539,14 @@ model TreasurySnapshot {
   day      String   @unique // UTC "YYYY-MM-DD"
   takenAt  DateTime @default(now())
   balances String // JSON { PC, G }
-  inflows  String // JSON { category: { PC, G } } — running totals at snapshot
-  outflows String // JSON { category: { PC, G } } — running totals at snapshot
+  inflows  String // JSON { category: { PC, G } }; running totals at snapshot
+  outflows String // JSON { category: { PC, G } }; running totals at snapshot
 }
 
 // ------------------------------------------------------------------
-// Rate limiting (Phase 8 — ANTI_SYBIL_CONSOLIDATION §3 W4, the
+// Rate limiting (Phase 8; ANTI_SYBIL_CONSOLIDATION §3 W4, the
 // consolidated schedule; lib/rateLimit.ts). Fixed-window counters.
-// The key is HMAC(policy, identifier, window) — no raw IP, session, or
+// The key is HMAC(policy, identifier, window); no raw IP, session, or
 // profile id is ever stored here (DUAL_IDENTITY §7.1 vector 4), and a
 // bucket carries no payload. Rows expire with their window; the prune
 // job deletes them after two day-cycles. Short retention is the point.
@@ -1558,7 +1558,7 @@ model TreasurySnapshot {
 // The unlinkability and privacy boundary: profileId, never humanId; no
 // public reads, no counts, never a ranking input for anyone else.
 // Profile imagery (PROFILE_PAGE_SPEC §4, owner-ruled 2026-07-22):
-// avatar and banner, per face, live-surface class — replaceable and
+// avatar and banner, per face, live-surface class; replaceable and
 // deletable anytime, never part of the permanent record, never
 // anchored. Bytes are the re-encoded WebP ONLY: originals (and their
 // EXIF) are destroyed at ingest and never stored.
@@ -1586,7 +1586,7 @@ model SavedDiscussion {
 }
 
 model RateLimitBucket {
-  key         String   @id // HMAC — never a raw identifier
+  key         String   @id // HMAC; never a raw identifier
   policy      String
   windowStart DateTime
   count       Int      @default(0)
@@ -1595,30 +1595,30 @@ model RateLimitBucket {
 }
 
 // ------------------------------------------------------------------
-// Analytics (Phase 8 — ANALYTICS_SPEC, owner-ratified 2026-07-08).
+// Analytics (Phase 8; ANALYTICS_SPEC, owner-ratified 2026-07-08).
 // Deliberately dumber than industry standard: an event is a NAME and a
-// TIMESTAMP — there is structurally no payload, no IP, no user-agent,
+// TIMESTAMP; there is structurally no payload, no IP, no user-agent,
 // no page-path-per-soul. subjectKey (HMAC'd profile key, set only on
 // the retention-relevant events) exists solely so cohort return rates
 // can be computed at crush time; no query may join it back to a
 // profile. Raw events live for the analytics.retentionDays rail
 // (90 days, lengthening structurally capped), then are crushed into
 // aggregates and DELETED (scripts/crush-analytics.ts). Analytics never
-// feeds ranking — lib/feed.ts and lib/search.ts importing this
+// feeds ranking; lib/feed.ts and lib/search.ts importing this
 // pipeline fails the test suite.
 // ------------------------------------------------------------------
 
 model AnalyticsEvent {
   id         String   @id @default(cuid())
   name       String // "funnel.gate", "action.posting", ...
-  subjectKey String? // HMAC — never a raw profile id (db:verify check 26)
+  subjectKey String? // HMAC; never a raw profile id (db:verify check 26)
   createdAt  DateTime @default(now())
 
   @@index([name, createdAt])
   @@index([createdAt])
 }
 
-// Permanent aggregates — what survives the crush. Counts only; no
+// Permanent aggregates; what survives the crush. Counts only; no
 // soul-level information exists here by construction.
 model AnalyticsAggregate {
   id       String @id @default(cuid())

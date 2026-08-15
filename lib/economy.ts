@@ -1,13 +1,13 @@
 // The internal economy (TOKENOMICS_SPEC.md). Two currencies, two jobs:
 // PollCoin pays fees and stakes support; Gratium is earned appreciation,
 // spent on tips and permanence. Both live as per-profile internal
-// balances — a soul's two faces are never bridged. Every flow is a
+// balances; a soul's two faces are never bridged. Every flow is a
 // double-entry EconomyEntry; balances are always the sum of entries,
 // and db:verify re-derives them (conservation, loudly).
 //
 // Grants mint from "issuance" (the internal era's accounted faucet);
 // everything else moves value between profiles and the treasury. Money
-// never buys outcome weight — nothing in this module touches a tally.
+// never buys outcome weight; nothing in this module touches a tally.
 
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
@@ -41,7 +41,7 @@ export type EconomyResult = { ok: true } | { ok: false; reason: string };
  * Atomically debit a profile's balance. The conditional UPDATE (WHERE
  * amount >= X) is the check AND the decrement in one statement, so two
  * concurrent debits cannot both pass a stale read and overspend under
- * Postgres READ COMMITTED — the check-then-act class Gate #25 closed
+ * Postgres READ COMMITTED; the check-then-act class Gate #25 closed
  * elsewhere, applied here to balances. (SQLite's single writer masks this
  * in dev/test, which is why it never surfaced.) Returns true if debited,
  * false if the balance could not cover it.
@@ -77,7 +77,7 @@ export async function chargeToTreasury(
     const balance = await balanceOf(tx, input.profileId, input.currency);
     return {
       ok: false,
-      reason: `Insufficient ${input.currency === "PC" ? "PollCoin" : "Gratium"} (${balance.toFixed(2)}u of ${input.amount}u) — participation costs; the earnable path covers committed souls.`,
+      reason: `Insufficient ${input.currency === "PC" ? "PollCoin" : "Gratium"} (${balance.toFixed(2)}u of ${input.amount}u); participation costs; the earnable path covers committed souls.`,
     };
   }
   await tx.treasuryBalance.upsert({
@@ -103,8 +103,8 @@ export async function chargeToTreasury(
  * The single door money leaves the treasury by (PHASE_8_7_SPEC §3,
  * Slice 1).
  *
- * The Constitution's Appendix A carries a must-guardrail — "the treasury
- * MUST NOT spend outside budgeted categories" — and TREASURY_DASHBOARD
+ * The Constitution's Appendix A carries a must-guardrail; "the treasury
+ * MUST NOT spend outside budgeted categories"; and TREASURY_DASHBOARD
  * §1.3 promises it is "rendered structurally: an outflow without a
  * budget category cannot exist." Until this function existed that was an
  * unbuilt promise: outflows were hand-rolled at each call site, so there
@@ -116,7 +116,7 @@ export async function chargeToTreasury(
  * That is the same reasoning as ADMIN_OPS §1's allowlist: the safety is
  * the absence of a path, not the presence of a check.
  *
- * Refuses (never throws — callers get a reason) when the category is
+ * Refuses (never throws; callers get a reason) when the category is
  * missing, unknown, or inactive. Category caps are NOT enforced yet:
  * the three shipped categories are uncapped by design (their amounts are
  * already rail-governed per-action), and FUND_INTEGRITY_SPEC §3.6's
@@ -143,13 +143,13 @@ export async function payFromTreasury(
   if (!category) {
     return {
       ok: false,
-      reason: `No budget category "${input.budgetCategory}" — the treasury may not spend outside budgeted categories (Constitution, Appendix A).`,
+      reason: `No budget category "${input.budgetCategory}"; the treasury may not spend outside budgeted categories (Constitution, Appendix A).`,
     };
   }
   if (!category.active) {
     return {
       ok: false,
-      reason: `Budget category "${input.budgetCategory}" is inactive — the treasury may not spend outside active budgeted categories (Constitution, Appendix A).`,
+      reason: `Budget category "${input.budgetCategory}" is inactive; the treasury may not spend outside active budgeted categories (Constitution, Appendix A).`,
     };
   }
 
@@ -207,7 +207,7 @@ export async function grant(
 /**
  * Mint a one-time grant atomically. The GrantClaim insert IS the mutex:
  * (profileId, kind) is the primary key, so two concurrent callers can never
- * both mint — the second insert collides with P2002 and its transaction
+ * both mint; the second insert collides with P2002 and its transaction
  * rolls back (the lib/gate.ts nullifier pattern). A plain
  * grantAlreadyGiven()-then-grant() is a SELECT-then-INSERT race that mints
  * issuance N× under concurrent requests.
@@ -242,7 +242,7 @@ export async function grantAlreadyGiven(
 
 /**
  * A tip: Gratium from reader to author, with the treasury micro-cut
- * rail taken from the gross — nearly all appreciation reaches the soul.
+ * rail taken from the gross; nearly all appreciation reaches the soul.
  */
 export async function tip(
   db: PrismaClient,
@@ -254,7 +254,7 @@ export async function tip(
   const post = await db.post.findUnique({ where: { id: input.postId } });
   if (!post) return { ok: false, reason: "No such post." };
   if (post.authorProfileId === input.tipperProfileId) {
-    return { ok: false, reason: "Appreciation flows outward — no self-tipping." };
+    return { ok: false, reason: "Appreciation flows outward; no self-tipping." };
   }
   const cutPercent = await getRail(db, "economy.tipCutPercent");
 
@@ -267,7 +267,7 @@ export async function tip(
         const balance = await balanceOf(tx, input.tipperProfileId, "G");
         return {
           ok: false as const,
-          reason: `Insufficient Gratium (${balance.toFixed(2)}u) — appreciation is costly on purpose.`,
+          reason: `Insufficient Gratium (${balance.toFixed(2)}u); appreciation is costly on purpose.`,
         };
       }
       await ensureBalance(tx, post.authorProfileId, "G");
@@ -309,7 +309,7 @@ export async function tip(
           amount: input.amount,
         },
       });
-      // Giving is positive participation (TOKENOMICS §4) — it accrues.
+      // Giving is positive participation (TOKENOMICS §4); it accrues.
       const { accrueForAction } = await import("./accrual");
       await accrueForAction(tx, input.tipperProfileId);
       // Quiet inbox: tips on one post collapse into one updating entry.
@@ -335,7 +335,7 @@ export async function tip(
 
 /**
  * Welcome Grant milestone: first action completed (Stage 6). True Self
- * journey only — the Alias's grant is the hatch grant (ECONOMIC §3).
+ * journey only; the Alias's grant is the hatch grant (ECONOMIC §3).
  * Call after a successful fee-bearing action, inside its transaction.
  */
 export async function maybeFirstActionGrant(
@@ -348,7 +348,7 @@ export async function maybeFirstActionGrant(
   // after the first (a P2002 here would abort the caller's whole action
   // transaction). On a genuine concurrent-first-action race the pre-check
   // misses, the losing grantOnce insert collides, and that action's
-  // transaction rolls back — no double mint; the retry sees the claim and
+  // transaction rolls back; no double mint; the retry sees the claim and
   // skips.
   const already = await tx.grantClaim.findUnique({
     where: { profileId_kind: { profileId, kind: "grant.first-action" } },

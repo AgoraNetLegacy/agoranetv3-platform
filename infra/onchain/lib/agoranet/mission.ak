@@ -1,4 +1,4 @@
-//// The mission-treasury core (Track 2 Slice 5 —
+//// The mission-treasury core (Track 2 Slice 5;
 //// ONCHAIN_TREASURY_VALIDATOR_SPEC.md, owner rulings 2026-07-18:
 //// signers = the chamber's attesting members; freeze = Tribunal-held
 //// attestation). Pure state-transition logic, unit-tested here; the
@@ -8,7 +8,7 @@
 use aiken/collection/list
 use agoranet/treasury.{Signer, threshold_met}
 
-/// A release proposal — terms frozen the moment it's recorded (§4).
+/// A release proposal; terms frozen the moment it's recorded (§4).
 pub type Pending {
   recipient: Signer,
   amount: Int,
@@ -17,7 +17,7 @@ pub type Pending {
 
 /// The two kinds of UTxO at the treasury script.
 pub type TreasuryDatum {
-  /// The chamber's thread of truth — exactly one, NFT-carried.
+  /// The chamber's thread of truth; exactly one, NFT-carried.
   State {
     chamber_id: ByteArray,
     signers: List<Signer>,
@@ -41,7 +41,7 @@ pub fn init_valid(datum: TreasuryDatum) -> Bool {
 }
 
 /// Any ONE attesting member may put a proposal on the table (⭐ spec
-/// choice — the app layer narrows who in practice).
+/// choice; the app layer narrows who in practice).
 pub fn may_propose(signers: List<Signer>, signatories: List<Signer>) -> Bool {
   list.any(signers, fn(s) { list.has(signatories, s) })
 }
@@ -71,7 +71,7 @@ pub fn propose_transition(old: TreasuryDatum, new: TreasuryDatum) -> Bool {
 }
 
 /// The §4 promise: with a pending proposal, unfrozen, and M-of-N
-/// co-signatures on THIS transaction, the release terms come back —
+/// co-signatures on THIS transaction, the release terms come back;
 /// otherwise nothing does. No operator key appears anywhere.
 pub fn release_ready(
   old: TreasuryDatum,
@@ -110,7 +110,7 @@ pub fn release_transition(old: TreasuryDatum, new: TreasuryDatum) -> Bool {
   }
 }
 
-/// SetFrozen: ONLY the tribunal key, and ONLY the frozen flag moves —
+/// SetFrozen: ONLY the tribunal key, and ONLY the frozen flag moves;
 /// signers, threshold, pending, identity all held constant. The freeze
 /// can block; it can never move value or rewrite the proposal.
 pub fn set_frozen_transition(

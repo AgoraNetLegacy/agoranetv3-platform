@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { roomAccess } from "@/lib/circles";
 
-// Results export in a standard format (POLLS §6) — closed polls only;
+// Results export in a standard format (POLLS §6); closed polls only;
 // sealed means sealed while open. Public mode includes the per-ballot
 // record; pseudonymous mode exports the aggregate, nothing else.
 // Circle-restricted polls export only inside the members' room.

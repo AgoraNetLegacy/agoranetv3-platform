@@ -23,7 +23,7 @@ import { DonateToScript } from "@/components/DonateToScript";
 export const dynamic = "force-dynamic";
 
 // Settings, per face (Phase 8.5, PRESENTATION_SPEC §5.1). THE RULE:
-// this page renders for the ACTIVE face only — no surface ever shows
+// this page renders for the ACTIVE face only; no surface ever shows
 // two faces' settings together; a shared settings screen would itself
 // be a linkage surface. Switch faces to change the other face's
 // settings; nothing here echoes across.
@@ -48,7 +48,7 @@ export default async function SettingsPage({
       getRail(db, "onchain.demoLockMinutes"),
     ]);
   const network = cardanoNetwork();
-  // Derived only when a wallet is linked — the donation section only
+  // Derived only when a wallet is linked; the donation section only
   // renders then, and an unconfigured beneficiary must not take the
   // whole settings page down with it.
   const [{ address: donationAddress }, beneficiaryHash] = walletLink
@@ -58,10 +58,10 @@ export default async function SettingsPage({
   return (
     <div className="ceremony">
       <h2>
-        Settings <span className="lore">— for {face.displayName} @{face.handle} only</span>
+        Settings <span className="lore">; for {face.displayName} @{face.handle} only</span>
       </h2>
       <p className="lore">
-        Settings are per-face. Your other face — if you have one — has its
+        Settings are per-face. Your other face; if you have one; has its
         own settings page, reachable only by switching. That separation is
         the design: a shared screen would itself link your faces.
       </p>
@@ -69,7 +69,7 @@ export default async function SettingsPage({
 
       <h3>Display name</h3>
       <p className="lore">
-        Your <strong>@handle is forever</strong> — the attribution key on
+        Your <strong>@handle is forever</strong>; the attribution key on
         every record you sign. Your display name is yours to change (at
         most once every {cooldownDays} days): live surfaces update;
         anything in the permanent record keeps the name it was written
@@ -92,15 +92,15 @@ export default async function SettingsPage({
       <h3>Face-switch animation</h3>
       <p className="lore">
         How the room turns when you change faces. The card flip is the
-        default; choose less motion if you prefer — by choice, never by
+        default; choose less motion if you prefer; by choice, never by
         detection.
       </p>
       <form action={setSwitchAnimation}>
         {(
           [
-            ["flip", "The card flip — the page turns over like a playing card"],
-            ["crossfade", "Crossfade — a quiet dissolve"],
-            ["instant", "Instant — no animation at all"],
+            ["flip", "The card flip; the page turns over like a playing card"],
+            ["crossfade", "Crossfade; a quiet dissolve"],
+            ["instant", "Instant; no animation at all"],
           ] as const
         ).map(([value, label]) => (
           <label key={value} style={{ display: "block", margin: "0.3rem 0" }}>
@@ -119,11 +119,11 @@ export default async function SettingsPage({
       <h3>Spirit Mode</h3>
       <p className="lore">
         A visibility veil for this face, toggled any time from the small
-        dot on the profile bubble — filled means visible, hollowed means
+        dot on the profile bubble; filled means visible, hollowed means
         walking unseen. Choose here how much the veil covers. Refusals it
         causes look identical to any undeliverable request, so the veil
         is never itself a signal. What&rsquo;s already in the permanent
-        record stays attributed — no veil rewrites the record.
+        record stays attributed; no veil rewrites the record.
       </p>
       <form action={updateSpiritSettings}>
         {SPIRIT_LEVELS.map((value) => (
@@ -146,16 +146,16 @@ export default async function SettingsPage({
           Begin each fresh sign-in with Spirit Mode already on
         </label>
         <p className="lore" style={{ margin: "0.35rem 0" }}>
-          Right now: {face.spiritActive ? "walking unseen" : "visible"} —
+          Right now: {face.spiritActive ? "walking unseen" : "visible"};
           the dot on the bubble flips this instantly.
         </p>
         <button type="submit">Save Spirit Mode</button>
       </form>
 
-      <h3>The Beacon — pacing</h3>
+      <h3>The Beacon; pacing</h3>
       <p className="lore">
         The feed&rsquo;s calm-pacing controls, yours to tune (or turn
-        off). The timing runs entirely in your own browser — the
+        off). The timing runs entirely in your own browser; the
         platform measures nothing; it only remembers the numbers you
         choose here, per face.
       </p>
@@ -163,7 +163,7 @@ export default async function SettingsPage({
         <label style={{ display: "block", margin: "0.3rem 0" }}>
           Go-act nudge after{" "}
           <select name="nudgeAfterMin" defaultValue={wellbeingRow ? (wellbeingRow.nudgeAfterMin === null ? "off" : String(wellbeingRow.nudgeAfterMin)) : String(nudgeDefault)}>
-            <option value="off">off — never nudge</option>
+            <option value="off">off; never nudge</option>
             {[10, 20, 30, 45, 60, 90, 120].map((m) => (
               <option key={m} value={m}>
                 {m} minutes of reading
@@ -189,15 +189,15 @@ export default async function SettingsPage({
       <p className="lore">
         The quietest defaults are on for everyone: two tiers (time-sensitive
         and the quiet inbox), aggregated per space, nothing manufactured to
-        pull you back. There is nothing to configure yet — push delivery
+        pull you back. There is nothing to configure yet; push delivery
         arrives as a fast-follow, and its preferences will live here, per
         face, off by default.
       </p>
 
-      <h3>The testnet rail — connect a wallet</h3>
+      <h3>The testnet rail; connect a wallet</h3>
       <p className="lore">
         <strong>Test network only, by design.</strong> Connecting shares
-        one {network} address with the platform — no keys, no custody,
+        one {network} address with the platform; no keys, no custody,
         nothing of real value anywhere on this rail. Real rails wait
         behind their own gate. Per-face, like everything: your other
         face connects its own wallet, or none.
@@ -219,7 +219,7 @@ export default async function SettingsPage({
           <h4>The self-custody proof</h4>
           <p className="lore">
             One small transaction ({network}), built in your browser and
-            signed by <strong>your</strong> wallet — a ~2 tADA send from
+            signed by <strong>your</strong> wallet; a ~2 tADA send from
             your address back to your address, so only the network fee is
             spent. The platform holds no keys and submits nothing; it
             records the transaction only after verifying it on {network}.
@@ -236,7 +236,7 @@ export default async function SettingsPage({
               >
                 <code>{walletLink.proofTxHash.slice(0, 16)}…</code>
               </a>{" "}
-              — publicly verifiable; anyone can look it up. Sign again
+; publicly verifiable; anyone can look it up. Sign again
               anytime to refresh it.
             </p>
           ) : (
@@ -248,13 +248,13 @@ export default async function SettingsPage({
           <p className="lore">
             The first real value movement on this rail: {(demoLovelace / 1_000_000).toLocaleString()} tADA
             from <strong>your</strong> wallet to the donation-lock{" "}
-            <strong>script</strong> —{" "}
-            <code>{donationAddress.slice(0, 24)}…</code> — an address
+            <strong>script</strong>; {" "}
+            <code>{donationAddress.slice(0, 24)}…</code>; an address
             governed by validator math, not by anyone&rsquo;s key. The
             platform cannot spend, redirect, or return what sits there;
             it never touches the funds at all. Honestly, the demo&rsquo;s
             shape: the lock opens after {demoLockMinutes} minutes, and
-            the collector is the dev demo wallet — the real
+            the collector is the dev demo wallet; the real
             mission-treasury release (M-of-N attestation, no single
             collector) is the next track of this build. Testnet tADA
             only; nothing of real value.
@@ -272,7 +272,7 @@ export default async function SettingsPage({
                   >
                     <code>{d.txHash.slice(0, 16)}…</code>
                   </a>{" "}
-                  — publicly verifiable; the funds sit at the script,
+; publicly verifiable; the funds sit at the script,
                   not with us.
                 </li>
               ))}
@@ -294,15 +294,15 @@ export default async function SettingsPage({
       <h3>This face&rsquo;s other controls</h3>
       <ul>
         <li>
-          <Link href="/profile">The profile window</Link> — your about-me,
+          <Link href="/profile">The profile window</Link>; your about-me,
           standing, and score log
         </li>
         <li>
-          <Link href="/feed/sources">Feed sources</Link> — choose what
+          <Link href="/feed/sources">Feed sources</Link>; choose what
           feeds this face&rsquo;s feed
         </li>
         <li>
-          <Link href="/search/history">Search history</Link> — per-face,
+          <Link href="/search/history">Search history</Link>; per-face,
           deletable, never used to rank
         </li>
       </ul>

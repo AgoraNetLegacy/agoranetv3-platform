@@ -1,12 +1,12 @@
-// The Feed (Phase 7 — FEED_AND_SEARCH_SPEC §§1–3, §5–6).
+// The Feed (Phase 7; FEED_AND_SEARCH_SPEC §§1–3, §5–6).
 //
 // The law of this surface: published formula or no formula; show the why,
 // everywhere; the feed ENDS; chosen, not inferred; per-persona,
 // absolutely; substance signals only (never views, never dwell).
 //
-// Two parts (§2): the backbone is what the soul explicitly chose —
+// Two parts (§2): the backbone is what the soul explicitly chose;
 // pillars, domains, Discussions (join = follow), Circles, polls, fellow
-// souls (OFF by default) — and one open lens ("Popular now") ranked by
+// souls (OFF by default); and one open lens ("Popular now") ranked by
 // the published participation formula, identical for everyone.
 //
 // Everything here is per-profile reading state: none of it is ledgered,
@@ -15,7 +15,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { getRail } from "./rails";
 
-export const FEED_FORMULA_VERSION = "v1 — 2026-07-11";
+export const FEED_FORMULA_VERSION = "v1; 2026-07-11";
 
 export interface FeedCard {
   /** Discussion cards link to /d/:id; poll cards to /polls/:id. */
@@ -112,7 +112,7 @@ export async function buildFeed(
 
   // Fellow-souls source (§2.1, Phase 6.5 hand-off; OFF by default):
   // discussions where a bonded profile recently posted PUBLICLY. Your
-  // bond list renders for you alone — naming them to their owner is the
+  // bond list renders for you alone; naming them to their owner is the
   // private graph working as designed.
   const fellowHandles = new Map<string, string>(); // discussionId -> handle
   if (sources.fellowSouls) {
@@ -139,7 +139,7 @@ export async function buildFeed(
 
   // Candidate discussions from every chosen source. Members'-room
   // discussions surface ONLY through a circle-membership source and only
-  // to a current member (checked below) — the enclosed-space rule.
+  // to a current member (checked below); the enclosed-space rule.
   const memberships = await db.circleMember.findMany({
     where: { profileId, leftAt: null },
     select: { circleId: true },
@@ -147,7 +147,7 @@ export async function buildFeed(
   const memberCircleIds = new Set(memberships.map((m) => m.circleId));
   const followedCircleIds = [...sources.circleIds].filter((id) => memberCircleIds.has(id));
   // Entered chambers (Phase 7.5): workshops surface ONLY through a
-  // chamber source and only to a soul who entered — the enclosed-space
+  // chamber source and only to a soul who entered; the enclosed-space
   // rule, chamber edition. The card carries space-level facts only.
   const chamberMemberships = await db.chamberMember.findMany({
     where: { profileId },
@@ -188,7 +188,7 @@ export async function buildFeed(
     // The why-line (§1.2): the most specific chosen source wins.
     let whyLine: string;
     if (d.chamber && sources.chamberIds.has(d.chamber.id)) {
-      whyLine = `In your feed: a chamber you've entered — ${d.chamber.title} (workshop)`;
+      whyLine = `In your feed: a chamber you've entered; ${d.chamber.title} (workshop)`;
     } else if (d.circle && sources.circleIds.has(d.circle.id)) {
       whyLine = `In your feed: your Circle ${d.circle.name} (members' room)`;
     } else if (fellowHandles.has(d.id)) {
@@ -217,8 +217,8 @@ export async function buildFeed(
 
   // Poll cards for explicitly followed polls (§2.1 makes the source
   // launch scope; the fuller card-type rollout order is the spec's §9.3
-  // owner item, flagged): status changes only — closing soon or results
-  // published — never a tally while sealed.
+  // owner item, flagged): status changes only; closing soon or results
+  // published; never a tally while sealed.
   if (sources.pollIds.size > 0) {
     const polls = await db.poll.findMany({
       where: { id: { in: [...sources.pollIds] }, visibilityScope: "public" },
@@ -289,8 +289,8 @@ export interface StorefrontCard {
   whyLine: string;
 }
 
-/** Chamber storefront cards (§2.3 — a launch-host hand-off): new and
- *  active PUBLIC chambers, most recent workshop activity first — a
+/** Chamber storefront cards (§2.3; a launch-host hand-off): new and
+ *  active PUBLIC chambers, most recent workshop activity first; a
  *  legible rule stated on every card, identical for everyone. Only the
  *  storefront rides the card; workshop contents never leave the
  *  workshop. */
@@ -314,12 +314,12 @@ export async function chamberStorefrontCards(
     createdAt: c.createdAt,
     lastActivityAt: c.lastActivityAt,
     whyLine:
-      "New & active public chambers — most recent workshop activity first, same for everyone",
+      "New & active public chambers; most recent workshop activity first, same for everyone",
   }));
 }
 
 /** The open lens (§2.2): "Popular now", ranked by the PUBLISHED
- *  participation formula — identical for everyone, over public
+ *  participation formula; identical for everyone, over public
  *  Discussions only. Views and dwell time are never inputs.
  *
  *  score = (Wc × unique contributors + Wt × unique tippers
@@ -331,7 +331,7 @@ export async function openLens(
   db: PrismaClient,
   limit = 10,
   // Community lanes (BEACON §3.4): the same published formula, scoped
-  // to one pillar — the pillar-pulse lane. No new math, no new inputs.
+  // to one pillar; the pillar-pulse lane. No new math, no new inputs.
   pillarSlug?: string
 ): Promise<LensCard[]> {
   const [wC, wT, wS, halfLife] = await Promise.all([
@@ -391,7 +391,7 @@ export async function openLens(
       lastActivityAt,
       whyLine: `Open lens: ${contributors} unique contributor${contributors === 1 ? "" : "s"}${
         tippers ? `, ${tippers} unique tipper${tippers === 1 ? "" : "s"}` : ""
-      }${sourced ? `, ${sourced} sourced post${sourced === 1 ? "" : "s"}` : ""} this window — published formula, same for everyone`,
+      }${sourced ? `, ${sourced} sourced post${sourced === 1 ? "" : "s"}` : ""} this window; published formula, same for everyone`,
       score,
       scoreParts: `(${wC}×${contributors} + ${wT}×${tippers} + ${wS}×${sourced}) × ${decay.toFixed(2)}`,
     });

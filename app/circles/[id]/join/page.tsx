@@ -11,11 +11,11 @@ import { submitJoinCircle } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
-// The join gate (CIRCLES §5): one gate-cleared action — no application
+// The join gate (CIRCLES §5): one gate-cleared action; no application
 // essays, no founder approval. When the joining face is an Alias and the
 // Circle is small or place-tagged, the honest warning the dual-identity
 // module commits us to is said OUT LOUD at the exact moment it matters
-// (DUAL_IDENTITY §7.1 vector 5) — informed choice, never a wall.
+// (DUAL_IDENTITY §7.1 vector 5); informed choice, never a wall.
 
 export default async function JoinCirclePage({
   params,
@@ -52,11 +52,11 @@ export default async function JoinCirclePage({
       {m && <div className="notice">{m}</div>}
       <p>
         Joining is one gate-cleared action: the humanity gate plus your
-        visible standing is the whole filter. Your membership —{" "}
+        visible standing is the whole filter. Your membership; {" "}
         <strong>
           {viewer.displayName} @{viewer.handle}
         </strong>{" "}
-        — joins the public member list, and the join event is public
+; joins the public member list, and the join event is public
         record, like leaving.
       </p>
       <p className="lore">
@@ -83,7 +83,7 @@ export default async function JoinCirclePage({
             as this face.
           </label>
         )}
-        <button type="submit">Clear this join — become a member</button>
+        <button type="submit">Clear this join; become a member</button>
       </form>
     </>
   );

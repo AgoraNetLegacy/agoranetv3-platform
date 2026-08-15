@@ -1,4 +1,4 @@
-// Track 2 Slice 5 — the on-chain invariant check (db:verify's spirit,
+// Track 2 Slice 5; the on-chain invariant check (db:verify's spirit,
 // pointed at the treasury script). Scans every UTxO at the
 // mission-treasury address and asserts the §4 shape holds for every
 // chamber found there: exactly one NFT-carried State thread, a sane
@@ -14,7 +14,7 @@ import { join } from "path";
 
 // deserializeDatum's real shape (probed live): constructors are
 // `{ constructor: 0n, fields: [...] }` with BigInt tags, and leaves
-// are wrapped — `{ bytes: hex }`, `{ int: 2n }`, `{ list: [...] }`.
+// are wrapped; `{ bytes: hex }`, `{ int: 2n }`, `{ list: [...] }`.
 type Leaf = { bytes?: string; int?: bigint; list?: Leaf[]; constructor?: bigint; fields?: Leaf[] };
 
 async function main() {
@@ -28,7 +28,7 @@ async function main() {
   const validator = blueprint.validators.find(
     (v: { title: string }) => v.title === "mission_treasury.mission_treasury.spend"
   );
-  if (!validator) throw new Error("mission_treasury missing — run aiken build.");
+  if (!validator) throw new Error("mission_treasury missing; run aiken build.");
   const scriptCbor = applyCborEncoding(validator.compiledCode);
   const scriptAddress = serializePlutusScript({ code: scriptCbor, version: "V3" }, undefined, 0)
     .address;
@@ -120,7 +120,7 @@ async function main() {
   console.log(
     failures.length
       ? `INVARIANT FAILURES (${failures.length}):\n  - ${failures.join("\n  - ")}`
-      : `ALL TREASURY INVARIANTS HOLD — ${utxos.length} UTxO(s), ${chambers.size} chamber(s).`
+      : `ALL TREASURY INVARIANTS HOLD; ${utxos.length} UTxO(s), ${chambers.size} chamber(s).`
   );
   if (failures.length) process.exit(1);
 }

@@ -1,4 +1,4 @@
-// DM encryption, Phase A (FELLOW_SOULS §5.1 / §9.1 — resolved at phase
+// DM encryption, Phase A (FELLOW_SOULS §5.1 / §9.1; resolved at phase
 // start, DECISIONS_PENDING #8: the spec's "simpler asymmetric scheme
 // for v1", built from Signal-family primitives).
 //
@@ -7,12 +7,12 @@
 //       → AES-256-GCM per message (random IV, thread-bound AAD)
 //
 // The honest part: in Phase A the private keys are held ENCRYPTED UNDER
-// AN OPERATOR SECRET (DM_MASTER_SECRET) — the gate's exact trust
+// AN OPERATOR SECRET (DM_MASTER_SECRET); the gate's exact trust
 // posture. Messages are encrypted at rest and unreadable to anyone
 // without the master secret, but the operator could read them; we
 // disclose that verbatim (DM_PHASE_A_DISCLOSURE) instead of performing
 // end-to-end theater in a server-rendered app. Phase 9 moves private
-// keys into the soul's wallet (Lace) — true E2E on the same published
+// keys into the soul's wallet (Lace); true E2E on the same published
 // schedule as the gate cutover. The INTERFACE (encrypt/decrypt per
 // thread) is the contract that survives.
 
@@ -30,7 +30,7 @@ import type { DbOrTx } from "./db";
 
 export const DM_PHASE_A_DISCLOSURE =
   "Messages are encrypted (X25519 + AES-256-GCM) and stored only as " +
-  "ciphertext — but in this phase the keys are held in escrow by the " +
+  "ciphertext; but in this phase the keys are held in escrow by the " +
   "operator, the same trust you extend to the gate: we are structurally " +
   "honest, and you are trusting us not to look. When the wallet rail " +
   "arrives (Phase 9), your key moves to your side and reading your " +

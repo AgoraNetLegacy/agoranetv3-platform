@@ -33,7 +33,7 @@ export default async function PollPage({
   if (!poll) notFound();
 
   // Circle-restricted polls live inside the members' room: read access
-  // is the room's (CIRCLES §7), and the parking rule does NOT apply —
+  // is the room's (CIRCLES §7), and the parking rule does NOT apply;
   // a Circle is not a pillar surface, and both of a soul's faces may
   // legitimately be members (§7 accepts that cost by design).
   let circle: { id: string; name: string; status: string } | null = null;
@@ -72,7 +72,7 @@ export default async function PollPage({
     <>
       <p>
         {circle ? (
-          <Link href={`/circles/${circle.id}/room`}>← Members&apos; room — {circle.name}</Link>
+          <Link href={`/circles/${circle.id}/room`}>← Members&apos; room; {circle.name}</Link>
         ) : (
           <Link
             href={
@@ -100,7 +100,7 @@ export default async function PollPage({
       {circle && (
         <p>
           <span className="badge locked">
-            Circle-restricted — visible to {circle.name}&apos;s members; per-profile
+            Circle-restricted; visible to {circle.name}&apos;s members; per-profile
             vote, like every poll
           </span>{" "}
           {poll.circleAction && (
@@ -116,12 +116,12 @@ export default async function PollPage({
       <p>
         {poll.mode === "public" ? (
           <span className="badge permanent">
-            PUBLIC VOTE — your choice is visibly attached to this poll's
+            PUBLIC VOTE; your choice is visibly attached to this poll's
             record
           </span>
         ) : (
           <span className="badge locked">
-            PSEUDONYMOUS VOTE — only the aggregate is ever visible, never
+            PSEUDONYMOUS VOTE; only the aggregate is ever visible, never
             who chose what
           </span>
         )}{" "}
@@ -140,7 +140,7 @@ export default async function PollPage({
             ) : (
               <>
                 🔒 <strong>Sealed until close.</strong> No running tally is
-                shown to anyone — gauge the room by its Discussion, not a
+                shown to anyone; gauge the room by its Discussion, not a
                 scoreboard.
               </>
             )}{" "}
@@ -151,7 +151,7 @@ export default async function PollPage({
                 drawn at random inside the final stretch and committed in
                 advance (
                 <code>{poll.candleCommitment?.slice(0, 16)}…</code>). Votes
-                cast after the hidden moment won't count — vote early.
+                cast after the hidden moment won't count; vote early.
               </>
             ) : (
               <>Voting until {poll.nominalCloseAt.toLocaleString()}.</>
@@ -170,7 +170,7 @@ export default async function PollPage({
                     required={poll.type !== "multi"}
                   />{" "}
                   {o.label}
-                  {tally && ` — ${tally.get(o.id) ?? 0} so far`}
+                  {tally && `; ${tally.get(o.id) ?? 0} so far`}
                 </label>
               ))}
               <button type="submit">
@@ -193,7 +193,7 @@ export default async function PollPage({
             <div className="notice">
               {poll.outcome === "passed"
                 ? `Consensus reached: the leading option cleared the ${Math.round((poll.consensusThreshold ?? 0) * 100)}% threshold.`
-                : `No consensus reached — the ${Math.round((poll.consensusThreshold ?? 0) * 100)}% threshold was not met. That isn't a dead end:`}
+                : `No consensus reached; the ${Math.round((poll.consensusThreshold ?? 0) * 100)}% threshold was not met. That isn't a dead end:`}
               {poll.outcome === "no-consensus" && viewer && !circle && (
                 <form action={startPollDiscussion} className="inline">
                   <input type="hidden" name="pollId" value={poll.id} />
@@ -210,7 +210,7 @@ export default async function PollPage({
             const pct = countedTotal > 0 ? Math.round((count / countedTotal) * 100) : 0;
             return (
               <div key={o.id} style={{ margin: "0.4rem 0" }}>
-                {o.label} — <strong>{count}</strong> ({pct}%)
+                {o.label}; <strong>{count}</strong> ({pct}%)
                 <div
                   style={{
                     background: "var(--accent)",
@@ -235,7 +235,7 @@ export default async function PollPage({
           {poll.candleCommitment && (
             <div className="notice">
               🕯 <strong>Candle reveal:</strong> the true close was{" "}
-              {poll.trueCloseAt.toLocaleString()} — committed before any vote
+              {poll.trueCloseAt.toLocaleString()}; committed before any vote
               existed as <code>{poll.candleCommitment.slice(0, 16)}…</code>{" "}
               and now revealed.{" "}
               {candleVerifies
@@ -246,13 +246,13 @@ export default async function PollPage({
 
           {poll.mode === "public" ? (
             <>
-              <h3>The public record — who voted how (this poll only)</h3>
+              <h3>The public record; who voted how (this poll only)</h3>
               <ul>
                 {poll.ballots
                   .filter((b) => b.counted)
                   .map((b) => (
                     <li key={b.id}>
-                      {b.voterDisplayName} @{b.voterHandle} —{" "}
+                      {b.voterDisplayName} @{b.voterHandle}; {" "}
                       {b.choices
                         .map(
                           (c) => poll.options.find((o) => o.id === c.optionId)?.label
@@ -263,13 +263,13 @@ export default async function PollPage({
               </ul>
               <p className="interim-note">
                 Public means public per-poll: this record lives here and on
-                the ledger — the platform never compiles voting dossiers
+                the ledger; the platform never compiles voting dossiers
                 across polls.
               </p>
             </>
           ) : (
             <p className="interim-note">
-              Pseudonymous vote: ballots are nullifier-keyed — the aggregate
+              Pseudonymous vote: ballots are nullifier-keyed; the aggregate
               above is the whole story, and the ledger carries a
               tamper-evidence hash of the sealed ballots.
             </p>
@@ -280,7 +280,7 @@ export default async function PollPage({
       <h3>Deliberation</h3>
       {circle ? (
         <p className="lore">
-          The deliberation is the members&apos; room — a Circle poll needs no
+          The deliberation is the members&apos; room; a Circle poll needs no
           public context space.
         </p>
       ) : (

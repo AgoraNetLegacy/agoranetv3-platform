@@ -10,7 +10,7 @@ import { markCaughtUp } from "@/app/actions";
 import { Icon } from "@/components/Icon";
 
 // Shared feed rendering (FEED_AND_SEARCH_SPEC), mounted in two places
-// since Phase 8.5: the full /feed page and the platform dashboard —
+// since Phase 8.5: the full /feed page and the platform dashboard;
 // §1.1 of the Presentation spec puts the feed ON the Agora dashboard.
 // One rendering, one set of rules: chosen sources + one open lens,
 // every card says why it's there, the feed ends.
@@ -70,12 +70,12 @@ export async function ChosenSourcesFeed({
           </ul>
           <div className="caught-up">
             <p>
-              <strong>You&rsquo;re caught up</strong> — that was everything
+              <strong>You&rsquo;re caught up</strong>; that was everything
               from your chosen sources
               {since ? ` since ${since.toLocaleString()}` : ""}.
             </p>
             <form action={markCaughtUp}>
-              <button type="submit">Mark read — next visit starts from now</button>
+              <button type="submit">Mark read; next visit starts from now</button>
             </form>
             {compactDoor && (
               <p className="lore">
@@ -90,7 +90,7 @@ export async function ChosenSourcesFeed({
   );
 }
 
-// Chamber storefront cards (FEED §2.3 — arriving with their Phase 7.5
+// Chamber storefront cards (FEED §2.3; arriving with their Phase 7.5
 // host): discovery of new/active PUBLIC chambers. The ordering rule is
 // legible and stated; only the public storefront rides the card.
 export async function PollinatorStrip() {
@@ -120,7 +120,7 @@ export async function LensSection() {
   const lens = await openLens(db);
   return (
     <>
-      <h3>Popular now — the open lens</h3>
+      <h3>Popular now; the open lens</h3>
       <p className="lore">
         One stream you didn&rsquo;t hand-pick, ranked by a{" "}
         <Link href="/feed/formula">published formula</Link> anyone can read:
@@ -142,18 +142,18 @@ export async function LensSection() {
           </li>
         ))}
         {lens.length === 0 && (
-          <li className="lore">Nothing in the lens window yet — quiet platform, honest lens.</li>
+          <li className="lore">Nothing in the lens window yet; quiet platform, honest lens.</li>
         )}
       </ul>
     </>
   );
 }
 
-// Saved & stirring — the Beacon's memory current (BEACON_FEED_SPEC
+// Saved & stirring; the Beacon's memory current (BEACON_FEED_SPEC
 // §3.3/§5.3, owner-ratified 2026-07-21): the face's own saved threads,
 // surfaced only when they've genuinely grown since that face last read
 // them. Per-face and private; the resurfacing formula is published on
-// /feed/formula. The section stays silent when nothing stirs — the
+// /feed/formula. The section stays silent when nothing stirs; the
 // feed still ends.
 export async function SavedAndStirring({ profileId }: { profileId: string }) {
   const stirring = await stirringSavesFor(db, profileId);
@@ -162,7 +162,7 @@ export async function SavedAndStirring({ profileId }: { profileId: string }) {
     <>
       <h3>Saved &amp; stirring</h3>
       <p className="lore">
-        Threads you saved, back only because they&rsquo;ve grown — never
+        Threads you saved, back only because they&rsquo;ve grown; never
         because a machine watched you. Private to this face.{" "}
         <Link href="/feed/formula">How resurfacing works</Link>.
       </p>
@@ -181,7 +181,7 @@ export async function SavedAndStirring({ profileId }: { profileId: string }) {
               {s.newVoices} new voice{s.newVoices === 1 ? "" : "s"} since you read it
             </div>
             <div className="why-line">
-              You saved this — it stirred while you were away.
+              You saved this; it stirred while you were away.
             </div>
           </li>
         ))}
@@ -192,7 +192,7 @@ export async function SavedAndStirring({ profileId }: { profileId: string }) {
 
 // The commons now (BEACON_FEED_SPEC §5.3): the platform-wide
 // recently-active stream, rehomed from the old /discussions directory.
-// Same for everyone, recency within a published rail window — no
+// Same for everyone, recency within a published rail window; no
 // personalization, nothing hidden.
 export async function CommonsNow() {
   const windowHours = await getRail(db, "feed.commons.windowHours");
@@ -229,7 +229,7 @@ export async function CommonsNow() {
       <h3>The commons now</h3>
       <p className="lore">
         Everything recently active across the whole commons, newest
-        first, within the last {Math.round(windowHours)} hours — same
+        first, within the last {Math.round(windowHours)} hours; same
         stream for every soul, nothing personalized.
       </p>
       <ul className="discussions">
@@ -254,7 +254,7 @@ export async function CommonsNow() {
 }
 
 // Server shim: resolve the face's wellbeing thresholds and hand them
-// to the client-side nudge (BEACON §7 — the browser does the timing;
+// to the client-side nudge (BEACON §7; the browser does the timing;
 // the server only knows the chosen numbers).
 export async function BeaconWellbeingMount({ profileId }: { profileId: string }) {
   const wb = await beaconWellbeingFor(db, profileId);
@@ -268,11 +268,11 @@ export async function BeaconWellbeingMount({ profileId }: { profileId: string })
   );
 }
 
-// Beacon cards — the open current's provable-good set (BEACON §6,
+// Beacon cards; the open current's provable-good set (BEACON §6,
 // v2's heart carried forward): a circle_story (attested, ledger-real
 // action) and a question_prompt (a canon question inviting an answer).
 // Deterministic and legible: newest attested story; the canon question
-// with the fewest voices — every card says why, every card exits into
+// with the fewest voices; every card says why, every card exits into
 // the core loop.
 export async function BeaconCards() {
   const [story, questions] = await Promise.all([
@@ -319,7 +319,7 @@ export async function BeaconCards() {
               {story.attestedAt!.toLocaleDateString()}
             </div>
             <div className="why-line">
-              Provable good: the newest ledger-attested Circle action — real
+              Provable good: the newest ledger-attested Circle action; real
               hands, real record. Join them.
             </div>
           </li>
@@ -333,7 +333,7 @@ export async function BeaconCards() {
               {prompt.discussion._count.posts === 1 ? "" : "s"} so far
             </div>
             <div className="why-line">
-              The canon question with the fewest voices — yours would count
+              The canon question with the fewest voices; yours would count
               double here.
             </div>
           </li>
@@ -344,7 +344,7 @@ export async function BeaconCards() {
 }
 
 // The day's featured pillar (BEACON §3.4 community lanes): a
-// deterministic date-keyed rotation over the six diagnostic pillars —
+// deterministic date-keyed rotation over the six diagnostic pillars;
 // same pillar for every soul, no personal signal, stated in the
 // why-line.
 async function featuredPillarOfTheDay(dbc: typeof db) {
@@ -366,9 +366,9 @@ export async function PillarPulse() {
   if (cards.length === 0) return null;
   return (
     <>
-      <h3>Pillar pulse — {pillar.name} today</h3>
+      <h3>Pillar pulse; {pillar.name} today</h3>
       <p className="lore">
-        Today&rsquo;s featured pillar rotates on a fixed daily cycle —
+        Today&rsquo;s featured pillar rotates on a fixed daily cycle;
         same pillar, same stream, for every soul. Ranked by the{" "}
         <Link href="/feed/formula">published formula</Link>, scoped to{" "}
         {pillar.name}.
@@ -389,7 +389,7 @@ export async function PillarPulse() {
 }
 
 // sources-radar: the most-cited source objects in the featured
-// pillar's public spaces within the commons window — the studies and
+// pillar's public spaces within the commons window; the studies and
 // articles the pillar is actually arguing about.
 export async function SourcesRadar() {
   const pillar = await featuredPillarOfTheDay(db);
@@ -432,10 +432,10 @@ export async function SourcesRadar() {
     .slice(0, Math.max(1, Math.round(cap)));
   return (
     <>
-      <h3>The sources radar — {pillar.name}</h3>
+      <h3>The sources radar; {pillar.name}</h3>
       <p className="lore">
         The most-cited sources in {pillar.name}&rsquo;s public spaces in
-        the last {Math.round(windowHours)} hours — what the commons is
+        the last {Math.round(windowHours)} hours; what the commons is
         actually reading. Citation counts only; nothing personal.
       </p>
       <ul className="discussions">
@@ -458,10 +458,10 @@ export async function SourcesRadar() {
 }
 
 // stoic-wisdom (BEACON §3.4, owner-ruled 2026-07-22): a date-keyed
-// deterministic rotation over the owner's Stoic teaching corpus —
+// deterministic rotation over the owner's Stoic teaching corpus;
 // same passage for every soul on a given day, always cited to its
 // lesson, always linking to the pillar it illuminates. Community-level
-// by construction; the Inner Citadel room stays parked — this lane is
+// by construction; the Inner Citadel room stays parked; this lane is
 // feed-only.
 export async function StoicWisdom() {
   if (STOIC_LESSONS.length === 0) return null;
@@ -483,7 +483,7 @@ export async function StoicWisdom() {
             {excerpt.text}
           </blockquote>
           <div className="meta">
-            From <em>{lesson.title}</em> — the platform&rsquo;s Stoic
+            From <em>{lesson.title}</em>; the platform&rsquo;s Stoic
             teaching corpus
             {pillar ? (
               <>
@@ -492,7 +492,7 @@ export async function StoicWisdom() {
             ) : null}
           </div>
           <div className="why-line">
-            One passage a day, the same for every soul — a fixed rotation,
+            One passage a day, the same for every soul; a fixed rotation,
             nothing personalized.
           </div>
         </li>

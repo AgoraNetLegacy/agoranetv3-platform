@@ -1,5 +1,5 @@
 // Test/demo fixture: mint a fully onboarded soul through the REAL
-// ceremonies — verification, True Self registration, blocking consents,
+// ceremonies; verification, True Self registration, blocking consents,
 // Alias hatch + immediate cohort release (activation time-travelled so
 // tests don't wait days).
 

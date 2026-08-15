@@ -13,22 +13,22 @@ export default async function AliasKeyPage() {
     <div className="ceremony">
       <h2>Your Alias access key</h2>
       <p>
-        <strong>Save it — shown exactly once, and deliberately hard to
+        <strong>Save it; shown exactly once, and deliberately hard to
         recover.</strong> A recovery path through your identity would be a
         linkage channel, so there isn't one; a lost key means hatching a
         successor.
       </p>
       {/* Deliberately the same generic filename as a True Self access
-          key — a download named "alias" would be a small linkage
+          key; a download named "alias" would be a small linkage
           artifact on disk. */}
       <SecretBox value={accessKey} downloadAs="agoranet-access-key.txt" />
       <p>
         Your Alias will activate at a random moment{" "}
         <strong>within the next few days</strong>, alongside a cohort of
-        others. We never announce the exact time — not even to you — because
+        others. We never announce the exact time; not even to you; because
         a signal to your True Self about your Alias would itself be the
         link we promise never to create.{" "}
-        <strong>How you&rsquo;ll know: try this key at sign-in — the day it
+        <strong>How you&rsquo;ll know: try this key at sign-in; the day it
         works, your Alias is live.</strong> You&rsquo;ll sign it in once on
         each browser; after that, switching faces is one click in the top
         bar.

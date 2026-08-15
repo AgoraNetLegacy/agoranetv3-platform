@@ -1,4 +1,4 @@
-// Phase 2 checkpoint demo (owner review) — both faces through onboarding,
+// Phase 2 checkpoint demo (owner review); both faces through onboarding,
 // the parking lock verified, and the linkage audit: proof that nothing in
 // the database links the two. Self-contained demo db, reset each run.
 //
@@ -9,7 +9,7 @@
 //   4. The parking rule: lock, blocked-by-name, separate lots, release,
 //      switch cooldown.
 //   5. THE LINKAGE AUDIT: sweep every table for any row containing both
-//      faces — then sign out and sweep again.
+//      faces; then sign out and sweep again.
 //   6. db:verify (now 11 checks) over the final state.
 
 import { execSync, spawnSync } from "child_process";
@@ -48,7 +48,7 @@ async function main() {
   const regEvent = await db.ledgerEvent.findFirst({
     where: { eventType: "trueself.registered" }, orderBy: { seq: "desc" },
   });
-  console.log(`Ledger #${regEvent!.seq}: trueself.registered — pseudonym + nullifier, nothing else.`);
+  console.log(`Ledger #${regEvent!.seq}: trueself.registered; pseudonym + nullifier, nothing else.`);
 
   await consent.recordAck(db, { profileId: ts.profileId, kind: "permanence" });
   await consent.recordAck(db, { profileId: ts.profileId, kind: "constitution" });
@@ -61,7 +61,7 @@ async function main() {
   });
   console.log("Values seed: 1/7 answered (skippable, matchmaking-only, never public).\n");
 
-  banner("2. The Alias hatch — no trace, no timing arrow");
+  banner("2. The Alias hatch; no trace, no timing arrow");
   const eventsBefore = await db.ledgerEvent.count();
   const hatch = await identity.registerAlias(db, {
     credential, handle: "quiet-cedar-17", displayName: "quiet-cedar-17", disclosuresAccepted: true,
@@ -69,7 +69,7 @@ async function main() {
   if (!hatch.ok) throw new Error(hatch.reason);
   const eventsAfter = await db.ledgerEvent.count();
   const aliasRow = await db.profile.findUniqueOrThrow({ where: { handle: "quiet-cedar-17" } });
-  console.log(`Hatched. Ledger events before: ${eventsBefore}, after: ${eventsAfter} — the public learns NOTHING.`);
+  console.log(`Hatched. Ledger events before: ${eventsBefore}, after: ${eventsAfter}; the public learns NOTHING.`);
   console.log(`Status: ${aliasRow.status}; activation: randomized, cohort-snapped → ${aliasRow.activateAt!.toISOString()}`);
   console.log(`Soul is told only: "${hatch.activationHint}". Profile will show join period "${aliasRow.joinedPeriod}".`);
   console.log(`Alias row humanId: ${JSON.stringify(aliasRow.humanId)} ← no stored link, ever.`);
@@ -77,7 +77,7 @@ async function main() {
   const second = await identity.registerAlias(db, {
     credential, handle: "third-face-99", displayName: "third-face-99", disclosuresAccepted: true,
   });
-  console.log(`A second hatch attempt: ${second.ok ? "UNEXPECTED!" : `refused — "${!second.ok && second.reason}" (blind, no public trace)`}`);
+  console.log(`A second hatch attempt: ${second.ok ? "UNEXPECTED!" : `refused; "${!second.ok && second.reason}" (blind, no public trace)`}`);
 
   banner("3. The cohort releases (time-travelled for the demo)");
   await db.profile.update({
@@ -88,11 +88,11 @@ async function main() {
   const actEvent = await db.ledgerEvent.findFirst({
     where: { eventType: "alias.activated" }, orderBy: { seq: "desc" },
   });
-  console.log(`Ledger #${actEvent!.seq}: alias.activated — the cohort's shared timestamp, not the soul's.`);
+  console.log(`Ledger #${actEvent!.seq}: alias.activated; the cohort's shared timestamp, not the soul's.`);
   await consent.recordAck(db, { profileId: aliasRow.id, kind: "permanence" });
   await consent.recordAck(db, { profileId: aliasRow.id, kind: "constitution" });
 
-  banner("4. The parking rule — one face per pillar, enforced");
+  banner("4. The parking rule; one face per pillar, enforced");
   const sessionId = await parking.createSession(db);
   await parking.addFace(db, { sessionId, profileId: ts.profileId });
   await parking.addFace(db, { sessionId, profileId: aliasRow.id });
@@ -101,7 +101,7 @@ async function main() {
   const e1 = await parking.enterPillar(db, { sessionId, profileId: ts.profileId, pillarId: pillars[0].id });
   console.log(`True Self enters ${pillars[0].name}: ${e1.allowed ? "parked ✓" : "blocked?!"}`);
   const e2 = await parking.enterPillar(db, { sessionId, profileId: aliasRow.id, pillarId: pillars[0].id });
-  console.log(`Alias tries ${pillars[0].name}: ${e2.allowed ? "UNEXPECTED" : `BLOCKED — held by ${!e2.allowed && e2.heldByHandle} (${!e2.allowed && e2.heldByFace})`}`);
+  console.log(`Alias tries ${pillars[0].name}: ${e2.allowed ? "UNEXPECTED" : `BLOCKED; held by ${!e2.allowed && e2.heldByHandle} (${!e2.allowed && e2.heldByFace})`}`);
   const e3 = await parking.enterPillar(db, { sessionId, profileId: aliasRow.id, pillarId: pillars[1].id });
   console.log(`Alias enters ${pillars[1].name} instead: ${e3.allowed ? "parked ✓ (different lot)" : "blocked?!"}`);
   await parking.releaseLock(db, { sessionId, pillarId: pillars[0].id });
@@ -110,9 +110,9 @@ async function main() {
 
   const s1 = await parking.switchFace(db, { sessionId, fromProfileId: null, toProfileId: ts.profileId });
   const s2 = await parking.switchFace(db, { sessionId, fromProfileId: ts.profileId, toProfileId: aliasRow.id });
-  console.log(`Rapid face-switch: first ${s1.ok ? "ok" : "?"}, second ${s2.ok ? "ok — seamless, as the owner intended (no cooldown; the parking rule is the timing mitigation)" : `UNEXPECTED: ${!s2.ok && s2.reason}`}`);
+  console.log(`Rapid face-switch: first ${s1.ok ? "ok" : "?"}, second ${s2.ok ? "ok; seamless, as the owner intended (no cooldown; the parking rule is the timing mitigation)" : `UNEXPECTED: ${!s2.ok && s2.reason}`}`);
 
-  banner("5. THE LINKAGE AUDIT — what actually connects the two faces?");
+  banner("5. THE LINKAGE AUDIT; what actually connects the two faces?");
   const tsIds = [ts.profileId, "bright-heron-42"];
   const aliasIds = [aliasRow.id, "quiet-cedar-17"];
   const tables = (await db.$queryRawUnsafe<{ name: string }[]>(
@@ -142,7 +142,7 @@ async function main() {
   }
   console.log(`Tables swept: ${tables.length}. Rows containing BOTH faces: ${coRows}.`);
   console.log(`Shared context found only in: ${sharedContext.length ? sharedContext.join(", ") : "none"}`);
-  console.log("  ^ the SoulSession — the soul's own signed-in browser, ephemeral");
+  console.log("  ^ the SoulSession; the soul's own signed-in browser, ephemeral");
   console.log("    by design (short retention, purged on expiry/sign-out).");
   console.log("\nNow the soul signs out…");
   await db.soulSession.delete({ where: { id: sessionId } });
@@ -159,15 +159,15 @@ async function main() {
       if (tsIds.some((x) => text.includes(x)) && aliasIds.some((x) => text.includes(x))) secondOrder++;
     }
   }
-  console.log(`After sign-out — co-occurrence rows: ${coAfter}; shared session context: ${secondOrder}.`);
+  console.log(`After sign-out; co-occurrence rows: ${coAfter}; shared session context: ${secondOrder}.`);
   console.log("\nThe honest Phase A residual, stated plainly: the operator secret");
   console.log("could re-derive registration nullifiers by brute force over humans.");
-  console.log('That is exactly the disclosure — "operator policy, not yet');
-  console.log('cryptography" — and it retires at Phase C with the secret itself.');
+  console.log('That is exactly the disclosure; "operator policy, not yet');
+  console.log('cryptography"; and it retires at Phase C with the secret itself.');
 
   await db.$disconnect();
 
-  banner("6. db:verify — all eleven checks");
+  banner("6. db:verify; all eleven checks");
   const verify = spawnSync("npx", ["tsx", "scripts/verify.ts"], {
     cwd: REPO_ROOT, env, stdio: "inherit",
   });

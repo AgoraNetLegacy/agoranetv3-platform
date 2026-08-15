@@ -1,10 +1,10 @@
 // The nightly backup (BACKUP_DR_SPEC §1–3, owner-ratified). pg_dump
 // custom-format archive + retention enforcement + the admin-log event.
-// Cadence is the RPO rail (backup.cadenceHours) — the cron invokes this
+// Cadence is the RPO rail (backup.cadenceHours); the cron invokes this
 // script; tightening the RPO is a schedule change, never a redesign.
 //
 // Where backups live is the host's job (same provider, different region
-// — owner-ratified; see docs/RUNBOOK.md): point BACKUP_DIR at the
+//; owner-ratified; see docs/RUNBOOK.md): point BACKUP_DIR at the
 // replicated/attached volume. Retention (30 daily / 12 monthly, rails)
 // is enforced here: dailies beyond the daily window are pruned unless
 // they are a month's first backup, which survives the monthly window.

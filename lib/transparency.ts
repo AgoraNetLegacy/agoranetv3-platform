@@ -1,4 +1,4 @@
-// The public transparency dashboard's books (Phase 7 —
+// The public transparency dashboard's books (Phase 7;
 // TREASURY_DASHBOARD_SPEC). One surface, three questions: what came in,
 // what went out, what have the operators done.
 //
@@ -6,13 +6,13 @@
 // bookkeeping system (§3): every figure re-derives from EconomyEntry
 // rows, db:verify re-derives the snapshots, and drift fails loudly.
 // The Constitution's must-guardrail is rendered structurally: every
-// treasury flow kind MUST map to a category — an unmapped kind throws,
+// treasury flow kind MUST map to a category; an unmapped kind throws,
 // here and in db:verify, rather than rendering a quiet "misc".
 //
 // Privacy (§2): aggregates by default; drill-down shows pseudonymized
-// entries (no actor of any kind — an economy row's profile ids are
+// entries (no actor of any kind; an economy row's profile ids are
 // Phase A operator space and never render). Stipend and reward outflows
-// display as AGGREGATES ONLY — itemizing them would out badge holders
+// display as AGGREGATES ONLY; itemizing them would out badge holders
 // (MODERATION §3 anonymity beats treasury itemization, the one ratified
 // exception). Vote-fee entries carry no poll reference by design
 // (sealed means sealed), so mid-poll linkage is structurally absent.
@@ -33,11 +33,11 @@ export interface KindInfo {
 // Every treasury-touching EconomyEntry kind, categorized (§1.2/§1.3 +
 // ECONOMIC_STARTING_DEFAULTS §6 launch budget categories).
 export const KIND_CATEGORIES: Record<string, KindInfo> = {
-  // Inflows — the fee lattice made visible.
+  // Inflows; the fee lattice made visible.
   "fee.discussion": { category: "Creation fees", direction: "inflow" },
   "fee.poll": { category: "Creation fees", direction: "inflow" },
   "fee.circle": { category: "Creation fees", direction: "inflow" },
-  // The Pollinator's dual-token fees (Phase 7.5 — the first surface
+  // The Pollinator's dual-token fees (Phase 7.5; the first surface
   // charging both currencies; the {PC, G} columns tell that story).
   "fee.chamber": { category: "Creation fees", direction: "inflow" },
   "fee.reply": { category: "Reply & vote micro-fees", direction: "inflow" },
@@ -51,7 +51,7 @@ export const KIND_CATEGORIES: Record<string, KindInfo> = {
   "penalty.strike": { category: "Rule-violation penalties", direction: "inflow" },
   "deposit.flag": { category: "Deposits held (flag & appeal)", direction: "inflow" },
   "deposit.appeal": { category: "Deposits held (flag & appeal)", direction: "inflow" },
-  // Outflows — budget categories (Constitution must-guardrail).
+  // Outflows; budget categories (Constitution must-guardrail).
   "reward.moderation": {
     category: "Moderation rewards",
     direction: "outflow",
@@ -64,7 +64,7 @@ export const KIND_CATEGORIES: Record<string, KindInfo> = {
   },
   "refund.flag": { category: "Deposit refunds", direction: "outflow" },
   "refund.appeal": { category: "Deposit refunds", direction: "outflow" },
-  // Fund Auditors (FUND_INTEGRITY §3.5) — civic service the treasury
+  // Fund Auditors (FUND_INTEGRITY §3.5); civic service the treasury
   // funds, like moderation. Aggregate-only for the same reason badge
   // rewards are: publishing per-recipient pay would out the auditors,
   // and an auditor whose identity is known is an auditor who can be
@@ -74,7 +74,7 @@ export const KIND_CATEGORIES: Record<string, KindInfo> = {
     direction: "outflow",
     aggregateOnly: true,
   },
-  // Issuance — the internal era's faucet, accounted honestly (grants
+  // Issuance; the internal era's faucet, accounted honestly (grants
   // mint from issuance, not the treasury; shown in their own section so
   // the money story has no dark corners).
   "grant.welcome": { category: "Welcome Grants (issuance)", direction: "issuance" },
@@ -86,9 +86,9 @@ export const KIND_CATEGORIES: Record<string, KindInfo> = {
   accrual: { category: "Participation accrual (issuance)", direction: "issuance" },
   "accrual.streak": { category: "Participation accrual (issuance)", direction: "issuance" },
   // Profile→profile flows the treasury only brushes (the cut is above).
-  tip: { category: "Tips (soul to soul — treasury takes only the cut)", direction: "issuance" },
+  tip: { category: "Tips (soul to soul; treasury takes only the cut)", direction: "issuance" },
   // Mission escrow (NEURAL_POLLINATOR §9.1; PHASE_8_7_SPEC Slice 2). A
-  // chamber paying out funds held for its own stated mission — the
+  // chamber paying out funds held for its own stated mission; the
   // treasury is not a party. Classed with the other flows the treasury
   // only brushes: it must appear (no dark corners, per this page's whole
   // premise), but it is emphatically NOT a treasury outflow, so it
@@ -96,15 +96,15 @@ export const KIND_CATEGORIES: Record<string, KindInfo> = {
   // Conflating the two would inflate every utilization figure here with
   // money the treasury never spent.
   "mission.release": {
-    category: "Mission releases (chamber funds, attested — treasury is not a party)",
+    category: "Mission releases (chamber funds, attested; treasury is not a party)",
     direction: "issuance",
   },
-  // A soul donating toward a chamber's declared mission (§9.1) — a
+  // A soul donating toward a chamber's declared mission (§9.1); a
   // genuine transfer, no auto-return. Soul → chamber; the treasury is
   // not a party in either direction, so it carries no budget category
   // and never touches a treasury figure on this page.
   "mission.donation": {
-    category: "Mission donations (soul to chamber — treasury is not a party)",
+    category: "Mission donations (soul to chamber; treasury is not a party)",
     direction: "issuance",
   },
 };
@@ -113,7 +113,7 @@ export function kindInfo(kind: string): KindInfo {
   const info = KIND_CATEGORIES[kind];
   if (!info) {
     throw new Error(
-      `Uncategorized economy kind "${kind}" — the Constitution's ` +
+      `Uncategorized economy kind "${kind}"; the Constitution's ` +
         "budgeted-categories guardrail forbids flows without a category. " +
         "Map it in lib/transparency.ts."
     );
@@ -134,7 +134,7 @@ export interface Books {
 
 /** Re-derive the whole money story from the entry rows. With `asOf`,
  *  flows are cut at that moment and the treasury balances re-derive
- *  from entries alone — how db:verify re-checks a snapshot. */
+ *  from entries alone; how db:verify re-checks a snapshot. */
 export async function computeBooks(db: DbOrTx, asOf?: Date): Promise<Books> {
   const balances = { PC: 0, G: 0 };
   if (asOf) {
@@ -167,7 +167,7 @@ export async function computeBooks(db: DbOrTx, asOf?: Date): Promise<Books> {
   for (const g of grouped) {
     const info = kindInfo(g.kind);
     // Tips are profile→profile; only the cut (its own kind) touches the
-    // treasury — skip the pass-through so the treasury books stay the
+    // treasury; skip the pass-through so the treasury books stay the
     // treasury's.
     if (g.kind === "tip") continue;
     const bucket =
@@ -184,7 +184,7 @@ export function utcDay(date = new Date()): string {
 }
 
 /** The daily snapshot (§6.2, owner-ratified cadence): generated on the
- *  platform's daily cycle — lazily, on first traffic of the UTC day —
+ *  platform's daily cycle; lazily, on first traffic of the UTC day;
  *  timestamped, ledger-evented, and re-derivable. The underlying ledger
  *  stays live; only these rendered aggregates are periodic. */
 export async function ensureDailySnapshot(db: PrismaClient) {
@@ -218,7 +218,7 @@ export async function ensureDailySnapshot(db: PrismaClient) {
   });
 }
 
-/** Public moderation stats (BUILD_ORDER Phase 7: "moderation stats" —
+/** Public moderation stats (BUILD_ORDER Phase 7: "moderation stats";
  *  aggregates only; nothing here can identify a moderator, a reporter,
  *  or an accused). */
 export async function moderationStats(db: PrismaClient) {

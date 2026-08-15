@@ -1,6 +1,6 @@
-// Phase 5 checkpoint demo (owner review) — a flag travels the whole
+// Phase 5 checkpoint demo (owner review); a flag travels the whole
 // road: filed → blurred → offered → ruled with citation → consequences
-// auto-applied → tombstone → appeal → reversal — triangle of blindness
+// auto-applied → tombstone → appeal → reversal; triangle of blindness
 // intact, every resolution on the ledger, notifications in their tiers.
 
 import { execSync, spawnSync } from "child_process";
@@ -53,13 +53,13 @@ async function main() {
   if (!flagged.ok) throw new Error(flagged.reason);
   const post1 = await db.post.findUniqueOrThrow({ where: { id: posted.postId } });
   console.log(`Flag filed (5 PC deposit held). Content is now: ${post1.status.toUpperCase()}`);
-  console.log("— blurred, not erased: a flag is never an instant censor button.");
+  console.log("; blurred, not erased: a flag is never an instant censor button.");
 
   banner("2. Sortition offers badges; the inbox rings (time-sensitive)");
   await mod.runModerationSweeps(db);
   const offers = await db.badgeOffer.count({ where: { status: "offered" } });
   console.log(`${offers} badge offer(s) drawn at random from eligible faces (12h to answer).`);
-  // The demo needs specific judges — three fresh souls, offered directly.
+  // The demo needs specific judges; three fresh souls, offered directly.
   const judges = [];
   for (const name of ["judge-wren", "judge-lynx", "judge-birch"]) {
     const soul = await makeOnboardedSoul(db, { trueSelf: name, alias: `${name}-a` });
@@ -71,16 +71,16 @@ async function main() {
     judges.push(soul);
   }
   const judgeInbox = await inboxFor(db, judges[0].trueSelfId);
-  console.log(`A judge's inbox (time-sensitive): ${judgeInbox.timeSensitive.map((n) => n.category).join(", ") || "—"}`);
+  console.log(`A judge's inbox (time-sensitive): ${judgeInbox.timeSensitive.map((n) => n.category).join(", ") || "; "}`);
 
-  banner("3. The minimal case file — content, never a person");
+  banner("3. The minimal case file; content, never a person");
   const modCase = await db.modCase.findFirstOrThrow({ where: { postId: posted.postId } });
   const file = await mod.caseFileFor(db, modCase.id);
   console.log(`Alleged: ${file.allegedRule} (tier ${file.tier}) · pillar: ${file.pillar}${file.heavy ? " · HEAVY: permanent space → 3 independent rulings" : ""}`);
   console.log(`Content: “${file.content}”`);
-  console.log(`Accused shown as: ${file.accusedActiveStrikes} active strike(s), ${file.accusedPillarStanding} standing — no handle, no history, no identity.`);
+  console.log(`Accused shown as: ${file.accusedActiveStrikes} active strike(s), ${file.accusedPillarStanding} standing; no handle, no history, no identity.`);
   const leaked = JSON.stringify(file).includes("accused-heron") || JSON.stringify(file).includes("watchful-otter");
-  console.log(`Case file names anyone? ${leaked ? "LEAKED ✗" : "no — the triangle holds ✓"}`);
+  console.log(`Case file names anyone? ${leaked ? "LEAKED ✗" : "no; the triangle holds ✓"}`);
 
   banner("4. Three rulings, one citation; consequences apply themselves");
   for (const judge of judges) {
@@ -92,13 +92,13 @@ async function main() {
   }
   const resolved = await db.modCase.findUniqueOrThrow({ where: { id: modCase.id } });
   const post2 = await db.post.findUniqueOrThrow({ where: { id: posted.postId } });
-  console.log(`Case ${resolved.outcome?.toUpperCase()} — content is now: ${post2.status.toUpperCase()} (the tombstone).`);
+  console.log(`Case ${resolved.outcome?.toUpperCase()}; content is now: ${post2.status.toUpperCase()} (the tombstone).`);
   console.log(`Strikes on the accused: ${await mod.activeStrikeCount(db, author.trueSelfId)} (ladder auto-applied: Gratium penalty + pillar-scoped deduction).`);
 
   const tombstone = await db.ledgerEvent.findFirst({ where: { eventType: "content.removed" }, orderBy: { seq: "desc" } });
   const resolution = await db.ledgerEvent.findFirst({ where: { eventType: "case.resolved" }, orderBy: { seq: "desc" } });
-  console.log(`Ledger #${tombstone!.seq} content.removed — cites ${JSON.parse(tombstone!.payload).rule}.`);
-  console.log(`Ledger #${resolution!.seq} case.resolved — rulings appear as nullifiers only: ${resolution!.payload.includes("judge-wren") ? "LEAKED ✗" : "no names ✓"}`);
+  console.log(`Ledger #${tombstone!.seq} content.removed; cites ${JSON.parse(tombstone!.payload).rule}.`);
+  console.log(`Ledger #${resolution!.seq} case.resolved; rulings appear as nullifiers only: ${resolution!.payload.includes("judge-wren") ? "LEAKED ✗" : "no names ✓"}`);
 
   const refund = await db.economyEntry.findFirst({ where: { kind: "refund.flag" } });
   console.log(`Flagger's deposit: ${refund ? "refunded (upheld)" : "MISSING ✗"}. Judges paid per case resolved, treasury-funded.`);
@@ -108,14 +108,14 @@ async function main() {
   console.log(`Accused notified (time-sensitive): "${accusedInbox.timeSensitive[0]?.title}"`);
   console.log(`Flagger notified (time-sensitive): "${flaggerInbox.timeSensitive[0]?.title}"`);
 
-  banner("5. The appeal — fresh eyes reverse it");
+  banner("5. The appeal; fresh eyes reverse it");
   const appealed = await mod.appealCase(db, { caseId: modCase.id, profileId: author.trueSelfId });
   if (!appealed.ok) throw new Error(appealed.reason);
-  console.log("Appeal filed (25 PC deposit — returned only if the ruling changes).");
+  console.log("Appeal filed (25 PC deposit; returned only if the ruling changes).");
   const stale = await mod.submitRuling(db, {
     caseId: appealed.appealCaseId, profileId: judges[0].trueSelfId, verdict: "decline",
   });
-  console.log(`An original judge tries to rule the appeal: ${stale.ok ? "ALLOWED ✗" : `refused — "${!stale.ok && stale.reason}"`}`);
+  console.log(`An original judge tries to rule the appeal: ${stale.ok ? "ALLOWED ✗" : `refused; "${!stale.ok && stale.reason}"`}`);
   for (const name of ["fresh-aspen", "fresh-cedar", "fresh-fox"]) {
     const soul = await makeOnboardedSoul(db, { trueSelf: name, alias: `${name}-a` });
     const offer = await db.badgeOffer.create({
@@ -153,7 +153,7 @@ async function main() {
 
   await db.$disconnect();
 
-  banner("7. db:verify — 20 checks over the honest final state");
+  banner("7. db:verify; 20 checks over the honest final state");
   process.exit(verify() ? 0 : 1);
 }
 

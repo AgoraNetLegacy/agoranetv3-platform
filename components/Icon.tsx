@@ -122,7 +122,7 @@ const PATHS = {
       <path d="M3.5 17h17M3 20.5h18" />
     </>
   ),
-  // Circles: two rings, joined — a bounded group, acting together.
+  // Circles: two rings, joined; a bounded group, acting together.
   circles: (
     <>
       <circle cx="8.5" cy="12" r="5.2" />

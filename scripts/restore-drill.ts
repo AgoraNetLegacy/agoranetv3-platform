@@ -1,12 +1,12 @@
 // The monthly automated restore drill (BACKUP_DR_SPEC §4, owner-ratified):
 // prove recovery BEFORE it's needed. Restores the latest backup into a
 // scratch database, runs the full db:verify invariant suite against the
-// restored copy — the hash-chained ledger makes recovery *provably
-// untampered*, not just "the data is back" — and records pass/fail on
+// restored copy; the hash-chained ledger makes recovery *provably
+// untampered*, not just "the data is back"; and records pass/fail on
 // the admin log. A failed drill is a production incident, not a
 // curiosity: this script exits nonzero so the cron's failure alert fires.
 //
-// Required: DRILL_DATABASE_URL (scratch Postgres, NEVER production —
+// Required: DRILL_DATABASE_URL (scratch Postgres, NEVER production;
 // refused if it matches), BACKUP_DIR or BACKUP_FILE. The ops host runs
 // with the Postgres client generated (db:generate:postgres).
 
@@ -85,7 +85,7 @@ async function main() {
   await db.$disconnect();
 
   if (!ok) {
-    console.error("DRILL FAILED — treat as a production incident (BACKUP_DR §4).");
+    console.error("DRILL FAILED; treat as a production incident (BACKUP_DR §4).");
     process.exit(1);
   }
   console.log("Drill passed: the backup restores, and the restored ledger verifies untampered.");

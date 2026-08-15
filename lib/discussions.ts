@@ -1,14 +1,14 @@
-// Discussions core (Phase 1 — DISCUSSIONS_SPEC.md §3, §8).
+// Discussions core (Phase 1; DISCUSSIONS_SPEC.md §3, §8).
 //
 // Every write action goes through the gate (no bypass, ever). Posts in
 // permanent spaces are committed to the Civic Ledger by content hash:
-// post.recorded at creation, post.amended for each grace-window edit —
+// post.recorded at creation, post.amended for each grace-window edit;
 // visible edit history, then the record locks. db:verify re-hashes every
 // locked permanent post against its last ledger commitment, so a locked
 // record cannot be silently altered even in the database.
 //
 // Replying is fee-bearing (participation-cost rule; rail
-// "discussion.replyFee") — the debit wires up in Phase 4 when internal
+// "discussion.replyFee"); the debit wires up in Phase 4 when internal
 // balances exist ("every ratified fee wired", BUILD_ORDER Phase 4).
 
 import { createHash, randomUUID } from "crypto";
@@ -27,7 +27,7 @@ export function contentHash(body: string): string {
 /**
  * Soul-created Discussions arrive in Phase 3 as poll-context spaces
  * (POLLS §4.4: attach at creation or later, by any soul; consensus-fail
- * offers one — prompted, never automatic). A context Discussion for a
+ * offers one; prompted, never automatic). A context Discussion for a
  * governance poll lives in the Governance room and is therefore
  * permanent; ordinary context spaces are author-deletable (deletion
  * mechanics arrive with their phase). Creation fee: designated
@@ -39,7 +39,7 @@ export async function createPollDiscussion(
     pollId: string;
     profileId: string;
     /** Paid permanence (§8): set at creation only, immutable, labeled
-     *  "Permanent — creator-designated". Gratium fee to the treasury. */
+     *  "Permanent; creator-designated". Gratium fee to the treasury. */
     paidPermanent?: boolean;
   }
 ): Promise<PostResult> {
@@ -51,7 +51,7 @@ export async function createPollDiscussion(
   if (poll.visibilityScope === "circle") {
     return {
       ok: false,
-      reason: "A Circle poll's context is the members' room — no public context space.",
+      reason: "A Circle poll's context is the members' room; no public context space.",
     };
   }
 
@@ -138,7 +138,7 @@ export async function createPollDiscussion(
 
 /**
  * Individual own-post permanence (§8): a soul may pay to make one of
- * their own posts permanent inside a deletable space — with the caveat
+ * their own posts permanent inside a deletable space; with the caveat
  * shown at purchase that the surrounding thread may later be deleted,
  * leaving the permanent post standing amid tombstones. The purchase
  * hash-commits the post to the ledger like any permanent record.
@@ -153,7 +153,7 @@ export async function upgradePostPermanence(
   });
   if (!post) return { ok: false, reason: "No such post." };
   if (post.authorProfileId !== input.profileId) {
-    return { ok: false, reason: "Own content only — nobody pays to make someone else's words permanent." };
+    return { ok: false, reason: "Own content only; nobody pays to make someone else's words permanent." };
   }
   if (post.discussion.permanence.startsWith("permanent")) {
     return { ok: false, reason: "This space is already permanent." };
@@ -161,23 +161,23 @@ export async function upgradePostPermanence(
   if (post.permanentUpgraded) {
     return { ok: false, reason: "Already permanent." };
   }
-  // The members' room is not the permanent record (CIRCLES §2.3) — a
+  // The members' room is not the permanent record (CIRCLES §2.3); a
   // members-only post never hash-commits to the public ledger. The
   // action log is where a Circle's permanent claims live.
   if (post.discussion.circleId) {
     return {
       ok: false,
-      reason: "Members'-room conversation stays in the room — log an action instead; the action log is the permanent record.",
+      reason: "Members'-room conversation stays in the room; log an action instead; the action log is the permanent record.",
     };
   }
   // The workshop is enclosed (POLLINATOR §4.3): a public hash-commit of
   // an enclosed draft would leak that the soul works inside. The Arena
   // (post-launch) is where a chamber's case goes on the permanent
-  // record — drafts stay drafts.
+  // record; drafts stay drafts.
   if (post.discussion.chamberId) {
     return {
       ok: false,
-      reason: "Workshop drafts stay in the workshop — enclosed by design. The Arena is where a chamber's case becomes permanent record.",
+      reason: "Workshop drafts stay in the workshop; enclosed by design. The Arena is where a chamber's case becomes permanent record.",
     };
   }
 
@@ -246,7 +246,7 @@ export async function createPost(
     profileId: string;
     body: string;
     parentId?: string | null;
-    /** Content attestation (§10.1): "Human-made — my reputation on it." */
+    /** Content attestation (§10.1): "Human-made; my reputation on it." */
     humanMade?: boolean;
     /** A typed source tag with the sharer's vouch choice (§4, §10.2). */
     source?: { url: string; kind: string; vouch: "vouched" | "unverified" };
@@ -289,10 +289,10 @@ export async function createPost(
     const { activeMembership } = await import("./circles");
     const circle = await db.circle.findUniqueOrThrow({ where: { id: discussion.circleId } });
     if (circle.status === "closed") {
-      return { ok: false, reason: "This Circle is closed — its room is read-only for former members." };
+      return { ok: false, reason: "This Circle is closed; its room is read-only for former members." };
     }
     if (!(await activeMembership(db, circle.id, profile.id))) {
-      return { ok: false, reason: "Members only — the working conversation belongs to the Circle." };
+      return { ok: false, reason: "Members only; the working conversation belongs to the Circle." };
     }
   }
   // The workshop (Phase 7.5, POLLINATOR §4.3): a chamber-scoped
@@ -300,10 +300,10 @@ export async function createPost(
   if (discussion.chamberId) {
     const { chamberMembership } = await import("./chambers");
     if (!(await chamberMembership(db, discussion.chamberId, profile.id))) {
-      return { ok: false, reason: "Enter the chamber to work its idea — the workshop is enter-to-see." };
+      return { ok: false, reason: "Enter the chamber to work its idea; the workshop is enter-to-see." };
     }
   }
-  // Consent before the first post, always (ONBOARDING Stage 4 — the
+  // Consent before the first post, always (ONBOARDING Stage 4; the
   // blocking acks are not legal wallpaper; they gate the pen).
   if (!(await hasPostingConsents(db, profile.id))) {
     return {
@@ -315,7 +315,7 @@ export async function createPost(
   // auto-enforced: read-only silences writing; rate-limit slows it.
   const now = new Date();
   if (profile.readOnlyUntil && profile.readOnlyUntil > now) {
-    return { ok: false, reason: `Read-only until ${profile.readOnlyUntil.toLocaleString()} (strike 3 — Tribunal review pending).` };
+    return { ok: false, reason: `Read-only until ${profile.readOnlyUntil.toLocaleString()} (strike 3; Tribunal review pending).` };
   }
   if (profile.rateLimitedUntil && profile.rateLimitedUntil > now) {
     const recent = await db.post.findFirst({
@@ -327,7 +327,7 @@ export async function createPost(
   }
 
   // Every post is its own action instance: the scope is unique per post,
-  // so the nullifier proves humanity for THIS act (DUAL_IDENTITY §3.2 —
+  // so the nullifier proves humanity for THIS act (DUAL_IDENTITY §3.2;
   // every gated action re-proves fresh) rather than rationing posts.
   // Workshop posts clear in PRIVATE recording: chamber membership is
   // enclosed-space information (unlike Circles, whose membership is
@@ -353,7 +353,7 @@ export async function createPost(
         return { ok: false as const, reason: `Gate: ${gate.outcome}` };
       }
     // The participation fee: workshop posts carry the dual-token
-    // signature (POLLINATOR §3 — both currencies, rails chamber.postFee*);
+    // signature (POLLINATOR §3; both currencies, rails chamber.postFee*);
     // everywhere else, the standard reply micro-fee.
     if (discussion.chamberId) {
       const { chargeWorkshopPostFee, touchChamberActivity } = await import("./chambers");
@@ -441,7 +441,7 @@ export async function createPost(
 
 class InsufficientFunds extends Error {}
 
-/** Edit a post within its grace window — visible history, then locked. */
+/** Edit a post within its grace window; visible history, then locked. */
 export async function editPost(
   db: PrismaClient,
   input: { postId: string; profileId: string; body: string }
@@ -460,7 +460,7 @@ export async function editPost(
   if (new Date() >= post.editableUntil) {
     return {
       ok: false,
-      reason: "The grace window has closed — this record is locked.",
+      reason: "The grace window has closed; this record is locked.",
     };
   }
 

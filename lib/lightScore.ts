@@ -1,29 +1,29 @@
-// Light Score v3 — the derivation layer (LIGHT_SCORE_EXTENSION_SPEC).
+// Light Score v3; the derivation layer (LIGHT_SCORE_EXTENSION_SPEC).
 //
 // Reputation is PER FACE, PER PILLAR: a constellation, never one number.
 // This module derives one face's standing from four inputs:
 //
-//   1. Discussion contributions (v2's core input, carried forward) —
+//   1. Discussion contributions (v2's core input, carried forward);
 //      posts in PUBLIC pillar Discussions. Members'-room posts never
 //      feed standing: the room is not the record (CIRCLES §2.3), and a
 //      public number must never derive from private activity.
-//   2. Circle attested actions + 3. accepted Picture repairs — already
+//   2. Circle attested actions + 3. accepted Picture repairs; already
 //      recorded as LightScoreAdjustment rows by their features, with
 //      named causes for the explainable log (§6).
-//   4. Moderation service — derived from resolved-case rulings,
+//   4. Moderation service; derived from resolved-case rulings,
 //      quality-gated (overridden rulings accrue nothing, §5.3),
 //      credited in each case's own pillar (cross-pillar work credits
 //      the rooms actually served, §2), daily-capped.
 //
 // Violation deductions (§4) arrive as negative adjustments from Phase 5,
 // decaying on the strike clock; expired deductions simply stop counting
-// (the ROW is permanent record, the ACTIVE effect decays — the same
+// (the ROW is permanent record, the ACTIVE effect decays; the same
 // redemption shape as strikes).
 //
-// THE ANTI-SUM GUARD (§1.2 — a build requirement, ported from v2's
+// THE ANTI-SUM GUARD (§1.2; a build requirement, ported from v2's
 // invariant): the constellation this module returns has POISONED
-// total/sum/overall/global accessors that throw. Any future code — a
-// page, an export, a metric — that reaches for a universal score fails
+// total/sum/overall/global accessors that throw. Any future code; a
+// page, an export, a metric; that reaches for a universal score fails
 // loudly at runtime, and tests hold the tripwire in place. Scores are
 // also never compared across faces here: no leaderboard export exists
 // in this module by design (Keystone's pillar leaderboards are a
@@ -74,7 +74,7 @@ async function scoreWeights(db: DbOrTx): Promise<ScoreWeights> {
   };
 }
 
-/** The pillar a case's service credits: the room actually served —
+/** The pillar a case's service credits: the room actually served;
  *  post cases credit the post's pillar; DM cases have no pillar and
  *  land in the meta pillar (the DECISIONS_PENDING #9 interim rule,
  *  applied consistently on the credit side). */
@@ -141,7 +141,7 @@ async function moderationServiceByPillar(
   return out;
 }
 
-/** One face's full constellation — every pillar it has standing in. */
+/** One face's full constellation; every pillar it has standing in. */
 export async function faceConstellation(
   db: PrismaClient,
   profileId: string
@@ -159,7 +159,7 @@ export async function faceConstellation(
         authorProfileId: profileId,
         status: "visible",
         // Never members'-room posts, never workshop drafts (the
-        // enclosed spaces are not the record — a public number must
+        // enclosed spaces are not the record; a public number must
         // never derive from private activity).
         discussion: { circleId: null, chamberId: null },
       },
@@ -241,7 +241,7 @@ export async function faceConstellation(
   return new ScoreConstellation(standings);
 }
 
-/** One face's standing in ONE pillar — the dashboard stat-row number. */
+/** One face's standing in ONE pillar; the dashboard stat-row number. */
 export async function pillarStanding(
   db: PrismaClient,
   profileId: string,
@@ -260,7 +260,7 @@ export interface ScoreChange {
 }
 
 /** The explainable score-change log (§6): visible to the profile OWNER
- *  only, every change with its named cause — no black-box reputation. */
+ *  only, every change with its named cause; no black-box reputation. */
 export async function scoreChangeLog(
   db: PrismaClient,
   profileId: string,
@@ -300,7 +300,7 @@ export async function scoreChangeLog(
       cause = `Accepted repair on ${repair?.domain.title ?? "a domain Picture"}`;
     } else if (a.caseId) {
       const expired = a.decaysAt && a.decaysAt <= new Date();
-      cause = `Upheld moderation ruling — deduction${expired ? " (decayed — no longer active)" : a.decaysAt ? `, decays ${a.decaysAt.toLocaleDateString()}` : ""}`;
+      cause = `Upheld moderation ruling; deduction${expired ? " (decayed; no longer active)" : a.decaysAt ? `, decays ${a.decaysAt.toLocaleDateString()}` : ""}`;
     } else {
       cause = "Adjustment";
     }

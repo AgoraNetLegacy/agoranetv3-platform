@@ -1,14 +1,14 @@
-// Saved threads — the Beacon's memory current (BEACON_FEED_SPEC §3.3,
+// Saved threads; the Beacon's memory current (BEACON_FEED_SPEC §3.3,
 // §4, owner-ratified 2026-07-21).
 //
 // The law of the save, enforced here structurally:
 //   - Per-face and PRIVATE: every read keys on profileId; nothing in
-//     this module can answer "who saved this thread" or "how many" —
+//     this module can answer "who saved this thread" or "how many";
 //     those queries deliberately do not exist.
 //   - Never a ranking input for anyone else: no aggregate leaves this
 //     module; the only thing a save ranks is the saving face's own
 //     saved current.
-//   - Free: no fee, no gate spend, no ledger event — a save is a
+//   - Free: no fee, no gate spend, no ledger event; a save is a
 //     private act, not a civic one.
 //   - Unsave is total: delete, no tombstone.
 
@@ -19,7 +19,7 @@ import { roomAccess } from "./circles";
 import { workshopAccess } from "./chambers";
 
 /** Can this face read this thread right now? Public spaces are always
- *  readable; enclosed rooms require current membership — the same rule
+ *  readable; enclosed rooms require current membership; the same rule
  *  the thread page itself enforces. Load-bearing for saves: a saved
  *  enclosed room must stop leaking the moment the face loses access
  *  (privacy audit 2026-07-22). */
@@ -56,7 +56,7 @@ export async function saveDiscussion(
     },
   });
   if (!discussion) return { ok: false, reason: "No such Discussion." };
-  // You can only save what you can currently read — never a handle onto
+  // You can only save what you can currently read; never a handle onto
   // an enclosed room you don't belong to.
   if (!(await canRead(db, discussion, input.profileId))) {
     return { ok: false, reason: "This Discussion can't be saved." };
@@ -110,7 +110,7 @@ export async function touchSavedWatermark(
   });
 }
 
-/** The face's own saved threads, optionally scoped to one pillar —
+/** The face's own saved threads, optionally scoped to one pillar;
  *  the per-pillar Saved lens and the unified dashboard list. */
 export async function savedThreadsFor(
   db: PrismaClient,
@@ -148,7 +148,7 @@ export async function savedThreadsFor(
 }
 
 /** The memory current (§3.3): the face's saved threads that have
- *  genuinely stirred — new posts since the face's own watermark —
+ *  genuinely stirred; new posts since the face's own watermark;
  *  ranked by the published resurfacing formula:
  *
  *    resurface priority = new posts + new unique contributors since
@@ -175,7 +175,7 @@ export async function stirringSavesFor(db: PrismaClient, profileId: string) {
   });
   const stirring = [];
   for (const s of saves) {
-    // A save can outlive access — never resurface a room the face can
+    // A save can outlive access; never resurface a room the face can
     // no longer read (privacy audit 2026-07-22).
     if (!(await canRead(db, s.discussion, profileId))) continue;
     const fresh = await db.post.findMany({

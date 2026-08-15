@@ -70,7 +70,7 @@ describe("the gate: pending → proof → cleared", () => {
     expect(payload.nullifier).toBe(result.nullifier);
   });
 
-  it("rejects a second attempt in the same per-profile scope as DUPLICATE — privately", async () => {
+  it("rejects a second attempt in the same per-profile scope as DUPLICATE; privately", async () => {
     const before = await db.ledgerEvent.count();
     const result = await clearGate(db, {
       profileId: trueSelfId,
@@ -109,7 +109,7 @@ describe("the gate: pending → proof → cleared", () => {
     expect(result.outcome).toBe("INVALID");
   });
 
-  it("one Alias per human — a second hatch is refused blind, with no public trace", async () => {
+  it("one Alias per human; a second hatch is refused blind, with no public trace", async () => {
     const before = await db.ledgerEvent.count();
     const second = await registerAlias(db, {
       credential,
@@ -126,7 +126,7 @@ describe("the gate: pending → proof → cleared", () => {
     ).toBeNull();
   });
 
-  it("the Alias row carries no humanId — no database row links the two faces", async () => {
+  it("the Alias row carries no humanId; no database row links the two faces", async () => {
     const alias = await db.profile.findUniqueOrThrow({ where: { id: aliasId } });
     expect(alias.humanId).toBeNull();
     const trueSelf = await db.profile.findUniqueOrThrow({ where: { id: trueSelfId } });
@@ -157,7 +157,7 @@ describe("the gate: pending → proof → cleared", () => {
 // instead of being lost as a phantom DUPLICATE. This is the property that
 // separates clearGateTx from the old two-transaction clearGate.
 describe("clearGateTx: the spend commits (and rolls back) with the feature write", () => {
-  it("a rolled-back feature write leaves NO spend — the retry clears", async () => {
+  it("a rolled-back feature write leaves NO spend; the retry clears", async () => {
     const scope = "poll:rollback-proof:face";
 
     // The gate clears inside the transaction, then the "feature write" fails.
@@ -174,11 +174,11 @@ describe("clearGateTx: the spend commits (and rolls back) with the feature write
     ).rejects.toThrow("simulated feature-write failure");
 
     // Everything rolled back with the transaction: no spend, no cleared row,
-    // no ledger event — nothing was stranded.
+    // no ledger event; nothing was stranded.
     expect(await db.nullifierSpend.count({ where: { scope } })).toBe(0);
     expect(await db.gateRequest.count({ where: { scope, status: "CLEARED" } })).toBe(0);
 
-    // The retry succeeds — the humanity spend was NOT consumed by the failed
+    // The retry succeeds; the humanity spend was NOT consumed by the failed
     // attempt. Under the old separate-transaction gate this returned DUPLICATE
     // and the action was lost forever.
     const retry = await db.$transaction((tx) =>
@@ -223,7 +223,7 @@ describe("clearGateTx: the spend commits (and rolls back) with the feature write
 
   // The outer catches must NOT report DUPLICATE for a P2002 that isn't the
   // nullifier collision (a ledger prevHash race, a GrantClaim first-action
-  // race) — that would drop a valid action and tell the soul, falsely, that
+  // race); that would drop a valid action and tell the soul, falsely, that
   // they already acted. gateDuplicateConfirmed re-checks the actual spend.
   it("gateDuplicateConfirmed: a P2002 with NO matching spend is NOT a duplicate", async () => {
     const p2002 = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
@@ -235,7 +235,7 @@ describe("clearGateTx: the spend commits (and rolls back) with the feature write
       scope: "poll:never-spent-here:face",
       scopeKind: "per-profile",
     });
-    expect(result).toBe(false); // retryable — must re-throw, not claim DUPLICATE
+    expect(result).toBe(false); // retryable; must re-throw, not claim DUPLICATE
   });
 
   it("gateDuplicateConfirmed: a P2002 WITH a committed spend IS a duplicate", async () => {

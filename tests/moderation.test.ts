@@ -47,7 +47,7 @@ async function equipFor(profileId: string) {
     where: { profileId, status: "offered", expiresAt: { gt: new Date() } },
   });
   if (!offer) {
-    // Sortition is random; the test needs THIS judge — mint the offer
+    // Sortition is random; the test needs THIS judge; mint the offer
     // directly (the lifecycle rails are covered by the sweep tests).
     offer = await db.badgeOffer.create({
       data: { profileId, expiresAt: new Date(Date.now() + 3_600_000) },
@@ -105,7 +105,7 @@ describe("the whole road: flag → blur → ruling → tombstone → ladder", ()
     caseId = modCase.id;
   });
 
-  it("the case file is minimal — no handles, no identities", async () => {
+  it("the case file is minimal; no handles, no identities", async () => {
     const file = await caseFileFor(db, caseId);
     const text = JSON.stringify(file);
     expect(text).not.toContain("accused-1");
@@ -155,7 +155,7 @@ describe("the whole road: flag → blur → ruling → tombstone → ladder", ()
     });
     expect(JSON.parse(tombstone!.payload).rule).toBe("R1.2");
 
-    // The public resolution is nullifier-keyed — never a handle.
+    // The public resolution is nullifier-keyed; never a handle.
     const resolution = await db.ledgerEvent.findFirst({
       where: { eventType: "case.resolved" },
       orderBy: { seq: "desc" },
@@ -226,7 +226,7 @@ describe("the whole road: flag → blur → ruling → tombstone → ladder", ()
     expect(staleAttempt.ok).toBe(false);
     if (!staleAttempt.ok) expect(staleAttempt.reason).toContain("Fresh eyes");
 
-    // Three fresh judges decline — the appeal succeeds.
+    // Three fresh judges decline; the appeal succeeds.
     for (const name of ["fresh-1", "fresh-2", "fresh-3"]) {
       const soul = await makeOnboardedSoul(db, { trueSelf: name, alias: `${name}a` });
       await equipFor(soul.trueSelfId);
@@ -288,7 +288,7 @@ describe("the whole road: flag → blur → ruling → tombstone → ladder", ()
   });
 
   it("a routine badge holder cannot rule on a Tribunal case (segregation)", async () => {
-    // A fresh severe case sits at status "open", tribunal: true — the same
+    // A fresh severe case sits at status "open", tribunal: true; the same
     // shape the routine bench sees, but off-limits to it.
     const posted = await createPost(db, {
       discussionId,

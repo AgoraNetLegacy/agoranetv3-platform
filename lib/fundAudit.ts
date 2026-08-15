@@ -1,4 +1,4 @@
-// Fund Auditors — Tier 4 (FUND_INTEGRITY §3.5; PHASE_8_7_SPEC Slice 6).
+// Fund Auditors; Tier 4 (FUND_INTEGRITY §3.5; PHASE_8_7_SPEC Slice 6).
 // The minimal seed of Human Links' Auditor role, pulled forward from
 // parked scope by owner ruling 2026-07-16.
 //
@@ -9,28 +9,28 @@
 //    problems will find problems. The pay is for looking, and a "clean"
 //    verdict earns exactly what a "concern" does. This is the same
 //    reasoning MODERATION already applies to badge holders (compensated
-//    per case resolved, never per conviction) — the incentive to
+//    per case resolved, never per conviction); the incentive to
 //    manufacture guilt is designed out, not policed.
 // 2. **Drawn by lot, per round.** Nothing durable to capture: an
 //    auditor cannot be lobbied before they exist, and by the time
 //    anyone knows who they are, their sample is already assigned. Same
-//    property that makes moderation sortition work — "nothing durable
+//    property that makes moderation sortition work; "nothing durable
 //    to capture" (ANTI_SYBIL row 6).
 // 3. **A finding is a signal, never a penalty.** It records publicly
 //    and stops. Consequences travel the same due-process road as
-//    everything else — a ruling — which is exactly Sentinel's rule
+//    everything else; a ruling; which is exactly Sentinel's rule
 //    ("anomalies never punish; they bundle to the Tribunal, labeled
 //    machine-flagged"). An auditor who could freeze money would be an
 //    operator with extra steps.
 // 4. **Badge-shaped, not Tribunal-shaped** (owner decision, 2026-07-16):
 //    sampling released money is periodic work, not reactive
-//    adjudication. Offers expire unanswered, exactly like badge offers —
+//    adjudication. Offers expire unanswered, exactly like badge offers;
 //    service is opt-in, never conscription.
 //
-// WHERE A CONCERN GOES (resolved 2026-07-16, owner ruling — this comment
+// WHERE A CONCERN GOES (resolved 2026-07-16, owner ruling; this comment
 // used to say "nowhere"). A release can now be reported like any other
 // evidence (`flags.fileReleaseFlag`), and an upheld **R3.4 Fraud**
-// ruling freezes the chamber's unpaid money. So the road exists — but
+// ruling freezes the chamber's unpaid money. So the road exists; but
 // the auditor still does not walk it: the finding is the signal, and a
 // human must decide to file. An auditor whose finding auto-opened a case
 // would be a machine accusing people, which is the thing sortition and
@@ -50,7 +50,7 @@ export type AuditResult = { ok: true } | { ok: false; reason: string };
  * sampled yet.
  *
  * Sampling, not census: auditing every release would cost more than it
- * protects, and the deterrent lives in *unpredictability* — a chamber
+ * protects, and the deterrent lives in *unpredictability*; a chamber
  * cannot know which release gets read, so the honest answer is to expect
  * all of them might. Same logic as moderation's quality sampling.
  */
@@ -60,7 +60,7 @@ export async function offerFundAudits(db: PrismaClient): Promise<number> {
     getRail(db, "fundAudit.offerWindowHours"),
   ]);
 
-  // Expire stale offers first — an unanswered offer passes on its own.
+  // Expire stale offers first; an unanswered offer passes on its own.
   // Service is opt-in; silence is a valid answer and costs nothing.
   await db.fundAudit.updateMany({
     where: { status: "offered", expiresAt: { lte: new Date() } },
@@ -73,7 +73,7 @@ export async function offerFundAudits(db: PrismaClient): Promise<number> {
   });
   if (unsampled.length === 0) return 0;
 
-  // The eligible pool: proven badge-completers — souls who have already
+  // The eligible pool: proven badge-completers; souls who have already
   // done real service under the triangle of blindness. Not a
   // credentialed class; just people the platform has watched work.
   const completers = await db.badgeTerm.findMany({
@@ -89,7 +89,7 @@ export async function offerFundAudits(db: PrismaClient): Promise<number> {
 
     // Conflict exclusion, the same shape moderation already uses: an
     // auditor may not read money they are party to. Members of the
-    // chamber, the proposer, and the recipient are all excluded — an
+    // chamber, the proposer, and the recipient are all excluded; an
     // auditor auditing their own mission is not an audit.
     const conflicted = new Set<string>([
       release.proposerProfileId,
@@ -108,7 +108,7 @@ export async function offerFundAudits(db: PrismaClient): Promise<number> {
           expiresAt: new Date(Date.now() + offerHours * 3_600_000),
         },
       });
-      // The offer is public as an EVENT, but never names the auditor —
+      // The offer is public as an EVENT, but never names the auditor;
       // the triangle of blindness applies here for the same reason it
       // applies to moderation: an auditor whose identity is known before
       // they rule is an auditor who can be lobbied.
@@ -138,13 +138,13 @@ export async function acceptFundAudit(
   }
   if (audit.expiresAt <= new Date()) {
     await db.fundAudit.update({ where: { id: audit.id }, data: { status: "expired" } });
-    return { ok: false, reason: "That offer expired — it passed on its own." };
+    return { ok: false, reason: "That offer expired; it passed on its own." };
   }
   await db.fundAudit.update({ where: { id: audit.id }, data: { status: "accepted" } });
   return { ok: true };
 }
 
-/** Decline. Passing costs nothing, ever — service is never conscription. */
+/** Decline. Passing costs nothing, ever; service is never conscription. */
 export async function passFundAudit(
   db: PrismaClient,
   input: { auditId: string; profileId: string }
@@ -160,7 +160,7 @@ export async function passFundAudit(
 }
 
 /**
- * Record a finding and get paid — the same amount either way.
+ * Record a finding and get paid; the same amount either way.
  *
  * The pay is for looking. "clean" and "concern" earn identically, which
  * is the entire anti-incentive: an auditor who profits from concerns
@@ -190,7 +190,7 @@ export async function completeFundAudit(
   if (!note) {
     return {
       ok: false,
-      reason: "A finding needs its reasoning — an unexplained verdict is not an audit.",
+      reason: "A finding needs its reasoning; an unexplained verdict is not an audit.",
     };
   }
 
@@ -207,7 +207,7 @@ export async function completeFundAudit(
       },
     });
     // Paid per case, never per finding. Rides the moderation-rewards
-    // budget category: this is the same kind of spending — the treasury
+    // budget category: this is the same kind of spending; the treasury
     // paying souls for civic service (TOKENOMICS §3's first funded
     // public service), and inventing a category for it would imply a
     // budget line the community never voted for.
@@ -222,7 +222,7 @@ export async function completeFundAudit(
     });
     if (!paid.ok) throw new Error(`Fund audit reward refused: ${paid.reason}`);
 
-    // The finding is public — and its LIMIT is public with it. An
+    // The finding is public; and its LIMIT is public with it. An
     // auditor who appears to be doing more than they can is worse than
     // no auditor.
     await appendEvent(tx, {
@@ -235,12 +235,12 @@ export async function completeFundAudit(
         note,
         // Stated on every concern, deliberately: a finding is a signal,
         // and the road from here runs through a human filing a report
-        // and a ruling landing — never through the auditor. Saying so on
+        // and a ruling landing; never through the auditor. Saying so on
         // the record beats an auditor who looks more powerful than they
         // are.
         consequence:
           input.finding === "concern"
-            ? "recorded — a concern is a public signal, not a penalty; consequences travel due process"
+            ? "recorded; a concern is a public signal, not a penalty; consequences travel due process"
             : "none",
       },
     });
@@ -248,7 +248,7 @@ export async function completeFundAudit(
   return { ok: true };
 }
 
-/** An auditor's own drawn work. Never public — see the offer event. */
+/** An auditor's own drawn work. Never public; see the offer event. */
 export async function myFundAudits(db: DbOrTx, profileId: string) {
   return db.fundAudit.findMany({
     where: { auditorProfileId: profileId, status: { in: ["offered", "accepted"] } },
@@ -259,7 +259,7 @@ export async function myFundAudits(db: DbOrTx, profileId: string) {
 
 /**
  * The public audit record for a release: what was found, by nobody in
- * particular. Findings are public; auditors are not — the same triangle
+ * particular. Findings are public; auditors are not; the same triangle
  * of blindness moderation runs on.
  */
 export async function auditsForRelease(db: DbOrTx, releaseId: string) {

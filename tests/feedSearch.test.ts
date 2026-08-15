@@ -1,4 +1,4 @@
-// Feed & Search (Phase 7 — FEED_AND_SEARCH_SPEC) and the transparency
+// Feed & Search (Phase 7; FEED_AND_SEARCH_SPEC) and the transparency
 // books. The invariants under test: chosen-not-inferred with honest
 // cold-start defaults; per-persona absolutely (a human's two faces have
 // two disjoint reading worlds); the enclosed-space rule (rooms surface
@@ -30,7 +30,7 @@ import { makeOnboardedSoul, topUpForTests } from "./helpers/souls";
 
 const db = new PrismaClient({ datasources: { db: { url } } });
 
-let humanTrueSelfId: string; // one human's two faces —
+let humanTrueSelfId: string; // one human's two faces;
 let humanAliasId: string; //   the per-persona separation cast
 let otherSoulId: string;
 let compassionId: string;
@@ -103,7 +103,7 @@ describe("the feed", () => {
 
   it("keeps a human's two faces in two disjoint reading worlds", async () => {
     // The Alias tunes its sources down to one pillar; the True Self's
-    // stay untouched — and vice versa.
+    // stay untouched; and vice versa.
     await ensureFeedDefaults(db, humanAliasId);
     await db.feedSource.deleteMany({
       where: { profileId: humanAliasId, kind: "pillar", refId: { not: compassionId } },
@@ -139,8 +139,8 @@ describe("the feed", () => {
       data: { profileId: otherSoulId, kind: "circle", refId: formed.circleId },
     });
 
-    // The member founder sees the room card; the non-member — even one
-    // who forges the source row — does not.
+    // The member founder sees the room card; the non-member; even one
+    // who forges the source row; does not.
     const memberFeed = await buildFeed(db, otherSoulId);
     expect(memberFeed.cards.some((c) => c.discussionId === room.id)).toBe(true);
 
@@ -155,7 +155,7 @@ describe("the feed", () => {
     const lens = await openLens(db);
     for (const card of lens) {
       expect(card.whyLine).toContain("Open lens");
-      // Room content never reaches the lens — every lens discussion is public.
+      // Room content never reaches the lens; every lens discussion is public.
       const d = await db.discussion.findUniqueOrThrow({ where: { id: card.discussionId } });
       expect(d.circleId).toBeNull();
     }
@@ -174,10 +174,10 @@ describe("search", () => {
     expect(place?.title).toBe("Kelowna Repair Crew");
   });
 
-  it("looks up souls by handle and display name — lookup, not discovery", async () => {
+  it("looks up souls by handle and display name; lookup, not discovery", async () => {
     const hits = await search(db, "dana", { types: ["souls"] });
     expect(hits.some((h) => h.title.includes("@dana"))).toBe(true);
-    // Both faces appear as what they are — separate souls; nothing marks
+    // Both faces appear as what they are; separate souls; nothing marks
     // them as related, because no data exists from which to relate them.
     const veil = await search(db, "dana-veil", { types: ["souls"] });
     expect(veil.some((h) => h.title.includes("@dana-veil"))).toBe(true);
@@ -200,7 +200,7 @@ describe("search", () => {
     expect(help.length).toBeGreaterThan(0);
   });
 
-  it("keeps history per-face, visible, deletable — and never a ranking input", async () => {
+  it("keeps history per-face, visible, deletable; and never a ranking input", async () => {
     await recordSearch(db, humanTrueSelfId, "housing first");
     await recordSearch(db, humanAliasId, "different world");
     const mine = await db.searchQuery.findMany({ where: { profileId: humanTrueSelfId } });
@@ -261,7 +261,7 @@ describe("the transparency books", () => {
 
   it("publishes moderation stats as aggregates only", async () => {
     const stats = await moderationStats(db);
-    // Shape only — this suite has no cases; the values are honest zeros.
+    // Shape only; this suite has no cases; the values are honest zeros.
     expect(stats).toHaveProperty("badgeTermsServed");
     expect(stats).toHaveProperty("casesByStatus");
     expect(JSON.stringify(stats)).not.toMatch(/profileId|handle/);

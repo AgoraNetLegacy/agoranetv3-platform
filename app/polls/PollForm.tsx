@@ -1,7 +1,7 @@
 import { submitPoll } from "@/app/actions";
 
 // The creation form (POLLS §4). Governance polls: always sealed, candle
-// close — the form says so instead of offering a live-tally choice.
+// close; the form says so instead of offering a live-tally choice.
 export function PollForm({
   pillarId,
   isGovernance,
@@ -29,7 +29,7 @@ export function PollForm({
         <input type="text" name="description" maxLength={500} />
       </label>
       <label>
-        Options — one per line
+        Options; one per line
         <textarea name="options" required placeholder={"Yes\nNo"} />
       </label>
       <label>
@@ -48,8 +48,8 @@ export function PollForm({
       <label>
         Vote visibility{" "}
         <select name="mode" defaultValue="pseudonymous">
-          <option value="pseudonymous">Pseudonymous — aggregate only, ever</option>
-          <option value="public">Public — who voted how, on this poll's record</option>
+          <option value="pseudonymous">Pseudonymous; aggregate only, ever</option>
+          <option value="public">Public; who voted how, on this poll's record</option>
         </select>
       </label>{" "}
       <label>
@@ -59,7 +59,7 @@ export function PollForm({
       <br />
       {isGovernance ? (
         <p className="interim-note">
-          Governance poll: sealed tally (no option) and the candle close —
+          Governance poll: sealed tally (no option) and the candle close;
           the true end is drawn at random inside the final stretch,
           committed as a hash now, revealed with the results.
         </p>

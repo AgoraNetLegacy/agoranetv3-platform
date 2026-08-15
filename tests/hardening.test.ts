@@ -1,4 +1,4 @@
-// Phase 8 — Deployment Hardening: the runtime config guard, the
+// Phase 8; Deployment Hardening: the runtime config guard, the
 // dual-provider parity discipline (DATABASE_SETUP.md), and the
 // consolidated rate-limit schedule (ANTI_SYBIL_CONSOLIDATION §3 W4).
 
@@ -31,7 +31,7 @@ import { RAIL_DEFAULTS } from "../lib/rails";
 const db = new PrismaClient({ datasources: { db: { url } } });
 
 // Tests that spawn seed/crush/verify as real subprocesses need CI-sized
-// timeouts — the invariant suite grows every phase.
+// timeouts; the invariant suite grows every phase.
 const SUBPROCESS_TIMEOUT = 120_000;
 
 beforeAll(async () => {
@@ -62,7 +62,7 @@ function hostedEnv(overrides: Record<string, string | undefined> = {}) {
   } as NodeJS.ProcessEnv;
 }
 
-describe("runtime config guard (DATABASE_SETUP.md — refuse to boot unsafe)", () => {
+describe("runtime config guard (DATABASE_SETUP.md; refuse to boot unsafe)", () => {
   it("passes a fully configured hosted environment", () => {
     expect(validateRuntimeConfig(hostedEnv())).toEqual([]);
     expect(() => requireRuntimeConfig(hostedEnv())).not.toThrow();
@@ -181,7 +181,7 @@ describe("minimal-log discipline guards (DUAL_IDENTITY §7.1 vector 4)", () => {
       const src = readFileSync(file, "utf8");
       expect(
         /\bconsole\.(log|info|warn|error|debug|trace)\(/.test(src),
-        `${file} writes a log line — the audit requires a reviewed exception`
+        `${file} writes a log line; the audit requires a reviewed exception`
       ).toBe(false);
     }
   });
@@ -193,7 +193,7 @@ describe("minimal-log discipline guards (DUAL_IDENTITY §7.1 vector 4)", () => {
         /from ["']next\/headers["']/.test(src) && /\bheaders\b/.test(src);
       if (readsHeaders && !file.endsWith(join("lib", "webSession.ts"))) {
         throw new Error(
-          `${file} reads request headers — extend docs/LOG_DISCIPLINE_AUDIT.md and this allowlist in the same commit`
+          `${file} reads request headers; extend docs/LOG_DISCIPLINE_AUDIT.md and this allowlist in the same commit`
         );
       }
     }
@@ -201,7 +201,7 @@ describe("minimal-log discipline guards (DUAL_IDENTITY §7.1 vector 4)", () => {
     expect(audited).toContain("x-forwarded-for");
   });
 
-  it("the schema stores no network identity — no IP/UA/device/geo columns", () => {
+  it("the schema stores no network identity; no IP/UA/device/geo columns", () => {
     const schema = readFileSync(join(REPO_ROOT, "prisma/schema.prisma"), "utf8");
     const fieldNames = [...schema.matchAll(/^\s{2}(\w+)\s+\w/gm)].map((m) =>
       m[1].toLowerCase()
@@ -217,18 +217,18 @@ describe("minimal-log discipline guards (DUAL_IDENTITY §7.1 vector 4)", () => {
   });
 });
 
-describe("analytics discipline (ANALYTICS_SPEC — measure the product, never the person)", () => {
+describe("analytics discipline (ANALYTICS_SPEC; measure the product, never the person)", () => {
   it("analytics NEVER feeds ranking: feed and search cannot import the pipeline", () => {
     for (const file of ["lib/feed.ts", "lib/search.ts"]) {
       const src = readFileSync(join(REPO_ROOT, file), "utf8");
       expect(
         src.includes("analytics"),
-        `${file} touches analytics — the published-formula law forbids hidden inputs`
+        `${file} touches analytics; the published-formula law forbids hidden inputs`
       ).toBe(false);
     }
   });
 
-  it("an event is a name and a moment — subject keys only where entitled, always HMAC", async () => {
+  it("an event is a name and a moment; subject keys only where entitled, always HMAC", async () => {
     const { recordEvent } = await import("../lib/analytics");
     await recordEvent(db, "action.posting", "profile-raw-id"); // not entitled
     await recordEvent(db, "action.any", "profile-raw-id"); // entitled
@@ -251,7 +251,7 @@ describe("analytics discipline (ANALYTICS_SPEC — measure the product, never th
     expect(analyticsSubjectKey("p1")).not.toBe(bucketKey("posting", "p1", 0));
   });
 
-  it("recordEvent swallows failure — measurement never breaks the product", async () => {
+  it("recordEvent swallows failure; measurement never breaks the product", async () => {
     const { recordEvent } = await import("../lib/analytics");
     const broken = {
       analyticsEvent: {
@@ -276,7 +276,7 @@ describe("analytics discipline (ANALYTICS_SPEC — measure the product, never th
           subjectKey: subject,
           createdAt: new Date(old.getTime() + 8 * 24 * 60 * 60 * 1000),
         },
-        { name: "funnel.arrival" }, // young — must survive
+        { name: "funnel.arrival" }, // young; must survive
       ],
     });
     const crush = spawnSync("npx", ["tsx", "scripts/crush-analytics.ts"], {
@@ -325,7 +325,7 @@ describe("analytics discipline (ANALYTICS_SPEC — measure the product, never th
   }, SUBPROCESS_TIMEOUT);
 });
 
-describe("backup retention policy (BACKUP_DR §2 — 30 daily / 12 monthly)", () => {
+describe("backup retention policy (BACKUP_DR §2; 30 daily / 12 monthly)", () => {
   const day = (d: string, n = 0) => `agoranet-${d}T0${n}-00-00-000Z.dump`;
 
   it("keeps everything inside the daily window", async () => {
@@ -375,7 +375,7 @@ describe("the consolidated rate-limit schedule (W4)", () => {
 
   it("allows under the wall and refuses over it, with a retry horizon", async () => {
     const now = new Date("2026-07-11T12:00:00Z");
-    // register: 3/hour — small enough to walk over.
+    // register: 3/hour; small enough to walk over.
     for (let i = 1; i <= 3; i++) {
       const r = await checkRateLimit(db, "register", "soul-a", now);
       expect(r.allowed).toBe(true);
@@ -400,7 +400,7 @@ describe("the consolidated rate-limit schedule (W4)", () => {
     expect(r.allowed).toBe(true);
   });
 
-  it("stores only HMAC keys — no raw identifier in any bucket row", async () => {
+  it("stores only HMAC keys; no raw identifier in any bucket row", async () => {
     const buckets = await db.rateLimitBucket.findMany();
     expect(buckets.length).toBeGreaterThan(0);
     for (const bucket of buckets) {

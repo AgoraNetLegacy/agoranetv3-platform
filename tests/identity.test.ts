@@ -105,7 +105,7 @@ describe("the True Self ceremony", () => {
   });
 });
 
-describe("the Alias ceremony — timing mitigations", () => {
+describe("the Alias ceremony; timing mitigations", () => {
   let credential: string;
 
   beforeAll(async () => {
@@ -161,12 +161,12 @@ describe("the Alias ceremony — timing mitigations", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("a pending Alias cannot sign in; an activated one can — and activation is a cohort event", async () => {
+  it("a pending Alias cannot sign in; an activated one can; and activation is a cohort event", async () => {
     const alias = await db.profile.findUniqueOrThrow({
       where: { handle: "night-face-8" },
     });
     // Pending: access key exists but sign-in is refused. (We can't know
-    // the key here — assert via status path in profileForAccessKey using
+    // the key here; assert via status path in profileForAccessKey using
     // a fresh hatch below instead.)
     const v = await verifyHumanity(db);
     const ts = await registerTrueSelf(db, { credential: v.credential, handle: "keyed-ts-3", displayName: "keyed-ts-3" });
@@ -183,7 +183,7 @@ describe("the Alias ceremony — timing mitigations", () => {
     const pendingLogin = await profileForAccessKey(db, hatched.accessKey);
     expect(pendingLogin.ok).toBe(false);
 
-    // Release the cohort (time-travel) — both pending aliases activate.
+    // Release the cohort (time-travel); both pending aliases activate.
     await db.profile.updateMany({
       where: { status: "pending" },
       data: { activateAt: new Date(Date.now() - 1000) },
@@ -293,7 +293,7 @@ describe("the parking rule", () => {
     await releaseLocks(db, { sessionId, profileId: aliasId });
   });
 
-  it("switches faces instantly (owner-resolved: no cooldown) — but the rail still enforces if ever set", async () => {
+  it("switches faces instantly (owner-resolved: no cooldown); but the rail still enforces if ever set", async () => {
     const first = await switchFace(db, { sessionId, fromProfileId: null, toProfileId: tsId });
     expect(first.ok).toBe(true);
     // The vision: seamless switching.

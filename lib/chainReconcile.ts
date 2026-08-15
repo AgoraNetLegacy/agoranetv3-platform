@@ -4,7 +4,7 @@
 // race the moment they walk away. So the server mirrors the chain on
 // ITS schedule: sweep every linked wallet's recent transactions, and
 // any that provably locked value at the donation script but have no
-// row yet get recorded — through the same chain-verified path the UI
+// row yet get recorded; through the same chain-verified path the UI
 // uses. Idempotent by construction (one row per tx hash); running it
 // twice, or concurrently with a live UI poll, changes nothing.
 
@@ -28,7 +28,7 @@ export async function listRecentAddressTxs(address: string): Promise<string[]> {
     { headers: { project_id: projectId }, cache: "no-store" }
   );
   // 404 = never used; 400 = not a decodable address (a dev placeholder
-  // link, say). Neither can hold donations — skip, don't kill the
+  // link, say). Neither can hold donations; skip, don't kill the
   // sweep. Real failures (auth, rate limit, outage) still throw.
   if (res.status === 404 || res.status === 400) return [];
   if (!res.ok) throw new Error(`Blockfrost address lookup failed (${res.status}).`);
@@ -58,7 +58,7 @@ export async function reconcileDonations(
       const lovelace = await lockedAtScript(txHash, scriptAddress);
       if (lovelace === null || lovelace <= 0) continue;
       // F3: the address listing includes txs that merely PAID this
-      // wallet — record only what the linked wallet itself SENT.
+      // wallet; record only what the linked wallet itself SENT.
       const senders = await inputAddresses(txHash);
       if (!senders?.includes(link.cardanoAddress)) continue;
       await db.testnetDonation.upsert({

@@ -1,17 +1,17 @@
-// Analytics — the deliberately-dumb pipeline (ANALYTICS_SPEC,
+// Analytics; the deliberately-dumb pipeline (ANALYTICS_SPEC,
 // owner-ratified: self-hosted, event-level, profile-free). An event is
 // a name and a moment. Nothing else exists to collect.
 //
 // The correlation constraint is the design (§ Executive Summary):
 // behavioral analytics is a correlation engine, so this one measures
-// the PRODUCT, never the person — no per-soul profiles, no dwell time,
+// the PRODUCT, never the person; no per-soul profiles, no dwell time,
 // no fingerprints, no cross-persona anything. subjectKey is an HMAC'd
 // per-profile key recorded ONLY where a metric is impossible without
 // it (retention cohorts, funnel completion), crushed with everything
 // else at the 90-day rail.
 //
 // Tool selection (OPEN_ITEMS #30, resolved at build): in-house minimal
-// over deploying an Umami/Plausible instance — the ratified constraints
+// over deploying an Umami/Plausible instance; the ratified constraints
 // are STRICTER than those tools' defaults (they retain hashed-IP
 // visitor keys and user-agents; we retain nothing), and one database
 // keeps analytics inside the same backup, verify, and access
@@ -20,7 +20,7 @@
 import { createHmac } from "crypto";
 import type { DbOrTx } from "./db";
 
-// The measured vocabulary — closed by design (db:verify check 26 fails
+// The measured vocabulary; closed by design (db:verify check 26 fails
 // on any name outside it; adding one is a conscious, audited act).
 export const FUNNEL_EVENTS = [
   "funnel.arrival", // the verification doorway was seen
@@ -34,7 +34,7 @@ export const FUNNEL_EVENTS = [
 ] as const;
 
 export const ACTION_EVENTS = [
-  // One per rate-limit policy family — feature vitals fall out of the
+  // One per rate-limit policy family; feature vitals fall out of the
   // same families the W4 schedule already names (counts, never queries).
   "action.posting",
   "action.votes",
@@ -84,7 +84,7 @@ export function analyticsSubjectKey(profileId: string): string {
 
 /**
  * Count that a thing happened. Fire-and-forget by contract: analytics
- * failing must NEVER break the product act it observes — errors are
+ * failing must NEVER break the product act it observes; errors are
  * swallowed (the one deliberate exception to fail-loudly, because the
  * alternative is the measurement tail wagging the product dog).
  */
@@ -104,6 +104,6 @@ export async function recordEvent(
       },
     });
   } catch {
-    // Swallowed by design — see contract above.
+    // Swallowed by design; see contract above.
   }
 }

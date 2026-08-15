@@ -13,7 +13,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-// Search (FEED_AND_SEARCH §4): free for everyone — search is reading.
+// Search (FEED_AND_SEARCH §4): free for everyone; search is reading.
 // Same query, same results, for everyone: a legibility feature and a
 // correlation-safety feature at once.
 export default async function SearchPage({
@@ -62,55 +62,55 @@ export default async function SearchPage({
     <>
       <h1>
         Search
-        <LearnMore label="About search — what the one box can find">
+        <LearnMore label="About search; what the one box can find">
           <h4>One box, nine kinds of thing</h4>
           <ul>
             <li>
-              <strong>Content</strong> — Discussions, replies, Circle
+              <strong>Content</strong>; Discussions, replies, Circle
               pages, Chamber storefronts.
             </li>
             <li>
-              <strong>Souls</strong> — look up anyone by @handle or
+              <strong>Souls</strong>; look up anyone by @handle or
               display name.
             </li>
             <li>
-              <strong>Fellow souls</strong> — search within your own
+              <strong>Fellow souls</strong>; search within your own
               list.
             </li>
             <li>
-              <strong>Places</strong> — Circles working in a city or
+              <strong>Places</strong>; Circles working in a city or
               region.
             </li>
             <li>
-              <strong>Pillars &amp; canon</strong> — the 49 questions and
+              <strong>Pillars &amp; canon</strong>; the 49 questions and
               56 domains.
             </li>
             <li>
-              <strong>Civic records</strong> — governance results, the
+              <strong>Civic records</strong>; governance results, the
               rulebook, treasury days.
             </li>
             <li>
-              <strong>Polls</strong> — open now, or past results.
+              <strong>Polls</strong>; open now, or past results.
             </li>
             <li>
-              <strong>Sources</strong> — every conversation citing a
+              <strong>Sources</strong>; every conversation citing a
               study or article. Paste a URL to find each room discussing
               it.
             </li>
             <li>
-              <strong>Help</strong> — how the platform works, fees,
+              <strong>Help</strong>; how the platform works, fees,
               rules.
             </li>
           </ul>
           <p>
             The filters narrow by kind, pillar, permanence, place, or
             date. Never here: direct messages, workshop interiors, and
-            moderator identities — by law, not by ranking.
+            moderator identities; by law, not by ranking.
           </p>
         </LearnMore>
       </h1>
       <p className="lore">
-        Nine kinds of thing, one box. Free for everyone — search is
+        Nine kinds of thing, one box. Free for everyone; search is
         reading. <Link href="/search/about">How results are ranked →</Link>
         {viewer && (
           <>
@@ -199,7 +199,7 @@ export default async function SearchPage({
       {q && (
         <>
           <p className="lore">
-            {hits.length} result{hits.length === 1 ? "" : "s"} for &ldquo;{q}&rdquo; — same
+            {hits.length} result{hits.length === 1 ? "" : "s"} for &ldquo;{q}&rdquo;; same
             results for every soul who searches this.
           </p>
           <ul className="discussions">

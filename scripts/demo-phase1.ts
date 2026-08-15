@@ -1,19 +1,19 @@
-// Phase 1 checkpoint demo (owner review) — the full permanent-record
+// Phase 1 checkpoint demo (owner review); the full permanent-record
 // lifecycle, compressed. Runs on the same self-contained demo database
 // as demo:phase0 (prisma/demo.db), reset on every run:
 //
 //   1. Seed everything; two souls appear.
-//   2. A soul posts in a canonical (permanent) Discussion — the ledger
+//   2. A soul posts in a canonical (permanent) Discussion; the ledger
 //      records the clearance and the content hash, pseudonymously.
-//   3. A grace-window edit — visible history + a ledger amendment.
-//   4. The window closes (simulated — the real rail is 15 minutes) and
+//   3. A grace-window edit; visible history + a ledger amendment.
+//   4. The window closes (simulated; the real rail is 15 minutes) and
 //      the record LOCKS: further edits are refused.
 //   5. A database tamper of the locked body → db:verify fails loudly.
-//   6. A flag is filed — queued for Phase 5, invisible on the ledger.
+//   6. A flag is filed; queued for Phase 5, invisible on the ledger.
 //   7. db:verify over the honest final state: all checks pass.
 //
 // The interactive version of this checkpoint: `npm run dev`, pick a dev
-// face, and post in any canonical thread — badge, ledger (/ledger), and
+// face, and post in any canonical thread; badge, ledger (/ledger), and
 // the lock after 15 real minutes.
 
 import { execSync, spawnSync } from "child_process";
@@ -62,7 +62,7 @@ async function main() {
     include: { question: true },
   });
   console.log(`Space: "${discussion.title.slice(0, 60)}…"`);
-  console.log(`Composer badge: 🏛 Permanent record — 15-minute grace window,`);
+  console.log(`Composer badge: 🏛 Permanent record; 15-minute grace window,`);
   console.log(`then your words lock into the record.\n`);
 
   const posted = await createPost(db, {
@@ -77,11 +77,11 @@ async function main() {
     console.log(`     ${ev.payload.slice(0, 100)}…`);
   }
 
-  banner("3. Grace-window edit — visible history + ledger amendment");
+  banner("3. Grace-window edit; visible history + ledger amendment");
   const edited = await editPost(db, {
     postId: posted.postId,
     profileId: author.id,
-    body: "It should be the town square that keeps its promises — and proves it.",
+    body: "It should be the town square that keeps its promises; and proves it.",
   });
   console.log(edited.ok ? "Edit accepted inside the window." : `UNEXPECTED: ${edited.reason}`);
   const revisions = await db.postRevision.count({ where: { postId: posted.postId } });
@@ -91,7 +91,7 @@ async function main() {
   console.log(`Visible history: ${revisions} earlier version preserved.`);
   console.log(`#${amendEvent!.seq} post.amended → new contentHash on the ledger.`);
 
-  banner("4. The window closes — the record locks");
+  banner("4. The window closes; the record locks");
   console.log("(Simulating the 15 minutes passing; the rail is data, the clock is real.)");
   await db.post.update({
     where: { id: posted.postId },
@@ -113,11 +113,11 @@ async function main() {
   const caught = verify(false);
   await db.post.update({
     where: { id: posted.postId },
-    data: { body: "It should be the town square that keeps its promises — and proves it." },
+    data: { body: "It should be the town square that keeps its promises; and proves it." },
   });
-  console.log(caught ? "\nCAUGHT — verify failed loudly ✓ (body restored)" : "\nNOT CAUGHT ✗");
+  console.log(caught ? "\nCAUGHT; verify failed loudly ✓ (body restored)" : "\nNOT CAUGHT ✗");
 
-  banner("6. A flag is filed — queued, and invisible to the public");
+  banner("6. A flag is filed; queued, and invisible to the public");
   const before = await db.ledgerEvent.count();
   const flagged = await fileFlag(db, {
     postId: posted.postId,
@@ -127,7 +127,7 @@ async function main() {
   });
   const after = await db.ledgerEvent.count();
   console.log(flagged.ok ? "Flag queued for Phase 5's adjudicators." : `UNEXPECTED: ${flagged.reason}`);
-  console.log(`Ledger events before: ${before}, after: ${after} — the public learns nothing.`);
+  console.log(`Ledger events before: ${before}, after: ${after}; the public learns nothing.`);
 
   await db.$disconnect();
 

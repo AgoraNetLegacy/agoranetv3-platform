@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 // The members' room (CIRCLES §2.2): the working conversation (a
 // Circle-scoped Discussion), the resource board (§5), and internal
-// Polls (§7) — all reuse, nothing bespoke. Members only; a closed
+// Polls (§7); all reuse, nothing bespoke. Members only; a closed
 // Circle's room stays readable for its former members (§8).
 
 export default async function CircleRoomPage({
@@ -42,8 +42,8 @@ export default async function CircleRoomPage({
         <h1>Members&apos; room</h1>
         <div className="notice">
           The working conversation belongs to {circle.name}&apos;s members.{" "}
-          <Link href={`/circles/${circle.id}`}>The public page — purpose,
-          log, membership — is open to everyone →</Link>
+          <Link href={`/circles/${circle.id}`}>The public page; purpose,
+          log, membership; is open to everyone →</Link>
         </div>
       </>
     );
@@ -63,7 +63,7 @@ export default async function CircleRoomPage({
       <p>
         <Link href={`/circles/${circle.id}`}>← <Icon name="circles" /> {circle.name} (public page)</Link>
       </p>
-      <h1>🚪 Members&apos; room — {circle.name}</h1>
+      <h1>🚪 Members&apos; room; {circle.name}</h1>
       {circle.status === "closed" && (
         <div className="notice">
           This Circle is closed: the room is read-only, preserved for its
@@ -74,7 +74,7 @@ export default async function CircleRoomPage({
 
       <h3>The working conversation</h3>
       <p className="lore">
-        Members-only and deletable — planning, coordination, disagreement.
+        Members-only and deletable; planning, coordination, disagreement.
         The action log on the public page is the permanent record; this is
         where the work gets argued out.
       </p>
@@ -110,7 +110,7 @@ export default async function CircleRoomPage({
 
       <h3>Resource board</h3>
       <p className="lore">
-        Offers of skills, tools, time, and pledges — living statements,
+        Offers of skills, tools, time, and pledges; living statements,
         editable and retractable, members-only. Money never transits the
         platform: pledges coordinate here and are fulfilled off-platform;
         an offer becomes part of the permanent record only when a logged
@@ -152,10 +152,10 @@ export default async function CircleRoomPage({
             <label>
               Kind{" "}
               <select name="kind" defaultValue="skill">
-                <option value="skill">Skill — &quot;I can do electrical work&quot;</option>
-                <option value="tool">Tool — &quot;I have a truck&quot;</option>
-                <option value="time">Time — &quot;Saturdays&quot;</option>
-                <option value="pledge">Pledge — &quot;$200 toward materials&quot; (fulfilled off-platform)</option>
+                <option value="skill">Skill; &quot;I can do electrical work&quot;</option>
+                <option value="tool">Tool; &quot;I have a truck&quot;</option>
+                <option value="time">Time; &quot;Saturdays&quot;</option>
+                <option value="pledge">Pledge; &quot;$200 toward materials&quot; (fulfilled off-platform)</option>
               </select>
             </label>
             <textarea name="body" required placeholder="The offer, in your words." />
@@ -164,14 +164,14 @@ export default async function CircleRoomPage({
         </details>
       )}
 
-      <h3>Internal polls — how this Circle decides</h3>
+      <h3>Internal polls; how this Circle decides</h3>
       <p className="lore">
         Circle-restricted Polls, exactly the platform&apos;s poll machinery
-        — sealed by default, one vote per profile.{" "}
+; sealed by default, one vote per profile.{" "}
         <strong>Always per-profile, never per-human:</strong> inside a
         small membership, per-human duplicate rejection would let the group
         infer that two member profiles share a human. The privacy holds
-        even here — especially here.
+        even here; especially here.
       </p>
       <ul className="discussions">
         {polls.map((p) => (
@@ -202,12 +202,12 @@ export default async function CircleRoomPage({
             <summary>Stewardship decision (binding)</summary>
             <p className="interim-note">
               Member removal, closure, founder succession, and the
-              attestation-threshold dial are member votes — consensus
+              attestation-threshold dial are member votes; consensus
               polls with Adopt/Decline, executed automatically if adopted.
               Removal runs at this Circle&apos;s bar
               ({Math.round(circle.removalBarPercent)}%; platform floor is a
               simple majority). The platform&apos;s moderation path stays
-              available in parallel for actual rule-breaking — Circles
+              available in parallel for actual rule-breaking; Circles
               decide membership, moderation decides conduct.
             </p>
             <form action={submitStewardshipPoll} className="composer">

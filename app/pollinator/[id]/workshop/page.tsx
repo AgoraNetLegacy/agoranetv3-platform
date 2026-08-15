@@ -11,9 +11,9 @@ export const dynamic = "force-dynamic";
 // The workshop (POLLINATOR §4.3, layer 2): enter-to-see. The scaffold
 // (the chamber's first-principles framing, with its visible edit
 // history), the working Discussion (threading per the Discussions
-// conventions — reuse, not reinvention), in-space search
+// conventions; reuse, not reinvention), in-space search
 // (FEED_AND_SEARCH §4.1, owner-resolved: ships at launch), who's
-// inside, and — for private chambers — the creator's invite control.
+// inside, and; for private chambers; the creator's invite control.
 
 export default async function WorkshopPage({
   params,
@@ -62,11 +62,11 @@ export default async function WorkshopPage({
           ← <Icon name="hive" /> {chamber.title} (storefront)
         </Link>
       </p>
-      <h1>🚪 The workshop — {chamber.title}</h1>
+      <h1>🚪 The workshop; {chamber.title}</h1>
       <div className="notice">{WORKSHOP_ENCLOSURE_NOTE}</div>
       {m && <div className="notice">{m}</div>}
 
-      <h3>The scaffold — work starts oriented, not adrift</h3>
+      <h3>The scaffold; work starts oriented, not adrift</h3>
       <p className="lore">
         The pre-convo framing every chamber opens with: the platform&apos;s
         first-principles method, productized. The creator sharpens it as
@@ -88,7 +88,7 @@ export default async function WorkshopPage({
         <details>
           <summary>
             Scaffold history ({chamber.scaffoldRevisions.length} earlier
-            version{chamber.scaffoldRevisions.length === 1 ? "" : "s"}) —
+            version{chamber.scaffoldRevisions.length === 1 ? "" : "s"});
             how the understanding sharpened
           </summary>
           {chamber.scaffoldRevisions.map((r) => (
@@ -124,7 +124,7 @@ export default async function WorkshopPage({
 
       <h3>The working conversation</h3>
       <p className="lore">
-        Threading follows the Discussions conventions — nothing bespoke.
+        Threading follows the Discussions conventions; nothing bespoke.
         Deletable-class, enclosed; posting carries the dual-token
         micro-fee (1 PC + 1 G). Standard moderation applies as everywhere:
         flag deposits, badge holders, the tribunal.
@@ -159,7 +159,7 @@ export default async function WorkshopPage({
 
       <h3>Souls inside ({chamber.members.length})</h3>
       <p className="lore">
-        Visible in here, not on the storefront — who works an idea is the
+        Visible in here, not on the storefront; who works an idea is the
         workshop&apos;s business; the public sees the count.
       </p>
       <ul>
@@ -173,11 +173,11 @@ export default async function WorkshopPage({
 
       {!chamber.isPublic && isCreator && (
         <>
-          <h3>Invitations — you select who gets in</h3>
+          <h3>Invitations; you select who gets in</h3>
           <ul>
             {chamber.invites.map((i) => (
               <li key={i.id} className="lore">
-                @{i.handle} —{" "}
+                @{i.handle}; {" "}
                 {enteredInviteIds.has(i.profileId) ? "entered" : "invited, not yet entered"}
               </li>
             ))}
@@ -191,7 +191,7 @@ export default async function WorkshopPage({
             <button type="submit">Invite</button>
           </form>
           <p className="interim-note">
-            Invited souls find it waiting on their Pollinator page — no
+            Invited souls find it waiting on their Pollinator page; no
             notification rides an invite yet (the category list is
             exhaustive by design; flagged for the owner).
           </p>

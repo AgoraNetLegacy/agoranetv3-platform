@@ -4,7 +4,7 @@
 //// `treasury.release_permitted`, unit-tested where it lives; this
 //// wrapper wires it to the script context. Funds locked here move
 //// ONLY when M of the datum's N authorised signers co-sign the
-//// spending transaction — attestRelease's threshold, as mathematics.
+//// spending transaction; attestRelease's threshold, as mathematics.
 
 use agoranet/treasury.{ReleaseDatum, release_permitted}
 use cardano/transaction.{OutputReference, Transaction}

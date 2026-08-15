@@ -12,7 +12,7 @@ import { hasAck } from "@/lib/consent";
 export const dynamic = "force-dynamic";
 
 // The face's own profile window (Phase 8.5, PRESENTATION_SPEC §5.2):
-// about-me and optional fields, per face ALWAYS — an Alias bio and a
+// about-me and optional fields, per face ALWAYS; an Alias bio and a
 // True Self bio never share a database row or a writing surface. Bios
 // are live-surface content (editable), never permanent-record. Display
 // name and other controls moved to /settings (§5.1).
@@ -55,22 +55,22 @@ export default async function ProfilePage({
         cacheBust={bust || undefined}
       />
       <p className="lore">
-        Your fellow souls ({bondCount}) — visible to you alone ·{" "}
+        Your fellow souls ({bondCount}); visible to you alone ·{" "}
         <Link href={`/souls/${face.handle}`}>see your public window</Link> ·{" "}
         <Link href="/settings">settings</Link>
       </p>
 
-      <h3>Your images — this face&rsquo;s mark and banner</h3>
+      <h3>Your images; this face&rsquo;s mark and banner</h3>
       <p className="lore">
         Live-surface, like the bio: replaceable or removable anytime,
         never part of the permanent record. Uploads are re-encoded and
         every trace of hidden camera data (location, device) is
-        destroyed — originals are never stored. Until you upload, your
+        destroyed; originals are never stored. Until you upload, your
         generated mark stands in.
       </p>
       {needsImageryWarning && (
         <div className="notice">
-          <strong>Before this face&rsquo;s first image — read this
+          <strong>Before this face&rsquo;s first image; read this
           honestly.</strong>
           <ol className="disclosure-list">
             {ALIAS_IMAGERY_WARNING.items.map((item, i) => (
@@ -121,7 +121,7 @@ export default async function ProfilePage({
       )}
       {m && <div className="notice">{m}</div>}
 
-      <h3>About you — this face&rsquo;s window</h3>
+      <h3>About you; this face&rsquo;s window</h3>
       <p className="lore">
         Live-surface content: editable anytime, shown on your public soul
         window, never part of the permanent record.
@@ -154,14 +154,14 @@ export default async function ProfilePage({
           />
         </label>
         <p className="lore">
-          Place yourself on the map, never someone else — name your own
+          Place yourself on the map, never someone else; name your own
           city, neighborhood, or nothing at all; other people&rsquo;s
           information and residential addresses don&rsquo;t belong here.
         </p>
         <button type="submit">Save the window</button>
       </form>
 
-      <h3>Your standing — the constellation</h3>
+      <h3>Your standing; the constellation</h3>
       <p>
         <em>Standing you earn, explained to the point.</em>
       </p>
@@ -171,7 +171,7 @@ export default async function ProfilePage({
       </p>
       {constellation.pillars.length === 0 && (
         <p className="lore">
-          No standing yet — it grows from substantive contributions:
+          No standing yet; it grows from substantive contributions:
           answers, attested Circle actions, accepted Picture repairs,
           moderation service.
         </p>
@@ -181,7 +181,7 @@ export default async function ProfilePage({
           <li key={p.pillarId}>
             <PillarMark slug={p.slug} /> <strong>{p.name}</strong>: {p.points}
             <details>
-              <summary className="lore">why — the full breakdown</summary>
+              <summary className="lore">why; the full breakdown</summary>
               <ul>
                 {p.lines.map((l, i) => (
                   <li key={i} className="lore">
@@ -196,12 +196,12 @@ export default async function ProfilePage({
 
       {changes.length > 0 && (
         <>
-          <h3>Recent score changes — every one with its cause</h3>
+          <h3>Recent score changes; every one with its cause</h3>
           <ul className="discussions">
             {changes.map((c, i) => (
               <li key={i}>
                 <span className="lore">{c.at.toLocaleDateString()}</span>{" "}
-                {c.pillarName}: {c.amount > 0 ? `+${c.amount}` : c.amount} —{" "}
+                {c.pillarName}: {c.amount > 0 ? `+${c.amount}` : c.amount}; {" "}
                 {c.cause}
               </li>
             ))}

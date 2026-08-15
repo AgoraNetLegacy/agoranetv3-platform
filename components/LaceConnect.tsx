@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 
 // The Lace testnet connect flow (TESTNET_RAILS_SPEC §1.3, §6.4 step 1):
 // CIP-30 in the browser, honestly labeled. The wallet stays the
-// soul's — connecting shares one testnet ADDRESS with the platform,
+// soul's; connecting shares one testnet ADDRESS with the platform,
 // nothing more; no keys, no custody, no mainnet. Mesh's BrowserWallet
 // wraps the CIP-30 API and hands back bech32 addresses directly.
 export function LaceConnect({
@@ -21,7 +21,7 @@ export function LaceConnect({
   async function connect() {
     setStatus(null);
     try {
-      // Loaded on click, not on page load — the wallet SDK is heavy
+      // Loaded on click, not on page load; the wallet SDK is heavy
       // and most page views never touch it.
       const { BrowserWallet } = await import("@meshsdk/core");
       const available = await BrowserWallet.getAvailableWallets();
@@ -37,7 +37,7 @@ export function LaceConnect({
       if (!address.startsWith("addr_test1")) {
         setStatus(
           "Lace is connected to MAINNET. This rail is testnet-only by " +
-            "design — open Lace → Settings → Network → Preprod, then try again."
+            "design; open Lace → Settings → Network → Preprod, then try again."
         );
         return;
       }
@@ -48,11 +48,11 @@ export function LaceConnect({
         await onLink(formData);
       });
     } catch (e) {
-      // The soul declining the wallet prompt lands here too — say so
+      // The soul declining the wallet prompt lands here too; say so
       // plainly, blame nobody.
       setStatus(
         "The wallet didn't complete the connection (declined, locked, or " +
-          "unavailable). Nothing was recorded — try again when ready."
+          "unavailable). Nothing was recorded; try again when ready."
       );
     }
   }

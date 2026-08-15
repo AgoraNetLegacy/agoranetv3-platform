@@ -15,7 +15,7 @@ import {
 export const dynamic = "force-dynamic";
 
 // A DM thread (FELLOW_SOULS §5): private, encrypted, readable only by
-// its two members — never rendered to anyone else, never public record.
+// its two members; never rendered to anyone else, never public record.
 
 export default async function DmThreadPage({
   params,
@@ -45,7 +45,7 @@ export default async function DmThreadPage({
         <Link href="/souls">← Fellow souls &amp; messages</Link>
       </p>
       <h1>
-        @{thread.otherHandle} — {thread.otherDisplayName}
+        @{thread.otherHandle}; {thread.otherDisplayName}
       </h1>
       <div className="notice">🔐 {DM_PHASE_A_DISCLOSURE}</div>
       {m && <div className="notice">{m}</div>}
@@ -53,7 +53,7 @@ export default async function DmThreadPage({
         <div className="notice">
           {isIncomingRequest
             ? "A stranger's request: replying opens the thread; declining closes it quietly. Both are free."
-            : "Your message waits with the request — one voice, once, until they answer."}
+            : "Your message waits with the request; one voice, once, until they answer."}
         </div>
       )}
 
@@ -74,7 +74,7 @@ export default async function DmThreadPage({
                 <input type="hidden" name="threadId" value={thread.id} />
                 <p className="interim-note">
                   Recipient-side reveal: this one message&apos;s words are
-                  disclosed to a random adjudicator as evidence — nothing
+                  disclosed to a random adjudicator as evidence; nothing
                   else in the thread. The standard flag path applies:
                   refundable deposit, rule citation, anonymous ruling.
                 </p>
@@ -84,7 +84,7 @@ export default async function DmThreadPage({
                   </option>
                   {rules.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.id} — {r.title}
+                      {r.id}; {r.title}
                     </option>
                   ))}
                 </select>{" "}
@@ -101,10 +101,10 @@ export default async function DmThreadPage({
 
       {canReply && (
         <>
-          <h3>Reply{isIncomingRequest ? " — replying opens the thread" : ""}</h3>
+          <h3>Reply{isIncomingRequest ? "; replying opens the thread" : ""}</h3>
           <form action={submitDmMessage} className="composer">
             <input type="hidden" name="threadId" value={thread.id} />
-            <textarea name="body" required placeholder="Your words — encrypted at rest." />
+            <textarea name="body" required placeholder="Your words; encrypted at rest." />
             <button type="submit">Send · {messageFee} PC</button>
           </form>
         </>

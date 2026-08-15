@@ -77,7 +77,7 @@ describe("stoic-wisdom rotation (BEACON §3.4)", () => {
   it("the date-keyed rotation is deterministic and covers every lesson", () => {
     const pick = (dayIndex: number) =>
       STOIC_LESSONS[dayIndex % STOIC_LESSONS.length];
-    // Same day, same lesson — for every soul.
+    // Same day, same lesson; for every soul.
     expect(pick(20000)).toBe(pick(20000));
     // A full cycle touches all 18.
     const seen = new Set<string>();

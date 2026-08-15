@@ -1,5 +1,5 @@
 // Runtime config guard (DATABASE_SETUP.md, v2 reuse): a hosted
-// environment REFUSES TO BOOT on unsafe configuration — a silent,
+// environment REFUSES TO BOOT on unsafe configuration; a silent,
 // hard-to-diagnose bug becomes an immediate startup failure. Enforced
 // by scripts/check-runtime-config.ts (prestart + build:postgres).
 //

@@ -1,5 +1,5 @@
 // The onboarding journey, visible (owner directive, 2026-07-14): every
-// ceremony screen shows where you are, what's done, and what's next —
+// ceremony screen shows where you are, what's done, and what's next;
 // hand-holding for the new soul that costs the experienced soul
 // nothing, since the bar reads at a glance and the flow itself never
 // slows down. The journey ends by carrying the soul to the Agora
@@ -35,8 +35,8 @@ export function JourneySteps({ current }: { current: JourneyStep }) {
       </ol>
       <p className="journey-next">
         {next
-          ? `Next: ${next.label.toLowerCase()} — then the Agora, your dashboard.`
-          : "Last step — the Agora, your dashboard, is right through here."}
+          ? `Next: ${next.label.toLowerCase()}; then the Agora, your dashboard.`
+          : "Last step; the Agora, your dashboard, is right through here."}
       </p>
     </nav>
   );

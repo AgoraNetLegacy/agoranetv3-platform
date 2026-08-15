@@ -1,9 +1,9 @@
-// The values seed (ONBOARDING Stage 5): one question per pillar — each
+// The values seed (ONBOARDING Stage 5): one question per pillar; each
 // pillar's OUSIA question, the "what is it, at its core?" lens (the
 // spec's recommendation). Encouraged, never blocking; skipped seeds just
 // mean weaker Circle matchmaking until real participation fills the gap.
 // Answers are per-profile and MATCHMAKING-ONLY (the ratified conservative
-// default) — never rendered publicly.
+// default); never rendered publicly.
 
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { grantOnce } from "./economy";
@@ -41,7 +41,7 @@ export async function saveSeedAnswer(
     update: { body },
   });
 
-  // Welcome Grant milestone: all seven answered (ECONOMIC §3) — once,
+  // Welcome Grant milestone: all seven answered (ECONOMIC §3); once,
   // atomically. The GrantClaim primary key makes concurrent final-answer
   // submissions safe: exactly one mints grant.seed, the rest collide.
   const answered = await db.valuesAnswer.count({
@@ -61,7 +61,7 @@ export async function saveSeedAnswer(
       if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002")) {
         throw err;
       }
-      // Already seeded (a concurrent request won the claim) — not an error.
+      // Already seeded (a concurrent request won the claim); not an error.
     }
   }
   return { ok: true };

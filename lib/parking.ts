@@ -1,12 +1,12 @@
 // Sessions & the parking rule (SEVEN_PILLAR_DASHBOARD_SPEC §3).
 //
-// A SoulSession is one browser context — the only place a soul's two
+// A SoulSession is one browser context; the only place a soul's two
 // faces ever co-occur, and only while both are signed in there. That
 // shared context is what lets the backend enforce "one face per pillar
 // at a time" without holding any durable link between the faces. The
 // rows are short-retention by design and purged on expiry (DUAL_IDENTITY
 // §7.2). A soul using two separate browsers steps outside the lock's
-// enforceable context — the lock protects them within the session that
+// enforceable context; the lock protects them within the session that
 // knows both faces; it cannot (and must not) consult a cross-face
 // registry that doesn't exist.
 
@@ -17,7 +17,7 @@ import { getRail } from "./rails";
 export async function createSession(db: PrismaClient): Promise<string> {
   const lifetimeHours = await getRail(db, "identity.sessionLifetimeHours");
   // The session id IS the browser's bearer token (it's the cookie value),
-  // so it must be unguessable — not the schema's default cuid(), whose
+  // so it must be unguessable; not the schema's default cuid(), whose
   // random block derives from a non-cryptographic RNG. 256 bits from the
   // CSPRNG puts session prediction out of reach.
   const id = randomBytes(32).toString("hex");
@@ -68,7 +68,7 @@ export type ParkingResult =
 /**
  * The hard lock (§3.3): a face entering a pillar takes the lot; the
  * session's OTHER face is blocked until that lot is released. Blocked
- * entry names the holding face plainly — expected behavior, not an
+ * entry names the holding face plainly; expected behavior, not an
  * error state.
  */
 export async function enterPillar(

@@ -1,11 +1,11 @@
-//// AgoraNet on-chain donation lock — Slice 3 (ONCHAIN_ECONOMY_MIGRATION.md).
+//// AgoraNet on-chain donation lock; Slice 3 (ONCHAIN_ECONOMY_MIGRATION.md).
 ////
 //// The "hello world" of non-custody, adapted from the Mesh vesting
 //// pattern: a donor locks value at the script address; it can leave
-//// ONLY through a transaction this logic accepts — the beneficiary
+//// ONLY through a transaction this logic accepts; the beneficiary
 //// signed, and the transaction provably begins at or after the unlock
 //// time. No operator path exists. The platform cannot spend, freeze,
-//// or redirect what sits here; it never could — the funds went from
+//// or redirect what sits here; it never could; the funds went from
 //// the donor's wallet to the script, and the script answers to math.
 ////
 //// Track 2 replaces the single beneficiary with the M-of-N release
@@ -16,7 +16,7 @@ use aiken/interval.{Finite, IntervalBoundType}
 
 /// What the donor locks alongside the funds.
 pub type DonationDatum {
-  /// Who may collect — a verification-key hash.
+  /// Who may collect; a verification-key hash.
   beneficiary: ByteArray,
   /// POSIX time (milliseconds). Collection is refused before this.
   unlock_after: Int,
@@ -65,7 +65,7 @@ test refuses_unsigned_beneficiary() {
 }
 
 test refuses_unbounded_validity_start() {
-  // A transaction with no finite start proves nothing about time —
+  // A transaction with no finite start proves nothing about time;
   // an attacker could otherwise collect early with an open interval.
   !can_collect(datum(), [beneficiary], interval.NegativeInfinity)
 }

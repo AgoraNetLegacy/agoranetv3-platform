@@ -1,7 +1,7 @@
 // Extract the domain layer from the spec corpus (Phase 7).
 //
 // The dashboard spec's content inventory (§7) maps every dashboard element
-// to its source document; this script performs that mapping mechanically —
+// to its source document; this script performs that mapping mechanically;
 // parsing each pillar's `_breakdown.md` domain sections VERBATIM into
 // `lib/domainContent.generated.ts`, and the mechanism documents into
 // `lib/mechanismDocs.generated.ts`. Content is ported, never paraphrased;
@@ -11,15 +11,15 @@
 // Run (one-time per corpus change):
 //   CORPUS="$HOME/Desktop/Agoranetv3" npx tsx scripts/extract-domain-content.ts
 //
-// The generated files are committed — the repo stays self-contained and
+// The generated files are committed; the repo stays self-contained and
 // the diff shows exactly what content the corpus contributed.
 //
 // PROVENANCE NOTE (flagged in DECISIONS_PENDING): the Compassion and Hope
 // breakdowns predate the per-domain "Opening Question" template the other
 // five carry. Their 16 questions are DRAFTED here in the ratified style
-// (marked provenance "derived-draft"), pending owner ratification — canon
+// (marked provenance "derived-draft"), pending owner ratification; canon
 // law already provides the amendment path ("question wording may evolve
-// later — every change becomes a ledger event", lib/canon.ts).
+// later; every change becomes a ledger event", lib/canon.ts).
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -89,28 +89,28 @@ const SOURCES: SourceSpec[] = [
   },
 ];
 
-// The 16 drafted Opening Questions (provenance "derived-draft" — see the
+// The 16 drafted Opening Questions (provenance "derived-draft"; see the
 // header note). Keyed by pillar slug + domain position.
 const DRAFTED_OPENING_QUESTIONS: Record<string, Record<number, string>> = {
   compassion: {
-    1: "When you last needed care, did the system treat you as a person or as a billing event — and what would healthcare paid for health itself actually look like?",
-    2: "When someone in your community has their worst hour, why is an armed response the default — and what would it take for the first person through the door to be trained to help?",
+    1: "When you last needed care, did the system treat you as a person or as a billing event; and what would healthcare paid for health itself actually look like?",
+    2: "When someone in your community has their worst hour, why is an armed response the default; and what would it take for the first person through the door to be trained to help?",
     3: "If everyone in the treatment chain is paid when a crisis repeats and no one is paid when it ends, how does recovery ever become the product?",
-    4: "If the justice system were paid only when people never came back, what would it do differently on day one — and why isn't it doing that now?",
-    5: "Why does growing old here mean disappearing from the neighborhood — and what would it take for our elders to remain neighbors instead of occupants?",
+    4: "If the justice system were paid only when people never came back, what would it do differently on day one; and why isn't it doing that now?",
+    5: "Why does growing old here mean disappearing from the neighborhood; and what would it take for our elders to remain neighbors instead of occupants?",
     6: "If housing people is provably cheaper than managing their homelessness, what exactly are we buying when we choose the more expensive cruelty?",
-    7: "Why does pollution always land where resistance is cheapest — and what would clean air and water as a birthright, not a zip-code lottery, require of us?",
-    8: "As essential life moves online, who around you is quietly being locked out — and what would technology built as an open elevator, not a gate, look like?",
+    7: "Why does pollution always land where resistance is cheapest; and what would clean air and water as a birthright, not a zip-code lottery, require of us?",
+    8: "As essential life moves online, who around you is quietly being locked out; and what would technology built as an open elevator, not a gate, look like?",
   },
   hope: {
-    1: "When did your vote last turn into something you could physically touch — and what would it take for that to be a normal experience instead of a memory?",
+    1: "When did your vote last turn into something you could physically touch; and what would it take for that to be a normal experience instead of a memory?",
     2: "If wages alone can no longer buy a stake in the future, where does a person actually begin to own a piece of the value they create?",
-    3: "Should a person's worst chapter be permanently searchable — and what would an automatic, earned clean slate change about who gets to try again?",
-    4: "What did school actually measure about you — what you could build, or how well you complied — and which one has your life run on since?",
+    3: "Should a person's worst chapter be permanently searchable; and what would an automatic, earned clean slate change about who gets to try again?",
+    4: "What did school actually measure about you; what you could build, or how well you complied; and which one has your life run on since?",
     5: "If despair and denial both end in doing nothing, what is the nearest piece of your own environment you could provably improve within a year?",
     6: "As world-changing capability concentrates in a few corporations, what tools would ordinary people need to stay creators instead of bystanders?",
-    7: "Who outside your household tangibly showed up for you this month — and where, within walking distance, could that even happen?",
-    8: "Your feed is paid for the seconds you spend, not for what you believe is possible afterward — what would you read differently if hope were the business model?",
+    7: "Who outside your household tangibly showed up for you this month; and where, within walking distance, could that even happen?",
+    8: "Your feed is paid for the seconds you spend, not for what you believe is possible afterward; what would you read differently if hope were the business model?",
   },
 };
 
@@ -131,7 +131,7 @@ interface ParsedDomain {
 function normalizeLabel(raw: string): string {
   let l = raw.trim();
   l = l.replace(/\s*\(.*\)\s*$/, ""); // trailing parenthetical
-  l = l.replace(/\s*—.*$/, ""); // em-dash suffix (Stoic Lens — Principle)
+  l = l.replace(/\s*; .*$/, ""); // em-dash suffix (Stoic Lens; Principle)
   l = l.replace(/^The\s+/, "");
   return l.trim();
 }
@@ -141,7 +141,7 @@ function parseBreakdown(path: string): ParsedDomain[] {
   const rawLines = text.split("\n");
 
   // Bold bullet labels may wrap across lines ("- **The Picture (…staying\n
-  // broken):** …") — join a bullet-opening line with its continuations
+  // broken):** …"); join a bullet-opening line with its continuations
   // until the label's closing ":**" appears.
   const lines: string[] = [];
   for (let i = 0; i < rawLines.length; i++) {
@@ -155,7 +155,7 @@ function parseBreakdown(path: string): ParsedDomain[] {
     lines.push(line);
   }
 
-  // Domain sections are "### N. Title (Subtitle)" — "### Level N" and other
+  // Domain sections are "### N. Title (Subtitle)"; "### Level N" and other
   // headings are not domains.
   const domains: ParsedDomain[] = [];
   let current: ParsedDomain | null = null;
@@ -235,7 +235,7 @@ function findSection(d: ParsedDomain, label: string): ParsedSection | undefined 
   return d.sections.find((s) => s.label === label);
 }
 
-/** Opening Questions arrive wrapped like *"…"* — store clean plain text. */
+/** Opening Questions arrive wrapped like *"…"*; store clean plain text. */
 function cleanQuestion(body: string): string {
   let q = body.trim();
   q = q.replace(/^\*+/, "").replace(/\*+$/, "").trim();
@@ -270,10 +270,10 @@ for (const src of SOURCES) {
       throw new Error(`${src.slug} domain ${d.position}: no Opening Question and no draft`);
     }
     if (oq && drafted) {
-      throw new Error(`${src.slug} domain ${d.position}: has BOTH a ratified Opening Question and a draft — remove the draft`);
+      throw new Error(`${src.slug} domain ${d.position}: has BOTH a ratified Opening Question and a draft; remove the draft`);
     }
     const stoic = findSection(d, "Stoic Lens")!;
-    const principle = stoic.rawLabel.match(/—\s*(.+)$/)?.[1]?.trim() ?? "";
+    const principle = stoic.rawLabel.match(/; \s*(.+)$/)?.[1]?.trim() ?? "";
     const repair = findSection(d, "Open for Repair")!;
     if (repair.items.length === 0) {
       throw new Error(`${src.slug} domain ${d.position}: Open for Repair has no questions`);
@@ -314,11 +314,11 @@ ${domainBlocks.join(",\n")},
   }`);
 }
 
-const domainFile = `// GENERATED by scripts/extract-domain-content.ts — do not hand-edit.
+const domainFile = `// GENERATED by scripts/extract-domain-content.ts; do not hand-edit.
 // Source: the spec corpus's seven pillar _breakdown.md documents
 // (7 Pillars/, dashboard spec §7 content inventory). Domain prose is
 // VERBATIM from the corpus. Opening questions marked "derived-draft"
-// (Compassion + Hope — their breakdowns predate the Opening Question
+// (Compassion + Hope; their breakdowns predate the Opening Question
 // template) are build-time drafts pending owner ratification; wording
 // changes are ledger-evented amendments, per canon law.
 
@@ -350,9 +350,9 @@ ${pillarBlocks.join(",\n")},
 `;
 
 writeFileSync(join(__dirname, "..", "lib", "domainContent.generated.ts"), domainFile);
-console.log(`Wrote lib/domainContent.generated.ts — ${totalDomains} domains across ${SOURCES.length} pillars.`);
+console.log(`Wrote lib/domainContent.generated.ts; ${totalDomains} domains across ${SOURCES.length} pillars.`);
 
-// Mechanism documents — full verbatim markdown, reference material for the
+// Mechanism documents; full verbatim markdown, reference material for the
 // dashboard's deep-dive section (spec §5.4).
 const mechBlocks: string[] = [];
 let mechCount = 0;
@@ -368,7 +368,7 @@ for (const src of SOURCES) {
   }`);
   }
 }
-const mechFile = `// GENERATED by scripts/extract-domain-content.ts — do not hand-edit.
+const mechFile = `// GENERATED by scripts/extract-domain-content.ts; do not hand-edit.
 // The pillar mechanism documents, verbatim (dashboard spec §5.4:
 // reference material, deliberately secondary).
 
@@ -384,4 +384,4 @@ ${mechBlocks.join(",\n")},
 ];
 `;
 writeFileSync(join(__dirname, "..", "lib", "mechanismDocs.generated.ts"), mechFile);
-console.log(`Wrote lib/mechanismDocs.generated.ts — ${mechCount} mechanism documents.`);
+console.log(`Wrote lib/mechanismDocs.generated.ts; ${mechCount} mechanism documents.`);

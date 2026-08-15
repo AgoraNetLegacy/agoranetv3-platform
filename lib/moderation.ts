@@ -1,4 +1,4 @@
-// Moderation Live (Phase 5 — MODERATION_SPEC.md + the rulebook).
+// Moderation Live (Phase 5; MODERATION_SPEC.md + the rulebook).
 //
 // Sortition: random opt-in 48-hour badges; nobody campaigns for the
 // power, nobody keeps it, nobody rules on their own community's cases.
@@ -6,7 +6,7 @@
 // rule," and consequences auto-apply. The triangle of blindness holds
 // everywhere: moderators never see who flagged or posted; the accused
 // never learns who flagged or ruled; the public sees the tombstone and
-// the rule. Rulings are nullifier-keyed in every public record —
+// the rule. Rulings are nullifier-keyed in every public record;
 // moderator identity lives only in Phase A operator space, where the
 // treasury pays it and the rating measures it.
 
@@ -20,14 +20,14 @@ import { BUDGET_MODERATION_REWARDS, BUDGET_TRIBUNAL_STIPENDS } from "./budget";
 import { notify } from "./notifications";
 import { contentHash } from "./discussions";
 
-// The full-hide expedited lane — R3.1 and R3.3 only (MODERATION §OQ6,
+// The full-hide expedited lane; R3.1 and R3.3 only (MODERATION §OQ6,
 // poll-governed, deliberately short).
 const EXPEDITED_RULES = ["R3.1", "R3.3"];
 
 // The freeze trigger (FUND_INTEGRITY §3.4; owner-ruled 2026-07-16 after
-// the spec was found silent on it — DECISIONS_PENDING #17).
+// the spec was found silent on it; DECISIONS_PENDING #17).
 //
-// **R3.4 "Fraud & phishing — active attempts to steal credentials,
+// **R3.4 "Fraud & phishing; active attempts to steal credentials,
 // FUNDS, or identities."** The rulebook already had the rule; nothing
 // was invented for this.
 //
@@ -35,14 +35,14 @@ const EXPEDITED_RULES = ["R3.1", "R3.3"];
 // ruling on a release freezes the chamber's remaining money ONLY when
 // the cited rule is fraud. Any other upheld rule against a release still
 // carries its normal consequences (strike ladder, Light Score) but moves
-// no money. The alternative — "any upheld ruling freezes" — would mean a
+// no money. The alternative; "any upheld ruling freezes"; would mean a
 // rude sentence in a payment's stated purpose could freeze a mission's
 // entire purse. Over-triggering here is not a smaller error than
 // under-triggering; it is a censorship mechanism wearing an anti-fraud
 // costume.
 const FREEZE_RULES = ["R3.4"];
 
-// v0 Moderation Rating — the input categories are public (agreement
+// v0 Moderation Rating; the input categories are public (agreement
 // with final outcomes, appeal survival); the weights below are platform
 // secret by ratified design. Never rendered.
 function ratingMultiplier(agreementRate: number, max: number): number {
@@ -54,7 +54,7 @@ function ratingMultiplier(agreementRate: number, max: number): number {
 
 /** Open a case for a flag, or join the evidence's existing open case.
  *  Posts blur under review (full-hide only in the expedited lane, §5);
- *  DM excerpts (Phase 6.5) carry no content action — nothing public
+ *  DM excerpts (Phase 6.5) carry no content action; nothing public
  *  exists to blur, and the recipient already holds the message. */
 export async function openOrJoinCase(
   tx: Tx,
@@ -96,7 +96,7 @@ export async function openOrJoinCase(
       where: { id: input.postId },
       include: { discussion: true },
     });
-    // Heavy = removal from a permanent space — three independent rulings.
+    // Heavy = removal from a permanent space; three independent rulings.
     heavy = post.discussion.permanence.startsWith("permanent") || post.permanentUpgraded;
   }
 
@@ -117,7 +117,7 @@ export async function openOrJoinCase(
     data: { caseId: created.id, status: "in-case" },
   });
   if (input.postId) {
-    // Blur, don't erase — a flag is never an instant censor button.
+    // Blur, don't erase; a flag is never an instant censor button.
     await tx.post.update({
       where: { id: input.postId },
       data: { status: expedited ? "hidden" : "blurred" },
@@ -129,7 +129,7 @@ export async function openOrJoinCase(
 /**
  * The accused behind a case's evidence, plus the pillar its
  * consequences land in. DM conduct (Phase 6.5) strikes in the meta
- * pillar — a violation of the commons' rules rather than any one
+ * pillar; a violation of the commons' rules rather than any one
  * pillar's room (build-time interim, flagged in DECISIONS_PENDING).
  */
 async function accusedOf(
@@ -144,7 +144,7 @@ async function accusedOf(
     return { profileId: post.authorProfileId, pillarId: post.discussion.pillarId };
   }
   // A mission release (Phase 8.7): the accused is the soul who PROPOSED
-  // the payment — the one who made the claim about what it was for. Not
+  // the payment; the one who made the claim about what it was for. Not
   // the recipient, who may be an innocent supplier, and not the
   // co-signers, whose own accountability runs through their staked
   // reputations rather than through this case. Consequences land in the
@@ -236,7 +236,7 @@ async function scaleOffers(db: PrismaClient): Promise<void> {
       tier: "time-sensitive",
       category: "badge-offer",
       title: "You've been offered a moderation badge",
-      body: `Sortition chose this face. Equip within ${offerWindowHours} hours or it passes on — freely, without penalty.`,
+      body: `Sortition chose this face. Equip within ${offerWindowHours} hours or it passes on; freely, without penalty.`,
       refType: "badge-offer",
       refId: offer.id,
     });
@@ -290,7 +290,7 @@ export async function activeTermFor(db: PrismaClient, profileId: string) {
 
 // -------------------------------------------------------------- the queue
 
-/** The minimal case file (§3.1) — and nothing else. DM cases show the
+/** The minimal case file (§3.1); and nothing else. DM cases show the
  *  revealed excerpt in place of a post; the triangle holds identically
  *  (no handles, no ids, standing only). */
 export async function caseFileFor(db: PrismaClient, caseId: string) {
@@ -324,7 +324,7 @@ export async function caseFileFor(db: PrismaClient, caseId: string) {
     // A mission payment (Phase 8.7). The "content" under judgment is the
     // payment's own claim: what it was for, how much, and to whom. All
     // of it is already public on the civic ledger, so the case file
-    // reveals nothing new — but the moderator still sees no handles,
+    // reveals nothing new; but the moderator still sees no handles,
     // exactly like every other case. The triangle holds.
     const release = await db.missionRelease.findUniqueOrThrow({
       where: { id: modCase.releaseId },
@@ -340,10 +340,10 @@ export async function caseFileFor(db: PrismaClient, caseId: string) {
       `Co-signers: ${await db.releaseAttestation.count({ where: { releaseId: release.id } })}`,
       `State: ${release.state}`,
       audits.length
-        ? `Auditor findings: ${audits.map((a) => `${a.finding} — ${a.note}`).join(" | ")}`
+        ? `Auditor findings: ${audits.map((a) => `${a.finding}; ${a.note}`).join(" | ")}`
         : "Auditor findings: none",
     ].join("\n");
-    pillarName = `Mission payment — ${release.chamber.title}`;
+    pillarName = `Mission payment; ${release.chamber.title}`;
   } else {
     const excerpt = await db.dmExcerpt.findUniqueOrThrow({
       where: { id: modCase.dmExcerptId! },
@@ -366,7 +366,7 @@ export async function caseFileFor(db: PrismaClient, caseId: string) {
     accusedActiveStrikes: activeStrikes,
     accusedPillarStanding: lsAdjustments._sum.amount ?? 0,
     flagNotes: modCase.flags.map((f) => f.note).filter(Boolean),
-    // No handles, no display names, no profile ids — the triangle.
+    // No handles, no display names, no profile ids; the triangle.
   };
 }
 
@@ -440,18 +440,18 @@ export async function submitRuling(
   input: RulingInput
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
   const term = await activeTermFor(db, input.profileId);
-  if (!term) return { ok: false, reason: "No active badge — the workbench is closed to you." };
+  if (!term) return { ok: false, reason: "No active badge; the workbench is closed to you." };
 
   const modCase = await db.modCase.findUnique({
     where: { id: input.caseId },
     include: { flags: true, rulings: true },
   });
   // Tribunal cases (tier-3, escalated, or Sentinel-bundled) live at
-  // status "open" too, but the routine bench must never touch them — they
+  // status "open" too, but the routine bench must never touch them; they
   // are decided only by seated Tribunal members through submitTribunalRuling
   // (§4). caseQueueFor already filters { tribunal: false }; enforce the same
   // segregation here so a hand-crafted caseId can't route a Tribunal case
-  // through the single-ruling routine path. The reason stays generic — the
+  // through the single-ruling routine path. The reason stays generic; the
   // routine bench should not learn which cases are Tribunal.
   if (
     !modCase ||
@@ -472,7 +472,7 @@ export async function submitRuling(
       where: { caseId: modCase.appealOfId, moderatorProfileId: input.profileId },
     });
     if (originalRuling) {
-      return { ok: false, reason: "Fresh eyes only — you ruled the original case." };
+      return { ok: false, reason: "Fresh eyes only; you ruled the original case." };
     }
   }
   if (input.verdict === "uphold" && !input.citedRuleId) {
@@ -484,7 +484,7 @@ export async function submitRuling(
   }
 
   // Supervision (§6): a new moderator's early rulings are double-checked
-  // before effect — when a qualified second exists. Computed here (reads)
+  // before effect; when a qualified second exists. Computed here (reads)
   // before the atomic spend+create, exactly as before.
   const initial = await getRail(db, "moderation.supervisionInitialCases");
   const myConfirmed = await confirmedRulingCount(db, input.profileId);
@@ -492,7 +492,7 @@ export async function submitRuling(
     myConfirmed < initial && (await qualifiedSupervisorExists(db, input.profileId));
 
   // The nullifier keys the ruling (v2 sealed-vote pattern) and enforces
-  // one-ruling-per-moderator-per-case; private recording — the public
+  // one-ruling-per-moderator-per-case; private recording; the public
   // record is written at resolution. The gate spend and the ruling row
   // commit in ONE transaction (#25), so a rollback can't strand the ruling
   // nullifier; resolution (the strike-ladder cascade) runs after the commit.
@@ -560,7 +560,7 @@ export async function reviewSupervisedRuling(
   db: PrismaClient,
   input: { rulingId: string; profileId: string; agree: boolean }
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
-  // Only a qualified supervisor may confirm/override — the same gate
+  // Only a qualified supervisor may confirm/override; the same gate
   // supervisionQueueFor applies to the queue. Without it, any signed-in
   // soul (no badge, or a brand-new badge holder past zero confirmed cases)
   // could push a stranger's pending ruling to "confirmed" (triggering the
@@ -568,7 +568,7 @@ export async function reviewSupervisedRuling(
   // moderator's agreement rate). The action gates only rate-limit family,
   // not standing, so the check must live here.
   const term = await activeTermFor(db, input.profileId);
-  if (!term) return { ok: false, reason: "No active badge — the workbench is closed to you." };
+  if (!term) return { ok: false, reason: "No active badge; the workbench is closed to you." };
   const initial = await getRail(db, "moderation.supervisionInitialCases");
   if ((await confirmedRulingCount(db, input.profileId)) < initial) {
     return { ok: false, reason: "Not a qualified supervisor yet." };
@@ -681,7 +681,7 @@ export async function resolveCase(
 
     // Content: tombstone on uphold; restore on decline (blur was never
     // erasure). The tombstone keeps the rule citation, publicly, forever.
-    // DM cases carry no content action — the message lives in a private
+    // DM cases carry no content action; the message lives in a private
     // thread the recipient already holds; consequences are personal.
     if (input.outcome === "upheld") {
       if (post) {
@@ -701,11 +701,11 @@ export async function resolveCase(
           },
         });
       }
-      // ★ THE FREEZE (FUND_INTEGRITY §3.4 — "the module's real teeth").
+      // ★ THE FREEZE (FUND_INTEGRITY §3.4; "the module's real teeth").
       // An upheld FRAUD ruling on a mission payment halts every release
       // that chamber has not yet paid out. Automatic, inside this
       // ruling's own transaction: no operator decides, which closes the
-      // mirror-image capture path — freezing funds someone simply
+      // mirror-image capture path; freezing funds someone simply
       // doesn't want paid (§3.7).
       //
       // Said honestly, in the product and here: you CANNOT claw back
@@ -735,7 +735,7 @@ export async function resolveCase(
             rule: input.citedRuleId,
             frozenCount: frozen,
             // The limit, on the record, every time.
-            note: "Unreleased payments only — money already paid out cannot be recovered by the platform.",
+            note: "Unreleased payments only; money already paid out cannot be recovered by the platform.",
           },
         });
       }
@@ -752,7 +752,7 @@ export async function resolveCase(
       });
     }
 
-    // "No rule fits" surfaces publicly — the judiciary tells the
+    // "No rule fits" surfaces publicly; the judiciary tells the
     // legislature where the law is thin (§3.4).
     if (input.outcome === "no-rule-fits") {
       await appendEvent(tx, {
@@ -762,7 +762,7 @@ export async function resolveCase(
       });
     }
 
-    // The public resolution record — nullifier-keyed rulings, no handles.
+    // The public resolution record; nullifier-keyed rulings, no handles.
     await appendEvent(tx, {
       actorType: "system",
       eventType: "case.resolved",
@@ -777,7 +777,7 @@ export async function resolveCase(
     });
 
     // Where ruling notifications point: the post, the DM thread (both
-    // parties already know the thread exists — nothing leaks), or the
+    // parties already know the thread exists; nothing leaks), or the
     // chamber whose payment was ruled on (Phase 8.7). A release's
     // chamber is already public, so pointing at it reveals nothing the
     // ledger doesn't already carry.
@@ -798,7 +798,7 @@ export async function resolveCase(
     for (const flag of modCase.flags) {
       const refund = flag.depositHeld > 0 && !input.badFaith;
       if (refund) {
-        // Through the one door (economy.payFromTreasury) — a refund is
+        // Through the one door (economy.payFromTreasury); a refund is
         // still the treasury spending, so it carries its category like
         // any other outflow.
         const paid = await payFromTreasury(tx, {
@@ -825,13 +825,13 @@ export async function resolveCase(
           input.outcome === "upheld"
             ? `Upheld under ${input.citedRuleId}. ${flag.depositHeld > 0 ? "Your deposit is refunded." : ""}`
             : input.badFaith
-              ? "Declined and ruled bad-faith — your deposit is forfeited to the treasury."
+              ? "Declined and ruled bad-faith; your deposit is forfeited to the treasury."
               : `Declined in good faith. ${flag.depositHeld > 0 ? "Your deposit is refunded." : ""}`,
         ...notifyRef,
       });
     }
 
-    // The accused learns the ruling and the citation — never who.
+    // The accused learns the ruling and the citation; never who.
     await notify(tx, {
       profileId: accused.profileId,
       tier: "time-sensitive",
@@ -841,12 +841,12 @@ export async function resolveCase(
         input.outcome === "upheld"
           ? `${post ? "Removed" : "Upheld"} under ${input.citedRuleId}. You may appeal once${modCase.tier <= 2 ? "; a restorative option may be available" : ""}.`
           : post
-            ? "A flag on your content was declined — it is visible again."
+            ? "A flag on your content was declined; it is visible again."
             : "A report on a message of yours was declined.",
       ...notifyRef,
     });
 
-    // Rewards: per case RESOLVED, never per uphold — every effective
+    // Rewards: per case RESOLVED, never per uphold; every effective
     // ruler is paid, treasury-funded, scaled by their (secret-weighted)
     // rating within the floor-and-cap rails.
     for (const ruling of modCase.rulings) {
@@ -888,7 +888,7 @@ export async function resolveCase(
   });
 }
 
-/** The auto-applied ladder (§7) — the moderator never sentences. */
+/** The auto-applied ladder (§7); the moderator never sentences. */
 async function applyStrikeLadder(
   tx: Tx,
   input: { profileId: string; pillarId: string; tier: number; caseId: string }
@@ -922,10 +922,10 @@ async function applyStrikeLadder(
   const penaltyG = strikeNumber === 1 ? p1 : p2;
   const lsBase = strikeNumber === 1 ? ls1 : ls2;
 
-  // Gratium penalty — clamped at the balance; penalties never create debt.
+  // Gratium penalty; clamped at the balance; penalties never create debt.
   // Lock the balance row first (the no-op upsert acquires its write lock,
   // held to commit) so concurrent strike resolutions against one profile
-  // serialise and each clamp reads a consistent balance — otherwise two
+  // serialise and each clamp reads a consistent balance; otherwise two
   // strikes read the same balance and drive it negative.
   await tx.balance.upsert({
     where: { profileId_currency: { profileId: input.profileId, currency: "G" } },
@@ -959,7 +959,7 @@ async function applyStrikeLadder(
     });
   }
 
-  // Light Score deduction — pillar-scoped, tier-scaled, decaying on the
+  // Light Score deduction; pillar-scoped, tier-scaled, decaying on the
   // strike clock; the Phase 7 engine consumes these records.
   await tx.lightScoreAdjustment.create({
     data: {
@@ -982,7 +982,7 @@ async function applyStrikeLadder(
       where: { id: input.profileId },
       data: { readOnlyUntil: new Date(Date.now() + readOnlyDays * 86_400_000) },
     });
-    // Tribunal review of the third strike (§7 ladder) — the docket
+    // Tribunal review of the third strike (§7 ladder); the docket
     // entry carries the originating case's evidence, whichever kind:
     // a post, a DM excerpt, or a mission payment (Phase 8.7). Dropping
     // one would leave a case with NO evidence, which db:verify's
@@ -1021,7 +1021,7 @@ export async function appealCase(
     return { ok: false, reason: "Nothing to appeal." };
   }
   if (original.appealedBy) {
-    return { ok: false, reason: "One appeal per ruling — this case has had its appeal." };
+    return { ok: false, reason: "One appeal per ruling; this case has had its appeal." };
   }
   const accused = await accusedOf(db, original);
   if (accused.profileId !== input.profileId) {
@@ -1087,7 +1087,7 @@ export async function settleAppeal(db: PrismaClient, appealCaseId: string): Prom
     });
     if (changed && depositEntry) {
       // The appeal deposit returns when the Tribunal changes the ruling
-      // (POLLS §8). Through the one door — a refund is the treasury
+      // (POLLS §8). Through the one door; a refund is the treasury
       // spending, and it carries its category like every other outflow.
       const refunded = await payFromTreasury(tx, {
         profileId: depositEntry.fromProfileId!,
@@ -1157,7 +1157,7 @@ export async function seatTribunal(db: PrismaClient): Promise<void> {
         },
       });
       // Treasury-paid stipend per term (service is compensated, never
-      // charged) — through the one door, carrying its category.
+      // charged); through the one door, carrying its category.
       const paidStipend = await payFromTreasury(tx, {
         profileId: candidate.profileId,
         currency: "G",
@@ -1301,7 +1301,7 @@ export async function acceptRestorative(
       const discussion = await tx.discussion.findUniqueOrThrow({
         where: { id: post.discussionId },
       });
-      // The correction is appended where the harm happened — remediation,
+      // The correction is appended where the harm happened; remediation,
       // not participation: no fee. In a permanent space it is hash-
       // committed like every other permanent record.
       const created = await tx.post.create({
@@ -1331,7 +1331,7 @@ export async function acceptRestorative(
         });
       }
     } else if (modCase.dmExcerptId) {
-      // DM case: the harm happened in the thread — the correction is
+      // DM case: the harm happened in the thread; the correction is
       // appended there, fee-exempt, encrypted like any message.
       const excerpt = await tx.dmExcerpt.findUniqueOrThrow({
         where: { id: modCase.dmExcerptId },
@@ -1384,7 +1384,7 @@ export async function acceptRestorative(
 
 // --------------------------------------------------------------- sentinel
 
-/** Sentinel v1 (§11): brigade detection only. Anomalies never punish —
+/** Sentinel v1 (§11): brigade detection only. Anomalies never punish;
  *  they bundle to the Tribunal, labeled machine-flagged. */
 async function sentinelSweep(db: PrismaClient): Promise<void> {
   const [threshold, windowHours] = await Promise.all([

@@ -1,11 +1,11 @@
-// Track 2 Slice 5 — the mission treasury, live on preprod.
+// Track 2 Slice 5; the mission treasury, live on preprod.
 // The full §4 cycle: INIT (state NFT + sane datum) → DONATE ×2
 // (non-custodial, no contention) → PROPOSE (one attesting member,
 // terms frozen in the datum) → 1-of-3 RELEASE REFUSED → 2-of-3
 // RELEASE: recipient paid exactly the proposed amount, remainder
 // provably back to the pot. Three throwaway attesting-member keys +
 // a throwaway tribunal key (unused until Slice 6); the fee-paying
-// dev wallet is NOT a signer — "the operator signed" moves nothing.
+// dev wallet is NOT a signer; "the operator signed" moves nothing.
 //
 // Usage: npx tsx scripts/chain/demo-treasury-roundtrip.ts
 import { loadEnvConfig } from "@next/env";
@@ -45,7 +45,7 @@ async function main() {
   const validator = blueprint.validators.find(
     (v: { title: string }) => v.title === "mission_treasury.mission_treasury.spend"
   );
-  if (!validator) throw new Error("mission_treasury missing — run aiken build.");
+  if (!validator) throw new Error("mission_treasury missing; run aiken build.");
   const scriptCbor = applyCborEncoding(validator.compiledCode);
   const scriptAddress = serializePlutusScript({ code: scriptCbor, version: "V3" }, undefined, 0)
     .address;
@@ -69,7 +69,7 @@ async function main() {
 
   console.log(`network: ${net}`);
   console.log(`script:  ${scriptAddress}`);
-  console.log("chamber: unique per run — 2-of-3 attestors, tribunal held out for Slice 6");
+  console.log("chamber: unique per run; 2-of-3 attestors, tribunal held out for Slice 6");
 
   const stateDatum = (frozen: boolean, pending: ReturnType<typeof mConStr0> | null) =>
     mConStr0([
@@ -93,7 +93,7 @@ async function main() {
   };
   // The address-UTxO index lags the tx index: before building the next
   // spend, wait until the wallet SEES its own change from the last one
-  // — or coin selection re-spends an input the chain already consumed.
+  //; or coin selection re-spends an input the chain already consumed.
   const waitWalletSees = async (txHash: string) => {
     for (let i = 0; i < 24; i++) {
       if ((await wallet.getUtxos()).some((u) => u.input.txHash === txHash)) return;
@@ -102,7 +102,7 @@ async function main() {
     throw new Error(`wallet never saw change from ${txHash}`);
   };
 
-  // Collateral is re-acquired FRESH before every Plutus leg — any
+  // Collateral is re-acquired FRESH before every Plutus leg; any
   // intervening transaction's coin selection may have eaten the last
   // one (the recurring trap of this toolchain, now handled once).
   const ensureCollateral = async () => {
@@ -128,7 +128,7 @@ async function main() {
     }
     return c;
   };
-  // Never hand the collateral to input selection — it must survive.
+  // Never hand the collateral to input selection; it must survive.
   const spendables = async (c: { input: { txHash: string; outputIndex: number } }) =>
     (await wallet.getUtxos()).filter(
       (u) =>
@@ -163,7 +163,7 @@ async function main() {
   await waitWalletSees(initHash);
   console.log("CONFIRMED: state NFT minted, treasury thread live.");
 
-  // --- 2. DONATE ×2 (plain payments to the script — no validator runs).
+  // --- 2. DONATE ×2 (plain payments to the script; no validator runs).
   const donate = async () => {
     const t = new Transaction({ initiator: wallet });
     t.sendLovelace(
@@ -180,14 +180,14 @@ async function main() {
   await waitWalletSees(d2);
   console.log(`DONATED 2×3 tADA: ${d1.slice(0, 12)}…, ${d2.slice(0, 12)}…`);
 
-  // Our chamber's UTxOs only — orphans from failed runs carry other
+  // Our chamber's UTxOs only; orphans from failed runs carry other
   // chamber ids in their datums and are ignored.
   const utxosAt = async () =>
     (await provider.fetchAddressUTxOs(scriptAddress)).filter((x) =>
       (x.output.plutusData ?? "").includes(chamberHex)
     );
-  // The state thread is tracked by its EXPECTED TIP — the tx that last
-  // moved it — never by "whatever the lagging address index shows".
+  // The state thread is tracked by its EXPECTED TIP; the tx that last
+  // moved it; never by "whatever the lagging address index shows".
   const stateUtxoFrom = async (tipTxHash: string) => {
     for (let i = 0; i < 24; i++) {
       const u = (await utxosAt()).find(
@@ -230,7 +230,7 @@ async function main() {
   await waitTx(propHash, scriptAddress);
   await waitWalletSees(propHash);
 
-  // --- 4+5. RELEASE — refused at 1-of-3, paid at 2-of-3.
+  // --- 4+5. RELEASE; refused at 1-of-3, paid at 2-of-3.
   st = await stateUtxoFrom(propHash);
   collateral = await ensureCollateral();
   const donations = (await utxosAt()).filter(
@@ -289,7 +289,7 @@ async function main() {
   try {
     const under = await buildRelease([signers[0]]);
     await wallet.submitTx(await coSign(under, [signers[0]]));
-    throw new Error("UNDER-THRESHOLD RELEASE ACCEPTED — do not ship this.");
+    throw new Error("UNDER-THRESHOLD RELEASE ACCEPTED; do not ship this.");
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     if (msg.includes("do not ship")) throw e;

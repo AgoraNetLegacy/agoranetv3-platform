@@ -1,17 +1,17 @@
-// Direct Messages (Phase 6.5 — FELLOW_SOULS_AND_DM_SPEC §5).
+// Direct Messages (Phase 6.5; FELLOW_SOULS_AND_DM_SPEC §5).
 //
 // Profile-to-profile, any face combination. Encrypted at rest
-// (lib/dmCrypto.ts — Phase A escrow posture, disclosed verbatim);
+// (lib/dmCrypto.ts; Phase A escrow posture, disclosed verbatim);
 // initiator pays to open a thread, every sender pays the per-message
 // micro-fee; recipients never pay to receive or reply. Strangers
 // arrive as requests (the x.com pattern); fellow souls land direct.
 // Not public record: private, deletable by each side for themselves,
-// metadata per-profile only — and NOTHING here ever reaches the
+// metadata per-profile only; and NOTHING here ever reaches the
 // public ledger (private gate recordings, blinded fee entries).
 //
 // Recipient-side reporting (§5.1): the recipient reveals a specific
 // message's plaintext as a frozen DmExcerpt; the excerpt feeds the
-// STANDARD flag path — deposit rules, badge adjudication, anonymity
+// STANDARD flag path; deposit rules, badge adjudication, anonymity
 // protections unchanged.
 
 import { randomUUID } from "crypto";
@@ -63,7 +63,7 @@ function sideOf(thread: ThreadRow, profileId: string): "initiator" | "other" | n
 /**
  * Open (or reuse) the thread to another soul and send the first
  * message. Fellow souls: the thread opens directly. Strangers: it
- * arrives as a request — the recipient can reply (opens it), ignore,
+ * arrives as a request; the recipient can reply (opens it), ignore,
  * or decline. Initiator pays the thread fee once, plus the per-message
  * fee like any sender.
  */
@@ -96,7 +96,7 @@ export async function openThread(
     if (existing.status === "declined") {
       return { ok: false, reason: "This message can't be delivered." };
     }
-    // Thread already exists — this is just a message into it.
+    // Thread already exists; this is just a message into it.
     const sent = await sendMessage(db, {
       threadId: existing.id,
       senderProfileId: from.id,
@@ -105,7 +105,7 @@ export async function openThread(
     return sent.ok ? { ok: true, threadId: existing.id } : sent;
   }
 
-  // Spirit Mode at inbound or above refuses NEW threads — the block's
+  // Spirit Mode at inbound or above refuses NEW threads; the block's
   // exact wording (§5.2), so the veil is never itself a signal.
   // Existing conversations continue (ghost handles those in
   // sendMessage).
@@ -126,7 +126,7 @@ export async function openThread(
         ledgerRecording: "private",
       });
       if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
-      // Initiator pays — blinded entries, no counterparty reference.
+      // Initiator pays; blinded entries, no counterparty reference.
       const threadFee = await chargeToTreasury(tx, {
         profileId: from.id,
         currency: "PC",
@@ -165,7 +165,7 @@ export async function openThread(
       });
 
       // §5.3: fellow-soul DMs are time-sensitive (a human is waiting);
-      // stranger requests wait quietly. Aggregated per thread — content
+      // stranger requests wait quietly. Aggregated per thread; content
       // never rides a notification.
       await notify(tx, {
         profileId: to.id,
@@ -175,8 +175,8 @@ export async function openThread(
           ? `A message from a fellow soul`
           : "A stranger opened a conversation",
         body: bonded
-          ? "A fellow soul wrote to you — the message is in your threads."
-          : "It waits in your Requests. Reply to open the thread, ignore it, or decline — all free.",
+          ? "A fellow soul wrote to you; the message is in your threads."
+          : "It waits in your Requests. Reply to open the thread, ignore it, or decline; all free.",
         refType: "dm-thread",
         refId: thread.id,
         aggregationKey: `dm:${thread.id}`,
@@ -204,10 +204,10 @@ export async function sendMessage(
     return { ok: false, reason: "This conversation is closed." };
   }
   // A request thread only carries more messages once the RECIPIENT
-  // replies — the initiator cannot pile on while it waits (§2.3's
+  // replies; the initiator cannot pile on while it waits (§2.3's
   // no-pressure discipline, applied to stranger threads).
   if (thread.status === "request" && side === "initiator") {
-    return { ok: false, reason: "Your message waits with the request — one voice, once, until they answer." };
+    return { ok: false, reason: "Your message waits with the request; one voice, once, until they answer." };
   }
   const otherId =
     side === "initiator" ? thread.otherProfileId : thread.initiatorProfileId;
@@ -215,7 +215,7 @@ export async function sendMessage(
     return { ok: false, reason: "This message can't be delivered." };
   }
   // Full ghost: even existing threads refuse new messages, with the
-  // same neutral wording — the veil is never itself a signal.
+  // same neutral wording; the veil is never itself a signal.
   const other = await db.profile.findUnique({ where: { id: otherId } });
   if (other && spiritCovers(other, "ghost")) {
     return { ok: false, reason: "This message can't be delivered." };
@@ -287,7 +287,7 @@ export async function sendMessage(
   }
 }
 
-/** Decline a request thread (free, quiet — the initiator learns nothing
+/** Decline a request thread (free, quiet; the initiator learns nothing
  *  beyond silence). */
 export async function declineThread(
   db: PrismaClient,
@@ -384,7 +384,7 @@ export async function threadsFor(db: PrismaClient, profileId: string) {
   };
 }
 
-/** Decrypt a thread for one of its two members — never anyone else.
+/** Decrypt a thread for one of its two members; never anyone else.
  *  Respects that side's delete-for-me horizon. */
 export async function readThread(
   db: PrismaClient,
@@ -444,7 +444,7 @@ export async function readThread(
 
 /**
  * Recipient-side reporting (§5.1): reveal ONE message's plaintext as a
- * frozen excerpt and file it through the standard flag path — deposit
+ * frozen excerpt and file it through the standard flag path; deposit
  * rules, badge adjudication, anonymity protections unchanged. Only the
  * message's RECIPIENT may reveal it; you cannot report your own words.
  */
@@ -463,9 +463,9 @@ export async function reportMessage(
     return { ok: false, reason: "You cannot report your own words." };
   }
   const rule = await db.rule.findUnique({ where: { id: input.ruleId } });
-  if (!rule) return { ok: false, reason: "Unknown rule — reports cite the rulebook." };
+  if (!rule) return { ok: false, reason: "Unknown rule; reports cite the rulebook." };
 
-  // One report per message per recipient — the gate's fixed scope is the
+  // One report per message per recipient; the gate's fixed scope is the
   // enforcement, private like every flag.
   const threadKey = await threadKeyFor(db, message.thread);
   const plaintext = openMessage(
@@ -499,7 +499,7 @@ export async function reportMessage(
         body: plaintext,
       },
     });
-    // The refundable deposit — never blocked at zero (DISCUSSIONS §7).
+    // The refundable deposit; never blocked at zero (DISCUSSIONS §7).
     const depositAmount = await getRail(tx, "moderation.flagDeposit");
     const { balanceOf } = await import("./economy");
     let depositTaken = 0;

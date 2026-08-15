@@ -17,7 +17,7 @@ import { Icon, PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
-// The public page (CIRCLES §2.1) — visible to everyone, including
+// The public page (CIRCLES §2.1); visible to everyone, including
 // Readers: purpose (versioned), focus tags, the action log (§6) with the
 // honest-claim copy fixed in the UI, the membership list, and status.
 // Deliberation lives in the members' room; this page is the record.
@@ -72,12 +72,12 @@ export default async function CirclePage({
         {label === "active" && <span className="badge permanent">Active</span>}
         {label === "inactive" && (
           <span className="badge locked">
-            Inactive — quiet for a while, honestly labeled; still joinable
+            Inactive; quiet for a while, honestly labeled; still joinable
           </span>
         )}
         {label === "closed" && (
           <span className="badge locked">
-            Closed by member vote — this record is preserved forever
+            Closed by member vote; this record is preserved forever
           </span>
         )}{" "}
         {circle.pillar && (
@@ -99,7 +99,7 @@ export default async function CirclePage({
         <details>
           <summary>
             Purpose history ({circle.purposeRevisions.length} earlier
-            version{circle.purposeRevisions.length === 1 ? "" : "s"}) — a
+            version{circle.purposeRevisions.length === 1 ? "" : "s"}); a
             Circle can&apos;t quietly rewrite what it claimed to be
           </summary>
           {circle.purposeRevisions.map((r) => (
@@ -113,7 +113,7 @@ export default async function CirclePage({
       )}
       {isFounder && circle.status === "active" && (
         <details>
-          <summary>Edit purpose &amp; tags (founder&apos;s only power — versioned)</summary>
+          <summary>Edit purpose &amp; tags (founder&apos;s only power; versioned)</summary>
           <form action={submitPurposeEdit} className="composer">
             <input type="hidden" name="circleId" value={circle.id} />
             <textarea name="purpose" defaultValue={circle.purpose} required maxLength={1000} />
@@ -139,7 +139,7 @@ export default async function CirclePage({
         </details>
       )}
 
-      {/* Membership actions — a div, not a <p>: a form may not descend
+      {/* Membership actions; a div, not a <p>: a form may not descend
           from a paragraph, and the hydration remount breaks submits. */}
       <div style={{ margin: "1rem 0" }}>
         {membership ? (
@@ -153,7 +153,7 @@ export default async function CirclePage({
             </form>
           </>
         ) : circle.status === "closed" ? (
-          <span className="lore">Closed — no longer joinable.</span>
+          <span className="lore">Closed; no longer joinable.</span>
         ) : viewer ? (
           <Link href={`/circles/${circle.id}/join`}>Join this Circle →</Link>
         ) : (
@@ -163,7 +163,7 @@ export default async function CirclePage({
         )}
       </div>
 
-      <h3>The action log — the permanent public record</h3>
+      <h3>The action log; the permanent public record</h3>
       <div className="notice">{HONEST_CLAIM}</div>
       {membership && circle.status === "active" && (
         <details>
@@ -171,9 +171,9 @@ export default async function CirclePage({
           <form action={submitActionEntry} className="composer">
             <input type="hidden" name="circleId" value={circle.id} />
             <span className="composer-badge">
-              <Icon name="infinity" /> Permanent public record — no edit, no delete, ever. A
+              <Icon name="infinity" /> Permanent public record; no edit, no delete, ever. A
               mistake is corrected by a later entry that references it.
-              Free text may name meeting places for coordination — place
+              Free text may name meeting places for coordination; place
               yourself on the map, never someone else, and never a
               residential address.
             </span>
@@ -192,12 +192,12 @@ export default async function CirclePage({
                 {circle.offers.map((o) => (
                   <label key={o.id} style={{ display: "block" }}>
                     <input type="checkbox" name="drewOn" value={o.id} /> {o.kind}: {o.body} (@{o.memberHandle})
-                    — referencing it makes it part of the permanent record
+; referencing it makes it part of the permanent record
                   </label>
                 ))}
               </details>
             )}
-            <button type="submit">Log it — forever</button>
+            <button type="submit">Log it; forever</button>
           </form>
         </details>
       )}
@@ -218,12 +218,12 @@ export default async function CirclePage({
               {entry.createdAt.toLocaleString()} ·{" "}
               {attested ? (
                 <span className="badge permanent">
-                  ✓ ATTESTED — {entry.attestations.length} co-signer
+                  ✓ ATTESTED; {entry.attestations.length} co-signer
                   {entry.attestations.length === 1 ? "" : "s"}
                 </span>
               ) : (
                 <span className="badge locked">
-                  Logged — {entry.attestations.length}/{circle.attestationThreshold}{" "}
+                  Logged; {entry.attestations.length}/{circle.attestationThreshold}{" "}
                   attestations
                 </span>
               )}
@@ -231,7 +231,7 @@ export default async function CirclePage({
             {entry.correctionOf && (
               <div className="meta">
                 ↩ Correction of an earlier entry (
-                <a href={`#${entry.correctionOf.id}`}>see it</a> — the
+                <a href={`#${entry.correctionOf.id}`}>see it</a>; the
                 mistaken record stands, corrected, like a ledger, because it
                 is one).
               </div>
@@ -245,7 +245,7 @@ export default async function CirclePage({
             {entry.pledges.length > 0 && (
               <div className="meta">
                 Drew on:{" "}
-                {entry.pledges.map((p) => `${p.kind} — ${p.body}`).join(" · ")}{" "}
+                {entry.pledges.map((p) => `${p.kind}; ${p.body}`).join(" · ")}{" "}
                 (snapshots at logging time; now part of the record)
               </div>
             )}
@@ -263,7 +263,7 @@ export default async function CirclePage({
                 <input type="hidden" name="entryId" value={entry.id} />
                 <input type="hidden" name="circleId" value={circle.id} />
                 <button type="submit">
-                  Attest — put your name to this claim, permanently
+                  Attest; put your name to this claim, permanently
                 </button>
               </form>
             )}
@@ -272,7 +272,7 @@ export default async function CirclePage({
       })}
       {circle.actions.length === 0 && (
         <p className="lore">
-          No actions logged yet — the log is what separates &quot;we talked
+          No actions logged yet; the log is what separates &quot;we talked
           about it&quot; from &quot;here&apos;s proof we did it.&quot;
         </p>
       )}
@@ -298,7 +298,7 @@ export default async function CirclePage({
               .filter((mm) => mm.leftAt !== null)
               .map((mm) => (
                 <li key={mm.id} className="lore">
-                  @{mm.handle} — left {mm.leftAt!.toLocaleDateString()}
+                  @{mm.handle}; left {mm.leftAt!.toLocaleDateString()}
                 </li>
               ))}
           </ul>

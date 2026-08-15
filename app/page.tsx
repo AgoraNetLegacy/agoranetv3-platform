@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 // thesis rendered literally: the six diagnose, The Agora equips.
 //
 // Parking note (derived, flagged in DECISIONS_PENDING): this threshold
-// parks nothing — the hub has always been where locks release (§3.3.5),
+// parks nothing; the hub has always been where locks release (§3.3.5),
 // and a homepage that could be blocked by your other face would break
 // that ratified rule. The Agora's interior doors (domains, governance,
 // threads) park exactly as they always did.
@@ -48,11 +48,11 @@ export default async function AgoraDashboard({
     <>
       {/* The dashboard's own backdrop (owner directive: the starfield as
           the page background, not just the hero card). Fixed to the
-          viewport — independent of <main>'s box model — and unmounted
+          viewport; independent of <main>'s box model; and unmounted
           automatically when navigating away from this page. */}
       <div className="agora-dashboard-backdrop" aria-hidden="true" />
 
-      {/* What is this place — the first arrival's framing (§1.1). */}
+      {/* What is this place; the first arrival's framing (§1.1). */}
       <div
         className="why-banner agora-hero"
         style={{ borderLeft: `5px solid ${agora.colorPrimary}` }}
@@ -61,11 +61,11 @@ export default async function AgoraDashboard({
           <PillarMark slug={agora.slug} /> {agora.name}
         </h1>
         <p className="lore" style={{ marginTop: 0 }}>
-          {agora.classicalName} — {agora.loreName}
+          {agora.classicalName}; {agora.loreName}
         </p>
         <p className="why-text">
           A purpose-built civic commons. Six pillars diagnose what's
-          broken; The Agora — this room — holds the tools to fix it
+          broken; The Agora; this room; holds the tools to fix it
           together: permanent public discussion, sealed collective
           decisions, provable action. Reading is free, forever. Acting
           requires proving you're one real human, once.
@@ -78,32 +78,32 @@ export default async function AgoraDashboard({
       {/* The journey's arrival (owner directive 2026-07-14): the flow
           carries a new soul HERE, and the first three moves are named
           instead of implied. Shown once, by the URL the done page sends
-          — never a nag, gone on the next navigation. */}
+; never a nag, gone on the next navigation. */}
       {welcome && face && (
         <div className="ceremony">
           <h3 style={{ marginTop: 0 }}>You&rsquo;re in. Three good first moves:</h3>
           <ol>
             <li>
               <strong>Read one Picture.</strong> Every domain states a
-              settled position, plainly — pick a{" "}
+              settled position, plainly; pick a{" "}
               <Link href="/pillars">pillar that matters to you</Link> and
               open its first domain.
             </li>
             <li>
               <strong>Say one thing.</strong> Step through any{" "}
-              <Link href="/discussions">Discussion door</Link> — your first
+              <Link href="/discussions">Discussion door</Link>; your first
               post is what your Welcome Grant is for.
             </li>
             <li>
               <strong>Choose what feeds you.</strong>{" "}
-              <Link href="/feed/sources">Pick your sources</Link> — this
+              <Link href="/feed/sources">Pick your sources</Link>; this
               feed only ever carries what you chose.
             </li>
           </ol>
           <p className="lore" style={{ marginBottom: 0 }}>
             Whenever you want a second face for the things you can&rsquo;t
             afford to sign, the Alias ceremony waits at{" "}
-            <Link href="/alias">/alias</Link> — your own schedule, no
+            <Link href="/alias">/alias</Link>; your own schedule, no
             pressure. And your two codes: wherever you saved them, make
             sure it&rsquo;s somewhere real.
           </p>
@@ -117,12 +117,12 @@ export default async function AgoraDashboard({
 
       {/* The Beacon assembled (BEACON_FEED_SPEC §5.3): the chosen
           current first, then the memory current (saved & stirring),
-          then the commons — and the feed still ends. */}
+          then the commons; and the feed still ends. */}
       {face ? (
         <>
           <h2>Your feed</h2>
           <p className="lore">
-            Assembled only from sources you chose —{" "}
+            Assembled only from sources you chose; {" "}
             <Link href="/feed/sources">choose what feeds it</Link>. The
             machine never watches your behavior to guess. Per-face: your
             other face has its own.
@@ -145,11 +145,11 @@ export default async function AgoraDashboard({
       <PollinatorStrip />
 
       {/* The Agora pillar's own anatomy (§1.1): domains, canon threads,
-          its Governance door — this room's substance. */}
+          its Governance door; this room's substance. */}
       <h2 style={{ marginTop: "2rem" }}>This room's anatomy</h2>
       <p className="lore">
-        The Agora is a pillar like the six — with domains, canonical
-        questions, Circles, and a Governance room — pointed at the
+        The Agora is a pillar like the six; with domains, canonical
+        questions, Circles, and a Governance room; pointed at the
         platform itself: its structure, legitimacy, and survival.
       </p>
       <PillarAnatomy slug={agora.slug} sort={sort} sortBasePath="/" />

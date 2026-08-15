@@ -1,4 +1,4 @@
-// Notifications (NOTIFICATIONS_SPEC.md) — two tiers, per-persona, the
+// Notifications (NOTIFICATIONS_SPEC.md); two tiers, per-persona, the
 // quietest functional defaults. Notifications serve the soul's actual
 // interests, never pull them back: no streaks, no nags, no unread-count
 // inflation, no third tier. The category list is exhaustive by design.
@@ -46,7 +46,7 @@ export async function notify(
         refId: input.refId,
         aggregationKey: input.aggregationKey,
       },
-      // Genuinely new activity updates the one entry (never a storm) —
+      // Genuinely new activity updates the one entry (never a storm);
       // and returns it to unread once, since the content changed.
       update: {
         body: input.body,
@@ -95,7 +95,7 @@ export async function inboxFor(db: PrismaClient, profileId: string) {
 
 /**
  * "A poll you voted in is closing soon" (time-sensitive). Phase A: the
- * voter set derives from operator-space gate requests — disclosed
+ * voter set derives from operator-space gate requests; disclosed
  * operator trust, used in the soul's own interest, never rendered.
  */
 export async function notifyClosingPolls(db: PrismaClient): Promise<void> {
@@ -136,7 +136,7 @@ export async function notifyPollResults(tx: Tx, pollId: string, title: string): 
       tier: "quiet",
       category: "poll-results",
       title: "Results published",
-      body: `"${title}" has closed — results are on the poll page.`,
+      body: `"${title}" has closed; results are on the poll page.`,
       refType: "poll",
       refId: pollId,
       aggregationKey: `poll-results:${pollId}`,

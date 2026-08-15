@@ -1,11 +1,11 @@
-// Budget categories — the Constitution's must-guardrail, made structural
+// Budget categories; the Constitution's must-guardrail, made structural
 // (PHASE_8_7_SPEC.md §3, Slice 1).
 //
 // PLATFORM_CONSTITUTION Appendix A, must-guardrails: "The treasury MUST
 // NOT spend outside budgeted categories." TREASURY_DASHBOARD_SPEC §1.3
 // promises that rule is "rendered structurally: an outflow without a
 // budget category cannot exist." Both were true as law and unbuilt as
-// code until this module — outflows were hand-rolled at each call site,
+// code until this module; outflows were hand-rolled at each call site,
 // so there was nowhere for the rule to bind.
 //
 // The shipped set is exactly the three outflows TOKENOMICS_SPEC §3's
@@ -16,7 +16,7 @@
 // Nothing is invented here. "Cause funding" is deliberately ABSENT: the
 // treasury has no such purpose in the ratified economics, and Fund
 // Integrity's discretionary spending is sourced from the Community
-// Endowment — a pool BESIDE the treasury (COMMUNITY_ENDOWMENT_SPEC),
+// Endowment; a pool BESIDE the treasury (COMMUNITY_ENDOWMENT_SPEC),
 // not a category inside it, and deliberately unratified pending counsel.
 //
 // Adding a category is a governance act, not a migration: the community
@@ -34,7 +34,7 @@ export const BUDGET_PLATFORM_OPERATIONS = "platform-operations";
  * `cap: null` = uncapped. That is deliberate and not an oversight: these
  * three are service categories whose amounts are already rail-governed
  * per-action (a badge reward is priced by the rail, not by a budget).
- * FUND_INTEGRITY_SPEC §3.6 proposes promoting cap ceilings to Class 2 —
+ * FUND_INTEGRITY_SPEC §3.6 proposes promoting cap ceilings to Class 2;
  * that is a constitutional proposal, not ratified, and this phase does
  * not pre-empt it. The column exists so the guardrail has somewhere to
  * land without a migration; the rule does not exist yet. Flagged, not
@@ -56,13 +56,13 @@ export const SHIPPED_BUDGET_CATEGORIES = [
   {
     name: BUDGET_PLATFORM_OPERATIONS,
     description:
-      "Running the commons: infrastructure, archival, and the costs of keeping the record permanent. No outflow exists under this category yet — it is seeded because TOKENOMICS §3 names it, so the table describes the ratified loop rather than only what code currently spends.",
+      "Running the commons: infrastructure, archival, and the costs of keeping the record permanent. No outflow exists under this category yet; it is seeded because TOKENOMICS §3 names it, so the table describes the ratified loop rather than only what code currently spends.",
     cap: null,
   },
 ] as const;
 
 /**
- * Seed the ratified categories. Idempotent — safe on every boot and in
+ * Seed the ratified categories. Idempotent; safe on every boot and in
  * every test; updates descriptions in place so corpus edits propagate
  * without a migration, and never resurrects a category the community
  * has deactivated.

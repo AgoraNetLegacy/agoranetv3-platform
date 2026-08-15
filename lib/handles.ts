@@ -1,12 +1,12 @@
 // The handle namespace (owner-ratified 2026-07-10, ONBOARDING Stage 3.4):
-// one flat global taken-list across all profiles, both faces — live
+// one flat global taken-list across all profiles, both faces; live
 // handles PLUS tombstones. It records THAT a string is claimed and
 // nothing else: availability is a public fact anyone can probe on any
 // platform, so the list carries zero linkage information. Handles are
 // never recycled.
 //
 // Format: 3–30 chars, letters/digits/underscore/hyphen, stored lowercase
-// (an attribution key must survive citation — no spaces, no lookalikes
+// (an attribution key must survive citation; no spaces, no lookalikes
 // via case). The spec fixes uniqueness semantics; this charset is the
 // minimal implementation of "@handle", noted for owner review.
 
@@ -29,7 +29,7 @@ export async function handleTaken(db: DbOrTx, handle: string): Promise<boolean> 
 }
 
 /**
- * Retire a handle forever — hatching succession, deletion, abandonment.
+ * Retire a handle forever; hatching succession, deletion, abandonment.
  * The permanent record's attribution never silently changes owners.
  */
 export async function tombstoneHandle(

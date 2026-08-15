@@ -1,5 +1,5 @@
 // Delete expired rate-limit buckets (older than two day-cycles). Run
-// from the ops cron alongside the nightly backup — short retention is
+// from the ops cron alongside the nightly backup; short retention is
 // the minimal-log discipline applied to our own counters.
 import { loadEnvConfig } from "@next/env";
 

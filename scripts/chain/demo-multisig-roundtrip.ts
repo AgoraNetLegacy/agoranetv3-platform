@@ -1,5 +1,5 @@
-// On-chain migration Slice 4a — the M-of-N release, live on preprod.
-// Three throwaway signer keys (no funds — they only sign), a 2-of-3
+// On-chain migration Slice 4a; the M-of-N release, live on preprod.
+// Three throwaway signer keys (no funds; they only sign), a 2-of-3
 // release lock, and both verdicts: release REFUSED with one
 // authorised signature, RELEASED with two. attestRelease's threshold,
 // proven as chain mathematics. The dev wallet pays fees and receives
@@ -40,12 +40,12 @@ async function main() {
   const validator = blueprint.validators.find(
     (v: { title: string }) => v.title === "release.release_lock.spend"
   );
-  if (!validator) throw new Error("release_lock missing from plutus.json — run aiken build.");
+  if (!validator) throw new Error("release_lock missing from plutus.json; run aiken build.");
   const scriptCbor = applyCborEncoding(validator.compiledCode);
   const scriptAddress = serializePlutusScript({ code: scriptCbor, version: "V3" }, undefined, 0)
     .address;
 
-  // Three throwaway signers — keys brewed on the spot, never funded,
+  // Three throwaway signers; keys brewed on the spot, never funded,
   // never stored. Their only act is signing (or not signing).
   const signers = [];
   for (let i = 0; i < 3; i++) {
@@ -57,7 +57,7 @@ async function main() {
   }
   console.log(`network: ${net}`);
   console.log(`script:  ${scriptAddress}`);
-  console.log(`signers: ${signers.map((s) => s.hash.slice(0, 8)).join(", ")} — threshold 2 of 3`);
+  console.log(`signers: ${signers.map((s) => s.hash.slice(0, 8)).join(", ")}; threshold 2 of 3`);
 
   // --- 1. Lock 3 tADA behind 2-of-3.
   const datum = mConStr0([signers.map((s) => s.hash), 2]);
@@ -78,7 +78,7 @@ async function main() {
   );
   if (!utxo) throw new Error("Script UTxO not found via provider.");
 
-  // --- 2. Collateral (after the lock — its coin selection must not
+  // --- 2. Collateral (after the lock; its coin selection must not
   // eat this), same drill as the donation roundtrip.
   const findPure = async () =>
     (await wallet.getUtxos()).find(
@@ -131,12 +131,12 @@ async function main() {
 
   // --- 3. The negative proof: ONE authorised signature (below the
   // threshold of two). Must be refused by the script. If it is ever
-  // accepted, the release authority is broken — fail loudly.
+  // accepted, the release authority is broken; fail loudly.
   try {
     const under = await buildRelease([signers[0]]);
     await wallet.submitTx(await coSign(under, [signers[0]]));
     throw new Error(
-      "UNDER-THRESHOLD RELEASE WAS ACCEPTED — M-of-N is NOT enforced. Do not ship this."
+      "UNDER-THRESHOLD RELEASE WAS ACCEPTED; M-of-N is NOT enforced. Do not ship this."
     );
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -156,7 +156,7 @@ async function main() {
   console.log(
     seen
       ? `MULTISIG ROUNDTRIP COMPLETE. lock=${lockHash} release=${releaseHash}`
-      : `Release submitted but not yet indexed — check ${releaseHash} on ${net} manually.`
+      : `Release submitted but not yet indexed; check ${releaseHash} on ${net} manually.`
   );
 }
 

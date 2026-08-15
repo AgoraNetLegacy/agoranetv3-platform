@@ -3,7 +3,7 @@
 // The refusal boundary. Server actions refuse loudly (walls, missing
 // faces, spec-gated actions); production masks thrown messages, so this
 // boundary keeps the refusal humane. Pace-wall refusals are the common
-// case a stranger could meet — say so honestly.
+// case a stranger could meet; say so honestly.
 
 export default function ErrorBoundary({
   error,

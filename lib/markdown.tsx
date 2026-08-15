@@ -1,5 +1,5 @@
 // A deliberately tiny markdown renderer for the mechanism reference
-// documents (dashboard spec §5.4 — dense reference material, rendered
+// documents (dashboard spec §5.4; dense reference material, rendered
 // readably; no external dependency, no HTML injection: everything is
 // React text nodes).
 

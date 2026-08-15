@@ -5,7 +5,7 @@ import type { DonationResult } from "@/lib/chain";
 
 // On-chain migration Slice 3 (ONCHAIN_ECONOMY_MIGRATION.md §5): the
 // first real non-custodial value movement. The soul's OWN wallet sends
-// tADA to the donation-lock SCRIPT — an address governed by validator
+// tADA to the donation-lock SCRIPT; an address governed by validator
 // math, not by anyone's key. Built in the browser from the wallet's own
 // UTxOs, signed and submitted by the wallet; the platform holds
 // nothing, at any moment. The server then verifies on-chain that the
@@ -21,7 +21,7 @@ export function DonateToScript({
   network: string;
   /** The donation-lock script address (derived server-side from the blueprint). */
   scriptAddress: string;
-  /** Who may collect after the lock — a verification-key hash (demo: the dev wallet). */
+  /** Who may collect after the lock; a verification-key hash (demo: the dev wallet). */
   beneficiaryHash: string;
   /** Donation size in lovelace (a rail). */
   lovelace: number;
@@ -44,7 +44,7 @@ export function DonateToScript({
       const address = await wallet.getChangeAddress();
       if (!address.startsWith("addr_test1")) {
         setStatus(
-          "Lace is on MAINNET. This rail is testnet-only — open Lace → " +
+          "Lace is on MAINNET. This rail is testnet-only; open Lace → " +
             "Settings → Network → Preprod, then try again."
         );
         return;
@@ -93,12 +93,12 @@ export function DonateToScript({
         await new Promise((r) => setTimeout(r, 5000));
       }
       setStatus(
-        "Two minutes without a confirmation — the network may just be slow. " +
+        "Two minutes without a confirmation; the network may just be slow. " +
           "Try the button again in a minute; an already-confirmed donation " +
           "records instantly without a second signature."
       );
     } catch {
-      // Declining the Lace popup lands here too — say so plainly.
+      // Declining the Lace popup lands here too; say so plainly.
       setStatus(
         "The wallet didn't complete the donation (declined, locked, or " +
           "unavailable). Nothing left your wallet and nothing was recorded."

@@ -137,7 +137,7 @@ describe("formation (§3)", () => {
   });
 
   it("the Welcome Grant covers exactly one Circle; the second needs earned PollCoin", async () => {
-    // Verification grants 25 PC — a fresh soul can form their first
+    // Verification grants 25 PC; a fresh soul can form their first
     // Circle at hour zero ("hours, not days"); the next one must be
     // earned. The fee is real: an insufficient balance refuses.
     const fresh = await makeOnboardedSoul(db, { trueSelf: "fresh-founder", alias: "ff-shade" });
@@ -176,7 +176,7 @@ describe("joining, leaving, the Alias warning (§5)", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("warns an Alias joining a small/place-tagged circle — and requires acceptance", async () => {
+  it("warns an Alias joining a small/place-tagged circle; and requires acceptance", async () => {
     expect(await joinNeedsAliasWarning(db, circleId, aliasId)).toBe(true);
     // A True Self never sees it.
     expect(await joinNeedsAliasWarning(db, circleId, outsiderId)).toBe(false);
@@ -208,7 +208,7 @@ describe("joining, leaving, the Alias warning (§5)", () => {
   });
 });
 
-describe("the members' room (§2.2) — reuse, scoped", () => {
+describe("the members' room (§2.2); reuse, scoped", () => {
   it("members post; outsiders are refused; nothing reaches the ledger", async () => {
     const room = await db.discussion.findFirstOrThrow({ where: { circleId } });
     const eventsBefore = await db.ledgerEvent.count({
@@ -235,7 +235,7 @@ describe("the members' room (§2.2) — reuse, scoped", () => {
     expect(eventsAfter).toBe(eventsBefore); // deletable class: no commits
   });
 
-  it("blocks permanence upgrades in the room — it is not the permanent record (§2.3)", async () => {
+  it("blocks permanence upgrades in the room; it is not the permanent record (§2.3)", async () => {
     const room = await db.discussion.findFirstOrThrow({ where: { circleId } });
     const post = await db.post.findFirstOrThrow({ where: { discussionId: room.id } });
     await topUpForTests(db, memberAId, { g: 20 });
@@ -317,7 +317,7 @@ describe("the resource board (§5)", () => {
     const left = await leaveCircle(db, { circleId: host.circleId, profileId: memberBId });
     expect(left.ok).toBe(true);
 
-    // Now edit and retract are both refused — the offer stands as a record
+    // Now edit and retract are both refused; the offer stands as a record
     // of what was pledged while they were in.
     const blocked = await updateOffer(db, {
       offerId: posted.offerId,
@@ -330,7 +330,7 @@ describe("the resource board (§5)", () => {
   });
 });
 
-describe("the action log (§6) — the heart of the feature", () => {
+describe("the action log (§6); the heart of the feature", () => {
   let entryId: string;
 
   it("a member logs an action referencing a pledge; it lands on the ledger hash-committed", async () => {
@@ -391,7 +391,7 @@ describe("the action log (§6) — the heart of the feature", () => {
     const second = await attestAction(db, { entryId, profileId: founderId });
     expect(second.ok).toBe(true);
     entry = await db.actionEntry.findUniqueOrThrow({ where: { id: entryId } });
-    expect(entry.attestedAt).not.toBeNull(); // attested at 2 — the rail default
+    expect(entry.attestedAt).not.toBeNull(); // attested at 2; the rail default
 
     // One attestation per member, enforced by the gate's per-entry scope.
     const repeat = await attestAction(db, { entryId, profileId: memberBId });
@@ -405,7 +405,7 @@ describe("the action log (§6) — the heart of the feature", () => {
     expect(await db.ledgerEvent.count({ where: { eventType: "action.attested" } })).toBe(2);
 
     // Light Score: author credited 5 (rail), each attestor 1, to the
-    // circle's pillar — recorded for the Phase 7 engine.
+    // circle's pillar; recorded for the Phase 7 engine.
     const credits = await db.lightScoreAdjustment.findMany({
       where: { refId: entryId },
     });
@@ -444,7 +444,7 @@ describe("the action log (§6) — the heart of the feature", () => {
     expect(attested.attestedAt).not.toBeNull();
     const latchedAt = attested.attestedAt;
 
-    // The author is credited exactly once for the crossing — never twice,
+    // The author is credited exactly once for the crossing; never twice,
     // which is the double-latch symptom the atomic guard prevents.
     const authorCredits = await db.lightScoreAdjustment.findMany({
       where: { refId: eId, profileId: memberAId, refType: "circle-action" },
@@ -463,7 +463,7 @@ describe("the action log (§6) — the heart of the feature", () => {
     expect(authorAfter).toBe(1); // still exactly one
 
     // The ledger's attestorCount is the real db count (3), not a stale
-    // snapshot — the third event records three signatures.
+    // snapshot; the third event records three signatures.
     const events = await db.ledgerEvent.findMany({
       where: { eventType: "action.attested" },
       orderBy: { seq: "asc" },
@@ -472,7 +472,7 @@ describe("the action log (§6) — the heart of the feature", () => {
     expect(JSON.parse(mine[mine.length - 1].payload).attestorCount).toBe(3);
   });
 
-  it("no edit, no delete — corrections are new entries referencing the old", async () => {
+  it("no edit, no delete; corrections are new entries referencing the old", async () => {
     const correction = await logAction(db, {
       circleId,
       profileId: memberAId,
@@ -533,7 +533,7 @@ describe("the action log (§6) — the heart of the feature", () => {
   });
 });
 
-describe("internal polls (§7) — reuse with the sharp rule", () => {
+describe("internal polls (§7); reuse with the sharp rule", () => {
   let pollId: string;
 
   it("creates a circle-restricted poll: hash-committed, no question text on the ledger", async () => {
@@ -590,7 +590,7 @@ describe("internal polls (§7) — reuse with the sharp rule", () => {
     expect(vote.ok).toBe(false);
   });
 
-  it("member votes use per-profile scope — the §7 sharp rule", async () => {
+  it("member votes use per-profile scope; the §7 sharp rule", async () => {
     const opt = await db.pollOption.findFirstOrThrow({
       where: { pollId, position: 1 },
     });
@@ -658,7 +658,7 @@ describe("internal polls (§7) — reuse with the sharp rule", () => {
   });
 });
 
-describe("stewardship — binding decisions (§7, §8)", () => {
+describe("stewardship; binding decisions (§7, §8)", () => {
   it("member removal: consensus poll at the circle's bar, executed at close", async () => {
     // Bring the alias back in so there is someone removable.
     await joinCircle(db, { circleId, profileId: aliasId, acceptedAliasWarning: true });
@@ -825,10 +825,10 @@ describe("thin founders (§3.3) & purpose versioning (§2.3)", () => {
   });
 });
 
-describe("discovery (§4) — transparent alignment", () => {
+describe("discovery (§4); transparent alignment", () => {
   it("alignment surfaces the pillar the soul answered in, with its why", async () => {
     const reasons = await alignmentPillarsFor(db, outsiderId);
-    // Every onboarded soul answered no seed questions in this suite —
+    // Every onboarded soul answered no seed questions in this suite;
     // answer one now and see the alignment appear.
     const question = await db.question.findFirstOrThrow({
       where: { pillarId, lens: "OUSIA" },
@@ -904,7 +904,7 @@ describe("lifecycle (§8)", () => {
   });
 });
 
-describe("db:verify — the Phase 6 invariants hold, and break loudly", () => {
+describe("db:verify; the Phase 6 invariants hold, and break loudly", () => {
   it("passes on the honest database", () => {
     const result = runVerify();
     expect(result.stdout).toContain("Circle integrity");

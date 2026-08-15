@@ -1,4 +1,4 @@
-//// The mission-treasury validator (Track 2 Slice 5 —
+//// The mission-treasury validator (Track 2 Slice 5;
 //// ONCHAIN_TREASURY_VALIDATOR_SPEC.md). One script, two UTxO kinds:
 //// the chamber's NFT-carried State thread, and non-custodial Donation
 //// UTxOs. The rules live in `agoranet/mission` where they are
@@ -22,7 +22,7 @@ use cardano/transaction.{
 }
 
 /// The state NFT's asset name (⭐ constant; seed-derived names are a
-/// before-mainnet upgrade — see spec §3).
+/// before-mainnet upgrade; see spec §3).
 const state_name: ByteArray = "STATE"
 
 pub type TreasuryMint {
@@ -44,7 +44,7 @@ fn datum_of(out: Output) -> TreasuryDatum {
 }
 
 /// Soft check: is this output a State UTxO of the given chamber?
-/// (Soft — foreign datums must yield False, not a crash.)
+/// (Soft; foreign datums must yield False, not a crash.)
 fn is_state_of(out: Output, chamber: ByteArray) -> Bool {
   when out.datum is {
     InlineDatum(d) ->
@@ -66,7 +66,7 @@ fn continuing_state(out: Output, own_addr: Address, own_hash: ByteArray) -> Bool
 }
 
 /// Total lovelace entering this tx from our address's Donation UTxOs
-/// of the given chamber — the pool the Release must account for.
+/// of the given chamber; the pool the Release must account for.
 fn donation_lovelace(
   inputs: List<Input>,
   own_addr: Address,

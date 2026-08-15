@@ -1,4 +1,4 @@
-// Mission escrow — money held on behalf of a stated purpose, released
+// Mission escrow; money held on behalf of a stated purpose, released
 // only when verified humans co-sign that the spend is legitimate.
 // (NEURAL_POLLINATOR §9.1, owner-designed 2026-07-13; PHASE_8_7_SPEC §3
 // Slice 2.)
@@ -8,7 +8,7 @@
 // they never hold funds... the action layer does not quietly become a
 // treasury." Chambers already have a ratified per-chamber balance
 // (§9.1), and a Chamber already IS a stated mission that survived public
-// dissection — which is what makes it the right container for a
+// dissection; which is what makes it the right container for a
 // financial stake. Never add a balance to a Circle.
 //
 // THE ESCROW IS SOURCE-AGNOSTIC, deliberately. It does not care whether
@@ -25,12 +25,12 @@
 // Both directions matter: an operator who can silently sit on approved
 // money is as much a capture vector as one who can steal it, and that
 // gap was unaudited until FUND_INTEGRITY §3.7 named it. The guarantee
-// here is the ABSENCE of that code path — the same shape as ADMIN_OPS
+// here is the ABSENCE of that code path; the same shape as ADMIN_OPS
 // §1's allowlist, where safety is what the tooling cannot do.
 //
 // WHAT ATTESTATION PROVES, honestly (CIRCLES_SPEC §6.2's wording,
 // carried over unchanged): N verified humans put their names to this
-// claim, permanently — NOT "the platform verified this spend was
+// claim, permanently; NOT "the platform verified this spend was
 // legitimate." Fund Integrity raises the cost of lying. It does not make
 // lying impossible, and the UI must never imply otherwise.
 
@@ -50,7 +50,7 @@ export type EscrowResult =
       /**
        * How this release must be authorized (§9.1). "attestation" is the
        * routine path; "binding-vote" is required above the size
-       * threshold — two co-signers are corroboration for a
+       * threshold; two co-signers are corroboration for a
        * reimbursement, not a mandate for the mission's whole purse.
        */
       authorization: "attestation" | "binding-vote";
@@ -73,7 +73,7 @@ export async function chamberBalanceOf(
  * Credit a chamber's mission balance. Source-agnostic: the caller names
  * where the money came from, and this module stays ignorant of it.
  *
- * Deliberately internal — Phase 8.7 ships exactly one caller (donations,
+ * Deliberately internal; Phase 8.7 ships exactly one caller (donations,
  * Slice 3). It exists as its own function so the endowment and bounty
  * adapters have somewhere to plug in without touching release logic.
  */
@@ -99,7 +99,7 @@ export async function creditMissionBalance(
  * (§9.1: "A Chamber may optionally declare it's raising PollCoin toward
  * its stated mission").
  *
- * Creator-only. §9.1 says "a Chamber may declare" without naming who —
+ * Creator-only. §9.1 says "a Chamber may declare" without naming who;
  * the creator is the reading consistent with the rest of the spec (they
  * author the scaffold and the storefront, §4.1), and it is the narrow
  * choice: widening later is a decision, un-widening is a migration.
@@ -107,7 +107,7 @@ export async function creditMissionBalance(
  * ratified.
  *
  * Withdrawing only stops new donations. It never touches money already
- * given: §9.1's donations are "genuine transfers — real cost, no
+ * given: §9.1's donations are "genuine transfers; real cost, no
  * auto-return," and a chamber that could un-declare its way out of
  * accountability would make that sentence a lie.
  */
@@ -131,7 +131,7 @@ export async function declareRaising(
   // Tier 0: a chamber cannot ask for money without saying who's funded,
   // how a donor can check that, and what the money buys. This is the
   // whole diligence gate, and it costs the creator three answers rather
-  // than a committee's approval — scrutiny, not permission.
+  // than a committee's approval; scrutiny, not permission.
   let plan: { recipient: string; evidence: string; breakdown: string } | null = null;
   if (input.raising) {
     const recipient = input.plan?.recipient?.trim() ?? "";
@@ -141,7 +141,7 @@ export async function declareRaising(
       return {
         ok: false,
         reason:
-          "A mission asking for money answers three things first: who is funded, how anyone can check that claim, and what the money buys, itemized. Souls donate against this plan — it can't be blank.",
+          "A mission asking for money answers three things first: who is funded, how anyone can check that claim, and what the money buys, itemized. Souls donate against this plan; it can't be blank.",
       };
     }
     plan = { recipient, evidence, breakdown };
@@ -161,7 +161,7 @@ export async function declareRaising(
         : { raisingForMission: false },
     });
     if (input.raising) {
-      // The plan as donated-against, from the first moment — so the
+      // The plan as donated-against, from the first moment; so the
       // history starts at v1 rather than only recording later edits.
       await tx.chamberFundingRevision.create({
         data: {
@@ -186,13 +186,13 @@ export async function declareRaising(
  * Revise the funding plan (FUND_INTEGRITY §3.1: the workshop's whole job
  * is making the creator fill the gaps the community finds).
  *
- * Revisable on purpose — a plan that survived dissection is better than
+ * Revisable on purpose; a plan that survived dissection is better than
  * the one that entered. But every version is kept, because souls donated
  * against a specific plan: silent edits after the money arrived would be
  * a bait-and-switch, and the history is what makes that impossible
  * rather than merely forbidden.
  *
- * Creator-only, matching `editScaffold` ("the creator's framing — only
+ * Creator-only, matching `editScaffold` ("the creator's framing; only
  * they sharpen it").
  */
 export async function reviseFundingPlan(
@@ -254,12 +254,12 @@ export async function reviseFundingPlan(
 /**
  * Donate PollCoin toward a chamber's declared mission (§9.1).
  *
- * **A genuine transfer — real cost, no auto-return.** This mechanic
+ * **A genuine transfer; real cost, no auto-return.** This mechanic
  * exists because the owner killed its predecessor for the opposite
  * property: auto-returned poll support-staking was "cheap talk, a
  * costless signal carries no information" (POLLS §4.8, retired). The
  * money is gone from the donor the moment it lands, and it comes back
- * only if the chamber's own members release it back — which is the
+ * only if the chamber's own members release it back; which is the
  * whole point.
  *
  * PollCoin only, per §9.1. Straight from the internal balance: no
@@ -284,7 +284,7 @@ export async function donateToMission(
     return { ok: false, reason: "No active face." };
   }
 
-  // Every write action clears the gate — no exceptions, even where
+  // Every write action clears the gate; no exceptions, even where
   // bypassing would be easy (CLAUDE.md rule 3). Per-donation scope: a
   // soul may give more than once. Gate spend + transfer share one
   // transaction (#25), so a rollback leaves no orphan spend.
@@ -299,7 +299,7 @@ export async function donateToMission(
       const balance = await balanceOf(tx, profile.id, "PC");
       return {
         ok: false as const,
-        reason: `Insufficient PollCoin (${balance.toFixed(2)}u of ${input.amount}u) — a donation is a real transfer, not a gesture.`,
+        reason: `Insufficient PollCoin (${balance.toFixed(2)}u of ${input.amount}u); a donation is a real transfer, not a gesture.`,
       };
     }
     await creditMissionBalance(tx, {
@@ -324,7 +324,7 @@ export async function donateToMission(
     });
 
     // Public at the moment of giving. The chamber's funding is part of
-    // its public storefront story — a mission asking for money answers
+    // its public storefront story; a mission asking for money answers
     // for what it raised, permanently.
     await appendEvent(tx, {
       actorType: "soul",
@@ -344,7 +344,7 @@ export async function donateToMission(
 
 /**
  * Propose a release (§9.1: "the chamber logs 'releasing Y PollCoin for
- * Z'"). The purpose is frozen at proposal — the claim being attested
+ * Z'"). The purpose is frozen at proposal; the claim being attested
  * must not move after signatures land on it.
  *
  * Refuses if the balance can't cover it, counting money already
@@ -367,7 +367,7 @@ export async function proposeRelease(
     return { ok: false, reason: "A release must be a positive amount." };
   }
   if (!input.purpose.trim()) {
-    return { ok: false, reason: "A release must say what it's for — that's the claim members attest." };
+    return { ok: false, reason: "A release must say what it's for; that's the claim members attest." };
   }
 
   const chamber = await db.chamber.findUnique({ where: { id: input.chamberId } });
@@ -390,7 +390,7 @@ export async function proposeRelease(
         ok: false as const,
         reason: `The mission holds ${balance.toFixed(2)}u ${input.currency}${
           committed > 0 ? ` (${committed.toFixed(2)}u already committed to open proposals)` : ""
-        } — not enough for ${input.amount.toFixed(2)}u.`,
+        }; not enough for ${input.amount.toFixed(2)}u.`,
       };
     }
 
@@ -413,7 +413,7 @@ export async function proposeRelease(
     // §9.1's size rule, decided at proposal and stated on the record:
     // routine releases ride attestation; large ones need a binding vote
     // of the chamber. Two co-signers are corroboration for a
-    // reimbursement — not a mandate for the mission's whole purse.
+    // reimbursement; not a mandate for the mission's whole purse.
     const bindingThreshold = await getRail(tx, "chamber.releaseBindingVoteThreshold");
     const needsVote = input.amount > bindingThreshold;
 
@@ -431,7 +431,7 @@ export async function proposeRelease(
         purpose: release.purpose,
         toHandle: recipient.handle,
         // Which door this release must go through, published before
-        // anyone signs or votes — never chosen after the fact.
+        // anyone signs or votes; never chosen after the fact.
         authorization: needsVote ? "binding-vote" : "attestation",
         threshold: needsVote ? null : chamber.releaseThreshold,
         bindingVoteThreshold: bindingThreshold,
@@ -448,7 +448,7 @@ export async function proposeRelease(
 }
 
 /**
- * Pay a release. THE ONLY PATH MONEY LEAVES A MISSION BY — both routes
+ * Pay a release. THE ONLY PATH MONEY LEAVES A MISSION BY; both routes
  * (attestation threshold, §9.1 binding vote) land here, so a large
  * release and a routine one are paid by identical code. Two payment
  * paths would be two chances to diverge.
@@ -472,7 +472,7 @@ async function payRelease(
 ): Promise<void> {
   // Atomically CLAIM the release: only the first transaction to flip it
   // proposed→released pays out. A concurrent second attestation that also
-  // reached the threshold finds zero rows here and pays nothing — no
+  // reached the threshold finds zero rows here and pays nothing; no
   // double-pay. Made explicit rather than left to the ledger's implicit
   // prevHash serialisation, which a future refactor could remove.
   const claimed = await tx.missionRelease.updateMany({
@@ -481,7 +481,7 @@ async function payRelease(
   });
   if (claimed.count !== 1) return;
 
-  // Conditional chamber debit — the check and the decrement in one statement,
+  // Conditional chamber debit; the check and the decrement in one statement,
   // so concurrent releases from the same chamber can never overdraw it.
   const debited = await tx.chamberBalance.updateMany({
     where: {
@@ -493,7 +493,7 @@ async function payRelease(
   });
   if (debited.count !== 1) {
     throw new Error(
-      `Mission balance fell below this release (< ${release.amount.toFixed(2)}u) — refusing to overdraw.`
+      `Mission balance fell below this release (< ${release.amount.toFixed(2)}u); refusing to overdraw.`
     );
   }
   await tx.balance.upsert({
@@ -533,7 +533,7 @@ async function payRelease(
 /**
  * Execute a passed binding release vote (§9.1: "members vote,
  * auto-executes on passage"). Called by closeDuePolls inside the close
- * transaction, only when the consensus passed with Adopt leading —
+ * transaction, only when the consensus passed with Adopt leading;
  * exactly the Circle stewardship pattern.
  */
 export async function executeChamberAction(
@@ -549,7 +549,7 @@ export async function executeChamberAction(
 
   const release = await tx.missionRelease.findUnique({ where: { id: arg } });
   // A decision can lapse: the release may have been frozen by a ruling
-  // while the vote ran. Frozen wins — due process outranks a vote that
+  // while the vote ran. Frozen wins; due process outranks a vote that
   // started before the facts were known.
   if (!release || release.state !== "proposed") {
     await appendEvent(tx, {
@@ -567,7 +567,7 @@ export async function executeChamberAction(
   await payRelease(tx, release, { via: "binding-vote", pollRef: poll.id });
 }
 
-/** Money already spoken for by open proposals — never double-promised. */
+/** Money already spoken for by open proposals; never double-promised. */
 async function openCommitments(
   tx: DbOrTx,
   chamberId: string,
@@ -580,7 +580,7 @@ async function openCommitments(
 }
 
 /**
- * Attest that a release is legitimate — and, at the threshold, PAY IT,
+ * Attest that a release is legitimate; and, at the threshold, PAY IT,
  * in this same transaction (FUND_INTEGRITY §3.7).
  *
  * The automatic payment is the point. There is no separate "execute"
@@ -598,7 +598,7 @@ export async function attestRelease(
   });
   if (!release) return { ok: false, reason: "No such release." };
   if (release.state === "frozen") {
-    return { ok: false, reason: "This release is frozen by a Tribunal ruling — it cannot be attested." };
+    return { ok: false, reason: "This release is frozen by a Tribunal ruling; it cannot be attested." };
   }
   if (release.state === "released") {
     return { ok: false, reason: "Already released." };
@@ -611,14 +611,14 @@ export async function attestRelease(
     return { ok: false, reason: "Only chamber members may attest a release." };
   }
   if (release.proposerProfileId === input.attestorProfileId) {
-    // Self-attestation would make "attested" mean one voice — which is
+    // Self-attestation would make "attested" mean one voice; which is
     // precisely what the floor of 2 exists to prevent (CIRCLES_SPEC:
     // "so 'attested' always means more than one voice").
-    return { ok: false, reason: "A proposer cannot attest their own release — attestation means more than one voice." };
+    return { ok: false, reason: "A proposer cannot attest their own release; attestation means more than one voice." };
   }
 
   // §9.1's size rule: attestation is the ROUTINE path. Above the
-  // threshold, a binding vote authorizes instead — two co-signers are
+  // threshold, a binding vote authorizes instead; two co-signers are
   // corroboration for a reimbursement, not a mandate for the mission's
   // whole purse. Enforced here as well as at proposal so a rail change
   // can never strand a large release on the cheap path.
@@ -652,7 +652,7 @@ export async function attestRelease(
         ok: false as const,
         reason:
           current?.state === "frozen"
-            ? "This release is frozen by a Tribunal ruling — it cannot be attested."
+            ? "This release is frozen by a Tribunal ruling; it cannot be attested."
             : "Already released.",
       };
     }
@@ -666,7 +666,7 @@ export async function attestRelease(
         attestorHandle: profile.handle,
       },
     });
-    // Count from the DATABASE inside the serialised transaction — never the
+    // Count from the DATABASE inside the serialised transaction; never the
     // pre-transaction snapshot, which misses a concurrent co-signer.
     const count = await tx.releaseAttestation.count({
       where: { releaseId: release.id },
@@ -685,7 +685,7 @@ export async function attestRelease(
       },
     });
 
-    // The threshold: the proposer's own voice never counts toward it —
+    // The threshold: the proposer's own voice never counts toward it;
     // attestation is corroboration, not self-assertion.
     if (count < release.chamber.releaseThreshold) {
       return {
@@ -708,10 +708,10 @@ export async function attestRelease(
 
 /**
  * Freeze every unreleased tranche of a chamber's mission money on an
- * upheld ruling (FUND_INTEGRITY §3.4 — "the module's real teeth").
+ * upheld ruling (FUND_INTEGRITY §3.4; "the module's real teeth").
  *
  * You cannot claw back what is spent; you CAN stop what has not moved.
- * Called from the ruling's own transaction, never by an operator — the
+ * Called from the ruling's own transaction, never by an operator; the
  * mirror-image capture path (freezing funds someone doesn't want paid)
  * is closed by the same absence of a code path that closes withholding.
  *
@@ -751,7 +751,7 @@ export async function freezeChamberReleases(
  * machinery, a new data source).
  *
  * Watches for **self-dealing**: a member proposing money to themselves.
- * Note this is NOT forbidden and must not be — reimbursing a member who
+ * Note this is NOT forbidden and must not be; reimbursing a member who
  * fronted costs is the single most ordinary use of a mission's money,
  * and banning it would push real spending off the record where nobody
  * can see it. So the design allows it and *watches* it, which is exactly
@@ -759,10 +759,10 @@ export async function freezeChamberReleases(
  *
  * **Anomalies never punish** (ANTI_SYBIL's rule, carried over verbatim).
  * This writes a public, machine-flagged event and stops. It cannot
- * freeze, deduct, or block — a detector that punishes is an operator
+ * freeze, deduct, or block; a detector that punishes is an operator
  * without due process.
  *
- * The pattern becomes publicly visible and stops there — deliberately.
+ * The pattern becomes publicly visible and stops there; deliberately.
  * A release CAN now be reported (owner ruling 2026-07-16), but Sentinel
  * does not file: a detector that opens its own cases is a machine
  * accusing people. It makes the pattern visible; a human decides whether
@@ -814,8 +814,8 @@ export async function sentinelMissionSweep(db: PrismaClient): Promise<number> {
           windowHours,
           // Say what this is and is not, on the record. A machine flag
           // that reads like a verdict is a verdict.
-          note: "Machine-flagged pattern, not a finding: members releasing mission funds to themselves. Reimbursement is legitimate and expected — this is a question, not an accusation.",
-          consequence: "none — anomalies never punish",
+          note: "Machine-flagged pattern, not a finding: members releasing mission funds to themselves. Reimbursement is legitimate and expected; this is a question, not an accusation.",
+          consequence: "none; anomalies never punish",
         },
       });
     });

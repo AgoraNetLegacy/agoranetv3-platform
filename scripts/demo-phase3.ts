@@ -1,9 +1,9 @@
-// Phase 3 checkpoint demo (owner review) — a governance poll end to end:
+// Phase 3 checkpoint demo (owner review); a governance poll end to end:
 // sealed tally, candle close revealed with results, record on the ledger.
 // Self-contained demo db, reset each run.
 //
 //   1. Seed + two onboarded souls (four voting faces).
-//   2. A governance poll opens in a Governance room — the candle
+//   2. A governance poll opens in a Governance room; the candle
 //      commitment lands on the ledger BEFORE any vote exists.
 //   3. Votes clear the gate; the tally is sealed (nothing to peek at,
 //      not even on the ledger); duplicates refused privately.
@@ -60,7 +60,7 @@ async function main() {
   });
   console.log("Souls onboarded: @bright-heron-42 + @quiet-cedar-17, @steady-otter-7 + @amber-fox-31");
 
-  banner("2. A governance poll opens — the candle promise comes first");
+  banner("2. A governance poll opens; the candle promise comes first");
   const agora = await db.pillar.findUniqueOrThrow({ where: { slug: "agoranet" } });
   const created = await polls.createPoll(db, {
     profileId: soulA.trueSelfId,
@@ -81,7 +81,7 @@ async function main() {
   console.log(`Mode: PSEUDONYMOUS · governance → always sealed, candle close.`);
   console.log(`Candle commitment (on the ledger, before any vote):`);
   console.log(`  ${poll.candleCommitment}`);
-  console.log(`Nominal close: ${poll.nominalCloseAt.toISOString()} — the true close is hidden.`);
+  console.log(`Nominal close: ${poll.nominalCloseAt.toISOString()}; the true close is hidden.`);
 
   banner("3. Votes clear the gate; the seal holds");
   const eventsBefore = await db.ledgerEvent.count();
@@ -92,16 +92,16 @@ async function main() {
   console.log("Three ballots cast (each face an independent voice).");
 
   const dupe = await polls.castVote(db, { pollId: poll.id, profileId: soulA.trueSelfId, optionIds: [reject.id] });
-  console.log(`A second vote by the same face: ${dupe.ok ? "UNEXPECTED" : `refused — "${!dupe.ok && dupe.reason}"`}`);
+  console.log(`A second vote by the same face: ${dupe.ok ? "UNEXPECTED" : `refused; "${!dupe.ok && dupe.reason}"`}`);
 
   const tally = await polls.visibleTally(db, poll.id);
-  console.log(`Peeking at the tally mid-poll: ${tally === null ? "nothing to see — sealed means sealed" : "UNEXPECTED!"}`);
-  console.log(`Ledger events since voting began: ${await db.ledgerEvent.count() - eventsBefore} — the ledger learned nothing.`);
+  console.log(`Peeking at the tally mid-poll: ${tally === null ? "nothing to see; sealed means sealed" : "UNEXPECTED!"}`);
+  console.log(`Ledger events since voting began: ${await db.ledgerEvent.count() - eventsBefore}; the ledger learned nothing.`);
 
   banner("4. The sniper waits for the end…");
   await polls.castVote(db, { pollId: poll.id, profileId: soulB.aliasId, optionIds: [reject.id] });
   console.log("@amber-fox-31 votes in the poll's final minutes (after the");
-  console.log("hidden candle moment — which nobody could have known).");
+  console.log("hidden candle moment; which nobody could have known).");
 
   // Time-travel: honest votes early, the sniper after the candle.
   const now = Date.now();
@@ -138,7 +138,7 @@ async function main() {
     (await db.poll.findUniqueOrThrow({ where: { id: poll.id } })).candleCommitment;
   console.log(`  reveal vs commitment: ${verifies ? "MATCHES ✓ (sha256(trueCloseAt|salt))" : "BROKEN ✗"}`);
   console.log(`  ballotsHash (tamper-evidence): ${String(payload.ballotsHash).slice(0, 24)}…`);
-  console.log("The sniper's ballot exists in the record — marked uncounted.");
+  console.log("The sniper's ballot exists in the record; marked uncounted.");
 
   banner("6. A consensus poll misses its threshold");
   const consensus = await polls.createPoll(db, {
@@ -166,7 +166,7 @@ async function main() {
   await polls.closeDuePolls(db);
   const cClosed = await db.poll.findUniqueOrThrow({ where: { id: cPoll.id } });
   console.log(`Outcome: ${cClosed.outcome} (50% < 75% threshold).`);
-  console.log("The poll page now OFFERS a Discussion — prompted, never automatic.");
+  console.log("The poll page now OFFERS a Discussion; prompted, never automatic.");
 
   banner("7. Attacking a closed ballot in the database");
   const target = await db.ballot.findFirstOrThrow({ where: { pollId: poll.id, counted: true } });
@@ -175,11 +175,11 @@ async function main() {
   console.log("Tampered: one counted ballot's nullifier rewritten. Running db:verify…");
   const caught = verify(false);
   await db.ballot.update({ where: { id: target.id }, data: { nullifier: original } });
-  console.log(caught ? "CAUGHT — verify failed loudly ✓ (ballot restored)" : "NOT CAUGHT ✗");
+  console.log(caught ? "CAUGHT; verify failed loudly ✓ (ballot restored)" : "NOT CAUGHT ✗");
 
   await db.$disconnect();
 
-  banner("8. db:verify — the honest final state");
+  banner("8. db:verify; the honest final state");
   const passed = verify(true);
   process.exit(passed && caught && verifies ? 0 : 1);
 }

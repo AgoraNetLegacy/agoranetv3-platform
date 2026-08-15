@@ -1,7 +1,7 @@
-// The Cardano testnet rail (Phase 8.6 — TESTNET_RAILS_SPEC §1.3, §6).
+// The Cardano testnet rail (Phase 8.6; TESTNET_RAILS_SPEC §1.3, §6).
 // TESTNET-ONLY BY CONSTRUCTION: the network selector refuses mainnet
 // values, the wallet-link path refuses mainnet addresses, and nothing
-// in this module custodies anything — the wallet stays the soul's;
+// in this module custodies anything; the wallet stays the soul's;
 // the platform records only which testnet address a face chose to
 // connect. The Phase A gate machinery is untouched (§6.6): this rail
 // is additive.
@@ -10,7 +10,7 @@ import type { PrismaClient } from "@prisma/client";
 
 const TESTNETS = new Set(["preprod", "preview"]);
 
-/** The configured Cardano testnet (§6.1). Throws on mainnet — this
+/** The configured Cardano testnet (§6.1). Throws on mainnet; this
  *  phase has no production posture at all, and a misconfigured env
  *  should fail loudly, not quietly reach a real network. */
 export function cardanoNetwork(): "preprod" | "preview" {
@@ -28,7 +28,7 @@ export type WalletLinkResult = { ok: true } | { ok: false; reason: string };
 
 /** Record which testnet address this face connected (§6.3). One link
  *  per face (re-connecting updates it); mainnet addresses are refused
- *  at the door — addr1… never enters this table. */
+ *  at the door; addr1… never enters this table. */
 export async function recordWalletLink(
   db: PrismaClient,
   input: { profileId: string; cardanoAddress: string; network: string }
@@ -39,7 +39,7 @@ export async function recordWalletLink(
       ok: false,
       reason:
         "Only Cardano TESTNET addresses (addr_test1…) can be linked. " +
-        "This phase runs no mainnet anything — if your wallet shows addr1…, " +
+        "This phase runs no mainnet anything; if your wallet shows addr1…, " +
         "switch it to the Preprod network first.",
     };
   }
@@ -68,7 +68,7 @@ export async function walletLinkFor(db: PrismaClient, profileId: string) {
 // wallet builds, signs, and submits a transaction in the browser; the
 // platform never sees a key and never submits anything. All the server
 // does is VERIFY the claimed hash exists on the configured testnet
-// before recording it — CIP-30 cannot distinguish preprod from preview
+// before recording it; CIP-30 cannot distinguish preprod from preview
 // (both report networkId 0), so the 8.6 wrong-testnet gotcha is closed
 // here with a real check instead of a footnote.
 // ------------------------------------------------------------------
@@ -80,7 +80,7 @@ export type ProofResult =
   | { ok: false; reason: string; retryable: boolean };
 
 /** Does this transaction exist on the CONFIGURED testnet? Blockfrost,
- *  server-side only — the browser never holds the project key. Returns
+ *  server-side only; the browser never holds the project key. Returns
  *  false on 404 (wrong network or not yet propagated); throws on any
  *  other failure so an outage never masquerades as "wrong network". */
 export async function txExistsOnConfiguredTestnet(txHash: string): Promise<boolean> {
@@ -118,9 +118,9 @@ export async function txInputAddressesOnConfiguredTestnet(
 
 const NOT_SENT_BY_LINKED =
   "That transaction exists, but it wasn't sent by this face's linked " +
-  "wallet — records here are only ever YOUR wallet's own acts. Nothing was recorded.";
+  "wallet; records here are only ever YOUR wallet's own acts. Nothing was recorded.";
 
-/** Record the face's self-custody proof — but only once the tx is
+/** Record the face's self-custody proof; but only once the tx is
  *  actually visible on the configured testnet AND provably sent by
  *  the face's own linked wallet (F3). Not-yet-found is retryable
  *  (propagation takes seconds to a couple of minutes); the caller
@@ -141,7 +141,7 @@ export async function recordSelfCustodyProof(
     return {
       ok: false,
       retryable: false,
-      reason: "No wallet is linked to this face yet — connect one first.",
+      reason: "No wallet is linked to this face yet; connect one first.",
     };
   }
   const found = await verify(txHash);
@@ -151,7 +151,7 @@ export async function recordSelfCustodyProof(
       retryable: true,
       reason:
         `Not visible on ${cardanoNetwork()} yet. If this persists past a couple of ` +
-        "minutes, your wallet is probably on the OTHER testnet (Preview) — " +
+        "minutes, your wallet is probably on the OTHER testnet (Preview); " +
         "the two share the same address format.",
     };
   }
@@ -172,7 +172,7 @@ export async function recordSelfCustodyProof(
 // ------------------------------------------------------------------
 // On-chain migration Slice 3: the non-custodial donation. The soul's
 // own wallet locks value at the donation-lock SCRIPT address; the
-// platform never possesses it — before recording, the server checks
+// platform never possesses it; before recording, the server checks
 // the chain and requires value to actually sit at the script in that
 // transaction's outputs. Same verify-before-record discipline as the
 // Slice 2 proof, one step further: not just "the tx exists" but "the
@@ -186,7 +186,7 @@ export type DonationResult =
 /** How much lovelace this transaction locked at `scriptAddress`, per
  *  the configured testnet's chain. Returns null when the tx isn't
  *  visible yet (retryable); 0 means the tx exists but paid the script
- *  nothing (wrong transaction — not retryable); throws on outages so
+ *  nothing (wrong transaction; not retryable); throws on outages so
  *  they never masquerade as either. */
 export async function lockedAtScriptOnConfiguredTestnet(
   txHash: string,
@@ -212,7 +212,7 @@ export async function lockedAtScriptOnConfiguredTestnet(
     );
 }
 
-/** Record a face's donation to the script — but only once the chain
+/** Record a face's donation to the script; but only once the chain
  *  shows value locked there in that transaction. The verifier is
  *  injectable for tests; recording is idempotent per tx hash. */
 export async function recordScriptDonation(
@@ -232,7 +232,7 @@ export async function recordScriptDonation(
     return {
       ok: false,
       retryable: false,
-      reason: "No wallet is linked to this face yet — connect one first.",
+      reason: "No wallet is linked to this face yet; connect one first.",
     };
   }
   const lovelace = await verify(txHash, input.scriptAddress);
@@ -242,7 +242,7 @@ export async function recordScriptDonation(
       retryable: true,
       reason:
         `Not visible on ${cardanoNetwork()} yet. If this persists past a couple of ` +
-        "minutes, your wallet is probably on the OTHER testnet (Preview) — " +
+        "minutes, your wallet is probably on the OTHER testnet (Preview); " +
         "the two share the same address format.",
     };
   }
@@ -251,7 +251,7 @@ export async function recordScriptDonation(
       ok: false,
       retryable: false,
       reason:
-        "That transaction exists but locked nothing at the donation script — " +
+        "That transaction exists but locked nothing at the donation script; " +
         "it isn't the donation. Nothing was recorded.",
     };
   }

@@ -9,7 +9,7 @@ import { Icon, PillarMark } from "@/components/Icon";
 export const dynamic = "force-dynamic";
 
 // Source management (§2.1): one screen, adjustable anytime. Everything
-// here is this face's own reading state — never public, never ledgered,
+// here is this face's own reading state; never public, never ledgered,
 // never shared with the other face.
 export default async function FeedSourcesPage({
   searchParams,
@@ -68,7 +68,7 @@ export default async function FeedSourcesPage({
       <p className="lore">
         Chosen, not inferred: the machine never watches your behavior to
         guess your interests. These choices belong to{" "}
-        <strong>@{face.handle}</strong> alone — your other face has its own
+        <strong>@{face.handle}</strong> alone; your other face has its own
         screen, and nothing crosses between them, ever.
       </p>
       {m && <div className="notice">{m}</div>}
@@ -150,7 +150,7 @@ export default async function FeedSourcesPage({
           public Discussions where your fellow souls are active
           <span className="lore">
             {" "}
-            (off by default; you have {bondCount} bond{bondCount === 1 ? "" : "s"} — only you
+            (off by default; you have {bondCount} bond{bondCount === 1 ? "" : "s"}; only you
             ever see this)
           </span>
         </label>
@@ -158,11 +158,11 @@ export default async function FeedSourcesPage({
         <h3>The lens &amp; the diet</h3>
         <label style={{ display: "block" }}>
           <input type="checkbox" name="openLens" defaultChecked={settings.openLens} /> Show the
-          open lens (&ldquo;Popular now&rdquo; — published formula, same for everyone)
+          open lens (&ldquo;Popular now&rdquo;; published formula, same for everyone)
         </label>
         <label style={{ display: "block" }}>
           <input type="checkbox" name="balancedDiet" defaultChecked={settings.balancedDiet} />{" "}
-          Balanced diet — interleave across pillars so one interest can&rsquo;t monopolize
+          Balanced diet; interleave across pillars so one interest can&rsquo;t monopolize
           the stream <span className="lore">(default on; the default expresses the platform&rsquo;s values)</span>
         </label>
 

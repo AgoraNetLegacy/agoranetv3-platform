@@ -44,13 +44,13 @@ function Composer({
       <span className="composer-badge">
         {permanent ? (
           <>
-            <Icon name="infinity" /> Permanent record — a {graceMinutes}-minute grace window for
+            <Icon name="infinity" /> Permanent record; a {graceMinutes}-minute grace window for
             typo repair with visible edit history, then your words lock
             into the record.
           </>
         ) : (
           <>
-            Author-deletable space — the creator may remove it later
+            Author-deletable space; the creator may remove it later
             (tombstones preserve reply context). Same {graceMinutes}-minute
             grace window for edits.
           </>
@@ -61,11 +61,11 @@ function Composer({
       <textarea
         name="body"
         required
-        placeholder={permanent ? "Speak deliberately — this space is permanent." : "Add your voice."}
+        placeholder={permanent ? "Speak deliberately; this space is permanent." : "Add your voice."}
       />
       <div style={{ fontSize: "0.8rem", margin: "0.3rem 0" }}>
         <label>
-          <input type="checkbox" name="humanMade" /> Human-made — my
+          <input type="checkbox" name="humanMade" /> Human-made; my
           reputation on it (falsely marking AI work is rule R2.3)
         </label>
         <details>
@@ -111,7 +111,7 @@ function FlagForm({
           </option>
           {rules.map((r) => (
             <option key={r.id} value={r.id}>
-              {r.id} — {r.title}
+              {r.id}; {r.title}
             </option>
           ))}
         </select>{" "}
@@ -149,7 +149,7 @@ async function RemovedControls({
       )}
       {resolved.tier <= 2 && (
         <details>
-          <summary>Restorative option — acknowledge & append a correction for a reduced strike</summary>
+          <summary>Restorative option; acknowledge & append a correction for a reduced strike</summary>
           <form action={submitRestorative} className="composer">
             <input type="hidden" name="caseId" value={resolved.id} />
             <input type="hidden" name="discussionId" value={discussionId} />
@@ -204,27 +204,27 @@ function PostNode({
           <span>grace window open until {post.editableUntil.toLocaleTimeString()}</span>
         )}{" "}
         {post.humanMade && (
-          <span className="badge permanent">Human-made — reputation staked</span>
+          <span className="badge permanent">Human-made; reputation staked</span>
         )}{" "}
         {post.permanentUpgraded && (
-          <span className="badge permanent">Permanent — creator-designated</span>
+          <span className="badge permanent">Permanent; creator-designated</span>
         )}
       </div>
       {post.status === "removed" ? (
         <div className="notice">
-          🪦 <strong>Removed by moderation</strong> — rule cited on the
+          🪦 <strong>Removed by moderation</strong>; rule cited on the
           public record; the tombstone preserves the fact of removal,
           forever.
         </div>
       ) : post.status === "hidden" ? (
         <div className="notice">
-          Hidden pending expedited review (severe category) — not
+          Hidden pending expedited review (severe category); not
           click-viewable by design.
         </div>
       ) : post.status === "blurred" ? (
         <details>
           <summary className="lore">
-            ⚠ Under review — blurred, not erased. Click to view.
+            ⚠ Under review; blurred, not erased. Click to view.
           </summary>
           <div className="body">{post.body}</div>
         </details>
@@ -236,7 +236,7 @@ function PostNode({
           {post.sources.map((s) => (
             <div key={s.id}>
               📎 <a href={s.source.url} rel="noreferrer nofollow">{s.source.url}</a>{" "}
-              ({s.kind}) —{" "}
+              ({s.kind}); {" "}
               {s.vouch === "vouched"
                 ? `vouched by @${s.sharerHandle}`
                 : "shared unverified"}
@@ -313,7 +313,7 @@ function PostNode({
                   15 G. Caveat: the surrounding thread may be deleted later,
                   leaving your permanent post standing amid tombstones.{" "}
                 </span>
-                <button type="submit">Pay 15 G — permanent record</button>
+                <button type="submit">Pay 15 G; permanent record</button>
               </form>
             </details>
           )}
@@ -356,7 +356,7 @@ export default async function DiscussionPage({
   if (!discussion) notFound();
 
   // The members' room (CIRCLES §2.2): a Circle-scoped Discussion is
-  // members-only — reading included — and exempt from the parking rule
+  // members-only; reading included; and exempt from the parking rule
   // (a Circle is not a pillar surface; both of a soul's faces may be
   // members, §7). Everything else keeps the pillar parking check.
   let roomWrite = true;
@@ -381,7 +381,7 @@ export default async function DiscussionPage({
     roomWrite = access.write;
   } else if (discussion.chamber) {
     // The workshop (POLLINATOR §4.3): a chamber-scoped Discussion is
-    // enter-to-see — READING included; that enclosure is the point.
+    // enter-to-see; READING included; that enclosure is the point.
     // Exempt from the parking rule like the members' room (a chamber is
     // not a pillar surface; it homes in the meta pillar only because a
     // Discussion needs a pillar row).
@@ -392,7 +392,7 @@ export default async function DiscussionPage({
         <>
           <h1>The workshop</h1>
           <div className="notice">
-            You enter a chamber to see what&apos;s inside — the workshop
+            You enter a chamber to see what&apos;s inside; the workshop
             belongs to the souls working the idea.{" "}
             <Link href={`/pollinator/${discussion.chamber.id}`}>
               Read the chamber&apos;s storefront →
@@ -402,7 +402,7 @@ export default async function DiscussionPage({
       );
     }
   } else {
-    // A Discussion is inside its pillar — the parking rule applies here
+    // A Discussion is inside its pillar; the parking rule applies here
     // exactly as on the dashboard (DASHBOARD §3.2).
     const parking = await checkParking(discussion.pillarId);
     if (parking.state === "blocked") {
@@ -426,7 +426,7 @@ export default async function DiscussionPage({
   ]);
 
   // The save (BEACON §4): private to this face. Reading a saved thread
-  // advances its resurfacing watermark — a time and nothing else.
+  // advances its resurfacing watermark; a time and nothing else.
   const saved = viewer
     ? await isSaved(db, { profileId: viewer.id, discussionId: discussion.id })
     : false;
@@ -477,7 +477,7 @@ export default async function DiscussionPage({
           <button
             type="submit"
             className="linklike"
-            title="Private to this face — nobody else ever sees your saves."
+            title="Private to this face; nobody else ever sees your saves."
           >
             {saved ? "★ Saved · unsave" : "☆ Save for later"}
           </button>
@@ -493,7 +493,7 @@ export default async function DiscussionPage({
       {discussion.circle ? (
         <div className="notice">
           🚪 <strong>The members&apos; room.</strong> Working conversation,
-          members-only, deletable — this is NOT the permanent record; the
+          members-only, deletable; this is NOT the permanent record; the
           Circle&apos;s action log is.{" "}
           {discussion.circle.status === "closed" &&
             "This Circle is closed: the room is read-only, kept for its former members."}
@@ -501,7 +501,7 @@ export default async function DiscussionPage({
       ) : discussion.chamber ? (
         <div className="notice">
           <Icon name="hive" /> <strong>The workshop.</strong> Enter-to-see and deletable-class
-          — half-formed thinking gets worked out here without the open
+; half-formed thinking gets worked out here without the open
           internet watching the drafts. Standard moderation applies as
           everywhere. Posting charges both tokens (the Pollinator&apos;s
           dual-token signature).
@@ -509,7 +509,7 @@ export default async function DiscussionPage({
       ) : permanent ? (
         <div className="door-banner">
           <Icon name="temple" /> <strong>You are standing in a permanent space.</strong> Everything
-          posted here becomes permanent record — a {graceMinutes}-minute grace
+          posted here becomes permanent record; a {graceMinutes}-minute grace
           window allows typo repair with visible edit history, then each post
           locks. Reading is free; participation clears the humanity gate.
         </div>
@@ -554,7 +554,7 @@ export default async function DiscussionPage({
         <>
           <h3>Add your voice</h3>
           <p className="interim-note">
-            Reading is free for the world — this button is where the gate
+            Reading is free for the world; this button is where the gate
             begins.{" "}
             <Link href={`/verify?returnTo=${encodeURIComponent(`/d/${discussion.id}`)}`}>
               Verify once to add your voice →

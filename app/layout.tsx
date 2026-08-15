@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 // The persistent profile indicator (DASHBOARD §3.4): always visible,
-// visually distinct per face, switching is deliberate — never a silent
+// visually distinct per face, switching is deliberate; never a silent
 // toggle. Readers see their reading state plainly.
 async function FaceBar() {
   const [face, faces] = await Promise.all([activeFace(), sessionFaces()]);
@@ -84,14 +84,14 @@ async function FaceBar() {
 
 // Deliberately NOT rendered inside <header>: the header has a
 // backdrop-filter (for the glass effect), which makes it the containing
-// block for any `position: fixed` descendant — the bubble would then
+// block for any `position: fixed` descendant; the bubble would then
 // pin to the header's own box instead of the viewport, and its popover
 // would render off-screen. Rendered as a sibling of <header> instead so
 // `fixed` resolves against the real viewport.
 async function ProfileBubble() {
   const [face, faces] = await Promise.all([activeFace(), sessionFaces()]);
   if (!face) return null;
-  // Cache-bust the bubble's mark by the image row's timestamp — the
+  // Cache-bust the bubble's mark by the image row's timestamp; the
   // bubble must always match the profile (owner finding 2026-07-22).
   const avatarRow = await db.profileImage.findUnique({
     where: { profileId_kind: { profileId: face.id, kind: "avatar" } },
@@ -100,7 +100,7 @@ async function ProfileBubble() {
   const avatarSrc = `/img/${face.handle}/avatar${
     avatarRow ? `?v=${avatarRow.updatedAt.getTime()}` : ""
   }`;
-  // The switch rows' marks bust the same way — the selector must
+  // The switch rows' marks bust the same way; the selector must
   // always match the profiles (owner finding 2026-07-22).
   const others = faces.filter((f) => f.id !== face.id);
   const otherAvatars = await db.profileImage.findMany({
@@ -117,7 +117,7 @@ async function ProfileBubble() {
     // inside <summary> would also toggle the panel.
     <div className="profile-bubble-anchor">
       {/* Spirit Mode dot (owner-ruled 2026-07-21): the small dot on the
-          bubble IS the veil toggle — filled when visible, hollowed when
+          bubble IS the veil toggle; filled when visible, hollowed when
           walking unseen. The level itself is a Settings choice. */}
       <form action={toggleSpiritMode} className="spirit-toggle">
         <button
@@ -125,14 +125,14 @@ async function ProfileBubble() {
           className={`profile-mode-dot ${chipClass}${face.spiritActive ? " spirit" : ""}`}
           aria-label={
             face.spiritActive
-              ? "Spirit Mode is on — click to become visible"
+              ? "Spirit Mode is on; click to become visible"
               : "Click to enter Spirit Mode (visibility veil)"
           }
-          title={face.spiritActive ? "Walking unseen — click to reappear" : "Spirit Mode"}
+          title={face.spiritActive ? "Walking unseen; click to reappear" : "Spirit Mode"}
         />
       </form>
       {/* Keyed by the active face: a successful switch remounts the
-          <details>, which resets its uncontrolled `open` state — the
+          <details>, which resets its uncontrolled `open` state; the
           panel closes itself after a switch instead of lingering. On a
           refused switch the face (and key) are unchanged, so the panel
           stays open to show the refusal. */}
@@ -260,7 +260,7 @@ async function SideNav() {
       <Link
         className="navlink"
         href="/record"
-        title="The record nobody can rewrite — including us."
+        title="The record nobody can rewrite; including us."
       >
         <span className="nav-icon"><Icon name="record" /></span><span>The Public Record</span>
       </Link>
@@ -280,13 +280,13 @@ async function SideNav() {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   // THEME = IDENTITY (PRESENTATION_SPEC §2): the theme follows the FACE,
-  // never OS preference — the room's color is a safety signal, so the
+  // never OS preference; the room's color is a safety signal, so the
   // signal always wins. Resolved server-side so no render ever flashes
   // the wrong room.
   const [face, flip] = await Promise.all([activeFace(), faceFlipPending()]);
   const theme = !face ? "reader" : face.face === "TRUE_SELF" ? "true-self" : "alias";
   // §5.1: the switch-animation method is the face's own choice (flip
-  // default; crossfade / instant for less motion — by choice, never
+  // default; crossfade / instant for less motion; by choice, never
   // detection). Readers get the default.
   const flipMethod = face?.switchAnimation ?? "flip";
   return (

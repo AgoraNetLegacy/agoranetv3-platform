@@ -11,7 +11,7 @@ delete or repurpose hosted resources until their role is recorded here.
 - [x] Run `npm run build:postgres` successfully.
 - [x] Commit clean working tree: `5fc9f81`.
 
-## Railway — staging infrastructure
+## Railway; staging infrastructure
 
 - [x] Railway account authenticated.
 - [x] Project exists: `agoranet-staging`.
@@ -26,7 +26,7 @@ delete or repurpose hosted resources until their role is recorded here.
 - [x] Seed the staging database.
 - [ ] Add and configure the operations service after the app is working.
 
-## Vercel — application hosting
+## Vercel; application hosting
 
 - [x] Confirm the Vercel project is linked to `projectpollify/agoranetv3-platform`.
 - [x] Configure staging environment variables.
@@ -38,7 +38,7 @@ delete or repurpose hosted resources until their role is recorded here.
 
 ## Verification
 
-- [x] Run `npm run db:verify:postgres` against staging — all checks passed.
+- [x] Run `npm run db:verify:postgres` against staging; all checks passed.
 - [x] Run `STAGING_URL=https://agoranet-staging.vercel.app npm run smoke:staging`.
 - [ ] Complete one throwaway-soul walkthrough.
 - [x] Record final URLs and resource names here.
@@ -57,9 +57,9 @@ All three services expose the standard Railway/Postgres variables and are
 currently empty according to their reported volume usage. Their roles have not
 yet been assigned:
 
-- `Postgres` — application database.
-- `Postgres-TSjx` — scratch/restore-drill database.
-- `Postgres-43aM` — unassigned; do not change until its role is confirmed.
+- `Postgres`; application database.
+- `Postgres-TSjx`; scratch/restore-drill database.
+- `Postgres-43aM`; unassigned; do not change until its role is confirmed.
 
 ## Working staging result
 

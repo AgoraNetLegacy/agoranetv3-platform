@@ -2,10 +2,10 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-// The raw treasury inspection page — the Phase 4 checkpoint surface
+// The raw treasury inspection page; the Phase 4 checkpoint surface
 // (BUILD_ORDER: "watches the treasury fill on a raw inspection page;
 // dashboard comes later"). Aggregates only: flows are grouped by kind,
-// and no entry here ever names a soul — vote fees and flag deposits
+// and no entry here ever names a soul; vote fees and flag deposits
 // especially must not become who-did-what records.
 export default async function TreasuryPage() {
   const [balances, entries] = await Promise.all([
@@ -37,10 +37,10 @@ export default async function TreasuryPage() {
 
   return (
     <>
-      <h1>The Treasury — raw inspection</h1>
+      <h1>The Treasury; raw inspection</h1>
       <p className="lore">
         Every fee and penalty lands here; moderation and tribunal service
-        are paid from here (TOKENOMICS §3). This is the raw view — the
+        are paid from here (TOKENOMICS §3). This is the raw view; the
         transparency dashboard arrives in Phase 7. Aggregates only: no
         line on this page names a soul.
       </p>
@@ -80,7 +80,7 @@ export default async function TreasuryPage() {
           {byKind.size === 0 && (
             <tr>
               <td colSpan={4} className="lore">
-                No flows yet — the first fee fills the first row.
+                No flows yet; the first fee fills the first row.
               </td>
             </tr>
           )}
@@ -102,7 +102,7 @@ export default async function TreasuryPage() {
         Conservation holds by construction and db:verify re-derives it:
         every balance equals the sum of its entries; the treasury equals
         the sum of what flowed in minus what flowed out. All amounts are
-        the ratified v0 TEST SCHEDULE — rails, expiring at the Phase 9
+        the ratified v0 TEST SCHEDULE; rails, expiring at the Phase 9
         real-money re-review.
       </p>
     </>

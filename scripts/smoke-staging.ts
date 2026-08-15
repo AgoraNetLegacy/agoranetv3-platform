@@ -1,6 +1,6 @@
 // Staging smoke test: the public, signed-out surfaces answer with their
 // landmark content. Run after every staging deploy (docs/DEPLOYMENT.md
-// §3.6). No account, no writes — reading is free by constitutional
+// §3.6). No account, no writes; reading is free by constitutional
 // design, so a smoke test needs no credentials.
 
 const base = (process.env.STAGING_URL ?? "").replace(/\/$/, "");

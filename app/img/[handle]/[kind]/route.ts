@@ -1,4 +1,4 @@
-// Profile imagery serving (PROFILE_PAGE_SPEC §4/§6): handle-keyed —
+// Profile imagery serving (PROFILE_PAGE_SPEC §4/§6): handle-keyed;
 // handles are the public attribution key; internal profile ids never
 // ride a URL. Falls back to the deterministic identicon, so every
 // surface can render <img src="/img/{handle}/avatar"> unconditionally
@@ -18,7 +18,7 @@ export async function GET(
   if (!(IMAGE_KINDS as readonly string[]).includes(kind)) {
     return new NextResponse("unknown kind", { status: 404 });
   }
-  // status: "active" — a PENDING alias is invisible everywhere else
+  // status: "active"; a PENDING alias is invisible everywhere else
   // (souls page, search, DM/fellow lookups). Without this filter the
   // route is an existence oracle (200 identicon vs 404) that would
   // defeat the cohort activation-delay unlinkability, and would serve a

@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import type { ProofResult } from "@/lib/chain";
 
 // On-chain migration Slice 2 (ONCHAIN_ECONOMY_MIGRATION.md §5, Track 1):
-// the soul's OWN wallet builds, signs, and submits a transaction — a
+// the soul's OWN wallet builds, signs, and submits a transaction; a
 // ~2 tADA self-send carrying a CIP-20 note. Everything value-touching
 // happens in the browser against the wallet's own UTxOs and endpoint;
 // the platform holds no key, sees no key, submits nothing. The server's
@@ -32,13 +32,13 @@ export function SelfCustodySign({
       const address = await wallet.getChangeAddress();
       if (!address.startsWith("addr_test1")) {
         setStatus(
-          "Lace is on MAINNET. This rail is testnet-only — open Lace → " +
+          "Lace is on MAINNET. This rail is testnet-only; open Lace → " +
             "Settings → Network → Preprod, then try again."
         );
         return;
       }
 
-      // Built in the browser from the WALLET'S own UTxOs — no server
+      // Built in the browser from the WALLET'S own UTxOs; no server
       // round-trip, no platform key, no custody. A self-send: the tADA
       // leaves your wallet and returns to it; only the fee is spent.
       setStatus("Building the transaction in your browser…");
@@ -75,12 +75,12 @@ export function SelfCustodySign({
         await new Promise((r) => setTimeout(r, 5000));
       }
       setStatus(
-        "Two minutes without a confirmation — the network may just be slow. " +
+        "Two minutes without a confirmation; the network may just be slow. " +
           "Your funds are fine (a self-send can't lose them). Try the button " +
           "again in a minute; an already-confirmed transaction records instantly."
       );
     } catch {
-      // Declining the Lace popup lands here too — say so plainly.
+      // Declining the Lace popup lands here too; say so plainly.
       setStatus(
         "The wallet didn't complete the signature (declined, locked, or " +
           "unavailable). Nothing left your wallet and nothing was recorded."

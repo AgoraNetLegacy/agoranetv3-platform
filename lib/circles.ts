@@ -1,4 +1,4 @@
-// Circles — the action layer (Phase 6, Circles/CIRCLES_SPEC.md).
+// Circles; the action layer (Phase 6, Circles/CIRCLES_SPEC.md).
 //
 // A Circle converts shared concern into logged, attested, real-world
 // action. Purpose, membership, and the action log are radically public;
@@ -12,11 +12,11 @@
 //
 // What the ledger proves is narrow and honest (§6.2): N verified humans
 // publicly staked their pseudonymous reputations on this claim at time
-// T, permanently — NOT "the platform verified this happened." The UI
+// T, permanently; NOT "the platform verified this happened." The UI
 // carries that sentence verbatim (HONEST_CLAIM below).
 //
 // The sharp privacy rule (§7): Circle-internal polls are always
-// per-profile scope, never per-human — inside a small membership,
+// per-profile scope, never per-human; inside a small membership,
 // per-human duplicate rejection would let the group infer that two of
 // its member profiles share a human. lib/polls.ts votes are per-profile
 // everywhere, so the rule holds by construction; tests assert it.
@@ -38,15 +38,15 @@ export type CircleResult<T = object> =
   | ({ ok: true } & T)
   | { ok: false; reason: string; aliasWarning?: boolean };
 
-/** Fixed UI copy (§6.2) — displayed on every Circle's log, not
+/** Fixed UI copy (§6.2); displayed on every Circle's log, not
  *  per-Circle editable. The ledger proves attestation, not truth. */
 export const HONEST_CLAIM =
   "Attested entries mean N verified humans put their names to this " +
-  "claim, permanently — not that the platform verified it happened. " +
+  "claim, permanently; not that the platform verified it happened. " +
   "Weigh attestor count, attestor standing, and this Circle's history " +
   "the way you would weigh any testimony.";
 
-/** The Alias small-community warning (§5) — DUAL_IDENTITY §7.1 vector 5,
+/** The Alias small-community warning (§5); DUAL_IDENTITY §7.1 vector 5,
  *  said out loud at the exact moment it matters. Informed choice, never
  *  a wall. */
 export const ALIAS_SMALL_COMMUNITY_WARNING =
@@ -139,10 +139,10 @@ async function touchActivity(tx: Tx, circleId: string) {
 // ---------------------------------------------------------- notifications
 
 /**
- * "Circle activity (your Circles)" — the quiet-inbox category the
+ * "Circle activity (your Circles)"; the quiet-inbox category the
  * NOTIFICATIONS spec reserves for CIRCLES. Enclosed-space discipline
  * (NOTIFICATIONS §6): space name + event type only; content is visible
- * on entering the space. Aggregated per Circle — never a storm.
+ * on entering the space. Aggregated per Circle; never a storm.
  */
 async function notifyCircleActivity(
   tx: Tx,
@@ -159,7 +159,7 @@ async function notifyCircleActivity(
       profileId: m.profileId,
       tier: "quiet",
       category: "circle-activity",
-      title: `Circle activity — ${circle.name}`,
+      title: `Circle activity; ${circle.name}`,
       body: `${eventLabel}. Details are in the Circle.`,
       refType: "circle",
       refId: circle.id,
@@ -172,7 +172,7 @@ async function notifyCircleActivity(
 
 /**
  * Formation (§3): gate-cleared, fee-bearing (25u rail), live
- * immediately — no approval queue; quality control is downstream.
+ * immediately; no approval queue; quality control is downstream.
  * The founder role is thin by design. The members' room (a
  * Circle-scoped Discussion) is born with the Circle.
  */
@@ -183,7 +183,7 @@ export async function formCircle(
     name: string;
     purpose: string;
     pillarId?: string | null;
-    // Optional domain within the pillar (§2.1) — data since Phase 7.
+    // Optional domain within the pillar (§2.1); data since Phase 7.
     domainId?: string | null;
     placeTag?: string | null;
     problem?: string | null;
@@ -196,7 +196,7 @@ export async function formCircle(
   const pillarId = input.pillarId || null;
   if (!name) return { ok: false, reason: "A Circle needs a name." };
   if (!purpose) {
-    return { ok: false, reason: "The purpose statement is the public claim — it can't be empty." };
+    return { ok: false, reason: "The purpose statement is the public claim; it can't be empty." };
   }
   // At least one focus tag (§2.1).
   if (!pillarId && !placeTag && !problem) {
@@ -229,7 +229,7 @@ export async function formCircle(
     }
   }
   // The members' room is a Discussion, and Discussions live in a pillar;
-  // an untagged Circle's room is homed in the meta pillar (the Agora —
+  // an untagged Circle's room is homed in the meta pillar (the Agora;
   // the platform's own container), which changes nothing about access:
   // Circle-scoped Discussions never appear on pillar pages.
   const homePillar =
@@ -272,16 +272,16 @@ export async function formCircle(
           removalBarPercent: await getRail(tx, "circle.removalBarPercent"),
         },
       });
-      // The founder is member #1 — a Circle belongs to its members.
+      // The founder is member #1; a Circle belongs to its members.
       await tx.circleMember.create({
         data: { circleId: created.id, profileId: profile.id, handle: profile.handle },
       });
       // The members' room, born with the Circle (§2.2): Discussion
-      // primitive, Circle-scoped, deletable class — the working
+      // primitive, Circle-scoped, deletable class; the working
       // conversation is not the permanent record (§2.3).
       await tx.discussion.create({
         data: {
-          title: `Members' room — ${name}`,
+          title: `Members' room; ${name}`,
           pillarId: homePillar.id,
           circleId: created.id,
           permanence: "deletable",
@@ -317,7 +317,7 @@ export async function formCircle(
 }
 
 /**
- * Purpose/tag edits — the founder's ONLY power (§3.3), versioned (§2.3):
+ * Purpose/tag edits; the founder's ONLY power (§3.3), versioned (§2.3):
  * a Circle can't quietly rewrite what it claimed to be.
  */
 export async function editPurpose(
@@ -336,9 +336,9 @@ export async function editPurpose(
     include: { pillar: true },
   });
   if (!circle) return { ok: false, reason: "No such Circle." };
-  if (circle.status === "closed") return { ok: false, reason: "This Circle is closed — its record stands as written." };
+  if (circle.status === "closed") return { ok: false, reason: "This Circle is closed; its record stands as written." };
   if (circle.founderProfileId !== input.profileId) {
-    return { ok: false, reason: "Only the founder edits the purpose statement — and nothing else." };
+    return { ok: false, reason: "Only the founder edits the purpose statement; and nothing else." };
   }
   const purpose = input.purpose.trim();
   const placeTag = input.placeTag?.trim() || null;
@@ -356,7 +356,7 @@ export async function editPurpose(
   }
 
   await db.$transaction(async (tx) => {
-    // Keep the prior version — public, versioned.
+    // Keep the prior version; public, versioned.
     await tx.circlePurposeRevision.create({
       data: {
         circleId: circle.id,
@@ -412,7 +412,7 @@ export async function joinNeedsAliasWarning(
 
 /**
  * Joining (§5): one gate-cleared action, per-profile scope. No
- * application essays, no founder approval — the humanity gate plus
+ * application essays, no founder approval; the humanity gate plus
  * visible standing is the filter. Join events are public record.
  */
 export async function joinCircle(
@@ -422,13 +422,13 @@ export async function joinCircle(
   const circle = await db.circle.findUnique({ where: { id: input.circleId } });
   if (!circle) return { ok: false, reason: "No such Circle." };
   if (circle.status === "closed") {
-    return { ok: false, reason: "This Circle is closed — no longer joinable; its record remains." };
+    return { ok: false, reason: "This Circle is closed; no longer joinable; its record remains." };
   }
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
     return { ok: false, reason: "No active face." };
   }
-  // Membership is a public permanent record — the same blocking
+  // Membership is a public permanent record; the same blocking
   // acknowledgments that gate the pen gate the list.
   if (!(await hasPostingConsents(db, profile.id))) {
     return { ok: false, reason: "The permanence and Constitution acknowledgments come first." };
@@ -436,7 +436,7 @@ export async function joinCircle(
   if (await activeMembership(db, circle.id, profile.id)) {
     return { ok: false, reason: "You are already a member of this Circle." };
   }
-  // The warning is informed choice, never a wall — but it must have
+  // The warning is informed choice, never a wall; but it must have
   // been SHOWN and accepted when it applies (§5).
   if (
     (await joinNeedsAliasWarning(db, circle.id, profile.id)) &&
@@ -446,7 +446,7 @@ export async function joinCircle(
   }
 
   // Each join is its own gate-cleared action (rejoining after leaving
-  // is allowed — §8 keeps Circles joinable); membership uniqueness
+  // is allowed; §8 keeps Circles joinable); membership uniqueness
   // lives in the membership table, humanity proof in the gate.
   // Gate spend + membership row share one transaction (#25).
   return db.$transaction(async (tx) => {
@@ -503,7 +503,7 @@ export async function leaveCircle(
 // -------------------------------------------------------- resource board
 
 /**
- * The resource board (§5): members-only listings — living statements,
+ * The resource board (§5): members-only listings; living statements,
  * not commitments of record. Gate-cleared like every write, but with
  * PRIVATE recording: members-only content leaves no public trace until
  * a logged action references it.
@@ -564,10 +564,10 @@ export async function updateOffer(
   if (offer.circle.status === "closed") return { ok: false, reason: "This Circle is closed." };
   // Offers live in the members' room: editing or retracting one is a
   // membership act, like postOffer. A member who has left (or been removed)
-  // no longer manages the board — their offer stays as a record of what was
+  // no longer manages the board; their offer stays as a record of what was
   // pledged while they were in.
   if (!(await activeMembership(db, offer.circleId, input.profileId))) {
-    return { ok: false, reason: "You have left this Circle — its offers are no longer yours to change." };
+    return { ok: false, reason: "You have left this Circle; its offers are no longer yours to change." };
   }
   const body = input.body?.trim();
   await db.resourceOffer.update({
@@ -585,11 +585,11 @@ export async function updateOffer(
 
 /**
  * Log an action (§6.1): permanent public record from the moment of
- * writing — the composer shows the permanence badge, and the entry
+ * writing; the composer shows the permanence badge, and the entry
  * hash-commits to the civic ledger immediately, attributed to the
  * posting member's pseudonym. No edit, no delete; corrections are new
  * entries that reference the mistaken one. Referenced offers are
- * snapshotted — that is the moment a pledge becomes part of the record.
+ * snapshotted; that is the moment a pledge becomes part of the record.
  */
 export async function logAction(
   db: PrismaClient,
@@ -604,14 +604,14 @@ export async function logAction(
   }
 ): Promise<CircleResult<{ entryId: string }>> {
   const body = input.body.trim();
-  if (!body) return { ok: false, reason: "Say what was done — the log is the proof." };
+  if (!body) return { ok: false, reason: "Say what was done; the log is the proof." };
   const circle = await db.circle.findUnique({ where: { id: input.circleId } });
   if (!circle) return { ok: false, reason: "No such Circle." };
   if (circle.status === "closed") {
-    return { ok: false, reason: "This Circle is closed — its log is complete." };
+    return { ok: false, reason: "This Circle is closed; its log is complete." };
   }
   const membership = await activeMembership(db, circle.id, input.profileId);
-  if (!membership) return { ok: false, reason: "Members only — join the Circle to log its work." };
+  if (!membership) return { ok: false, reason: "Members only; join the Circle to log its work." };
   const profile = await db.profile.findUniqueOrThrow({ where: { id: input.profileId } });
   if (!(await hasPostingConsents(db, profile.id))) {
     return { ok: false, reason: "The permanence and Constitution acknowledgments come first." };
@@ -624,7 +624,7 @@ export async function logAction(
     }
   }
 
-  // Snapshot referenced offers now — offers stay living statements;
+  // Snapshot referenced offers now; offers stay living statements;
   // the record freezes what the action drew on (§5).
   const drewOn: Array<{ offerId: string; kind: string; body: string }> = [];
   for (const offerId of Array.from(new Set(input.drewOnOfferIds ?? []))) {
@@ -681,7 +681,7 @@ export async function logAction(
         displayName: profile.displayName,
         correctionOf: input.correctionOfId ?? undefined,
         // Referencing a pledge is what makes it part of the permanent
-        // record (§5) — the snapshot rides the public event.
+        // record (§5); the snapshot rides the public event.
         drewOn: drewOn.length > 0 ? drewOn.map((d) => ({ kind: d.kind, body: d.body })) : undefined,
       },
     });
@@ -692,7 +692,7 @@ export async function logAction(
   });
 }
 
-/** Re-derivable hash of an entry's public claim — verify.ts re-checks
+/** Re-derivable hash of an entry's public claim; verify.ts re-checks
  *  every entry against its action.logged commitment. */
 export function actionEntryHash(entry: {
   body: string;
@@ -713,8 +713,8 @@ export function actionEntryHash(entry: {
 /**
  * Attest (§6.1 step 3): co-sign with your own pseudonym. Members only,
  * never the author, once per entry (the gate's per-entry scope IS the
- * once — a second attempt is a private DUPLICATE). At the Circle's
- * threshold the entry latches to attested — the state that counts for
+ * once; a second attempt is a private DUPLICATE). At the Circle's
+ * threshold the entry latches to attested; the state that counts for
  * Light Score and pillar surfacing.
  */
 export async function attestAction(
@@ -727,10 +727,10 @@ export async function attestAction(
   });
   if (!entry) return { ok: false, reason: "No such entry." };
   if (entry.circle.status === "closed") {
-    return { ok: false, reason: "This Circle is closed — its log is complete." };
+    return { ok: false, reason: "This Circle is closed; its log is complete." };
   }
   if (entry.authorProfileId === input.profileId) {
-    return { ok: false, reason: "Attestation is other voices — you already signed it by writing it." };
+    return { ok: false, reason: "Attestation is other voices; you already signed it by writing it." };
   }
   const membership = await activeMembership(db, entry.circleId, input.profileId);
   if (!membership) return { ok: false, reason: "Members only." };
@@ -740,7 +740,7 @@ export async function attestAction(
   }
 
   // One attestation per profile per entry: a fixed per-entry scope, so
-  // the nullifier collision rejects repeats — privately, like all
+  // the nullifier collision rejects repeats; privately, like all
   // duplicates. Gate spend + attestation + latch share ONE transaction
   // (#25): a rollback (e.g. the ledger append losing a concurrent race) no
   // longer strands the attest nullifier, so the co-signature is retryable
@@ -758,7 +758,7 @@ export async function attestAction(
     if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     // Serialise concurrent attestations on this entry: a no-op self-write
     // takes the entry row's write lock (held to commit), so a second
-    // co-signer blocks until the first commits and then counts it —
+    // co-signer blocks until the first commits and then counts it;
     // otherwise two concurrent attestors each see zero priors and neither
     // crosses the threshold, leaving the entry stuck below attested.
     await tx.actionEntry.update({
@@ -772,7 +772,7 @@ export async function attestAction(
         attestorHandle: profile.handle,
       },
     });
-    // Count from the DATABASE inside the serialised tx — never the
+    // Count from the DATABASE inside the serialised tx; never the
     // pre-transaction snapshot, which misses a concurrent co-signer.
     const count = await tx.attestation.count({ where: { entryId: entry.id } });
     await appendEvent(tx, {
@@ -804,12 +804,12 @@ export async function attestAction(
     }
 
     // Light Score crediting (§6.3, LIGHT_SCORE spec §2): ATTESTED
-    // entries only — logging alone credits nothing; attesting credits
+    // entries only; logging alone credits nothing; attesting credits
     // less than authoring. Recorded now, consumed by the Phase 7 engine.
     if (entry.circle.pillarId) {
       if (nowAttested) {
         // Crossing the threshold credits the author and every attestor
-        // so far (their signatures made the state) — read fresh from the tx.
+        // so far (their signatures made the state); read fresh from the tx.
         await creditCircleLightScore(tx, {
           profileId: entry.authorProfileId,
           pillarId: entry.circle.pillarId,
@@ -836,7 +836,7 @@ export async function attestAction(
         }
       } else if (wasAttested) {
         // A late co-signature on an already-attested entry still stakes
-        // reputation — it credits the attestor.
+        // reputation; it credits the attestor.
         await creditCircleLightScore(tx, {
           profileId: profile.id,
           pillarId: entry.circle.pillarId,
@@ -891,7 +891,7 @@ async function creditCircleLightScore(
   const cap = await getRail(tx, "circle.lsDailyCapPoints");
   const dayStart = new Date(new Date().setUTCHours(0, 0, 0, 0));
 
-  // Today's Circle-derived credits for this profile in this circle —
+  // Today's Circle-derived credits for this profile in this circle;
   // the entry ids of this circle scope the sum.
   const circleEntryIds = (
     await tx.actionEntry.findMany({
@@ -988,7 +988,7 @@ function splitAction(action: string): [string, string | null] {
 /**
  * Execute a passed stewardship poll (called by closeDuePolls inside the
  * close transaction, only when the consensus passed with Adopt leading).
- * Stewardship outcomes are public record — membership and lifecycle
+ * Stewardship outcomes are public record; membership and lifecycle
  * events already are.
  */
 export async function executeCircleAction(
@@ -1075,10 +1075,10 @@ export async function executeCircleAction(
 /**
  * The values-alignment signal (§4): a Circle can be surfaced to a
  * profile that has answered canonical questions in the Circle's focus
- * pillar — the onboarding values seed first, growing with real
+ * pillar; the onboarding values seed first, growing with real
  * 49-question participation. v1 is a simple, explainable overlap, and
  * every surfaced recommendation SHOWS ITS WHY in plain language. No
- * black-box ranking — a product-identity commitment, not a v1 shortcut.
+ * black-box ranking; a product-identity commitment, not a v1 shortcut.
  */
 export async function alignmentPillarsFor(
   db: DbOrTx,
@@ -1112,7 +1112,7 @@ export async function alignmentPillarsFor(
   return reasons;
 }
 
-/** Latest attested-action time per circle — active hands rank above old
+/** Latest attested-action time per circle; active hands rank above old
  *  claims (§6.3). */
 export async function lastAttestedAt(
   db: DbOrTx,

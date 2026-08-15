@@ -58,11 +58,11 @@ function ensureTemplateDb(template: string) {
       if (existsSync(template)) return;
       try {
         if (Date.now() - statSync(lock).mtimeMs > STALE_MS) {
-          rmSync(lock, { recursive: true, force: true }); // orphaned — reclaim
+          rmSync(lock, { recursive: true, force: true }); // orphaned; reclaim
           continue;
         }
       } catch {
-        // Lock vanished between the checks — just retry the mkdir.
+        // Lock vanished between the checks; just retry the mkdir.
       }
       if (Date.now() - start > GIVE_UP_MS) {
         throw new Error(

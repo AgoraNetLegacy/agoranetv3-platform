@@ -1,13 +1,13 @@
 // Scoped nullifiers, Phase A (DUAL_IDENTITY_MODULE.md §4.1, §10).
 //
 // A nullifier proves "this subject already acted in this scope" without
-// revealing who — and without a stored link to either public face. Phase A
+// revealing who; and without a stored link to either public face. Phase A
 // implementation: HMAC(operator secret, scope + subject). One-way and
 // unlinkable to a profile in every record it appears in, but the operator
-// holds the secret — operator-trusted integrity, honestly disclosed
+// holds the secret; operator-trusted integrity, honestly disclosed
 // (PHASE_A_DISCLOSURE in lib/gate.ts). Phase B replaces this with a ZK
 // nullifier derived client-side from the humanity credential; Phase C
-// retires the secret. The *interface* — scope in, opaque nullifier out —
+// retires the secret. The *interface*; scope in, opaque nullifier out;
 // is the contract that survives the cutover.
 //
 // Scope design is product policy (§4.2, owner-ratified 2026-07-06):
@@ -33,9 +33,9 @@ function operatorSecret(): string {
 /**
  * Derive the nullifier for one subject in one scope.
  *
- * - `per-profile`: subjectId is the profile's id — the same human's two
+ * - `per-profile`: subjectId is the profile's id; the same human's two
  *   faces produce unrelated nullifiers (two voices, deliberately).
- * - `per-human`: subjectId is the human's id — both faces produce the SAME
+ * - `per-human`: subjectId is the human's id; both faces produce the SAME
  *   nullifier, so a second attempt is detectable as a duplicate without
  *   the platform learning which faces are siblings.
  *

@@ -1,9 +1,9 @@
-# Derived Defaults — gaps filled from the ratified lattice
+# Derived Defaults; gaps filled from the ratified lattice
 
 Owner directive (2026-07-11): "figure out what the numbers should be
 according to the other numbers we use… fill in the gaps for now so we
-can fully test." Every number below is DERIVED from ratified anchors —
-never invented free-hand — and remains a rail: poll-adjustable, and all
+can fully test." Every number below is DERIVED from ratified anchors;
+never invented free-hand; and remains a rail: poll-adjustable, and all
 of it expires at the Phase 9 real-money re-review like the rest of the
 v0 test schedule.
 
@@ -12,11 +12,11 @@ v0 test schedule.
 The ratified symmetry principle (DISCUSSIONS §7) prices BOTH sides of
 bad faith: a bad-faith flagger forfeits the **5u** flag deposit. So:
 
-- **Strike 1 = 5 uG** — rule-breaking stings exactly as much as
+- **Strike 1 = 5 uG**; rule-breaking stings exactly as much as
   flagging-as-censorship does; the two halves of the symmetry carry the
   same weight. It also more than funds the routine case that judged it
   (1 moderator × 3 uG), so penalties finance their own adjudication.
-- **Strike 2 = 15 uG** — the ratified "serious consequence" magnitude
+- **Strike 2 = 15 uG**; the ratified "serious consequence" magnitude
   (= the paid-permanence fee; a 3× lattice step, matching the
   schedule's tier jumps). It covers a heavy 3-moderator case
   (3 × 3 uG) with margin to the treasury.
@@ -24,14 +24,14 @@ bad faith: a bad-faith flagger forfeits the **5u** flag deposit. So:
 ## Light Score deductions (points, × severity tier)
 
 Anchored to the v2 engine this platform ports at Phase 7 (declared
-reuse — `lib/score.ts` weights): a substantive answer = **5 points**;
+reuse; `lib/score.ts` weights): a substantive answer = **5 points**;
 the per-discussion participation cap = **10 points**.
 
-- **Strike 1 = 5 × tier** — one substantive contribution's worth of
+- **Strike 1 = 5 × tier**; one substantive contribution's worth of
   standing, erased.
-- **Strike 2 = 10 × tier** — a full discussion's maximum credit.
+- **Strike 2 = 10 × tier**; a full discussion's maximum credit.
 
-Deductions decay on the strike clock (6 months, ratified) — one
+Deductions decay on the strike clock (6 months, ratified); one
 redemption curve for both.
 
 ## Sentinel brigade threshold
@@ -47,10 +47,10 @@ Sentinel bundles it to the Tribunal. 24h is the platform's rhythm unit
 - **Rate-limit (strike 2): 24h** = one day-cycle, the same unit as the
   accrual ceiling and digest cadence. (Read-only 7d and badge cooldown
   7d were already ratified.)
-- **Poll-closing-soon notification: 6h** = ¼ day-cycle — inside a day,
+- **Poll-closing-soon notification: 6h** = ¼ day-cycle; inside a day,
   outside the noise; recipients already voted, so it can never aid
   sniping.
-- **Candle window: 20% of duration** — for the default 72h poll that
+- **Candle window: 20% of duration**; for the default 72h poll that
   is ~14.4h, sitting between the ratified 12h offer window and the 24h
   cycle: long enough that "camp the deadline" is a real gamble, short
   enough that honest early voters are untouched.
@@ -61,20 +61,20 @@ Sentinel bundles it to the Tribunal. 24h is the platform's rhythm unit
   The mechanism survives as a rail (0–15 min) should governance ever
   vote a pause in.
 
-## Circle rails (Phase 6, 2026-07-11 — same derivation discipline)
+## Circle rails (Phase 6, 2026-07-11; same derivation discipline)
 
 - **Small-community warning threshold: 25 members** (CIRCLES OQ6). The
-  lattice's serious-stake magnitude — Circle fee, appeal deposit, and
+  lattice's serious-stake magnitude; Circle fee, appeal deposit, and
   the verification grant are all 25: when the crowd you're anonymous
   within is thinner than "an appeal's worth" of souls, the Alias
   warning speaks. Place-tagged Circles always warn, regardless of size
   (the spec's own OR).
-- **Inactivity auto-label: 90 days** (CIRCLES OQ4) — the spec's own
+- **Inactivity auto-label: 90 days** (CIRCLES OQ4); the spec's own
   first suggestion; = 3 tribunal terms. Derived label, auto-lifting;
   never blocks joining.
 - **Light Score credits** (LIGHT_SCORE spec leaves amounts to the
   technical pass; recorded now for Phase 7): **author 5 points** = the
-  v2 engine's substantive-answer weight — an attested real-world action
+  v2 engine's substantive-answer weight; an attested real-world action
   is worth at least a substantive answer; **attestor 1 point** = the
   anchor unit (one reply's worth of standing; smaller than authoring,
   per the spec's shipped default); **per-circle daily cap 10 points** =
@@ -86,47 +86,47 @@ Sentinel bundles it to the Tribunal. 24h is the platform's rhythm unit
   (CIRCLES OQ1 rail): floor 2 so "attested" always means more than one
   voice; ceiling 4× the default, the standard bounds policy.
 
-## Phase 7 rails (2026-07-11 — same derivation discipline)
+## Phase 7 rails (2026-07-11; same derivation discipline)
 
 - **Light Score engine weights** (declared v2 reuse, now rails):
   answer **5**, debate reply **1**, per-discussion participation cap
-  **10** — the v2 constants verbatim.
+  **10**; the v2 constants verbatim.
 - **Accepted-repair credit: 5 points** = the substantive-answer weight
-  (an accepted repair to a Picture is at least a substantive answer —
+  (an accepted repair to a Picture is at least a substantive answer;
   the same anchor as the Circle author credit).
 - **Moderation-service credit: 1 point per case resolved** (the anchor
-  unit — deliberately small, LIGHT_SCORE §5.3), **daily cap 10** (the
+  unit; deliberately small, LIGHT_SCORE §5.3), **daily cap 10** (the
   participation cap), quality-gated by supervision.
 - **Repair consensus bar: 60%** (the platform's consensus example;
-  floor 50% — never below simple majority) · **repair poll duration:
+  floor 50%; never below simple majority) · **repair poll duration:
   72h** (the platform's default deliberation window).
 - **Open-lens weights** (FEED §9.1 defers finals to real data):
   unique contributors **×3** = the v2 insightful-vote weight (quality's
   multiplier, and the "weighted highest" the spec requires), unique
   tippers **×1** and sourced posts **×1** (anchor units), **half-life
   72h** (the deliberation window), activity window 4× half-life.
-- **Treasury snapshot cadence: 24h** — owner-ratified daily
+- **Treasury snapshot cadence: 24h**; owner-ratified daily
   (TREASURY §6.2); held as a rail like everything else.
 
-## Phase 8 rails (2026-07-11 — same derivation discipline)
+## Phase 8 rails (2026-07-11; same derivation discipline)
 
 - **The consolidated rate-limit schedule** (ANTI_SYBIL_CONSOLIDATION §3
   watch-item W4, the named Phase 8 deliverable): sixteen `ratelimit.*`
   rails, one per surface family plus a global backstop, enforced at
   every write action (lib/rateLimit.ts). **Anchor: the v2 platform's
-  proven limiter** — the same declared-reuse anchor as the Light Score
-  weights — with v2 values carried verbatim where the surface maps 1:1
+  proven limiter**; the same declared-reuse anchor as the Light Score
+  weights; with v2 values carried verbatim where the surface maps 1:1
   (posting 12, votes 120, flags 20, moderation 60, appeals 5,
   faceSwitch 30) and mapped to the nearest v2 family where v3's surface
   is new (chambers → creation, DMs → the debate wall). Windows are
   structural, not rails: the 10-minute burst window, the hour, and the
-  ratified 24h day-cycle. Walls sit at machine speed — fees and
+  ratified 24h day-cycle. Walls sit at machine speed; fees and
   deposits remain the ratified throttle (incentive design, per the
   anti-Sybil audit's own verdict); these are the outer wall against
   automation. **The faceSwitch wall is NOT a cooldown** (owner resolved
   cooldown = NONE, 2026-07-11): 30/10min is two orders of magnitude
   above human switching.
-- **Bucket retention: 2 day-cycles** — counters are HMAC-keyed
+- **Bucket retention: 2 day-cycles**; counters are HMAC-keyed
   (RATE_LIMIT_SECRET; no raw IP/session/profile id is ever stored) and
   pruned after twice the longest window. Minimal-log discipline applied
   to our own counters.

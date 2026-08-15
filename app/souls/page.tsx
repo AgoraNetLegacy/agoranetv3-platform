@@ -20,10 +20,10 @@ import {
 
 export const dynamic = "force-dynamic";
 
-// The souls page (FELLOW_SOULS_AND_DM_SPEC) — per-persona, and PRIVATE:
+// The souls page (FELLOW_SOULS_AND_DM_SPEC); per-persona, and PRIVATE:
 // this list renders for its owner alone. No counts leave this page, no
 // other soul's list exists anywhere, and there is no "people you may
-// know" — ever. A permanent product commitment, not a missing feature.
+// know"; ever. A permanent product commitment, not a missing feature.
 
 export default async function SoulsPage({
   searchParams,
@@ -71,7 +71,7 @@ export default async function SoulsPage({
       </p>
       <p className="lore">
         Good people find each other. Bonds are mutual consent between two
-        faces; your graph is yours alone — no public lists, no counts, no
+        faces; your graph is yours alone; no public lists, no counts, no
         suggestions, ever.
       </p>
       {m && <div className="notice">{m}</div>}
@@ -94,7 +94,7 @@ export default async function SoulsPage({
               Accept (free)
             </button>{" "}
             <button type="submit" name="accept" value="0">
-              Decline (free, quiet — they are not told)
+              Decline (free, quiet; they are not told)
             </button>
           </form>
         </div>
@@ -107,7 +107,7 @@ export default async function SoulsPage({
             {t.lastMessageAt.toLocaleDateString()}
           </div>
           <div className="meta">
-            A stranger&apos;s first message waits as a request — reading it
+            A stranger&apos;s first message waits as a request; reading it
             costs nothing; replying opens the thread.
           </div>
           <Link href={`/dm/${t.id}`}>Read it →</Link>{" "}
@@ -123,7 +123,7 @@ export default async function SoulsPage({
         {threads.inbox.map((t) => (
           <li key={t.id}>
             <Link href={`/dm/${t.id}`}>
-              @{t.other?.handle} — {t.other?.displayName}
+              @{t.other?.handle}; {t.other?.displayName}
             </Link>{" "}
             {t.status === "request" && (
               <span className="badge locked">Awaiting their answer</span>
@@ -145,7 +145,7 @@ export default async function SoulsPage({
           <p className="interim-note">
             Strangers receive this as a request; fellow souls receive it
             directly. Opening costs {threadFee} PC + {messageFee} PC for the
-            message — the initiator pays, so spam prices itself out.
+            message; the initiator pays, so spam prices itself out.
             Receiving and replying are free to the other side.
           </p>
           <button type="submit">Send · {(threadFee + messageFee).toFixed(2)} PC</button>
@@ -155,7 +155,7 @@ export default async function SoulsPage({
       <h3>Your fellow souls ({souls.length})</h3>
       <p className="lore">
         Visible to you alone. The platform never counts, ranks, or
-        suggests souls — a friend graph is a fingerprint, so yours is
+        suggests souls; a friend graph is a fingerprint, so yours is
         never computed against.
       </p>
       <ul>
@@ -178,7 +178,7 @@ export default async function SoulsPage({
           </li>
           );
         })}
-        {souls.length === 0 && <li className="lore">None yet — send a request below.</li>}
+        {souls.length === 0 && <li className="lore">None yet; send a request below.</li>}
       </ul>
       <details>
         <summary>Ask a soul to be your fellow soul</summary>
@@ -189,7 +189,7 @@ export default async function SoulsPage({
           <input type="text" name="note" maxLength={200} placeholder="A short note (optional)" />
           <p className="interim-note">
             {requestFee} PC, initiator pays. They may accept, ignore, or
-            decline — all free, and declines are silent. A declined or
+            decline; all free, and declines are silent. A declined or
             lapsed request holds a cooldown before you may ask again.
           </p>
           <button type="submit">Send request · {requestFee} PC</button>

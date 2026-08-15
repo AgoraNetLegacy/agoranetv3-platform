@@ -3,7 +3,7 @@ import { computeBooks } from "@/lib/transparency";
 
 export const dynamic = "force-dynamic";
 
-// Standard-format export (TREASURY_DASHBOARD §3 — the POLLS results
+// Standard-format export (TREASURY_DASHBOARD §3; the POLLS results
 // export precedent): the current books plus the snapshot history, CSV.
 export async function GET() {
   const books = await computeBooks(db);

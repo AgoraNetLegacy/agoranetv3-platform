@@ -1,6 +1,6 @@
 // Slice 7 live-proof fixture: give one completed-but-unsettled fund
 // audit's auditor a linked testnet wallet (a freshly brewed throwaway
-// address — settlement only needs somewhere to pay). The off-chain
+// address; settlement only needs somewhere to pay). The off-chain
 // process (Phase 8.7's offer→accept→complete) is the system of record;
 // this only links the wallet the settlement pays.
 //
@@ -17,7 +17,7 @@ async function main() {
     where: { status: "completed", settlementTxHash: null },
     orderBy: { completedAt: "asc" },
   });
-  if (!due) throw new Error("No completed, unsettled fund audit found — run the 8.7 demo first.");
+  if (!due) throw new Error("No completed, unsettled fund audit found; run the 8.7 demo first.");
   const existing = await db.testnetWalletLink.findUnique({
     where: { profileId: due.auditorProfileId },
   });

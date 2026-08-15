@@ -1,9 +1,9 @@
-// Domains & the Picture repair loop (Phase 7 — DASHBOARD §5.3/§6.5).
+// Domains & the Picture repair loop (Phase 7; DASHBOARD §5.3/§6.5).
 //
 // The Picture is a living content object: a settled position, stated
 // plainly, kept honest by a public, dated revision history. Any verified
 // soul may submit a formal Repair; acceptance is decided the way the
-// platform decides everything it governs — a poll (DASHBOARD §6.3: this
+// platform decides everything it governs; a poll (DASHBOARD §6.3: this
 // spec "assumes Polls, not juries, are the resolution mechanism"). The
 // repair opens a SYSTEM-created governance poll in the domain's pillar
 // (consensus-typed at the platform bar, sealed + candle like all
@@ -12,7 +12,7 @@
 //
 // Pricing, reading the ratified fee lattice strictly: repair submission
 // is FREE (it is not a priced action; flagged). The anti-spam guard is
-// structural instead — one open repair per soul per domain, and the
+// structural instead; one open repair per soul per domain, and the
 // standard strike-ladder consequences apply. Honest misses stay safe:
 // declined repairs cost nothing (LIGHT_SCORE §5.2).
 
@@ -37,7 +37,7 @@ export async function currentPicture(db: PrismaClient, domainId: string) {
   });
 }
 
-/** The domain card's live status tag (§5.3 — real data, never
+/** The domain card's live status tag (§5.3; real data, never
  *  decorative): open repair count + last repaired date. */
 export async function repairStatus(db: PrismaClient, domainIds: string[]) {
   const [open, revisions] = await Promise.all([
@@ -103,7 +103,7 @@ export async function submitRepair(
     where: { domainId: domain.id, authorProfileId: profile.id, status: "open" },
   });
   if (alreadyOpen) {
-    return { ok: false, reason: "You already have an open repair on this domain — one at a time." };
+    return { ok: false, reason: "You already have an open repair on this domain; one at a time." };
   }
 
   const [durationHours, consensusPercent, windowPercent] = await Promise.all([
@@ -123,7 +123,7 @@ export async function submitRepair(
     });
     if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
     const nominalCloseAt = new Date(Date.now() + durationHours * 3_600_000);
-    // Governance polls close by candle — same law, system-opened or not.
+    // Governance polls close by candle; same law, system-opened or not.
     const windowMs = (durationHours * 3_600_000 * windowPercent) / 100;
     const trueCloseAt = new Date(
       nominalCloseAt.getTime() - windowMs + Math.random() * windowMs
@@ -134,7 +134,7 @@ export async function submitRepair(
       data: {
         pillarId: domain.pillarId,
         // System-opened: the platform is the poll's operator, not any
-        // soul ("system" is tombstoned in the taken-list — never
+        // soul ("system" is tombstoned in the taken-list; never
         // claimable). The repair's author is attributed on the repair
         // itself, by handle, like every civic contribution.
         creatorProfileId: "system",
@@ -196,7 +196,7 @@ export async function submitRepair(
 }
 
 /** Called by closeDuePolls for every closed poll: if a repair rides this
- *  poll, execute the community's decision — Adopt leading + consensus
+ *  poll, execute the community's decision; Adopt leading + consensus
  *  passed appends the revision and credits the author; anything else
  *  declines, costing the author nothing. */
 export async function executeRepairPoll(
@@ -251,7 +251,7 @@ export async function executeRepairPoll(
   });
 
   // Accepted repairs credit Light Score in the domain's pillar
-  // (LIGHT_SCORE §2) — recorded with its named cause for the
+  // (LIGHT_SCORE §2); recorded with its named cause for the
   // explainable log (§6). Accepted-only is the anti-gaming filter
   // (§5.2); no decay (v2 credit behavior carries, §OQ4).
   const credit = await getRail(tx, "lightScore.repairAcceptedCredit");

@@ -29,15 +29,15 @@ const SORTS = {
   },
   participants: {
     label: "Most participants",
-    measures: "breadth of engagement — distinct souls who posted",
+    measures: "breadth of engagement; distinct souls who posted",
   },
   tippers: {
     label: "Most unique tippers",
-    measures: "breadth of real appreciation — ten 1-Gratium tippers outrank one 50-Gratium whale",
+    measures: "breadth of real appreciation; ten 1-Gratium tippers outrank one 50-Gratium whale",
   },
   sourced: {
     label: "Most sourced",
-    measures: "evidence density — sources are visible, so inspectable",
+    measures: "evidence density; sources are visible, so inspectable",
   },
 } as const;
 
@@ -54,7 +54,7 @@ export async function PillarAnatomy({
 }: {
   slug: string;
   sort: SortKey;
-  /** Where the sort-menu links point — "/" when mounted on the platform
+  /** Where the sort-menu links point; "/" when mounted on the platform
    *  dashboard, the pillar's own path everywhere else. */
   sortBasePath: string;
 }) {
@@ -96,7 +96,7 @@ export async function PillarAnatomy({
     repairStatus(db, (await db.domain.findMany({ where: { pillarId: pillar.id }, select: { id: true } })).map((d) => d.id)),
   ]);
 
-  // The stat row (§5.2) — this pillar only, this face only; never a
+  // The stat row (§5.2); this pillar only, this face only; never a
   // cross-pillar or global number.
   const viewerCircleCount = viewer
     ? circles.filter((c) => c.members.some((m) => m.profileId === viewer.id)).length
@@ -118,7 +118,7 @@ export async function PillarAnatomy({
   const standing = viewer ? await pillarStanding(db, viewer.id, pillar.id) : null;
 
   // §1.4: each domain card carries a visible Discussion door with its
-  // voice count — the conversation stops hiding behind "live thread".
+  // voice count; the conversation stops hiding behind "live thread".
   const threadByDomain = new Map(
     domainThreads.map((d) => [
       d.domainId,
@@ -165,7 +165,7 @@ export async function PillarAnatomy({
 
   return (
     <>
-      {/* The stat row (§5.2) — this pillar, this face, nothing global. */}
+      {/* The stat row (§5.2); this pillar, this face, nothing global. */}
       <div className="stat-row">
         <div className="stat">
           <div className="stat-number">
@@ -182,7 +182,7 @@ export async function PillarAnatomy({
           </div>
         </div>
         <div className="stat">
-          <div className="stat-number">{standing ? standing.points : "—"}</div>
+          <div className="stat-number">{standing ? standing.points : "; "}</div>
           <div className="stat-label">
             your standing{" "}
             {viewer ? (
@@ -194,11 +194,11 @@ export async function PillarAnatomy({
         </div>
       </div>
       <p className="lore">
-        Standing is per-face, per-pillar — insight over volume, positions
+        Standing is per-face, per-pillar; insight over volume, positions
         never scored. No universal score exists, by design.
       </p>
 
-      {/* Domain cards (§5.3): the second ring. Live repair status — real
+      {/* Domain cards (§5.3): the second ring. Live repair status; real
           data, never decorative. */}
       <h3>The {pillar.domains.length} domains</h3>
       <ul className="domain-grid">
@@ -223,7 +223,7 @@ export async function PillarAnatomy({
               {threadByDomain.get(d.id) && (
                 <div className="discussion-door">
                   <Link href={`/d/${threadByDomain.get(d.id)!.id}`}>
-                    Join the Discussion — {threadByDomain.get(d.id)!.voices} voice
+                    Join the Discussion; {threadByDomain.get(d.id)!.voices} voice
                     {threadByDomain.get(d.id)!.voices === 1 ? "" : "s"}
                   </Link>
                 </div>
@@ -245,7 +245,7 @@ export async function PillarAnatomy({
           </Link>
         ))}
         <div className="sort-note">
-          Sorted by: {SORTS[sort].label} — {SORTS[sort].measures}. No hidden
+          Sorted by: {SORTS[sort].label}; {SORTS[sort].measures}. No hidden
           formula, ever.
         </div>
       </div>
@@ -272,7 +272,7 @@ export async function PillarAnatomy({
 
       <h3><Icon name="circles" /> Circles working in {pillar.name}</h3>
       <p className="lore">
-        Deliberation becomes provable action — ordered by most recent
+        Deliberation becomes provable action; ordered by most recent
         attested action, so active hands rank above old claims.
         {viewer ? ` You belong to ${viewerCircleCount} Circle${viewerCircleCount === 1 ? "" : "s"} here.` : ""}{" "}
         <Link href="/circles">Browse all Circles →</Link>
@@ -304,7 +304,7 @@ export async function PillarAnatomy({
         <p style={{ marginBottom: 0 }}>
           Beyond this door, everything written is permanent public record,
           and governance votes carry the PollCoin micro-fee. Permanence is
-          a place you knowingly walk into — this is the threshold.
+          a place you knowingly walk into; this is the threshold.
         </p>
       </div>
 
@@ -342,7 +342,7 @@ export async function PillarAnatomy({
       {mechanismDocs.length > 0 && (
         <details className="deep-dive">
           <summary>
-            Mechanism deep-dive — the reference documents behind this pillar
+            Mechanism deep-dive; the reference documents behind this pillar
           </summary>
           <p className="lore">
             Dense reference material, not everyday reading: the biology and

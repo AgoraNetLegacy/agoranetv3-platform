@@ -23,7 +23,7 @@ import { Icon } from "@/components/Icon";
 export const dynamic = "force-dynamic";
 
 // The moderation workbench (MODERATION §3). The case file is minimal by
-// law: content in context, the alleged rule, standing and history —
+// law: content in context, the alleged rule, standing and history;
 // never a person. Souls judge content; the ladder does the sentencing.
 export default async function ModerationPage({
   searchParams,
@@ -60,7 +60,7 @@ export default async function ModerationPage({
       {offer && (
         <div className="door-banner">
           <Icon name="badge" /> <strong>You've been offered a moderation badge.</strong>{" "}
-          Sortition chose this face; equip it or pass freely — passing
+          Sortition chose this face; equip it or pass freely; passing
           concentrates nothing. Offer expires{" "}
           {offer.expiresAt.toLocaleString()}. Service is compensated, never
           charged.
@@ -79,7 +79,7 @@ export default async function ModerationPage({
 
       {term ? (
         <>
-          {/* §5.3 design pass: the bench at a glance — this term, this
+          {/* §5.3 design pass: the bench at a glance; this term, this
               face, nothing global. */}
           <div className="stat-row">
             <div className="stat">
@@ -92,11 +92,11 @@ export default async function ModerationPage({
             </div>
             <div className="stat">
               <div className="stat-number">{term.gratiumEarned.toFixed(1)} G</div>
-              <div className="stat-label">earned — service is paid, never charged</div>
+              <div className="stat-label">earned; service is paid, never charged</div>
             </div>
           </div>
           <p className="lore">
-            Badge active until {term.endsAt.toLocaleString()} — hard cutoff,
+            Badge active until {term.endsAt.toLocaleString()}; hard cutoff,
             no carryover.
           </p>
 
@@ -106,7 +106,7 @@ export default async function ModerationPage({
               <p>
                 <span className="badge locked">
                   Alleged: {file.allegedRule} · Tier {file.tier}
-                  {file.heavy ? " · HEAVY (permanent space — 3 rulings)" : ""}
+                  {file.heavy ? " · HEAVY (permanent space; 3 rulings)" : ""}
                   {file.expedited ? " · EXPEDITED" : ""}
                 </span>
               </p>
@@ -125,15 +125,15 @@ export default async function ModerationPage({
                   <option value="" disabled>
                     Does this content break the cited rule?
                   </option>
-                  <option value="uphold">Uphold — it breaks the rule</option>
-                  <option value="decline">Decline — it does not</option>
+                  <option value="uphold">Uphold; it breaks the rule</option>
+                  <option value="decline">Decline; it does not</option>
                   <option value="no-rule-fits">No rule fits (signal the legislature)</option>
                   <option value="escalate">Escalate to the Tribunal</option>
                 </select>{" "}
                 <select name="citedRuleId" defaultValue={file.allegedRule}>
                   {rules.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.id} — {r.title}
+                      {r.id}; {r.title}
                     </option>
                   ))}
                 </select>{" "}
@@ -154,18 +154,18 @@ export default async function ModerationPage({
                   <p className="lore">
                     A newer moderator ruled “{r.verdict}
                     {r.citedRuleId ? ` (${r.citedRuleId})` : ""}” on case{" "}
-                    {r.caseId.slice(0, 8)}… — confirm or override before it
+                    {r.caseId.slice(0, 8)}…; confirm or override before it
                     takes effect.
                   </p>
                   <form action={submitSupervision} className="inline">
                     <input type="hidden" name="rulingId" value={r.id} />
                     <input type="hidden" name="agree" value="1" />
-                    <button type="submit">Agree — confirm</button>
+                    <button type="submit">Agree; confirm</button>
                   </form>{" "}
                   <form action={submitSupervision} className="inline">
                     <input type="hidden" name="rulingId" value={r.id} />
                     <input type="hidden" name="agree" value="0" />
-                    <button type="submit">Disagree — escalate</button>
+                    <button type="submit">Disagree; escalate</button>
                   </form>
                 </div>
               ))}
@@ -178,14 +178,14 @@ export default async function ModerationPage({
             {rating.resolvedWithOutcome} · supervision overrides:{" "}
             {rating.supervisionOverrides} · current reward multiplier:{" "}
             {rating.rewardMultiplier}× (inputs are public; the weights are
-            not — the only way to raise it is to moderate well).
+            not; the only way to raise it is to moderate well).
           </p>
         </>
       ) : (
         !offer && (
           <p className="lore">
             No badge on this face. Badges arrive by sortition when the queue
-            needs hands — watch your inbox; offers expire in 12 hours.
+            needs hands; watch your inbox; offers expire in 12 hours.
           </p>
         )
       )}
@@ -213,7 +213,7 @@ export default async function ModerationPage({
                 <select name="citedRuleId" defaultValue={file.allegedRule}>
                   {rules.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.id} — {r.title}
+                      {r.id}; {r.title}
                     </option>
                   ))}
                 </select>{" "}

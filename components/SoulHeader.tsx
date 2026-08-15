@@ -1,6 +1,6 @@
 // The profile header (PROFILE_PAGE_SPEC §3, owner-ruled 2026-07-22):
-// the industry-standard grammar — banner, circular avatar overlapping
-// its bottom edge, then name → @handle → chip → meta — with the
+// the industry-standard grammar; banner, circular avatar overlapping
+// its bottom edge, then name → @handle → chip → meta; with the
 // platform's substitutions (no counts, no totals). Served handle-keyed
 // from /img/, which falls back to the deterministic mark, so this
 // renders for every soul from birth.

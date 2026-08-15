@@ -5,7 +5,7 @@ import { Icon } from "@/components/Icon";
 
 // The Constitution, readable by anyone (owner walkthrough finding,
 // 2026-07-15): souls acknowledge this document at onboarding, so the
-// full text lives ON the platform — public, no account, no fee. Reading
+// full text lives ON the platform; public, no account, no fee. Reading
 // is free (Invariant 7), and nothing binds a soul that they cannot read.
 export default function ConstitutionPage() {
   return (
@@ -14,7 +14,7 @@ export default function ConstitutionPage() {
         <Icon name="temple" /> The AgoraNet Constitution
       </h1>
       <p className="lore">
-        This is the full founding text — the same document every soul
+        This is the full founding text; the same document every soul
         acknowledges before their first post. At launch it is hashed and
         anchored on-chain, so the version you read here is verifiably the
         version everyone agreed to. The written rules it authorizes live
@@ -23,7 +23,7 @@ export default function ConstitutionPage() {
       </p>
       <Markdown source={CONSTITUTION_MARKDOWN} />
       <p className="lore">
-        Amendments move by governance poll under Article IV — this page
+        Amendments move by governance poll under Article IV; this page
         always renders the current ratified text.
       </p>
     </>

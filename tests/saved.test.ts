@@ -21,7 +21,7 @@ import { makeOnboardedSoul, topUpForTests } from "./helpers/souls";
 const db = new PrismaClient({ datasources: { db: { url } } });
 
 let saverId: string; // the face doing the saving
-let otherId: string; // an unrelated face — must never see the saves
+let otherId: string; // an unrelated face; must never see the saves
 let discussionId: string;
 
 beforeAll(async () => {
@@ -79,7 +79,7 @@ describe("the save", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("keeps saves strictly per-face — the privacy boundary", async () => {
+  it("keeps saves strictly per-face; the privacy boundary", async () => {
     await saveDiscussion(db, { profileId: saverId, discussionId });
 
     const mine = await savedThreadsFor(db, saverId);
@@ -112,11 +112,11 @@ describe("the memory current (resurfacing)", () => {
     let stirring = await stirringSavesFor(db, saverId);
     expect(stirring.length).toBe(0);
 
-    // Another soul posts — the saved thread has stirred.
+    // Another soul posts; the saved thread has stirred.
     const posted = await createPost(db, {
       discussionId,
       profileId: otherId,
-      body: "New voice after the watermark — the thread stirs.",
+      body: "New voice after the watermark; the thread stirs.",
     });
     expect(posted.ok).toBe(true);
 
@@ -126,7 +126,7 @@ describe("the memory current (resurfacing)", () => {
     expect(stirring[0].newVoices).toBeGreaterThanOrEqual(1);
     expect(stirring[0].discussion.id).toBe(discussionId);
 
-    // The other face has no saves — nothing stirs for them.
+    // The other face has no saves; nothing stirs for them.
     expect((await stirringSavesFor(db, otherId)).length).toBe(0);
 
     // Reading advances the watermark; the current settles.

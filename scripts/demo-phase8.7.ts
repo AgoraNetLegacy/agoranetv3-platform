@@ -1,9 +1,9 @@
-// demo:phase8.7 — The Treasury's Other Half, end to end.
+// demo:phase8.7; The Treasury's Other Half, end to end.
 //
 // THE STORY THIS TELLS, and why it's the one worth telling: every part
 // of this pipeline is a composition of machinery that already runs. The
 // Chamber and its scaffold, attestation, the Tribunal, Sentinel, the
-// civic ledger anchored to Cardano preprod — none of it was invented for
+// civic ledger anchored to Cardano preprod; none of it was invented for
 // fund integrity. That is the claim that cannot be faked, and it is why
 // a working demo beats a specification.
 //
@@ -16,7 +16,7 @@
 // the same whatever they find → and every step of it is on a ledger
 // whose head hash is witnessed by a public blockchain.
 //
-// HONEST THROUGHOUT (OWNERS_GUIDE §2 — "say this honestly, always"):
+// HONEST THROUGHOUT (OWNERS_GUIDE §2; "say this honestly, always"):
 // the units are internal, valueless points. The MECHANISM is what's
 // real. Phase 9 changes the value, not the machinery.
 //
@@ -43,7 +43,7 @@ import { makeOnboardedSoul, topUpForTests } from "../tests/helpers/souls";
 const db = new PrismaClient();
 
 function step(n: string, msg: string) {
-  console.log(`\n— ${n}. ${msg}`);
+  console.log(`\n; ${n}. ${msg}`);
 }
 function note(msg: string) {
   console.log(`     ${msg}`);
@@ -51,26 +51,26 @@ function note(msg: string) {
 
 async function main() {
   const stamp = Date.now().toString(36).slice(-5);
-  console.log("\n=== Phase 8.7 — The Treasury's Other Half ===");
+  console.log("\n=== Phase 8.7; The Treasury's Other Half ===");
   console.log("Internal points, no real value. The mechanism is what's real.");
 
   // ── 1 ──────────────────────────────────────────────────────────────
   step("1", "The guardrail that had no code: budgeted categories");
   const categories = await db.budgetCategory.findMany({ orderBy: { name: "asc" } });
   note(`The Constitution (Appendix A): "the treasury MUST NOT spend outside budgeted categories."`);
-  note(`Until this phase that was law with nothing to enforce it — no category model, no`);
+  note(`Until this phase that was law with nothing to enforce it; no category model, no`);
   note(`field, and no shared door for money to leave by. Now there is exactly one door,`);
   note(`and it refuses anything uncategorized.`);
   for (const c of categories) note(`  · ${c.name}${c.active ? "" : " (inactive)"}`);
-  note(`These three are exactly TOKENOMICS §3's treasury loop — nothing invented.`);
+  note(`These three are exactly TOKENOMICS §3's treasury loop; nothing invented.`);
   note(`Note what's ABSENT: "cause funding." The treasury has no such purpose in the`);
   note(`ratified economics, so this phase didn't give it one.`);
   if (categories.length !== SHIPPED_BUDGET_CATEGORIES.length) {
-    throw new Error("budget categories missing — run npm run db:seed");
+    throw new Error("budget categories missing; run npm run db:seed");
   }
 
   // ── 2 ──────────────────────────────────────────────────────────────
-  step("2", "A mission asks for money — and must answer three questions first");
+  step("2", "A mission asks for money; and must answer three questions first");
   const founder = await makeOnboardedSoul(db, {
     trueSelf: `d87-founder-${stamp}`,
     alias: `d87-f-shade-${stamp}`,
@@ -95,7 +95,7 @@ async function main() {
     title: `Kelowna Food Security ${stamp}`,
     subject: "A funded surplus-rescue route",
     pitch: "Grocers discard edible food nightly; pantries run short by Thursday.",
-    whyCare: "Wasted food, hungry neighbors, and the fix is logistics — solvable now, by us.",
+    whyCare: "Wasted food, hungry neighbors, and the fix is logistics; solvable now, by us.",
     isPublic: true,
     scaffold: {
       solving: "Edible surplus goes to landfill while pantries run dry.",
@@ -132,18 +132,18 @@ async function main() {
   note(`Answered → now raising. The plan is v1 in a history that keeps every version.`);
 
   // ── 3 ──────────────────────────────────────────────────────────────
-  step("3", "Souls give — and it costs them for real");
+  step("3", "Souls give; and it costs them for real");
   const donorBefore = await balanceOf(db, donor.trueSelfId, "PC");
   await donateToMission(db, { chamberId, profileId: donor.trueSelfId, amount: 100 });
   const donorAfter = await balanceOf(db, donor.trueSelfId, "PC");
   note(`Donor: ${donorBefore.toFixed(2)}u → ${donorAfter.toFixed(2)}u PollCoin. Gone.`);
   note(`Mission holds: ${(await chamberBalanceOf(db, chamberId, "PC")).toFixed(2)}u`);
   note(`No auto-return, ever. This mechanic replaced poll support-staking on the owner's`);
-  note(`own critique: "auto-returned staking is cheap talk — a costless signal carries no`);
+  note(`own critique: "auto-returned staking is cheap talk; a costless signal carries no`);
   note(`information." It comes back only if the chamber's members release it.`);
 
   // ── 4 ──────────────────────────────────────────────────────────────
-  step("4", "A release is proposed — and the proposer cannot wave it through");
+  step("4", "A release is proposed; and the proposer cannot wave it through");
   const small = await proposeRelease(db, {
     chamberId,
     proposerProfileId: founder.trueSelfId,
@@ -153,7 +153,7 @@ async function main() {
     purpose: "Cold-chain totes for the Thursday route",
   });
   if (!small.ok) throw new Error(small.reason);
-  note(`Proposed 12u — "${"Cold-chain totes for the Thursday route"}"`);
+  note(`Proposed 12u; "${"Cold-chain totes for the Thursday route"}"`);
   note(`Door: ${small.authorization} (published at proposal, never chosen after the fact)`);
 
   const selfSign = await attestRelease(db, {
@@ -164,7 +164,7 @@ async function main() {
   note(`  "${!selfSign.ok ? selfSign.reason : "??"}"`);
 
   // ── 5 ──────────────────────────────────────────────────────────────
-  step("5", "★ Two other members co-sign — and the money moves in that instant");
+  step("5", "★ Two other members co-sign; and the money moves in that instant");
   const chamberBefore = await chamberBalanceOf(db, chamberId, "PC");
   const recipientBefore = await balanceOf(db, neighbour.trueSelfId, "PC");
 
@@ -184,7 +184,7 @@ async function main() {
   note(``);
   note(`THE POINT: the call that recorded the second signature IS the call that paid.`);
   note(`There is no "execute" step. Not for an admin, not for the founder, not for`);
-  note(`anyone — the code path does not exist. An operator who can silently sit on`);
+  note(`anyone; the code path does not exist. An operator who can silently sit on`);
   note(`approved money is as much a capture vector as one who can steal it.`);
 
   // ── 6 ──────────────────────────────────────────────────────────────
@@ -207,7 +207,7 @@ async function main() {
   note(`Trying to co-sign it through anyway → REFUSED:`);
   note(`  "${!sneak.ok ? sneak.reason : "??"}"`);
   note(`Two co-signers are corroboration for a reimbursement. They are not a mandate`);
-  note(`for the mission's whole purse — so §9.1 gives the purse a second door.`);
+  note(`for the mission's whole purse; so §9.1 gives the purse a second door.`);
 
   const meta = await db.pillar.findFirstOrThrow({ where: { isMeta: true } });
   const poll = await createPoll(db, {
@@ -248,7 +248,7 @@ async function main() {
   note(`Again: the poll closing IS the payment. Both doors, one payment path.`);
 
   // ── 7 ──────────────────────────────────────────────────────────────
-  step("7", "★ A ruling freezes what hasn't moved — the real teeth");
+  step("7", "★ A ruling freezes what hasn't moved; the real teeth");
   const pendingA = await proposeRelease(db, {
     chamberId,
     proposerProfileId: founder.trueSelfId,
@@ -273,11 +273,11 @@ async function main() {
   note(`inside the ruling's own transaction. No operator pressed anything.`);
   note(``);
   note(`Said honestly: you CANNOT claw back what is already spent. The 12u and the 60u`);
-  note(`stay spent. Freeze stops what has not moved — that is the whole claim, and`);
+  note(`stay spent. Freeze stops what has not moved; that is the whole claim, and`);
   note(`overselling it would be the easiest lie in this demo.`);
 
   // ── 8 ──────────────────────────────────────────────────────────────
-  step("8", "An auditor is drawn by lot — and paid the same whatever they find");
+  step("8", "An auditor is drawn by lot; and paid the same whatever they find");
   const auditor = await makeOnboardedSoul(db, {
     trueSelf: `d87-auditor-${stamp}`,
     alias: `d87-au-shade-${stamp}`,
@@ -314,13 +314,13 @@ async function main() {
     });
     note(`Finding: clean. Auditor paid ${(await balanceOf(db, auditor.trueSelfId, "G")) - auditorBefore}u G.`);
     note(`A "concern" would have paid EXACTLY the same. An auditor paid for finding`);
-    note(`problems will find problems — so the pay is for looking.`);
+    note(`problems will find problems; so the pay is for looking.`);
     note(`Never the proposer, the recipient, or a chamber member: an auditor auditing`);
     note(`their own mission is not an audit.`);
   }
 
   // ── 9 ──────────────────────────────────────────────────────────────
-  step("9", "Sentinel watches patterns — and never punishes");
+  step("9", "Sentinel watches patterns; and never punishes");
   await db.rail.update({
     where: { key: "sentinel.selfDealReleaseThreshold" },
     data: { value: 2 },
@@ -341,7 +341,7 @@ async function main() {
   const flagged = await sentinelMissionSweep(db);
   note(`Self-directed release pattern flagged: ${flagged}`);
   note(`ONE member reimbursing themselves is the most ordinary use of a mission's`);
-  note(`money — forbidding it would push real spending off the record where nobody`);
+  note(`money; forbidding it would push real spending off the record where nobody`);
   note(`can see it. So it's allowed, and watched. The flag says on its face: "a`);
   note(`question, not an accusation." Anomalies never punish.`);
 
@@ -378,18 +378,18 @@ async function main() {
     note(`  tx ${payload.txHash ?? payload.anchorRef ?? "(see /transparency)"}`);
     note(`Rewriting any of the above now means beating a public blockchain.`);
   } else {
-    note(`No anchor in this database yet — run: npm run chain:anchor`);
+    note(`No anchor in this database yet; run: npm run chain:anchor`);
     note(`(The cadence is live on preprod; see /transparency for the latest tx.)`);
   }
   note(``);
   note(`Every step above is composition, not invention: Chambers, attestation, polls,`);
-  note(`the Tribunal, Sentinel, the ledger, the anchor — all of it already ran. That`);
+  note(`the Tribunal, Sentinel, the ledger, the anchor; all of it already ran. That`);
   note(`is the claim worth making, and it's the one that can't be faked.`);
 
   console.log(`\n=== The honest part ===`);
   console.log(`The units are internal points with no value. The MECHANISM is what's real.`);
   console.log(`Phase 9 changes the value, not the machinery.`);
-  console.log(`Attestation proves N verified humans staked their names — never that the`);
+  console.log(`Attestation proves N verified humans staked their names; never that the`);
   console.log(`platform verified the spend. Fund Integrity raises the cost of lying; it`);
   console.log(`does not make lying impossible.\n`);
 }

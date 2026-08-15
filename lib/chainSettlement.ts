@@ -3,7 +3,7 @@
 // the system of record; this mirrors the payout onto the testnet rail:
 // each COMPLETED audit whose auditor linked a wallet gets the railed
 // amount paid to THEIR OWN address, and the row records the tx hash
-// only after the chain confirms the payment — verify-then-record, the
+// only after the chain confirms the payment; verify-then-record, the
 // Slice 2 discipline. PER CASE, NEVER PER FINDING: the amount is one
 // rail, blind to 'clean' vs 'concern', exactly like the internal rail.
 //
@@ -57,7 +57,7 @@ export async function settleCompletedAudits(
     )
       .trim()
       .toLowerCase();
-    // Verify before recording — poll briefly; the tx was just submitted.
+    // Verify before recording; poll briefly; the tx was just submitted.
     let paid: number | null = null;
     for (let attempt = 0; attempt < 24 && paid === null; attempt++) {
       paid = await verify(txHash, link.cardanoAddress);
@@ -65,7 +65,7 @@ export async function settleCompletedAudits(
     }
     if (paid === null || paid < lovelace) {
       throw new Error(
-        `Settlement ${txHash} for audit ${audit.id} not confirmed at the auditor's address — NOT recorded.`
+        `Settlement ${txHash} for audit ${audit.id} not confirmed at the auditor's address; NOT recorded.`
       );
     }
     await db.fundAudit.update({

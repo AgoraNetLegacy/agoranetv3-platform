@@ -1,10 +1,10 @@
-// Phase 8 checkpoint demo — deployment hardening, walked end to end:
+// Phase 8 checkpoint demo; deployment hardening, walked end to end:
 // the walls hold at machine speed (and are rails), the counters and
 // ops log keep the minimal-log discipline, the analytics funnel counts
 // without watching, the crush deletes on schedule, the runtime guard
 // refuses an unsafe boot, and the dual-provider parity promise checks
 // itself. (The Postgres backup → restore-drill loop is separate live
-// evidence — it ran against a real Postgres 17 with all checks green
+// evidence; it ran against a real Postgres 17 with all checks green
 // and a corrupted archive failing loudly; see CHECKPOINTS.md.)
 
 import { execSync, spawnSync } from "child_process";
@@ -27,7 +27,7 @@ function verify(): boolean {
 }
 
 async function main() {
-  banner("0. Fresh database, seeded — the rails include the W4 schedule");
+  banner("0. Fresh database, seeded; the rails include the W4 schedule");
   execSync("npx prisma db push --skip-generate --force-reset", { cwd: REPO_ROOT, env, stdio: "pipe" });
   execSync("npx tsx prisma/seed.ts", { cwd: REPO_ROOT, env, stdio: "pipe" });
 
@@ -38,9 +38,9 @@ async function main() {
   const { validateRuntimeConfig } = await import("../lib/runtimeConfig");
   const { getRail } = await import("../lib/rails");
 
-  banner("1. The pace wall — machine speed refused, humans untouched");
+  banner("1. The pace wall; machine speed refused, humans untouched");
   const limit = await getRail(db, "ratelimit.register");
-  console.log(`ratelimit.register rail: ${limit} ceremonies/hour (a rail — poll-adjustable within bounds)`);
+  console.log(`ratelimit.register rail: ${limit} ceremonies/hour (a rail; poll-adjustable within bounds)`);
   const now = new Date();
   for (let i = 1; i <= limit; i++) {
     const r = await checkRateLimit(db, "register", "demo-arrival", now);
@@ -53,7 +53,7 @@ async function main() {
     console.log(`  attempt ${limit + 1}: ${(error as Error).message}`);
   }
 
-  banner("2. Counter hygiene — the buckets know nobody");
+  banner("2. Counter hygiene; the buckets know nobody");
   const buckets = await db.rateLimitBucket.findMany();
   console.log(`  ${buckets.length} bucket(s); every key: ${buckets.every((b) => /^[0-9a-f]{64}$/.test(b.key)) ? "HMAC-shaped ✓" : "LEAKY ✗"}`);
   console.log(`  the identifier 'demo-arrival' appears in a key: ${buckets.some((b) => b.key.includes("demo-arrival")) ? "YES ✗" : "no ✓"}`);
@@ -64,11 +64,11 @@ async function main() {
   await recordEvent(db, "funnel.trueself", "demo-profile-id");
   await recordEvent(db, "action.any", "demo-profile-id");
   const keyed = await db.analyticsEvent.findFirst({ where: { name: "funnel.trueself" } });
-  console.log(`  funnel.trueself subjectKey: ${keyed?.subjectKey?.slice(0, 16)}… (HMAC — the raw id never lands)`);
+  console.log(`  funnel.trueself subjectKey: ${keyed?.subjectKey?.slice(0, 16)}… (HMAC; the raw id never lands)`);
   console.log(`  same soul's rate-limit key and analytics key differ: ${
     analyticsSubjectKey("demo-profile-id") !== buckets[0]?.key ? "✓ (separate derivations, unjoinable)" : "✗"}`);
 
-  banner("4. The 90-day crush — aggregates survive, raw events die");
+  banner("4. The 90-day crush; aggregates survive, raw events die");
   const old = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000);
   await db.analyticsEvent.createMany({
     data: [
@@ -86,13 +86,13 @@ async function main() {
   console.log(`  permanent aggregates: ${aggregates}; raw events older than the rail remaining: ${remaining} (must be 0)`);
   if (remaining !== 0) throw new Error("THE CRUSH DID NOT DELETE");
 
-  banner("5. The ops log — attributable, allowlisted, public");
+  banner("5. The ops log; attributable, allowlisted, public");
   await recordOpsEvent(db, "admin.backup.drill", { file: "demo.dump", ok: true });
   const ops = await db.ledgerEvent.findFirst({ where: { eventType: "admin.backup.drill" } });
   console.log(`  ${ops?.eventType}: ${ops?.payload}`);
-  console.log("  (renders publicly on /transparency — souls can see that drills pass)");
+  console.log("  (renders publicly on /transparency; souls can see that drills pass)");
 
-  banner("6. The runtime guard — an unsafe boot is refused, loudly");
+  banner("6. The runtime guard; an unsafe boot is refused, loudly");
   const errors = validateRuntimeConfig({
     NODE_ENV: "production",
     DATABASE_URL: "file:./dev.db",
@@ -101,18 +101,18 @@ async function main() {
   for (const e of errors) console.log(`  ✗ ${e}`);
   if (!errors.length) throw new Error("THE GUARD DID NOT REFUSE");
 
-  banner("7. Dual-provider parity — the two schemas cannot drift");
+  banner("7. Dual-provider parity; the two schemas cannot drift");
   const parity = spawnSync("npx", ["tsx", "scripts/check-postgres-schema.ts"], {
     cwd: REPO_ROOT, env: process.env as NodeJS.ProcessEnv, encoding: "utf8",
   });
   process.stdout.write(parity.stdout + (parity.stderr ?? ""));
   if (parity.status !== 0) throw new Error("PARITY BROKEN");
 
-  banner("8. Housekeeping — expired counters pruned");
+  banner("8. Housekeeping; expired counters pruned");
   const ancient = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
   await checkRateLimit(db, "posting", "old-soul", ancient);
   const pruned = await pruneRateLimitBuckets(db);
-  console.log(`  pruned ${pruned} expired bucket(s) — short retention is the point`);
+  console.log(`  pruned ${pruned} expired bucket(s); short retention is the point`);
 
   await db.$disconnect();
 

@@ -1,4 +1,4 @@
-// The real restore — the operator's worst-day command (docs/RUNBOOK.md
+// The real restore; the operator's worst-day command (docs/RUNBOOK.md
 // walks the whole day; this script is one step of it). Destructive by
 // nature, so it demands explicit consent via ALLOW_DATABASE_RESTORE=YES
 // and never touches DATABASE_URL implicitly: the target is always named.
@@ -34,7 +34,7 @@ async function main() {
   }
   if (result.status !== 0) throw new Error("PostgreSQL restore failed.");
 
-  // The restore itself goes on the restored record (ADMIN_OPS §2) —
+  // The restore itself goes on the restored record (ADMIN_OPS §2);
   // recovery is an operator act souls are entitled to see.
   process.env.DATABASE_URL = databaseUrl;
   const { db } = await import("../lib/db");

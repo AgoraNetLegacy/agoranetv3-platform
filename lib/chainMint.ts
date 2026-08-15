@@ -1,8 +1,8 @@
-// The Cardano testnet mint + anchor engine (Phase 8.6 —
+// The Cardano testnet mint + anchor engine (Phase 8.6;
 // TESTNET_RAILS_SPEC §2.1, §3). TESTNET ONLY, throwaway policy: this
 // module holds NOTHING of value and mints a demo-labeled asset under a
 // disposable key. The internal double-entry economy remains the system
-// of record (§2.1) — this only mirrors boundary events onto real test
+// of record (§2.1); this only mirrors boundary events onto real test
 // rails so the demo shows real tokens moving.
 //
 // Node-only (uses the operator's throwaway key + Blockfrost); never
@@ -17,7 +17,7 @@ import {
   stringToHex,
 } from "@meshsdk/core";
 
-// Env is read INSIDE the functions, never at module top level — script
+// Env is read INSIDE the functions, never at module top level; script
 // callers load env (Next's loadEnvConfig) after the hoisted import, so
 // top-level reads would see undefined.
 function testnetEnv() {
@@ -43,7 +43,7 @@ export async function mintWallet() {
   const { projectId, mnemonic } = testnetEnv();
   const provider = new BlockfrostProvider(projectId!);
   const wallet = new MeshWallet({
-    networkId: 0, // testnet — never 1 (mainnet) in this module
+    networkId: 0, // testnet; never 1 (mainnet) in this module
     fetcher: provider,
     submitter: provider,
     key: { type: "mnemonic", words: mnemonic!.trim().split(/\s+/) },
@@ -59,7 +59,7 @@ export async function mintDemoPollCoin(quantity = "1000000") {
   const wallet = await mintWallet();
   const addr = (await wallet.getUsedAddresses())[0] ?? (await wallet.getChangeAddress());
 
-  // Throwaway policy: a native "signed by this key" script — disposable
+  // Throwaway policy: a native "signed by this key" script; disposable
   // by construction, exactly what §2.1 calls for.
   const forge = ForgeScript.withOneSignature(addr);
   const policyId = resolveScriptHash(forge);
@@ -72,7 +72,7 @@ export async function mintDemoPollCoin(quantity = "1000000") {
     metadata: {
       name: "PollCoin Demo",
       ticker: "dPOLL",
-      desc: "AgoraNet Phase 8.6 testnet demo token — no real value, ever.",
+      desc: "AgoraNet Phase 8.6 testnet demo token; no real value, ever.",
     },
     label: "721",
     recipient: addr,
@@ -86,7 +86,7 @@ export async function mintDemoPollCoin(quantity = "1000000") {
 
 /** Anchor one civic-ledger hash into a preprod transaction's metadata
  *  (§3, CIP-20 style). The chain becomes an external, public witness
- *  to the internal ledger's integrity — anyone can look it up. */
+ *  to the internal ledger's integrity; anyone can look it up. */
 export async function anchorLedgerHash(hashHex: string) {
   const wallet = await mintWallet();
   const addr = (await wallet.getUsedAddresses())[0] ?? (await wallet.getChangeAddress());

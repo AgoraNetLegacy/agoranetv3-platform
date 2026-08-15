@@ -1,7 +1,7 @@
-// demo:phase6.5 — the Phase 6.5 checkpoint, end to end (BUILD_ORDER):
+// demo:phase6.5; the Phase 6.5 checkpoint, end to end (BUILD_ORDER):
 // a stranger request goes out from one profile (fee paid), is accepted
 // by another soul, encrypted DMs flow both ways, a message is reported,
-// and the report lands in the moderation queue — with nothing anywhere
+// and the report lands in the moderation queue; with nothing anywhere
 // revealing either soul's graph.
 //
 // Run: npm run demo:phase6.5   (uses the dev database; seed first)
@@ -20,7 +20,7 @@ import { makeOnboardedSoul, topUpForTests } from "../tests/helpers/souls";
 const db = new PrismaClient();
 
 function step(n: number, msg: string) {
-  console.log(`\n— ${n}. ${msg}`);
+  console.log(`\n; ${n}. ${msg}`);
 }
 
 async function main() {
@@ -39,7 +39,7 @@ async function main() {
   const askerHandle = `demo65-asker-${stamp}`;
   const friendHandle = `demo65-friend-${stamp}`;
 
-  step(2, "A fellow-soul request goes out — initiator pays, recipient owes nothing");
+  step(2, "A fellow-soul request goes out; initiator pays, recipient owes nothing");
   const before = await balanceOf(db, asker.trueSelfId, "PC");
   const request = await sendFellowSoulRequest(db, {
     fromProfileId: asker.trueSelfId,
@@ -48,10 +48,10 @@ async function main() {
   });
   if (!request.ok) throw new Error(request.reason);
   console.log(
-    `   fee: ${before.toFixed(2)} → ${(await balanceOf(db, asker.trueSelfId, "PC")).toFixed(2)} PC · one QUIET inbox entry for the recipient — no pressure, ever`
+    `   fee: ${before.toFixed(2)} → ${(await balanceOf(db, asker.trueSelfId, "PC")).toFixed(2)} PC · one QUIET inbox entry for the recipient; no pressure, ever`
   );
 
-  step(3, "Accepted (free) — the bond is mutual consent between two faces");
+  step(3, "Accepted (free); the bond is mutual consent between two faces");
   const pending = await db.fellowSoulRequest.findFirstOrThrow({
     where: { toProfileId: friend.trueSelfId, status: "pending" },
   });
@@ -62,10 +62,10 @@ async function main() {
   });
   if (!accepted.ok) throw new Error(accepted.reason);
   console.log(
-    `   fellow souls? ${await areFellowSouls(db, asker.trueSelfId, friend.trueSelfId)} — visible only to these two; no lists, no counts, no suggestions, ever`
+    `   fellow souls? ${await areFellowSouls(db, asker.trueSelfId, friend.trueSelfId)}; visible only to these two; no lists, no counts, no suggestions, ever`
   );
 
-  step(4, "Encrypted DMs flow both ways — fellow souls land direct");
+  step(4, "Encrypted DMs flow both ways; fellow souls land direct");
   const thread = await openThread(db, {
     fromProfileId: asker.trueSelfId,
     toHandle: friendHandle,
@@ -75,14 +75,14 @@ async function main() {
   const reply = await sendMessage(db, {
     threadId: thread.threadId,
     senderProfileId: friend.trueSelfId,
-    body: "Deal — and something unkind for the demo: you argue in bad faith and I'll disrupt every thread you touch.",
+    body: "Deal; and something unkind for the demo: you argue in bad faith and I'll disrupt every thread you touch.",
   });
   if (!reply.ok) throw new Error(reply.reason);
 
   const stored = await db.dmMessage.findFirstOrThrow({
     where: { threadId: thread.threadId },
   });
-  console.log(`   at rest: "${stored.ciphertext.slice(0, 44)}…" — ciphertext only`);
+  console.log(`   at rest: "${stored.ciphertext.slice(0, 44)}…"; ciphertext only`);
   const read = await readThread(db, {
     threadId: thread.threadId,
     profileId: asker.trueSelfId,
@@ -107,7 +107,7 @@ async function main() {
   });
   console.log(`   case ${modCase.id.slice(0, 8)}… open in the moderation queue (deposit held, rule cited)`);
 
-  step(6, "The case file: the words and the standing — never a name");
+  step(6, "The case file: the words and the standing; never a name");
   const file = await caseFileFor(db, modCase.id);
   console.log(`   evidence: "${file.content.slice(0, 50)}…"`);
   console.log(`   surface: ${file.pillar} · accused strikes: ${file.accusedActiveStrikes}`);

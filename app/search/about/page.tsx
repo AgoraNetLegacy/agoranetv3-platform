@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-// The published search ranking (FEED_AND_SEARCH §4.2): like the lens —
+// The published search ranking (FEED_AND_SEARCH §4.2): like the lens;
 // no formula a soul can't read.
 export default async function SearchAboutPage() {
   return (
@@ -14,7 +14,7 @@ export default async function SearchAboutPage() {
       <blockquote className="opening-question">
         score = match quality (exact @handle 4 · title/name 2–3 · body 1)
         + substance signals (participants, members, citations, sourced
-        posts) — sorted highest first, ties alphabetical.
+        posts); sorted highest first, ties alphabetical.
       </blockquote>
       <ul>
         <li>
@@ -24,20 +24,20 @@ export default async function SearchAboutPage() {
         </li>
         <li>
           <strong>Substance signals:</strong> the platform&rsquo;s own
-          currencies of quality — distinct participants, Circle members,
+          currencies of quality; distinct participants, Circle members,
           citation counts, sourced posts. Never views, never dwell time,
           never engagement metrics: the platform does not measure them.
         </li>
         <li>
           <strong>No personalization:</strong> same query, same results, for
-          everyone — a legibility feature and a correlation-safety feature
+          everyone; a legibility feature and a correlation-safety feature
           at once. Your search history is never a ranking input.
         </li>
       </ul>
       <h3>What is never in the index</h3>
       <ul>
         <li>
-          Workshop and members&rsquo;-room interiors — a member searching
+          Workshop and members&rsquo;-room interiors; a member searching
           inside a space they belong to is in-space search, scoped to that
           space (the search box in the room itself).
         </li>

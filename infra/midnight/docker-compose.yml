@@ -1,12 +1,12 @@
-# Midnight dev proof server (Phase 8.6 slice 3 — TESTNET_RAILS_SPEC §6.2, §6.4 step 3).
+# Midnight dev proof server (Phase 8.6 slice 3; TESTNET_RAILS_SPEC §6.2, §6.4 step 3).
 #
 # Dev-grade by ratified scope: proofs run locally through this container
 # (20–60s each is normal); consumer in-browser proving waits on Lace
-# shipping proving delegation — outside this platform's control.
+# shipping proving delegation; outside this platform's control.
 #
 # Version pinned 2026-07-14 from the official support matrix
 # (docs.midnight.network/relnotes/support-matrix): proof-server 8.1.0 is
-# the Preview/Preprod testnet tier — 8.0.3 (the removed prior-attempt
+# the Preview/Preprod testnet tier; 8.0.3 (the removed prior-attempt
 # container's tag) is the MAINNET tier, which this phase never touches.
 # The 9.0.0-rc series is rolling out; re-pin deliberately, not by drift.
 #

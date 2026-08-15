@@ -1,13 +1,13 @@
-// Fellow Souls (Phase 6.5 — FELLOW_SOULS_AND_DM_SPEC §1–§4).
+// Fellow Souls (Phase 6.5; FELLOW_SOULS_AND_DM_SPEC §1–§4).
 //
-// The bond is mutual consent between two PROFILES — any face
+// The bond is mutual consent between two PROFILES; any face
 // combination; the platform neither knows nor asks whether two bonded
 // profiles share a human. The load-bearing privacy rules (§4) are
 // structural here:
-//   1. Your list is visible to you alone — no public lists, no counts.
+//   1. Your list is visible to you alone; no public lists, no counts.
 //   2. No "people you may know," EVER. Nothing in this module computes,
 //      stores, or surfaces graph-derived suggestions. Permanent.
-//   3. Two personas, two graphs — everything keyed by profileId.
+//   3. Two personas, two graphs; everything keyed by profileId.
 //   4. Mutual knowledge only: you may learn YOUR relationship to a
 //      soul, never anyone's list.
 // And the one that governs every function: NOTHING social ever touches
@@ -27,14 +27,14 @@ import { notify } from "./notifications";
 
 export type SocialResult<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
 
-/** Normalized pair key — one bond row, one thread per pair. */
+/** Normalized pair key; one bond row, one thread per pair. */
 export function pairOf(a: string, b: string): { a: string; b: string; key: string } {
   return a < b ? { a, b, key: `${a}:${b}` } : { a: b, b: a, key: `${b}:${a}` };
 }
 
 // -------------------------------------------------------------- the graph
 
-/** Are these two profiles fellow souls? (§4.4 — mutual knowledge only:
+/** Are these two profiles fellow souls? (§4.4; mutual knowledge only:
  *  callers may only ever surface this for the viewer's OWN pair.) */
 export async function areFellowSouls(
   db: DbOrTx,
@@ -48,7 +48,7 @@ export async function areFellowSouls(
   return bond !== null;
 }
 
-/** The viewer's own bonds — the ONLY list this module ever returns,
+/** The viewer's own bonds; the ONLY list this module ever returns,
  *  and only for the profile asking about itself. */
 export async function myFellowSouls(db: PrismaClient, profileId: string) {
   const bonds = await db.fellowSoulBond.findMany({
@@ -61,7 +61,7 @@ export async function myFellowSouls(db: PrismaClient, profileId: string) {
   return db.profile.findMany({
     where: { id: { in: otherIds } },
     // spiritActive/spiritLevel ride along so the souls page can show a
-    // bonded fellow walking unseen (ghost level only) — this is the one
+    // bonded fellow walking unseen (ghost level only); this is the one
     // deliberate crack in the veil's silence: your OWN fellows may know
     // you're away, strangers never learn anything.
     select: {
@@ -91,7 +91,7 @@ export async function isBlocked(
 // --------------------------------------------------------------- requests
 
 /**
- * Send a fellow-soul request (§2): gate-cleared (private recording —
+ * Send a fellow-soul request (§2): gate-cleared (private recording;
  * social actions are not civic record), initiator pays the rail, one
  * optional short note. Declined/ignored senders face the cooldown rail.
  */
@@ -117,11 +117,11 @@ export async function sendFellowSoulRequest(
     return { ok: false, reason: "You are already fellow souls." };
   }
   // Blocks are quiet (§5.2): the same neutral refusal a stranger would
-  // see for any undeliverable request — never a block notice.
+  // see for any undeliverable request; never a block notice.
   if (await isBlocked(db, to.id, from.id)) {
     return { ok: false, reason: "This request can't be delivered." };
   }
-  // Spirit Mode at inbound or above refuses new requests — with the
+  // Spirit Mode at inbound or above refuses new requests; with the
   // block's exact wording, so the veil is never itself a signal.
   if (spiritCovers(to, "inbound")) {
     return { ok: false, reason: "This request can't be delivered." };
@@ -145,7 +145,7 @@ export async function sendFellowSoulRequest(
   if (recentRefusal) {
     return {
       ok: false,
-      reason: `A recent request to this soul was declined or lapsed — the door reopens after ${cooldownDays} days.`,
+      reason: `A recent request to this soul was declined or lapsed; the door reopens after ${cooldownDays} days.`,
     };
   }
 
@@ -160,7 +160,7 @@ export async function sendFellowSoulRequest(
         ledgerRecording: "private",
       });
       if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
-      // Initiator pays (participation-cost rule) — the fee entry is
+      // Initiator pays (participation-cost rule); the fee entry is
       // BLINDED: no reference to the recipient; who-asked-whom stays
       // out of the economy table entirely.
       const fee = await chargeToTreasury(tx, {
@@ -186,7 +186,7 @@ export async function sendFellowSoulRequest(
         tier: "quiet",
         category: "request",
         title: "A soul asks to be your fellow soul",
-        body: "A request waits in your Souls page. Accept, ignore, or decline — all free, no clock ticking at you.",
+        body: "A request waits in your Souls page. Accept, ignore, or decline; all free, no clock ticking at you.",
         refType: "souls",
         aggregationKey: "fellow-requests",
       });
@@ -226,25 +226,25 @@ export async function respondToRequest(
         where: { pairKey: key, status: "request" },
         data: { status: "open" },
       });
-      // The requester learns the good news — quiet; nothing was asked of them.
+      // The requester learns the good news; quiet; nothing was asked of them.
       await notify(tx, {
         profileId: request.fromProfileId,
         tier: "quiet",
         category: "request",
         title: "Your fellow-soul request was accepted",
-        body: "You are fellow souls now — DMs land direct.",
+        body: "You are fellow souls now; DMs land direct.",
         refType: "souls",
         aggregationKey: "fellow-accepted",
       });
     }
     // Declines are silent to the requester (§2: declined requests end
-    // there) — no notification, no re-notification, ever.
+    // there); no notification, no re-notification, ever.
   });
   return { ok: true };
 }
 
 /**
- * Release a bond. The spec makes the bond mutual CONSENT — consent is
+ * Release a bond. The spec makes the bond mutual CONSENT; consent is
  * ongoing, so either side may withdraw it, quietly (the same
  * no-notification discipline as blocking; flagged in
  * DECISIONS_PENDING as a derived rule). DMs between the pair fall back
@@ -314,11 +314,11 @@ export async function expireStaleRequests(db: PrismaClient): Promise<void> {
     where: { status: "pending", createdAt: { lte: cutoff } },
     data: { status: "expired", resolvedAt: new Date() },
   });
-  // Stranger threads that were never answered lapse the same way —
+  // Stranger threads that were never answered lapse the same way;
   // back to a sendable state? No: the thread row stays (the initiator
   // paid to open it); only the REQUEST decoration ends. Unanswered
   // stranger threads simply sit; the receiver may still answer later.
-  // (The expiry rail governs the requests AREA — fellow-soul asks —
+  // (The expiry rail governs the requests AREA; fellow-soul asks;
   // per the owner's 2026-07-09 resolution.)
 }
 

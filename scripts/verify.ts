@@ -1,4 +1,4 @@
-// db:verify — the invariant check. Run after any work session; CI runs it
+// db:verify; the invariant check. Run after any work session; CI runs it
 // on every push. v2's proven pattern, reimplemented on the v3 schema
 // (declared reuse, DUAL_IDENTITY_MODULE.md §1.2 invariant 3 / §9).
 //
@@ -8,7 +8,7 @@
 // 2. Canon integrity: 7 pillars, 49 questions, full lens coverage,
 //    positions 1–49 complete.
 // 3. Identity-leak guard: no Human id, no Profile db id anywhere in the
-//    ledger — pseudonyms only.
+//    ledger; pseudonyms only.
 // 4. Gate integrity: every PSEUDONYMOUS cleared request is on the ledger
 //    (nothing clears off-ledger), one clearance per (scope, nullifier),
 //    duplicate rejections private, PRIVATE clearances have no event.
@@ -16,7 +16,7 @@
 // 5. Canonical Discussions: 49 permanent spaces, 1:1 with the canon.
 // 6. Permanent-record integrity: every permanent-space post has a
 //    post.recorded event; every LOCKED post's body re-hashes to its
-//    last ledger commitment — a locked record cannot be silently edited.
+//    last ledger commitment; a locked record cannot be silently edited.
 // 7. Flag privacy: no flag-related event type on the public ledger, and
 //    no flag's nullifier appears anywhere in it (triangle of blindness).
 // Phase 2:
@@ -25,7 +25,7 @@
 // 9. Registration evidence: nullifier spends match profile counts;
 //    active faces have their registration/activation events; PENDING
 //    aliases appear NOWHERE in the public ledger.
-// 10. Session hygiene: expired sessions/locks purged (short retention —
+// 10. Session hygiene: expired sessions/locks purged (short retention;
 //     this check sweeps, then asserts).
 // 11. Consent-before-posting: every post author holds the two blocking
 //     acknowledgments.
@@ -43,7 +43,7 @@
 //     the ledger; exactly one members' room; membership rows and
 //     join/leave/removal events correspond; one active membership per
 //     (circle, profile); action-log entries re-hash to their
-//     action.logged commitments (no silent edits — there is no edit);
+//     action.logged commitments (no silent edits; there is no edit);
 //     every attestation is on the ledger, by a member, never the
 //     author, never doubled; attested state implies the platform floor
 //     of co-signers; corrections stay in their circle.
@@ -55,7 +55,7 @@
 //     Circle Light Score credits reference real attested entries and
 //     respect the per-circle daily cap.
 // Phase 6.5:
-// 18. Social privacy — the graph never leaks: NOTHING social on the
+// 18. Social privacy; the graph never leaks: NOTHING social on the
 //     public ledger (no event types, no bond/request/thread/message/
 //     excerpt/block ids anywhere in it); every social gate clearance
 //     ran in PRIVATE recording; social fee entries are blinded (no
@@ -78,19 +78,19 @@
 //     Light Score credit references a real accepted repair at the rail
 //     amount in the right pillar.
 // 21. Transparency books: every economy kind maps to a category (the
-//     Constitution's budgeted-categories guardrail — an unmapped flow
+//     Constitution's budgeted-categories guardrail; an unmapped flow
 //     fails here, not renders as "misc"); the latest treasury snapshot
-//     re-derives from the entries as of its timestamp — the dashboard
+//     re-derives from the entries as of its timestamp; the dashboard
 //     is a view, never a second set of books.
 // 22. Feed & search privacy: reading-surface state (feed sources,
-//     settings, search history) is per-profile operator space — no
+//     settings, search history) is per-profile operator space; no
 //     feed/search event type exists on the public ledger and no such
 //     row id appears anywhere in it; every feed source is a known kind.
 // Phase 7.5:
 // 23. Chamber integrity: every chamber paid BOTH halves of the
 //     dual-token creation fee and has its chamber.created event;
 //     exactly one workshop Discussion per chamber, deletable class
-//     (never permanent — the drafts are not the record); the scaffold
+//     (never permanent; the drafts are not the record); the scaffold
 //     and the "why should people care" field are non-empty (the
 //     ratified creation requirements); every workshop post's author
 //     entered the chamber, and every workshop post paid the dual-token
@@ -100,7 +100,7 @@
 //     public ledger or upgrades to permanence; no chamber member,
 //     invite, or workshop-discussion id appears anywhere in the
 //     ledger (entry, invites, and workshop posting all clear the gate
-//     in PRIVATE recording — membership is enclosed-space information,
+//     in PRIVATE recording; membership is enclosed-space information,
 //     the public sees count and activity level only).
 // Phase 8:
 // 25. Ops & counter hygiene (minimal-log discipline, DUAL_IDENTITY
@@ -108,7 +108,7 @@
 //     raw IP/session/profile identifier can never persist as a
 //     counter key); every admin.* ops event carries its operator
 //     attribution and file reference and NOTHING beyond the audited
-//     payload fields — ops-log payload creep toward soul data fails
+//     payload fields; ops-log payload creep toward soul data fails
 //     loudly here.
 // 26. Analytics discipline (ANALYTICS_SPEC): every event name is in
 //     the closed measured vocabulary (an unaudited event type cannot
@@ -172,7 +172,7 @@ async function main() {
   else { failures++; console.error("✗ Question positions broken"); }
 
   // --- 3. Identity-leak guard: the public ledger must contain no Human ids
-  //        and no raw Profile ids — only pseudonyms. (Dual-identity safety.)
+  //        and no raw Profile ids; only pseudonyms. (Dual-identity safety.)
   const humans = await db.human.findMany({ select: { id: true } });
   const profiles = await db.profile.findMany({ select: { id: true } });
   const forbidden = new Set<string>([
@@ -235,13 +235,13 @@ async function main() {
     }
   }
 
-  // --- 4b. One clearance per (scope, nullifier) — among requests AND events.
+  // --- 4b. One clearance per (scope, nullifier); among requests AND events.
   const seenReq = new Set<string>();
   for (const req of clearedRequests) {
     const key = `${req.scope}|${req.nullifier}`;
     if (seenReq.has(key)) {
       gateProblems++;
-      console.error(`✗ DOUBLE CLEARANCE: (scope, nullifier) cleared twice — ${req.scope}`);
+      console.error(`✗ DOUBLE CLEARANCE: (scope, nullifier) cleared twice; ${req.scope}`);
     }
     seenReq.add(key);
   }
@@ -448,7 +448,7 @@ async function main() {
   }
 
   // --- 9b. Handle namespace integrity (naming ruling 2026-07-10): no
-  //         live handle may collide with a tombstone — never recycled.
+  //         live handle may collide with a tombstone; never recycled.
   const tombstones = await db.handleTombstone.findMany({ select: { handle: true } });
   const tombstoneSet = new Set(tombstones.map((t) => t.handle));
   let handleProblems = 0;
@@ -464,7 +464,7 @@ async function main() {
     failures += handleProblems;
   }
 
-  // --- 10. Session hygiene: short retention is a promise — sweep expired
+  // --- 10. Session hygiene: short retention is a promise; sweep expired
   //         ephemera, then assert none remain.
   await db.soulSession.deleteMany({ where: { expiresAt: { lte: new Date() } } });
   const lingering = await db.soulSession.count({ where: { expiresAt: { lte: new Date() } } });
@@ -755,7 +755,7 @@ async function main() {
     } catch { /* chain covers bytes */ }
   }
   let modProblems = 0;
-  // Triangle: no moderator handle or profile id in any ledger event —
+  // Triangle: no moderator handle or profile id in any ledger event;
   // rulings appear ONLY as nullifiers.
   const moderatorIds = new Set(
     (await db.ruling.findMany({ select: { moderatorProfileId: true } })).map(
@@ -1166,7 +1166,7 @@ async function main() {
     }
   }
   // Every social clearance ran private (enforcement must never become
-  // an observation channel — and the graph is nobody's civic record).
+  // an observation channel; and the graph is nobody's civic record).
   const socialScopes = await db.gateRequest.findMany({
     where: {
       status: "CLEARED",
@@ -1261,7 +1261,7 @@ async function main() {
       );
     } catch {
       dmProblems++;
-      console.error(`✗ CIPHERTEXT BROKEN: message ${message.id} fails authentication — altered, or plaintext smuggled into the column`);
+      console.error(`✗ CIPHERTEXT BROKEN: message ${message.id} fails authentication; altered, or plaintext smuggled into the column`);
     }
   }
   // Notification bodies never carry message content (§6's enclosed-
@@ -1289,7 +1289,7 @@ async function main() {
       console.error(`✗ REQUEST RETENTION: ${stale} pending request(s) past the expiry rail`);
     }
   }
-  // EXACTLY ONE evidence pointer per flag and per case — a post, a DM
+  // EXACTLY ONE evidence pointer per flag and per case; a post, a DM
   // excerpt, or (Phase 8.7) a mission release. The rule is unchanged;
   // only the number of legal shapes grew. Two pointers would make the
   // case file ambiguous about what is actually being judged.
@@ -1384,7 +1384,7 @@ async function main() {
     }
     if (!poll.isGovernance || poll.pillarId !== r.domain.pillarId || poll.creatorHandle !== "system") {
       domainProblems++;
-      console.error(`✗ REPAIR POLL SHAPE: ${r.id} — not a system governance poll in the domain's pillar`);
+      console.error(`✗ REPAIR POLL SHAPE: ${r.id}; not a system governance poll in the domain's pillar`);
     }
     if (r.status === "open" && poll.status !== "open") {
       domainProblems++;
@@ -1560,7 +1560,7 @@ async function main() {
   if (chamberFeesPc.length < chambers.length || chamberFeesG.length < chambers.length) {
     chamberProblems++;
     console.error(
-      `✗ HALF-PAID CHAMBER: ${chambers.length} chamber(s) but ${chamberFeesPc.length} PC / ${chamberFeesG.length} G creation fee entries — the dual-token signature is both halves or neither`
+      `✗ HALF-PAID CHAMBER: ${chambers.length} chamber(s) but ${chamberFeesPc.length} PC / ${chamberFeesG.length} G creation fee entries; the dual-token signature is both halves or neither`
     );
   }
   const workshopDiscussionIds = new Set<string>();
@@ -1578,7 +1578,7 @@ async function main() {
       workshopDiscussionIds.add(w.id);
       if (w.permanence !== "deletable") {
         chamberProblems++;
-        console.error(`✗ WORKSHOP PERMANENCE: chamber ${chamber.id} workshop is "${w.permanence}" — the drafts are not the record`);
+        console.error(`✗ WORKSHOP PERMANENCE: chamber ${chamber.id} workshop is "${w.permanence}"; the drafts are not the record`);
       }
     }
     if (
@@ -1631,7 +1631,7 @@ async function main() {
     failures += chamberProblems;
   }
 
-  // --- 24. Workshop enclosure — the enter-to-see boundary is structural.
+  // --- 24. Workshop enclosure; the enter-to-see boundary is structural.
   let enclosureProblems = 0;
   for (const post of workshopPosts) {
     if (lastHashByPost.has(post.id)) {
@@ -1643,7 +1643,7 @@ async function main() {
       console.error(`✗ WORKSHOP PERMANENCE: post ${post.id} was permanence-upgraded`);
     }
   }
-  // No enclosed row id — member, invite, workshop discussion — anywhere
+  // No enclosed row id; member, invite, workshop discussion; anywhere
   // in the ledger. (The chamber id itself is public: creating a chamber
   // is a civic act; what happens inside is not.)
   const enclosedIds = new Set<string>([
@@ -1659,7 +1659,7 @@ async function main() {
       break;
     }
   }
-  // Entry, invites, and workshop posting all clear the gate PRIVATELY —
+  // Entry, invites, and workshop posting all clear the gate PRIVATELY;
   // enforcement must never become an observation channel for who works
   // inside.
   const chamberScopes = await db.gateRequest.findMany({
@@ -1691,7 +1691,7 @@ async function main() {
     failures += enclosureProblems;
   }
 
-  // --- 25. Ops & counter hygiene (Phase 8 — minimal-log discipline)
+  // --- 25. Ops & counter hygiene (Phase 8; minimal-log discipline)
   let opsProblems = 0;
   const buckets = await db.rateLimitBucket.findMany({
     select: { key: true },
@@ -1741,7 +1741,7 @@ async function main() {
     failures += opsProblems;
   }
 
-  // --- 26. Analytics discipline (Phase 8 — ANALYTICS_SPEC)
+  // --- 26. Analytics discipline (Phase 8; ANALYTICS_SPEC)
   let analyticsProblems = 0;
   const { MEASURED_EVENTS, SUBJECT_KEYED_EVENTS } = await import("../lib/analytics");
   const analyticsEvents = await db.analyticsEvent.findMany({
@@ -1753,7 +1753,7 @@ async function main() {
   if (!retentionRail) {
     analyticsProblems++;
     console.error(
-      "✗ ANALYTICS: rail analytics.retentionDays is not seeded — run db:seed (a missing rail is a build error)"
+      "✗ ANALYTICS: rail analytics.retentionDays is not seeded; run db:seed (a missing rail is a build error)"
     );
   }
   const retentionDays = retentionRail?.value ?? 90;
@@ -1785,7 +1785,7 @@ async function main() {
   if (overdue.length) {
     analyticsProblems++;
     console.error(
-      `✗ ANALYTICS: ${overdue.length} raw event(s) outlived the ${retentionDays}d retention rail + crush grace — the crush job is not running`
+      `✗ ANALYTICS: ${overdue.length} raw event(s) outlived the ${retentionDays}d retention rail + crush grace; the crush job is not running`
     );
   }
   const analyticsLedgerLeak = events.find((e) =>
@@ -1803,9 +1803,9 @@ async function main() {
     failures += analyticsProblems;
   }
 
-  // --- 27. Anchor integrity (Phase 8.6 slice 4 — TESTNET_RAILS §3):
+  // --- 27. Anchor integrity (Phase 8.6 slice 4; TESTNET_RAILS §3):
   // every ledger.anchored event must point at a real ledger row whose
-  // anchorRef carries the same external tx — the public witness and the
+  // anchorRef carries the same external tx; the public witness and the
   // internal record may never disagree.
   let anchorProblems = 0;
   const anchorEvents = events.filter((e) => e.eventType === "ledger.anchored");
@@ -1854,7 +1854,7 @@ async function main() {
   // Slice 1). PLATFORM_CONSTITUTION Appendix A: "The treasury MUST NOT
   // spend outside budgeted categories." TREASURY_DASHBOARD §1.3 promises
   // it is "rendered structurally: an outflow without a budget category
-  // cannot exist." This check is what makes that sentence true — the
+  // cannot exist." This check is what makes that sentence true; the
   // rule is enforced in economy.payFromTreasury(), and pinned here so a
   // future call site that hand-rolls an outflow fails loudly instead of
   // silently reopening the hole.
@@ -1867,7 +1867,7 @@ async function main() {
   for (const entry of outflows) {
     if (!entry.budgetCategory) {
       console.error(
-        `✗ Treasury outflow with NO budget category: ${entry.kind} ${entry.amount}${entry.currency} (entry ${entry.id}) — the Constitution's must-guardrail says this cannot exist.`
+        `✗ Treasury outflow with NO budget category: ${entry.kind} ${entry.amount}${entry.currency} (entry ${entry.id}); the Constitution's must-guardrail says this cannot exist.`
       );
       budgetProblems++;
       continue;
@@ -1893,7 +1893,7 @@ async function main() {
     budgetProblems++;
   }
 
-  // The three TOKENOMICS §3 outflows must exist as categories — if a
+  // The three TOKENOMICS §3 outflows must exist as categories; if a
   // deploy loses them, payFromTreasury starts refusing moderation
   // rewards, and the moderators simply stop being paid. Fail here, loudly
   // and early, rather than in a badge holder's silent missing stipend.

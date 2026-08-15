@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 // full identity → the shared anatomy (stat row, domain cards, canon
 // threads, Circles, the Governance door, mechanism deep-dive). The
 // Agora's dashboard IS the platform dashboard (PRESENTATION_SPEC §1.1,
-// owner-corrected: one thing, not two) — its slug redirects home.
+// owner-corrected: one thing, not two); its slug redirects home.
 type Lens = "here" | "mine" | "saved";
 function asLens(value: string | undefined): Lens {
   return value === "mine" || value === "saved" ? value : "here";
@@ -34,7 +34,7 @@ async function DiscussionLenses({
   const face = await activeFace();
 
   // Enclosed rooms (Circle members' rooms, chamber workshops) never
-  // surface in any lens — including "mine" echoes (BEACON §5.2).
+  // surface in any lens; including "mine" echoes (BEACON §5.2).
   const publicHere = { pillarId, circleId: null, chamberId: null } as const;
 
   let threads: {
@@ -99,7 +99,7 @@ async function DiscussionLenses({
       {(lens === "mine" || lens === "saved") && !face ? (
         <p className="lore">
           This lens is per-face. <Link href="/login">Sign in</Link> to see{" "}
-          {lens === "mine" ? "the threads you've spoken in" : "your saved threads"} —
+          {lens === "mine" ? "the threads you've spoken in" : "your saved threads"};
           your other face has its own.
         </p>
       ) : (
@@ -138,9 +138,9 @@ async function DiscussionLenses({
             <li className="lore">
               {lens === "here" && "No public threads live here yet."}
               {lens === "mine" &&
-                "This face hasn't spoken in this pillar yet — every thread you post in gathers here."}
+                "This face hasn't spoken in this pillar yet; every thread you post in gathers here."}
               {lens === "saved" &&
-                "Nothing saved in this pillar yet — the ☆ on any thread keeps it here, visible to this face alone."}
+                "Nothing saved in this pillar yet; the ☆ on any thread keeps it here, visible to this face alone."}
             </li>
           )}
         </ul>
@@ -205,7 +205,7 @@ export default async function PillarPage({
           <PillarMark slug={pillar.slug} /> {pillar.name}
         </h1>
         <p className="lore" style={{ marginTop: 0 }}>
-          {pillar.classicalName} — {pillar.loreName}
+          {pillar.classicalName}; {pillar.loreName}
         </p>
         <p className="why-text">{editorial.whyBanner}</p>
         <p className="lore">
@@ -220,14 +220,14 @@ export default async function PillarPage({
       />
 
       {/* The three lenses (BEACON_FEED_SPEC §5.2, owner-directed
-          2026-07-21): one room, three views of its conversations —
+          2026-07-21): one room, three views of its conversations;
           everything living here, the ones this face has spoken in, and
           the ones this face saved. Per-face by construction. */}
       <DiscussionLenses pillarId={pillar.id} slug={pillar.slug} lens={lens} />
 
       <p className="lore" style={{ marginTop: "1.5rem" }}>
         Read the Pictures. Challenge one with a repair. Join a domain's
-        Discussion, or find a Circle already working the problem — this
+        Discussion, or find a Circle already working the problem; this
         pillar is a place to act, not just to read.
       </p>
     </>

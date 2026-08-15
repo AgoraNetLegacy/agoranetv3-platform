@@ -1,8 +1,8 @@
 // Operator actions on the public record (ADMIN_OPS §2 via BACKUP_DR §2:
 // backup access "belongs in the admin action log"). The admin log IS the
-// civic ledger's admin.* events — the transparency page renders them, and
+// civic ledger's admin.* events; the transparency page renders them, and
 // an empty log is honestly empty. Payloads carry operational facts only
-// (file names, counts, pass/fail) — never soul data, never paths that
+// (file names, counts, pass/fail); never soul data, never paths that
 // reveal infrastructure layout beyond the file's own name.
 
 import type { DbOrTx } from "./db";

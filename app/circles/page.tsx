@@ -10,7 +10,7 @@ import { LearnMore } from "@/components/LearnMore";
 export const dynamic = "force-dynamic";
 
 // Discovery v1 (CIRCLES §4): browse + filters + ONE transparent
-// values-alignment signal. No matchmaking algorithm on day one — and
+// values-alignment signal. No matchmaking algorithm on day one; and
 // every surfaced recommendation shows its reason in plain language. An
 // opaque recommender is a narrative-capture surface; transparent-reason
 // recommendation is a product-identity commitment.
@@ -68,7 +68,7 @@ export default async function CirclesPage({
     ? circles.filter((c) => labels.get(c.id) === status)
     : circles;
 
-  // Recency of last attested action orders the browse (§4/§6.3) —
+  // Recency of last attested action orders the browse (§4/§6.3);
   // active hands above old claims, formation date as the fallback.
   const ranked = [...filtered].sort(
     (a, b) =>
@@ -92,25 +92,25 @@ export default async function CirclesPage({
     <>
       <h1>
         <Icon name="circles" /> Circles
-        <LearnMore label="About Circles — the action layer">
+        <LearnMore label="About Circles; the action layer">
           <h4>The action layer</h4>
           <p>
             <em>Turn talk into proof you acted.</em> Circles are where
             deliberation becomes provable action: a bounded group owns a
             real problem, works it in their own room, and logs what
-            actually got done — attested by the members, on the public
+            actually got done; attested by the members, on the public
             record, forever.
           </p>
           <p>
             A Circle forms on a problem, not a vibe: it belongs to a
             pillar, can carry a place tag for work rooted somewhere real,
-            and its action log is the point — the platform&rsquo;s answer
+            and its action log is the point; the platform&rsquo;s answer
             to communities that deliberate, decide, and never act.
           </p>
           <p>
             Discovery is transparent: when a Circle is surfaced for you,
-            the page states exactly why — your standing overlaps its
-            pillar — and that overlap is the whole formula. No hidden
+            the page states exactly why; your standing overlaps its
+            pillar; and that overlap is the whole formula. No hidden
             ranking, no engagement bait.
           </p>
         </LearnMore>
@@ -119,7 +119,7 @@ export default async function CirclesPage({
 
       {aligned.length > 0 && (
         <>
-          <h3>Surfaced for you — and exactly why</h3>
+          <h3>Surfaced for you; and exactly why</h3>
           <ul className="discussions">
             {aligned.slice(0, 5).map((c) => (
               <li key={c.id}>
@@ -127,7 +127,7 @@ export default async function CirclesPage({
                 <div className="meta">
                   Shown because {alignment.get(c.pillarId!)} and this Circle
                   works in {c.pillar!.name}
-                  {c.placeTag ? ` (${c.placeTag})` : ""}. No hidden ranking —
+                  {c.placeTag ? ` (${c.placeTag})` : ""}. No hidden ranking;
                   this overlap is the whole formula.
                 </div>
               </li>
@@ -165,11 +165,11 @@ export default async function CirclesPage({
               <Link href={`/circles/${c.id}`}>{c.name}</Link>{" "}
               {label === "active" && <span className="badge permanent">Active</span>}
               {label === "inactive" && (
-                <span className="badge locked" title="Quiet for a while — honestly labeled, still joinable.">
+                <span className="badge locked" title="Quiet for a while; honestly labeled, still joinable.">
                   Inactive
                 </span>
               )}
-              {label === "closed" && <span className="badge locked">Closed — record preserved</span>}
+              {label === "closed" && <span className="badge locked">Closed; record preserved</span>}
               <div className="meta">
                 {c.purpose.length > 140 ? `${c.purpose.slice(0, 140)}…` : c.purpose}
               </div>
@@ -188,7 +188,7 @@ export default async function CirclesPage({
         {ranked.length === 0 && (
           <li className="lore">
             No Circles match. Failed and fizzled Circles stay visible by
-            design — none exist under this filter yet.
+            design; none exist under this filter yet.
           </li>
         )}
       </ul>
@@ -196,20 +196,20 @@ export default async function CirclesPage({
       <h3>Start a Circle</h3>
       {viewer ? (
         <details>
-          <summary>Form a new Circle — {creationFee} PC, live immediately, no approval queue</summary>
+          <summary>Form a new Circle; {creationFee} PC, live immediately, no approval queue</summary>
           <form action={submitCircle} className="composer">
             <label>
               Name
               <input type="text" name="name" required maxLength={80} />
             </label>
             <label>
-              Purpose statement — short, plain language: what this Circle exists to do
+              Purpose statement; short, plain language: what this Circle exists to do
               <textarea name="purpose" required maxLength={1000} />
             </label>
             <p className="interim-note">
-              Focus tags — at least one. Place tags stay city/region level
+              Focus tags; at least one. Place tags stay city/region level
               (the searchable index is never finer); inside the Circle,
-              free text may name venues and meeting places — place
+              free text may name venues and meeting places; place
               yourself on the map, never someone else.
             </p>
             <label>
@@ -228,7 +228,7 @@ export default async function CirclesPage({
             <label>
               Domain within that pillar (optional){" "}
               <select name="domainId" defaultValue={domainFilter ?? ""}>
-                <option value="">None — the whole pillar</option>
+                <option value="">None; the whole pillar</option>
                 {pillars
                   .filter((p) => !p.isMeta)
                   .map((p) => (
@@ -254,7 +254,7 @@ export default async function CirclesPage({
             <p className="interim-note">
               The founder role is deliberately thin: you'll edit the purpose
               statement and tags, and that's it. Within days of existing, a
-              Circle belongs to its members — removals, closure, and
+              Circle belongs to its members; removals, closure, and
               succession are member votes, never founder powers.
             </p>
             <button type="submit">Form Circle · {creationFee} PC</button>

@@ -41,7 +41,7 @@ export default async function ReferencePage({
       </p>
       <h1>{doc.title}</h1>
       <p className="lore">
-        Reference material — the mechanism behind {pillar.name}&rsquo;s
+        Reference material; the mechanism behind {pillar.name}&rsquo;s
         diagnosis. Ported verbatim from the ratified corpus.
       </p>
       <Markdown source={doc.markdown} />

@@ -9,7 +9,7 @@ import { PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
-// Stage 5 — the values seed: one OUSIA question per pillar. Encouraged,
+// Stage 5; the values seed: one OUSIA question per pillar. Encouraged,
 // never blocking; answers are matchmaking-only and never public.
 export default async function SeedPage({
   searchParams,
@@ -31,22 +31,22 @@ export default async function SeedPage({
   return (
     <div className="ceremony">
       <JourneySteps current="seed" />
-      <h2>The values seed — seven questions, one per pillar</h2>
+      <h2>The values seed; seven questions, one per pillar</h2>
       <p>
         Your answers seed Circle matchmaking later. They are{" "}
-        <strong>never public</strong> — matchmaking-only, by design. Answer
+        <strong>never public</strong>; matchmaking-only, by design. Answer
         any, skip any; you can return from the pillar dashboards anytime.
         ({done}/7 answered)
       </p>
       {m && <div className="notice">{m}</div>}
       {/* Unanswered questions stay OPEN (owner finding, 2026-07-15: the
-          old collapse-after-two heuristic read as "you only get two" —
+          old collapse-after-two heuristic read as "you only get two";
           a ▶ triangle is not an invitation). Answered ones fold away. */}
       {questions.map((q) => (
         <details key={q.id} open={!answeredIds.has(q.id)}>
           <summary>
             <PillarMark slug={q.pillar.slug} /> <strong>{q.pillar.name}</strong>
-            {answeredIds.has(q.id) ? " ✓" : " — open"}
+            {answeredIds.has(q.id) ? " ✓" : "; open"}
           </summary>
           <p className="lore">{q.text}</p>
           <form action={submitSeedAnswer} className="composer">
@@ -55,7 +55,7 @@ export default async function SeedPage({
             <textarea
               name="body"
               defaultValue={answers.find((a) => a.questionId === q.id)?.body ?? ""}
-              placeholder="In your own words — a sentence is plenty."
+              placeholder="In your own words; a sentence is plenty."
             />
             <button type="submit">Save answer</button>
           </form>

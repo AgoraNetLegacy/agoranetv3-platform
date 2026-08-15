@@ -246,7 +246,7 @@
           "fields": [
             {
               "title": "beneficiary",
-              "description": "Who may collect — a verification-key hash.",
+              "description": "Who may collect; a verification-key hash.",
               "$ref": "#/definitions/ByteArray"
             },
             {
@@ -260,7 +260,7 @@
     },
     "agoranet/mission/Pending": {
       "title": "Pending",
-      "description": "A release proposal — terms frozen the moment it's recorded (§4).",
+      "description": "A release proposal; terms frozen the moment it's recorded (§4).",
       "anyOf": [
         {
           "title": "Pending",
@@ -289,7 +289,7 @@
       "anyOf": [
         {
           "title": "State",
-          "description": "The chamber's thread of truth — exactly one, NFT-carried.",
+          "description": "The chamber's thread of truth; exactly one, NFT-carried.",
           "dataType": "constructor",
           "index": 0,
           "fields": [
@@ -335,7 +335,7 @@
     },
     "agoranet/treasury/ReleaseDatum": {
       "title": "ReleaseDatum",
-      "description": "Slice 4a: what the release lock stores alongside locked funds —\n the authorised signer set and how many of them must co-sign.\n The on-chain twin of `ReleaseAttestation`'s threshold.",
+      "description": "Slice 4a: what the release lock stores alongside locked funds; \n the authorised signer set and how many of them must co-sign.\n The on-chain twin of `ReleaseAttestation`'s threshold.",
       "anyOf": [
         {
           "title": "ReleaseDatum",

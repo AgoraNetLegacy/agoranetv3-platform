@@ -16,7 +16,7 @@ function asTab(v: string | undefined): SoulTab {
 export const dynamic = "force-dynamic";
 
 // The public soul window (Phase 8.5, PRESENTATION_SPEC §5.2): what one
-// face chooses to show — display name, @handle, face kind, coarse join
+// face chooses to show; display name, @handle, face kind, coarse join
 // period, and the live-surface bio. Nothing here is new information:
 // every field is either already public or written by the soul for this
 // exact window. Pending Aliases don't exist publicly, here or anywhere.
@@ -68,24 +68,24 @@ export default async function SoulWindow({
         <p className="lore">This soul hasn&rsquo;t written a window yet.</p>
       )}
 
-      {/* The CTA row (PROFILE_PAGE_SPEC §1/§3): act on this soul —
+      {/* The CTA row (PROFILE_PAGE_SPEC §1/§3): act on this soul;
           request a bond, open a conversation. Bond state is mutual
           knowledge only (your own pair); declines stay silent. */}
       {isOwn ? (
         <p className="lore">
-          This is your window as others see it —{" "}
+          This is your window as others see it; {" "}
           <Link href="/profile">edit it here</Link>.
         </p>
       ) : viewer ? (
         <SoulActions viewerId={viewer.id} soul={soul} />
       ) : (
         <p className="lore">
-          <Link href="/login">Sign in</Link> to reach out — requests wait
+          <Link href="/login">Sign in</Link> to reach out; requests wait
           quietly; nothing ticks at anyone.
         </p>
       )}
 
-      {/* Standing — the constellation, public like the search lane's
+      {/* Standing; the constellation, public like the search lane's
           per-pillar standing. Never a sum (Invariant 3); the private
           why-breakdown stays on the soul's own page. */}
       <SoulConstellation profileId={soul.id} />
@@ -157,7 +157,7 @@ async function SoulActions({
           <p className="interim-note">
             {bonded
               ? "Fellow souls receive this directly."
-              : "Strangers receive this as a quiet request — reading costs them nothing; replying opens the thread."}
+              : "Strangers receive this as a quiet request; reading costs them nothing; replying opens the thread."}
           </p>
           <button type="submit">Send</button>
         </form>
@@ -171,7 +171,7 @@ async function SoulConstellation({ profileId }: { profileId: string }) {
   if (constellation.pillars.length === 0) return null;
   return (
     <>
-      <h3>Standing — the constellation</h3>
+      <h3>Standing; the constellation</h3>
       <ul className="discussions">
         {constellation.pillars.map((p) => (
           <li key={p.pillarId}>
@@ -188,7 +188,7 @@ async function SoulContributions({
 }: {
   soul: { id: string; displayName: string };
 }) {
-  // Public spaces only — enclosed rooms never surface here, exactly as
+  // Public spaces only; enclosed rooms never surface here, exactly as
   // everywhere else. Attribution is already public by design; this tab
   // is honest collation, nothing new.
   const posts = await db.post.findMany({
@@ -238,7 +238,7 @@ async function SoulContributions({
 }
 
 async function SoulActionsLog({ soul }: { soul: { id: string } }) {
-  // Attested Circle actions naming this handle — ledger-anchored,
+  // Attested Circle actions naming this handle; ledger-anchored,
   // provable work instead of follower counts (PROFILE_PAGE_SPEC §2).
   const entries = await db.actionEntry.findMany({
     where: { authorProfileId: soul.id, attestedAt: { not: null } },
@@ -250,7 +250,7 @@ async function SoulActionsLog({ soul }: { soul: { id: string } }) {
     take: 20,
   });
   if (entries.length === 0)
-    return <p className="lore">No attested actions yet — the log fills from real work.</p>;
+    return <p className="lore">No attested actions yet; the log fills from real work.</p>;
   return (
     <ul className="discussions">
       {entries.map((e) => (

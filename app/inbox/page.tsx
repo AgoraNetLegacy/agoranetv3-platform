@@ -9,7 +9,7 @@ import { markNotificationRead } from "@/app/actions";
 export const dynamic = "force-dynamic";
 
 // The inbox (NOTIFICATIONS §1/§3): time-sensitive first, the quiet tier
-// below. Per-persona — this is the ACTIVE face's inbox and nobody
+// below. Per-persona; this is the ACTIVE face's inbox and nobody
 // else's; nothing merges, previews, or counts across faces. No streaks,
 // no nags, nothing manufactured.
 export default async function InboxPage() {
@@ -47,10 +47,10 @@ export default async function InboxPage() {
 
   return (
     <>
-      <h1>Inbox — {face.displayName} @{face.handle}</h1>
+      <h1>Inbox; {face.displayName} @{face.handle}</h1>
       <p className="lore">
         This face's inbox only. Time-sensitive first; the quiet tier waits
-        for you — no streaks, no red-dot games, ever.
+        for you; no streaks, no red-dot games, ever.
       </p>
 
       <h3>Time-sensitive</h3>

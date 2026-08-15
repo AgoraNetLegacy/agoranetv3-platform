@@ -1,7 +1,7 @@
-// Rate limiting — the consolidated per-surface schedule (Phase 8;
+// Rate limiting; the consolidated per-surface schedule (Phase 8;
 // ANTI_SYBIL_CONSOLIDATION §3 watch-item W4: "the single build-time
 // table"). The v2 platform's proven limiter is the anchor, ported
-// deliberately — the same way the Light Score weights were.
+// deliberately; the same way the Light Score weights were.
 //
 // Design:
 // - Walls sit at MACHINE speed, never deliberation speed. Fees and
@@ -9,17 +9,17 @@
 //   these limits are the outer wall against automation and floods.
 // - Every limit is a rail (`ratelimit.*`, seeded in lib/rails.ts),
 //   poll-adjustable within bounds. Windows are structural: each policy
-//   counts within the platform's rhythm units — the 10-minute burst
+//   counts within the platform's rhythm units; the 10-minute burst
 //   window, the hour, and the 24h day-cycle.
 // - Minimal-log discipline (DUAL_IDENTITY §7.1 vector 4): identifiers
 //   are HMAC-hashed with RATE_LIMIT_SECRET before persistence. No raw
 //   IP, session id, or profile id ever lands in a bucket row, and
-//   buckets carry no payload — a subpoenaed bucket table names nobody.
+//   buckets carry no payload; a subpoenaed bucket table names nobody.
 // - Fixed windows aligned to the epoch; the window index is folded into
 //   the bucket key, so increments are single atomic upserts and expired
 //   windows are simply old rows (pruned by scripts/prune-rate-limits.ts).
 // - NOT a face-switch cooldown: the owner resolved that to NONE
-//   (2026-07-11) — `faceSwitch` here is an anti-automation wall two
+//   (2026-07-11); `faceSwitch` here is an anti-automation wall two
 //   orders of magnitude above human switching, not a timing mitigation.
 
 import { createHmac } from "crypto";
@@ -74,7 +74,7 @@ export class RateLimitError extends Error {
     super(
       `Pace wall: too many ${surface} in a short time. Try again in about ` +
         `${minutes} minute${minutes === 1 ? "" : "s"}. Walls are set at machine ` +
-        `speed — a soul deliberating never meets them.`
+        `speed; a soul deliberating never meets them.`
     );
     this.name = "RateLimitError";
     this.retryAfterSeconds = retryAfterSeconds;
@@ -89,7 +89,7 @@ function rateLimitSecret(): string {
   return secret;
 }
 
-/** Hash (policy, identifier, window) before persistence — raw identifiers
+/** Hash (policy, identifier, window) before persistence; raw identifiers
  *  never reach the database (DUAL_IDENTITY §7.1 vector 4). */
 export function bucketKey(
   policyName: string,

@@ -1,11 +1,11 @@
-// Phase 7.5 — Chambers (Pollinator v1). The invariants under test:
+// Phase 7.5; Chambers (Pollinator v1). The invariants under test:
 // the dual-token signature (creation and workshop posts charge BOTH
-// currencies — both halves or neither), the ratified creation
+// currencies; both halves or neither), the ratified creation
 // requirements (scaffold + "why should people care"), the entry
-// prerequisites (gate + carrying both tokens — the complete definition,
+// prerequisites (gate + carrying both tokens; the complete definition,
 // owner-resolved OQ5), private chambers as creator-invite-only, and the
 // enclosure: workshop content never reaches the ledger, Light Score,
-// the open lens, or public search — and db:verify FAILS LOUDLY when it
+// the open lens, or public search; and db:verify FAILS LOUDLY when it
 // does.
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
@@ -58,7 +58,7 @@ const db = new PrismaClient({ datasources: { db: { url } } });
 let creatorId: string;
 let workerId: string;
 let strangerId: string;
-let paupergId: string; // a soul drained of Gratium — fails "carrying both"
+let paupergId: string; // a soul drained of Gratium; fails "carrying both"
 let publicChamberId: string;
 let privateChamberId: string;
 let workshopId: string;
@@ -107,7 +107,7 @@ afterAll(async () => {
   await db.$disconnect();
 });
 
-describe("creation — the dual-token signature", () => {
+describe("creation; the dual-token signature", () => {
   it("refuses a chamber without the scaffold or the why-care answer", async () => {
     const noWhy = await createChamber(db, {
       profileId: creatorId,
@@ -135,11 +135,11 @@ describe("creation — the dual-token signature", () => {
     expect(await db.chamber.count()).toBe(0);
   });
 
-  it("refuses creation when EITHER token is short — both halves or neither", async () => {
+  it("refuses creation when EITHER token is short; both halves or neither", async () => {
     // Drain the pauper's Gratium below the 20u fee via a real tip
-    // (accounted flow — conservation holds). Verified grant = 25 G.
+    // (accounted flow; conservation holds). Verified grant = 25 G.
     const seedPost = await db.post.findFirst({ where: { authorProfileId: { not: paupergId } } });
-    // No posts exist yet — make one to tip, from the stranger.
+    // No posts exist yet; make one to tip, from the stranger.
     const canon = await db.discussion.findFirstOrThrow({ where: { questionId: { not: null } } });
     const posted = await createPost(db, {
       discussionId: canon.id,
@@ -184,7 +184,7 @@ describe("creation — the dual-token signature", () => {
       title: "Surplus to Pantry",
       subject: "A borough-wide food-surplus rescue route",
       pitch: "Grocers discard edible food nightly; pantries run short by Thursday. Connect them.",
-      whyCare: "Wasted food, hungry neighbors, and the fix is logistics — solvable now, by us.",
+      whyCare: "Wasted food, hungry neighbors, and the fix is logistics; solvable now, by us.",
       isPublic: true,
       scaffold: SCAFFOLD,
     });
@@ -218,10 +218,10 @@ describe("creation — the dual-token signature", () => {
   });
 });
 
-describe("entry — gate + carrying both tokens, and nothing else", () => {
+describe("entry; gate + carrying both tokens, and nothing else", () => {
   it("refuses a soul carrying only one token, and admits them once they carry both", async () => {
     // The pauper spent Gratium down but still holds some (15 tipped of
-    // 25) — drain to zero with one more tip, then assert refusal.
+    // 25); drain to zero with one more tip, then assert refusal.
     const post = await db.post.findFirstOrThrow({ where: { authorProfileId: strangerId } });
     const g = await balanceOf(db, paupergId, "G");
     if (g > 0) {
@@ -239,11 +239,11 @@ describe("entry — gate + carrying both tokens, and nothing else", () => {
     expect(admitted.ok).toBe(true);
   });
 
-  it("admits any verified soul to a public chamber — no Light Score floor, no approval", async () => {
+  it("admits any verified soul to a public chamber; no Light Score floor, no approval", async () => {
     const result = await enterChamber(db, { chamberId: publicChamberId, profileId: workerId });
     expect(result.ok).toBe(true);
     expect(await workshopAccess(db, publicChamberId, workerId)).toBe(true);
-    // Entering is free — no fee entry of any chamber kind for entry.
+    // Entering is free; no fee entry of any chamber kind for entry.
     expect(await db.economyEntry.count({ where: { kind: "fee.chamber-post" } })).toBe(0);
   });
 
@@ -252,7 +252,7 @@ describe("entry — gate + carrying both tokens, and nothing else", () => {
     expect(again.ok).toBe(false);
   });
 
-  it("records entry PRIVATELY — membership is enclosed-space information", async () => {
+  it("records entry PRIVATELY; membership is enclosed-space information", async () => {
     const clearances = await db.gateRequest.findMany({
       where: { scope: { startsWith: `chamber:${publicChamberId}:enter` } },
     });
@@ -277,7 +277,7 @@ describe("entry — gate + carrying both tokens, and nothing else", () => {
   });
 });
 
-describe("the workshop — dual-token participation inside the enclosure", () => {
+describe("the workshop; dual-token participation inside the enclosure", () => {
   it("refuses a non-member's post: enter to see, enter to speak", async () => {
     const result = await createPost(db, {
       discussionId: workshopId,
@@ -322,14 +322,14 @@ describe("the workshop — dual-token participation inside the enclosure", () =>
     expect(await db.ledgerEvent.count()).toBe(eventsBefore);
   });
 
-  it("blocks permanence upgrades — drafts stay drafts", async () => {
+  it("blocks permanence upgrades; drafts stay drafts", async () => {
     const post = await db.post.findFirstOrThrow({ where: { discussionId: workshopId } });
     const result = await upgradePostPermanence(db, { postId: post.id, profileId: workerId });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toContain("Workshop drafts stay in the workshop");
   });
 
-  it("keeps workshop posts out of Light Score — a public number never derives from enclosed activity", async () => {
+  it("keeps workshop posts out of Light Score; a public number never derives from enclosed activity", async () => {
     const constellation = await faceConstellation(db, workerId);
     // The worker's only post is the workshop draft; standing must be
     // untouched by it (no pillar line from the meta-homed workshop).
@@ -364,9 +364,9 @@ describe("the workshop — dual-token participation inside the enclosure", () =>
   });
 });
 
-describe("private chambers — the creator selects who gets in", () => {
+describe("private chambers; the creator selects who gets in", () => {
   it("creates a private chamber and refuses the uninvited", async () => {
-    // The first chamber spent the creator down below a second dual fee —
+    // The first chamber spent the creator down below a second dual fee;
     // the accounted test faucet stands in for earned balance.
     await topUpForTests(db, creatorId, { pc: 40, g: 40 });
     const result = await createChamber(db, {
@@ -420,7 +420,7 @@ describe("private chambers — the creator selects who gets in", () => {
   });
 });
 
-describe("the hand-offs — feed and search meet the enclosure", () => {
+describe("the hand-offs; feed and search meet the enclosure", () => {
   it("keeps workshops out of the open lens and pillar-sourced feeds", async () => {
     const lens = await openLens(db);
     expect(lens.every((c) => c.discussionId !== workshopId)).toBe(true);
@@ -459,7 +459,7 @@ describe("the hand-offs — feed and search meet the enclosure", () => {
     expect(cards[0].whyLine).toContain("same for everyone");
   });
 
-  it("finds storefronts in search — never workshop interiors; private chambers by name only", async () => {
+  it("finds storefronts in search; never workshop interiors; private chambers by name only", async () => {
     const storefront = await search(db, "Surplus to Pantry");
     expect(storefront.some((h) => h.href === `/pollinator/${publicChamberId}`)).toBe(true);
 
@@ -479,7 +479,7 @@ describe("the hand-offs — feed and search meet the enclosure", () => {
   });
 });
 
-describe("db:verify — the enclosure fails loudly", () => {
+describe("db:verify; the enclosure fails loudly", () => {
   it("passes clean on the exercised database", () => {
     const result = runVerify();
     expect(result.stdout).toContain("Chamber integrity");
@@ -529,18 +529,18 @@ describe("db:verify — the enclosure fails loudly", () => {
 //
 // Money held on behalf of a stated mission, released only when verified
 // humans co-sign the spend is legitimate. Recipients are CHAMBERS, never
-// Circles — CIRCLES_SPEC Principle 4 forbids Circle custody ("the action
+// Circles; CIRCLES_SPEC Principle 4 forbids Circle custody ("the action
 // layer does not quietly become a treasury"), and Chambers already have
 // a ratified per-chamber balance (§9.1).
 //
-// THE THRESHOLD COUNTS CO-SIGNERS, NOT TOTAL VOICES — the Circle rule
+// THE THRESHOLD COUNTS CO-SIGNERS, NOT TOTAL VOICES; the Circle rule
 // carried over exactly (CIRCLES_SPEC §6.1: the author is separate; the
 // threshold counts attestations). So a default of 2 means the proposer
 // plus TWO other members: three distinct humans before money moves.
 // Its own dedicated chamber below, so open proposals from other tests
 // can never pollute a balance assertion.
 // ─────────────────────────────────────────────────────────────────────
-describe("mission escrow — holding, attested release, and the freeze", () => {
+describe("mission escrow; holding, attested release, and the freeze", () => {
   let missionChamberId: string;
   let attestorAId: string;
   let attestorBId: string;
@@ -573,7 +573,7 @@ describe("mission escrow — holding, attested release, and the freeze", () => {
       data: { raisingForMission: true },
     });
     // Slice 2 owns holding and release, and is deliberately ignorant of
-    // where the balance came from — donations (souls → chamber) are
+    // where the balance came from; donations (souls → chamber) are
     // Slice 3's adapter.
     await db.$transaction((tx) =>
       creditMissionBalance(tx, {
@@ -615,7 +615,7 @@ describe("mission escrow — holding, attested release, and the freeze", () => {
     if (!result.ok) expect(result.reason).toContain("not enough");
   });
 
-  it("refuses a release with no stated purpose — the purpose IS the claim attested", async () => {
+  it("refuses a release with no stated purpose; the purpose IS the claim attested", async () => {
     const result = await proposeRelease(db, {
       chamberId: missionChamberId,
       proposerProfileId: creatorId,
@@ -628,7 +628,7 @@ describe("mission escrow — holding, attested release, and the freeze", () => {
     if (!result.ok) expect(result.reason).toContain("what it's for");
   });
 
-  it("REFUSES self-attestation — 'attested' must mean more than one voice", async () => {
+  it("REFUSES self-attestation; 'attested' must mean more than one voice", async () => {
     const proposed = await proposeRelease(db, {
       chamberId: missionChamberId,
       proposerProfileId: creatorId,
@@ -666,7 +666,7 @@ describe("mission escrow — holding, attested release, and the freeze", () => {
       attestorProfileId: attestorAId,
     });
     expect(first.ok).toBe(true);
-    // One co-signer, threshold 2 — proposer + one is not corroboration.
+    // One co-signer, threshold 2; proposer + one is not corroboration.
     if (first.ok) expect(first.released).toBe(false);
     expect(await chamberBalanceOf(db, missionChamberId, "PC")).toBeCloseTo(before, 5);
 
@@ -680,7 +680,7 @@ describe("mission escrow — holding, attested release, and the freeze", () => {
     await db.missionRelease.delete({ where: { id: proposed.releaseId } });
   });
 
-  it("★ pays AUTOMATICALLY at the threshold — no operator step exists (§3.7)", async () => {
+  it("★ pays AUTOMATICALLY at the threshold; no operator step exists (§3.7)", async () => {
     const chamberBefore = await chamberBalanceOf(db, missionChamberId, "PC");
     const recipientBefore = await balanceOf(db, attestorAId, "PC");
 
@@ -696,7 +696,7 @@ describe("mission escrow — holding, attested release, and the freeze", () => {
     if (!proposed.ok) return;
 
     await attestRelease(db, { releaseId: proposed.releaseId, attestorProfileId: attestorAId });
-    // The SECOND co-signature meets the threshold — and the very call
+    // The SECOND co-signature meets the threshold; and the very call
     // that latches it pays. There is no separate execute for anyone to
     // withhold; that absence IS the guarantee.
     const second = await attestRelease(db, {
@@ -751,7 +751,7 @@ describe("mission escrow — holding, attested release, and the freeze", () => {
     if (first.ok) await db.missionRelease.delete({ where: { id: first.releaseId } });
   });
 
-  it("★ freezes every unreleased proposal on a ruling — the real teeth (§3.4)", async () => {
+  it("★ freezes every unreleased proposal on a ruling; the real teeth (§3.4)", async () => {
     const releasedBefore = await db.missionRelease.count({
       where: { chamberId: missionChamberId, state: "released" },
     });
@@ -786,12 +786,12 @@ describe("mission escrow — holding, attested release, and the freeze", () => {
       where: { chamberId: missionChamberId, state: "frozen" },
     });
     expect(all.length).toBe(2);
-    // A frozen release always cites its due process — never a quiet
+    // A frozen release always cites its due process; never a quiet
     // decision someone made.
     expect(all.every((r) => r.frozenByRulingId === "ruling-test-misuse")).toBe(true);
 
     // You cannot claw back what is spent; the already-paid release stays
-    // paid. Freeze stops what has NOT moved — that is the whole claim,
+    // paid. Freeze stops what has NOT moved; that is the whole claim,
     // and the spec says so plainly rather than overselling it.
     const releasedAfter = await db.missionRelease.count({
       where: { chamberId: missionChamberId, state: "released" },
@@ -822,8 +822,8 @@ describe("mission escrow — holding, attested release, and the freeze", () => {
 // Slice 3). The mechanic that replaced auto-returned poll
 // support-staking, killed by the owner's own critique: "auto-returned
 // staking is cheap talk, a costless signal carries no information."
-// Everything here tests that donations COST — because that's the point.
-describe("mission donations — genuine transfers, no auto-return (§9.1)", () => {
+// Everything here tests that donations COST; because that's the point.
+describe("mission donations; genuine transfers, no auto-return (§9.1)", () => {
   let fundedChamberId: string;
   let donorId: string;
 
@@ -832,7 +832,7 @@ describe("mission donations — genuine transfers, no auto-return (§9.1)", () =
     donorId = d.trueSelfId;
     // The creator has spent their PollCoin on earlier chambers in this
     // file; top up through the accounted test faucet so conservation
-    // still holds (never a raw balance write — db:verify would catch it).
+    // still holds (never a raw balance write; db:verify would catch it).
     await topUpForTests(db, creatorId, { pc: 60, g: 60 });
     const made = await createChamber(db, {
       profileId: creatorId,
@@ -876,7 +876,7 @@ describe("mission donations — genuine transfers, no auto-return (§9.1)", () =
     expect(declared.ok).toBe(true);
   });
 
-  it("★ a donation actually COSTS — the money leaves the donor for good", async () => {
+  it("★ a donation actually COSTS; the money leaves the donor for good", async () => {
     const donorBefore = await balanceOf(db, donorId, "PC");
     const result = await donateToMission(db, {
       chamberId: fundedChamberId,
@@ -886,7 +886,7 @@ describe("mission donations — genuine transfers, no auto-return (§9.1)", () =
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.balance).toBeCloseTo(8, 5);
 
-    // Gone from the donor — no auto-return, no escrow-back-to-me. It
+    // Gone from the donor; no auto-return, no escrow-back-to-me. It
     // returns only if the chamber's own members release it.
     expect(await balanceOf(db, donorId, "PC")).toBeCloseTo(donorBefore - 8, 5);
     expect(await chamberBalanceOf(db, fundedChamberId, "PC")).toBeCloseTo(8, 5);
@@ -895,7 +895,7 @@ describe("mission donations — genuine transfers, no auto-return (§9.1)", () =
       where: { kind: "mission.donation", fromProfileId: donorId },
     });
     expect(entry?.refId).toBe(fundedChamberId);
-    // Never a treasury flow in either direction — so no budget category,
+    // Never a treasury flow in either direction; so no budget category,
     // which is the Constitution's TREASURY spending guardrail.
     expect(entry?.toTreasury).toBe(false);
     expect(entry?.fromTreasury).toBe(false);
@@ -953,11 +953,11 @@ describe("mission donations — genuine transfers, no auto-return (§9.1)", () =
   }, 60_000);
 });
 
-// The funding plan (FUND_INTEGRITY §3.1 — Tier 0, "procurement due
+// The funding plan (FUND_INTEGRITY §3.1; Tier 0, "procurement due
 // diligence"). Tier 0 is not a gate bolted onto Chambers; it IS what a
-// Chamber already is — the scaffold and the public workshop are the
+// Chamber already is; the scaffold and the public workshop are the
 // dissection. These three fields only point that machinery at money.
-describe("the funding plan — Tier 0 diligence (FUND_INTEGRITY §3.1)", () => {
+describe("the funding plan; Tier 0 diligence (FUND_INTEGRITY §3.1)", () => {
   let planChamberId: string;
   let planDonorId: string;
 
@@ -978,7 +978,7 @@ describe("the funding plan — Tier 0 diligence (FUND_INTEGRITY §3.1)", () => {
     planChamberId = made.chamberId;
   }, 60_000);
 
-  it("★ refuses to raise without answering all three — no plan, no money", async () => {
+  it("★ refuses to raise without answering all three; no plan, no money", async () => {
     const noPlan = await declareRaising(db, {
       chamberId: planChamberId,
       profileId: creatorId,
@@ -995,7 +995,7 @@ describe("the funding plan — Tier 0 diligence (FUND_INTEGRITY §3.1)", () => {
     });
     expect(partial.ok).toBe(false);
 
-    // Refused means it never started raising — so nobody can donate.
+    // Refused means it never started raising; so nobody can donate.
     const chamber = await db.chamber.findUniqueOrThrow({ where: { id: planChamberId } });
     expect(chamber.raisingForMission).toBe(false);
     const blocked = await donateToMission(db, {
@@ -1021,7 +1021,7 @@ describe("the funding plan — Tier 0 diligence (FUND_INTEGRITY §3.1)", () => {
     expect(chamber.fundingBreakdown).toBe(PLAN.breakdown);
     expect(chamber.raisingDeclaredAt).not.toBeNull();
 
-    // v1 exists from the first moment — the history records what souls
+    // v1 exists from the first moment; the history records what souls
     // donated against, not only what changed later.
     const revisions = await db.chamberFundingRevision.findMany({
       where: { chamberId: planChamberId },
@@ -1030,7 +1030,7 @@ describe("the funding plan — Tier 0 diligence (FUND_INTEGRITY §3.1)", () => {
     expect(revisions[0].breakdown).toBe(PLAN.breakdown);
   });
 
-  it("★ a revised plan keeps every version — donors gave against a specific one", async () => {
+  it("★ a revised plan keeps every version; donors gave against a specific one", async () => {
     await donateToMission(db, {
       chamberId: planChamberId,
       profileId: planDonorId,
@@ -1046,7 +1046,7 @@ describe("the funding plan — Tier 0 diligence (FUND_INTEGRITY §3.1)", () => {
     });
     expect(revised.ok).toBe(true);
 
-    // The plan sharpened — that's the workshop working. But the version
+    // The plan sharpened; that's the workshop working. But the version
     // the donor gave against survives, so a silent bait-and-switch is
     // impossible rather than merely forbidden.
     const revisions = await db.chamberFundingRevision.findMany({
@@ -1060,7 +1060,7 @@ describe("the funding plan — Tier 0 diligence (FUND_INTEGRITY §3.1)", () => {
     const chamber = await db.chamber.findUniqueOrThrow({ where: { id: planChamberId } });
     expect(chamber.fundingBreakdown).toContain("50u coats");
 
-    // And the change is public — a donor deserves to see it.
+    // And the change is public; a donor deserves to see it.
     const event = await db.ledgerEvent.findFirst({
       where: { eventType: "mission.plan-revised" },
       orderBy: { seq: "desc" },
@@ -1088,11 +1088,11 @@ describe("the funding plan — Tier 0 diligence (FUND_INTEGRITY §3.1)", () => {
 });
 
 // The binding vote for LARGE releases (NEURAL_POLLINATOR §9.1: "above a
-// size threshold or when contested — a binding stewardship-style poll
+// size threshold or when contested; a binding stewardship-style poll
 // authorizes it... members vote, auto-executes on passage").
 //
 // Two co-signers are corroboration for a reimbursement. They are not a
-// mandate for the mission's whole purse — which is the entire reason
+// mandate for the mission's whole purse; which is the entire reason
 // §9.1 has a second door.
 describe("large releases ride a binding vote, not attestation (§9.1)", () => {
   let bigChamberId: string;
@@ -1148,7 +1148,7 @@ describe("large releases ride a binding vote, not attestation (§9.1)", () => {
     expect(big.authorization).toBe("binding-vote");
 
     // Which door it must go through is published BEFORE anyone signs or
-    // votes — never chosen after the fact.
+    // votes; never chosen after the fact.
     const event = await db.ledgerEvent.findFirst({
       where: { eventType: "mission.release-proposed" },
       orderBy: { seq: "desc" },
@@ -1166,12 +1166,12 @@ describe("large releases ride a binding vote, not attestation (§9.1)", () => {
     });
     expect(sneak.ok).toBe(false);
     if (!sneak.ok) expect(sneak.reason).toContain("binding vote");
-    // Still unpaid — the cheap path cannot authorize the mission's purse.
+    // Still unpaid; the cheap path cannot authorize the mission's purse.
     const after = await db.missionRelease.findUniqueOrThrow({ where: { id: big.id } });
     expect(after.state).toBe("proposed");
   });
 
-  it("a routine release still rides attestation — the two doors coexist", async () => {
+  it("a routine release still rides attestation; the two doors coexist", async () => {
     const small = await proposeRelease(db, {
       chamberId: bigChamberId,
       proposerProfileId: creatorId,
@@ -1185,7 +1185,7 @@ describe("large releases ride a binding vote, not attestation (§9.1)", () => {
     expect(small.authorization).toBe("attestation");
   });
 
-  it("★ a passed binding vote PAYS on close — no operator step, again", async () => {
+  it("★ a passed binding vote PAYS on close; no operator step, again", async () => {
     const big = await db.missionRelease.findFirstOrThrow({
       where: { chamberId: bigChamberId, state: "proposed", amount: 100 },
     });
@@ -1206,7 +1206,7 @@ describe("large releases ride a binding vote, not attestation (§9.1)", () => {
     expect(poll.ok).toBe(true);
     if (!poll.ok) return;
 
-    // Members only — the ballot box sits inside the workshop.
+    // Members only; the ballot box sits inside the workshop.
     const adoptOption = await db.pollOption.findFirstOrThrow({
       where: { pollId: poll.pollId, position: 1 },
     });
@@ -1233,7 +1233,7 @@ describe("large releases ride a binding vote, not attestation (§9.1)", () => {
     const recipientBefore = await balanceOf(db, voterAId, "PC");
 
     // Close it: the poll closing IS the payment (§3.7). Time-travel the
-    // ballots first — the candle only counts votes cast before the true
+    // ballots first; the candle only counts votes cast before the true
     // close, and that rule is doing its job here, not getting in the way.
     await db.ballot.updateMany({
       where: { pollId: poll.pollId },
@@ -1250,7 +1250,7 @@ describe("large releases ride a binding vote, not attestation (§9.1)", () => {
     expect(await chamberBalanceOf(db, bigChamberId, "PC")).toBeCloseTo(chamberBefore - 100, 5);
     expect(await balanceOf(db, voterAId, "PC")).toBeCloseTo(recipientBefore + 100, 5);
 
-    // Both doors land in the same payment path — the ledger says which
+    // Both doors land in the same payment path; the ledger says which
     // one authorized it.
     const event = await db.ledgerEvent.findFirst({
       where: { eventType: "mission.released" },
@@ -1303,7 +1303,7 @@ describe("large releases ride a binding vote, not attestation (§9.1)", () => {
     });
     await closeDuePolls(db);
 
-    // The poll "passed" (consensus reached) — on Decline. Nothing moves.
+    // The poll "passed" (consensus reached); on Decline. Nothing moves.
     const after = await db.missionRelease.findUniqueOrThrow({ where: { id: rel.releaseId } });
     expect(after.state).toBe("proposed");
   }, 60_000);
@@ -1314,18 +1314,18 @@ describe("large releases ride a binding vote, not attestation (§9.1)", () => {
   }, 60_000);
 });
 
-// Fund Auditors — Tier 4 (FUND_INTEGRITY §3.5). The answer to "who
+// Fund Auditors; Tier 4 (FUND_INTEGRITY §3.5). The answer to "who
 // watches the watchers" only works if the watcher cannot punish, and
 // cannot profit from finding fault. Both properties are tested here,
 // because both are the whole point.
-describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () => {
+describe("Fund Auditors; sampling released money (FUND_INTEGRITY §3.5)", () => {
   let auditChamberId: string;
   let auditorId: string;
   let memberId: string;
   let releaseId: string;
 
   beforeAll(async () => {
-    // An auditor must be a proven badge-completer — someone the platform
+    // An auditor must be a proven badge-completer; someone the platform
     // has already watched do real service.
     const aud = await makeOnboardedSoul(db, { trueSelf: "fund-auditor", alias: "fa-shade" });
     auditorId = aud.trueSelfId;
@@ -1384,7 +1384,7 @@ describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () 
   }, 120_000);
 
   it("draws auditors by lot over released money, excluding anyone party to it", async () => {
-    // Sample everything for the test — the rail is the dial, not the law.
+    // Sample everything for the test; the rail is the dial, not the law.
     await db.rail.update({ where: { key: "fundAudit.samplePercent" }, data: { value: 100 } });
     const offered = await offerFundAudits(db);
     expect(offered).toBeGreaterThan(0);
@@ -1396,7 +1396,7 @@ describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () 
     expect([creatorId, memberId, workerId]).not.toContain(audit.auditorProfileId);
     expect(audit.auditorProfileId).toBe(auditorId);
 
-    // The offer is public — but never names the auditor. An auditor
+    // The offer is public; but never names the auditor. An auditor
     // whose identity is known before they rule can be lobbied.
     const event = await db.ledgerEvent.findFirst({
       where: { eventType: "fund-audit.offered" },
@@ -1414,7 +1414,7 @@ describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () 
     if (!notYours.ok) expect(notYours.reason).toContain("drawn for someone else");
   });
 
-  it("a finding needs its reasoning — an unexplained verdict is not an audit", async () => {
+  it("a finding needs its reasoning; an unexplained verdict is not an audit", async () => {
     const audit = await db.fundAudit.findFirstOrThrow({ where: { releaseId } });
     await acceptFundAudit(db, { auditId: audit.id, profileId: auditorId });
     const blank = await completeFundAudit(db, {
@@ -1427,7 +1427,7 @@ describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () 
     if (!blank.ok) expect(blank.reason).toContain("reasoning");
   });
 
-  it("★ pays PER CASE, never per finding — clean and concern earn identically", async () => {
+  it("★ pays PER CASE, never per finding; clean and concern earn identically", async () => {
     const audit = await db.fundAudit.findFirstOrThrow({ where: { releaseId } });
     const before = await balanceOf(db, auditorId, "G");
     const done = await completeFundAudit(db, {
@@ -1442,13 +1442,13 @@ describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () 
     expect(await balanceOf(db, auditorId, "G")).toBeCloseTo(before + reward, 5);
 
     // The pay is for LOOKING. An auditor paid for finding problems will
-    // find problems — so a clean verdict earns exactly what a concern
+    // find problems; so a clean verdict earns exactly what a concern
     // does, and that is the whole anti-incentive.
     const row = await db.fundAudit.findUniqueOrThrow({ where: { id: audit.id } });
     expect(row.finding).toBe("clean");
     expect(row.gratiumEarned).toBeCloseTo(reward, 5);
 
-    // Rides the moderation-rewards budget: same kind of spending — the
+    // Rides the moderation-rewards budget: same kind of spending; the
     // treasury paying souls for civic service.
     const entry = await db.economyEntry.findFirstOrThrow({
       where: { kind: "reward.fund-audit", toProfileId: auditorId },
@@ -1457,7 +1457,7 @@ describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () 
     expect(entry.fromTreasury).toBe(true);
   }, 60_000);
 
-  it("★ a finding is a SIGNAL, not a penalty — and says so on the record", async () => {
+  it("★ a finding is a SIGNAL, not a penalty; and says so on the record", async () => {
     const event = await db.ledgerEvent.findFirst({
       where: { eventType: "fund-audit.completed" },
       orderBy: { seq: "desc" },
@@ -1467,13 +1467,13 @@ describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () 
     expect(payload.finding).toBe("clean");
     expect(payload.consequence).toBe("none");
 
-    // The release is untouched by the audit — an auditor who could move
+    // The release is untouched by the audit; an auditor who could move
     // money would be an operator with extra steps.
     const release = await db.missionRelease.findUniqueOrThrow({ where: { id: releaseId } });
     expect(release.state).toBe("released");
   });
 
-  it("Sentinel flags a self-dealing PATTERN — never a single reimbursement", async () => {
+  it("Sentinel flags a self-dealing PATTERN; never a single reimbursement", async () => {
     // One member reimbursing themselves is the most ordinary use of a
     // mission's money. Forbidding it would push real spending off the
     // record; Sentinel watches instead.
@@ -1486,7 +1486,7 @@ describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () 
       const rel = await proposeRelease(db, {
         chamberId: auditChamberId,
         proposerProfileId: memberId,
-        toProfileId: memberId, // to themselves — allowed, and watched
+        toProfileId: memberId, // to themselves; allowed, and watched
         currency: "PC",
         amount: 2,
         purpose,
@@ -1506,7 +1506,7 @@ describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () 
     const payload = JSON.parse(event!.payload);
     expect(payload.pattern).toBe("self-directed-releases");
     expect(payload.consequence).toContain("never punish");
-    // A machine flag that reads like a verdict IS a verdict — so it says
+    // A machine flag that reads like a verdict IS a verdict; so it says
     // plainly that this is a question, not an accusation.
     expect(payload.note).toContain("not an accusation");
 
@@ -1530,14 +1530,14 @@ describe("Fund Auditors — sampling released money (FUND_INTEGRITY §3.5)", () 
 //
 // The mechanism was built in Slice 2 and left deliberately unwired: the
 // spec never said how a case STARTS, and a release couldn't be flagged
-// at all. Both answers came from the owner — yes, payments are
+// at all. Both answers came from the owner; yes, payments are
 // reportable; the rule is R3.4 (Fraud & phishing: "attempts to steal
 // credentials, FUNDS, or identities").
 //
 // The narrowness is the design. Over-triggering is not a smaller error
 // than under-triggering: "any upheld ruling freezes" would mean a rude
 // sentence in a payment's stated purpose could freeze a mission's whole
-// purse — a censorship mechanism in an anti-fraud costume.
+// purse; a censorship mechanism in an anti-fraud costume.
 describe("the freeze, wired to a real ruling (§3.4)", () => {
   let fChamberId: string;
   let fMemberId: string;
@@ -1575,7 +1575,7 @@ describe("the freeze, wired to a real ruling (§3.4)", () => {
     );
   }, 120_000);
 
-  it("a payment can be reported — the door that didn't exist", async () => {
+  it("a payment can be reported; the door that didn't exist", async () => {
     const rel = await proposeRelease(db, {
       chamberId: fChamberId,
       proposerProfileId: creatorId,
@@ -1597,7 +1597,7 @@ describe("the freeze, wired to a real ruling (§3.4)", () => {
     expect(filed.ok).toBe(true);
 
     // Same deposit, same rulebook, same triangle of blindness as any
-    // other flag — a payment is not a special kind of accusation.
+    // other flag; a payment is not a special kind of accusation.
     const flag = await db.flag.findFirstOrThrow({ where: { releaseId: rel.releaseId } });
     expect(flag.ruleId).toBe("R3.4");
     expect(flag.caseId).not.toBeNull();
@@ -1606,7 +1606,7 @@ describe("the freeze, wired to a real ruling (§3.4)", () => {
     expect(modCase.tier).toBe(3); // R3.4 is severe → Tribunal lane
   }, 60_000);
 
-  it("★ an upheld FRAUD ruling freezes what hasn't moved — automatically", async () => {
+  it("★ an upheld FRAUD ruling freezes what hasn't moved; automatically", async () => {
     // Two payments still pending when the ruling lands.
     const pendingA = await proposeRelease(db, {
       chamberId: fChamberId,
@@ -1664,7 +1664,7 @@ describe("the freeze, wired to a real ruling (§3.4)", () => {
 
   it("★ does NOT over-trigger: a non-fraud ruling moves no money", async () => {
     // A rude sentence in a payment's purpose is a rule violation. It is
-    // NOT a reason to freeze a mission's purse — that would be a
+    // NOT a reason to freeze a mission's purse; that would be a
     // censorship mechanism wearing an anti-fraud costume.
     const rel = await proposeRelease(db, {
       chamberId: fChamberId,
@@ -1672,14 +1672,14 @@ describe("the freeze, wired to a real ruling (§3.4)", () => {
       toProfileId: fMemberId,
       currency: "PC",
       amount: 4,
-      purpose: "Totes — and a rude aside about a neighbour",
+      purpose: "Totes; and a rude aside about a neighbour",
     });
     if (!rel.ok) throw new Error(rel.reason);
 
     const filed = await fileReleaseFlag(db, {
       releaseId: rel.releaseId,
       profileId: reporterId,
-      ruleId: "R2.1", // harassment — real, but not fraud
+      ruleId: "R2.1", // harassment; real, but not fraud
       note: "The purpose line attacks someone.",
     });
     expect(filed.ok).toBe(true);
@@ -1692,7 +1692,7 @@ describe("the freeze, wired to a real ruling (§3.4)", () => {
       badFaith: false,
     });
 
-    // Upheld — the accused takes the strike. But the payment stands: no
+    // Upheld; the accused takes the strike. But the payment stands: no
     // freeze, because the rule wasn't fraud.
     const after = await db.missionRelease.findUniqueOrThrow({ where: { id: rel.releaseId } });
     expect(after.state).toBe("proposed");
@@ -1799,7 +1799,7 @@ describe("a release case survives the whole moderation road", () => {
     });
     expect(appealed.ok).toBe(true);
 
-    // An appeal with no evidence is not an appeal — and db:verify's
+    // An appeal with no evidence is not an appeal; and db:verify's
     // evidence-shape check would fail the case outright.
     const appeal = await db.modCase.findFirstOrThrow({ where: { appealOfId: modCase.id } });
     expect(appeal.releaseId).toBe(rReleaseId);

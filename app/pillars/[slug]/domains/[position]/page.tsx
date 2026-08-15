@@ -9,12 +9,12 @@ import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
-// The dedicated domain page (DASHBOARD §5.3 expanded — the spec allows
+// The dedicated domain page (DASHBOARD §5.3 expanded; the spec allows
 // in-place expansion or a dedicated page; a page keeps the permanent
 // Picture history addressable). Everything the card promised: Reality,
 // Impact Point, Forward Marker, Stoic Lens, the Picture as a living
 // object with its full repair history, Open-for-Repair questions with a
-// real submission control, and the doors onward — the domain's permanent
+// real submission control, and the doors onward; the domain's permanent
 // thread and the Circles working its Impact Point.
 export default async function DomainPage({
   params,
@@ -84,12 +84,12 @@ export default async function DomainPage({
 
       <blockquote className="opening-question">{domain.openingQuestion}</blockquote>
 
-      {/* §1.4: the door at the TOP too — the read-first layout stays,
+      {/* §1.4: the door at the TOP too; the read-first layout stays,
           but the conversation stops being basement-only. */}
       {domain.discussion && (
         <div className="discussion-door">
           <Link href={`/d/${domain.discussion.id}`}>
-            Join the Discussion — {participants} voice{participants === 1 ? "" : "s"}
+            Join the Discussion; {participants} voice{participants === 1 ? "" : "s"}
           </Link>
         </div>
       )}
@@ -106,10 +106,10 @@ export default async function DomainPage({
       <h3>The Impact Point</h3>
       <p>{domain.impactPoint}</p>
 
-      <h3>Defined Forward Marker — what &ldquo;working&rdquo; looks like</h3>
+      <h3>Defined Forward Marker; what &ldquo;working&rdquo; looks like</h3>
       <p>{domain.forwardMarker}</p>
 
-      <h3>Stoic Lens — {domain.stoicPrinciple}</h3>
+      <h3>Stoic Lens; {domain.stoicPrinciple}</h3>
       <p>{domain.stoicLens}</p>
 
       {domain.inService && (
@@ -120,13 +120,13 @@ export default async function DomainPage({
       )}
 
       {/* The Picture as a living object (§6.5): current text, provenance,
-          and the full dated history — claim, challenge, revision. */}
+          and the full dated history; claim, challenge, revision. */}
       <div className="picture-object">
         <h3 style={{ marginTop: 0 }}>
           The Picture{" "}
           <span className="badge permanent">
             version {picture.version}
-            {picture.version === 1 ? " — as ratified" : " — community-repaired"}
+            {picture.version === 1 ? "; as ratified" : "; community-repaired"}
           </span>
         </h3>
         <p className="lore">
@@ -141,7 +141,7 @@ export default async function DomainPage({
             <ul>
               {domain.revisions.map((r) => (
                 <li key={r.id}>
-                  <strong>v{r.version}</strong> — {r.createdAt.toLocaleDateString()}
+                  <strong>v{r.version}</strong>; {r.createdAt.toLocaleDateString()}
                   {r.repair
                     ? ` · accepted repair by @${r.repair.authorHandle}`
                     : " · the ratified original"}
@@ -160,7 +160,7 @@ export default async function DomainPage({
 
       <h3>Open for Repair</h3>
       <p className="lore">
-        Investigation, not agreement — these questions invite someone who
+        Investigation, not agreement; these questions invite someone who
         disagrees with the Picture to test it, push back, or propose a
         better account.
       </p>
@@ -199,7 +199,7 @@ export default async function DomainPage({
           <ul className="discussions">
             {resolvedRepairs.map((r) => (
               <li key={r.id}>
-                <strong>@{r.authorHandle}</strong> — {r.status}
+                <strong>@{r.authorHandle}</strong>; {r.status}
                 {r.resolvedAt ? ` ${r.resolvedAt.toLocaleDateString()}` : ""}
                 <div className="meta">{r.challenge.slice(0, 160)}</div>
               </li>
@@ -216,7 +216,7 @@ export default async function DomainPage({
             text. The community decides in a sealed governance poll in{" "}
             {pillar.name}&rsquo;s room; adopted repairs join the permanent
             revision history and credit your standing here. Declined repairs
-            cost nothing — honest misses are safe. Submitting is free; one
+            cost nothing; honest misses are safe. Submitting is free; one
             open repair per soul per domain.
           </p>
           <form action={submitRepairAction} className="composer">
@@ -233,7 +233,7 @@ export default async function DomainPage({
               <textarea name="proposedText" rows={8} required defaultValue={picture.body} />
             </label>
             <div className="composer-badge">
-              <Icon name="infinity" /> Permanent public record — the challenge, the poll, and the
+              <Icon name="infinity" /> Permanent public record; the challenge, the poll, and the
               outcome all enter the domain&rsquo;s dated history.
             </div>
             <button type="submit">Submit the repair</button>
@@ -249,7 +249,7 @@ export default async function DomainPage({
       {domain.discussion && (
         <div className="discussion-door">
           <Link href={`/d/${domain.discussion.id}`}>
-            Join the Discussion — {participants} voice{participants === 1 ? "" : "s"}
+            Join the Discussion; {participants} voice{participants === 1 ? "" : "s"}
           </Link>
         </div>
       )}
@@ -278,7 +278,7 @@ export default async function DomainPage({
         <li>
           Circles working this Impact Point:{" "}
           {domain.circles.length === 0 ? (
-            <span className="lore">none yet — </span>
+            <span className="lore">none yet; </span>
           ) : (
             domain.circles.map((c, i) => (
               <span key={c.id}>

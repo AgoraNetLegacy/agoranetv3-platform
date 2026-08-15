@@ -14,7 +14,7 @@ export function SecretBox({
   downloadAs,
 }: {
   value: string;
-  /** When set, a Download button saves the secret as this filename —
+  /** When set, a Download button saves the secret as this filename;
    *  one click instead of open-a-doc-and-paste (owner finding,
    *  2026-07-15: the copy-somewhere ceremony is friction). */
   downloadAs?: string;
@@ -51,7 +51,7 @@ export function SecretBox({
       setTimeout(() => setState("idle"), 2500);
       return;
     } catch {
-      // fall through — clipboard API refused (privacy settings, no
+      // fall through; clipboard API refused (privacy settings, no
       // user-activation context); try the legacy path.
     }
     if (selectValue()) {
@@ -66,7 +66,7 @@ export function SecretBox({
         setState("copied");
         setTimeout(() => setState("idle"), 2500);
       } else {
-        // Honest last resort: the text is selected — one keystroke away.
+        // Honest last resort: the text is selected; one keystroke away.
         setState("selected");
       }
     }
@@ -81,7 +81,7 @@ export function SecretBox({
         {state === "copied"
           ? "✓ Copied"
           : state === "selected"
-            ? "Selected — press ⌘C"
+            ? "Selected; press ⌘C"
             : "Copy"}
       </button>
       {downloadAs && (

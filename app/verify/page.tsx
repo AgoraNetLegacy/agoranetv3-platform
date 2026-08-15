@@ -6,7 +6,7 @@ import { JourneySteps } from "@/components/JourneySteps";
 
 export const dynamic = "force-dynamic";
 
-// Stage 1 — the decision moment: the gate introduces itself. The Reader
+// Stage 1; the decision moment: the gate introduces itself. The Reader
 // can decline and keep reading; the gate never nags (ONBOARDING §2.1).
 export default async function VerifyIntro({
   searchParams,
@@ -14,7 +14,7 @@ export default async function VerifyIntro({
   searchParams: Promise<{ returnTo?: string }>;
 }) {
   const { returnTo } = await searchParams;
-  // The funnel's top: this doorway was seen. A count and a moment —
+  // The funnel's top: this doorway was seen. A count and a moment;
   // no cookie, no subject (the page is force-dynamic, so it's a real view).
   await recordEvent(db, "funnel.arrival");
   return (
@@ -29,7 +29,7 @@ export default async function VerifyIntro({
         <button type="submit">Begin verification</button>
       </form>
       <p className="interim-note">
-        Or just keep reading — everything public stays free to read, no
+        Or just keep reading; everything public stays free to read, no
         account needed. This screen only reappears when you next try to act.
       </p>
     </div>

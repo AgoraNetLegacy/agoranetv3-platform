@@ -3,10 +3,10 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-// Raw inspection page for the Civic Ledger — the public record, shown as
+// Raw inspection page for the Civic Ledger; the public record, shown as
 // it is. Not a dashboard (those arrive in Phase 7); a window. The ledger
 // speaks only in pseudonyms and nullifiers, so showing it raw is safe by
-// construction — and db:verify proves it stays that way.
+// construction; and db:verify proves it stays that way.
 export default async function LedgerPage() {
   const events = await db.ledgerEvent.findMany({
     orderBy: { seq: "desc" },
@@ -18,11 +18,11 @@ export default async function LedgerPage() {
     <>
       <h1>The Civic Ledger</h1>
       <p>
-        <em>The record nobody can rewrite — including us.</em>
+        <em>The record nobody can rewrite; including us.</em>
       </p>
       <p className="lore">
         Append-only, hash-chained from GENESIS, pseudonym-only. {total} events;
-        showing the most recent {events.length}. Raw inspection view — for
+        showing the most recent {events.length}. Raw inspection view; for
         the readable books, see the{" "}
         <Link href="/transparency">transparency dashboard</Link>.
       </p>

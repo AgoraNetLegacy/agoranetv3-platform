@@ -1,6 +1,6 @@
 // Mint PollCoin Demo (dPOLL) on Cardano preprod (TESTNET_RAILS_SPEC
 // §2.1). Prints the policy id, unit, and an explorer link. Idempotent
-// in spirit — run again and it mints more of the same-named asset
+// in spirit; run again and it mints more of the same-named asset
 // under the same throwaway policy.
 import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());

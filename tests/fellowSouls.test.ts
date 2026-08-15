@@ -96,7 +96,7 @@ describe("fellow-soul requests (§2)", () => {
     expect(dup.ok).toBe(false);
   });
 
-  it("accept (free) forms the bond; both sides see it — nobody else can", async () => {
+  it("accept (free) forms the bond; both sides see it; nobody else can", async () => {
     const request = await db.fellowSoulRequest.findFirstOrThrow({
       where: { fromProfileId: adaId, toProfileId: benId, status: "pending" },
     });
@@ -134,7 +134,7 @@ describe("fellow-soul requests (§2)", () => {
     if (!again.ok) expect(again.reason).toContain("door reopens");
   });
 
-  it("pending requests expire on the rail — quietly", async () => {
+  it("pending requests expire on the rail; quietly", async () => {
     const sent = await sendFellowSoulRequest(db, { fromProfileId: cyrusId, toHandle: adaHandle });
     expect(sent.ok).toBe(true);
     await db.fellowSoulRequest.updateMany({
@@ -222,7 +222,7 @@ describe("direct messages (§5)", () => {
     const pileOn = await sendMessage(db, {
       threadId: strangerThreadId,
       senderProfileId: cyrusId,
-      body: "Also—",
+      body: "Also; ",
     });
     expect(pileOn.ok).toBe(false);
 
@@ -343,7 +343,7 @@ describe("recipient-side reporting → the standard path (§5.1)", () => {
     expect(modCase.postId).toBeNull();
   });
 
-  it("the case file shows the excerpt and standing — no handles, no ids", async () => {
+  it("the case file shows the excerpt and standing; no handles, no ids", async () => {
     const file = await caseFileFor(db, caseId);
     expect(file.isDm).toBe(true);
     expect(file.content).toContain("Deliberately disruptive");
@@ -354,15 +354,15 @@ describe("recipient-side reporting → the standard path (§5.1)", () => {
     expect(rendered).not.toContain(benId);
   });
 
-  it("an uphold strikes the sender (meta pillar), refunds the reporter, notifies both — namelessly", async () => {
-    // Ada takes the badge (Ben reported; Cyrus is accused — Ada is the
+  it("an uphold strikes the sender (meta pillar), refunds the reporter, notifies both; namelessly", async () => {
+    // Ada takes the badge (Ben reported; Cyrus is accused; Ada is the
     // only clean pair of hands).
     await runModerationSweeps(db);
     let offer = await db.badgeOffer.findFirst({
       where: { profileId: adaId, status: "offered", expiresAt: { gt: new Date() } },
     });
     if (!offer) {
-      // Sortition is random; the test needs THIS judge — mint the offer
+      // Sortition is random; the test needs THIS judge; mint the offer
       // directly (lifecycle rails are covered in moderation.test.ts).
       offer = await db.badgeOffer.create({
         data: { profileId: adaId, expiresAt: new Date(Date.now() + 3_600_000) },
@@ -397,12 +397,12 @@ describe("recipient-side reporting → the standard path (§5.1)", () => {
     expect(accusedNote?.body).toContain("R1.2");
     expect(accusedNote?.body ?? "").not.toContain(benHandle);
 
-    // The message itself is untouched — no content action in a private
+    // The message itself is untouched; no content action in a private
     // thread; the recipient already holds it.
     const message = await db.dmMessage.findUniqueOrThrow({ where: { id: reportedMessageId } });
     expect(message.ciphertext.split(":")).toHaveLength(3);
 
-    // The public record: a case resolved citing a rule — and not one
+    // The public record: a case resolved citing a rule; and not one
     // social identifier anywhere.
     const events = await db.ledgerEvent.findMany({ orderBy: { seq: "desc" }, take: 5 });
     const resolvedEvent = events.find((e) => e.eventType === "case.resolved");
@@ -413,7 +413,7 @@ describe("recipient-side reporting → the standard path (§5.1)", () => {
   });
 });
 
-describe("db:verify — the social invariants hold, and break loudly", () => {
+describe("db:verify; the social invariants hold, and break loudly", () => {
   it("passes on the honest database", () => {
     const result = runVerify();
     expect(result.stdout).toContain("Social privacy");

@@ -1,9 +1,9 @@
-// The gate — the single flow every gated action uses, forever
+// The gate; the single flow every gated action uses, forever
 // (DUAL_IDENTITY_MODULE.md §3.3):
 //
 //   action → PENDING → proof → nullifier checked unseen → CLEARED → settle
 //
-// Application code never branches on identity — only on clearance. One
+// Application code never branches on identity; only on clearance. One
 // gate serves Polls, Circles, Discussions, moderation eligibility, and
 // anything added later. NO FEATURE MAY EVER BYPASS THIS INTERFACE, even
 // in Phase A when bypassing would be easy (§10; BUILD_ORDER Rule 2). The
@@ -26,7 +26,7 @@ export const PHASE_A_DISCLOSURE =
   "secret: we are structurally honest, but you are trusting us not to " +
   "look. The replacement is no longer hypothetical: a public Midnight " +
   "testnet contract already proves the nullifier half on-chain with " +
-  "zero-knowledge proofs — that no subject can act twice in a scope, " +
+  "zero-knowledge proofs; that no subject can act twice in a scope, " +
   "verifiable by anyone. Binding each subject to a single human (so a new " +
   "secret can't just be minted) is the other half, and remains the " +
   "cutover work ahead. The live gate cuts over when both halves are " +
@@ -36,10 +36,10 @@ export type GateOutcome = "CLEARED" | "DUPLICATE" | "INVALID";
 
 /**
  * How a clearance is recorded publicly. "pseudonymous" (default): civic
- * actions are public record — pseudonym + nullifier + timestamp on the
+ * actions are public record; pseudonym + nullifier + timestamp on the
  * ledger. "private": the gate still enforces humanity + one-per-scope,
- * but NO public event exists — for actions whose existence must not be
- * observable (flags: MODERATION §3.2's triangle of blindness — the
+ * but NO public event exists; for actions whose existence must not be
+ * observable (flags: MODERATION §3.2's triangle of blindness; the
  * public sees only outcomes; same reasoning as §4.3's nullifier-keyed
  * sealed ballots).
  */
@@ -48,7 +48,7 @@ export type LedgerRecording = "pseudonymous" | "private";
 export interface GateResult {
   outcome: GateOutcome;
   requestId: string;
-  /** Present on CLEARED — the opaque per-scope nullifier on the ledger. */
+  /** Present on CLEARED; the opaque per-scope nullifier on the ledger. */
   nullifier?: string;
 }
 
@@ -77,10 +77,10 @@ export async function requestGate(
  * Step 2: the proof arrives and is checked. In Phase A the "proof" is the
  * server deriving the HMAC nullifier itself (operator-trusted); in Phase B
  * the soul's wallet sends a ZK proof and this function only verifies. The
- * caller sees CLEARED / DUPLICATE / INVALID — and nothing else.
+ * caller sees CLEARED / DUPLICATE / INVALID; and nothing else.
  *
  * A DUPLICATE is deliberately private (§3.2): the request row records it
- * for the soul, but no public ledger event exists — enforcement must never
+ * for the soul, but no public ledger event exists; enforcement must never
  * become an observation channel.
  */
 export async function submitProof(
@@ -102,7 +102,7 @@ export async function submitProof(
   }
 
   const scopeKind = request.scopeKind as ScopeKind;
-  // An Alias carries no humanId (deliberately — lib/identity.ts), so it
+  // An Alias carries no humanId (deliberately; lib/identity.ts), so it
   // cannot act in per-human scopes. Per the ratified scope table those
   // are registration-only anyway; anything else per-human is reserved.
   const subjectId =
@@ -158,18 +158,18 @@ export async function submitProof(
 }
 
 /**
- * The gate flow, run INSIDE the caller's transaction — the tx-aware twin of
+ * The gate flow, run INSIDE the caller's transaction; the tx-aware twin of
  * clearGate (same contract: scope in, opaque outcome out). Because the
  * nullifier spend commits with the feature write, an action that rolls back
  * no longer strands a spent nullifier that would refuse the retry as a
- * DUPLICATE (DECISIONS_PENDING #25). This is still THE gate — feature code
+ * DUPLICATE (DECISIONS_PENDING #25). This is still THE gate; feature code
  * branches on outcome only, never on identity.
  *
  * The duplicate check is a findUnique, NOT a caught insert: a P2002 inside
  * the caller's transaction would abort it on Postgres. The pre-check clears
  * the common "already acted" case without touching the transaction; the
  * rare truly-simultaneous spend still collides on the create below and rolls
- * the whole action back — correct now, because the retry finds no spend.
+ * the whole action back; correct now, because the retry finds no spend.
  */
 export async function clearGateTx(
   tx: Tx,
@@ -192,7 +192,7 @@ export async function clearGateTx(
   });
 
   const profile = await tx.profile.findUnique({ where: { id: input.profileId } });
-  // An Alias carries no humanId (deliberately — lib/identity.ts), so it
+  // An Alias carries no humanId (deliberately; lib/identity.ts), so it
   // cannot act in per-human scopes.
   const subjectId =
     input.scopeKind === "per-human" ? profile?.humanId : input.profileId;
@@ -243,7 +243,7 @@ export async function clearGateTx(
  * transaction so the spend and the write commit together; this wrapper
  * remains for callers that own no surrounding transaction. On the rare
  * simultaneous-spend P2002 (the pre-check missed it), report the DUPLICATE
- * it is — the transaction rolled back, so nothing was spent.
+ * it is; the transaction rolled back, so nothing was spent.
  */
 export async function clearGate(
   db: PrismaClient,
@@ -268,7 +268,7 @@ export async function clearGate(
 }
 
 /** True for any Prisma unique-constraint (P2002) error. Necessary but NOT
- *  sufficient to conclude a gated action was a duplicate — a transaction can
+ *  sufficient to conclude a gated action was a duplicate; a transaction can
  *  raise P2002 from OTHER unique constraints (the ledger's prevHash under
  *  concurrent appends, a GrantClaim first-action race). Use
  *  gateDuplicateConfirmed to decide DUPLICATE; this is its first gate. */
@@ -280,16 +280,16 @@ export function isGateDuplicateError(err: unknown): boolean {
 
 /**
  * After a gated transaction rolls back with a P2002, decide whether it was
- * genuinely the one-per-scope nullifier collision — versus an unrelated
+ * genuinely the one-per-scope nullifier collision; versus an unrelated
  * unique clash (a ledger-prevHash race, a GrantClaim first-action race) that
  * happened to roll the same transaction back. Returns true ONLY if the error
  * is P2002 AND this subject's nullifier for this scope is now actually spent
  * (by the winner of a truly-simultaneous race). Otherwise the action rolled
- * back cleanly and is genuinely retryable — the caller must re-throw so it
+ * back cleanly and is genuinely retryable; the caller must re-throw so it
  * surfaces as a retryable error, never a misleading "you already did this".
  *
  * Fixed-scope gated actions call this from their OUTER catch (never inside
- * the transaction — a caught P2002 poisons it on Postgres). Cannot fire on
+ * the transaction; a caught P2002 poisons it on Postgres). Cannot fire on
  * SQLite, which serialises writers; a Postgres-only edge, like #25 itself.
  */
 export async function gateDuplicateConfirmed(
@@ -314,11 +314,11 @@ export type RegistrationOutcome = "CLEARED" | "DUPLICATE";
 /**
  * The gate's own bootstrap (DUAL_IDENTITY §3.2 steps 2–3): registration
  * ceremonies prove "this human has not registered in this scope before."
- * Always per-human by definition — this IS the one-True-Self /
+ * Always per-human by definition; this IS the one-True-Self /
  * one-Alias enforcement. No profile exists yet, so there is no
  * GateRequest row; the nullifier spend is the enforcement record, and
  * the ceremony (lib/identity.ts) decides what, if anything, reaches the
- * public ledger — a True Self registration is public immediately; an
+ * public ledger; a True Self registration is public immediately; an
  * Alias leaves no public trace until its cohort activates (ONBOARDING
  * §3.3–3.4: registration time must never be observable).
  *

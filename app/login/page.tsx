@@ -12,7 +12,7 @@ export default async function LoginPage({
     <div className="ceremony">
       <h2>Sign in a face</h2>
       <p>
-        Each face signs in with its own access key — never with your
+        Each face signs in with its own access key; never with your
         credential, and never through the other face. Paste it; hand-typing
         64 characters is nobody&rsquo;s job. <strong>This is a one-time
         introduction per browser:</strong> once a face is signed in here,
@@ -30,7 +30,7 @@ export default async function LoginPage({
       <p className="interim-note">
         New here? <a href="/verify">Verify once, act forever.</a> Holding a
         credential and wanting a second face? The Alias ceremony lives at{" "}
-        <a href="/alias">/alias</a> — ambient documentation, never a button
+        <a href="/alias">/alias</a>; ambient documentation, never a button
         in your settings.
       </p>
     </div>

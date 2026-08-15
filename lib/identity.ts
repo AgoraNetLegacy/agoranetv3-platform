@@ -1,7 +1,7 @@
-// Identity ceremonies (Phase 2 — ONBOARDING_SPEC.md §2–3, DUAL_IDENTITY
+// Identity ceremonies (Phase 2; ONBOARDING_SPEC.md §2–3, DUAL_IDENTITY
 // §3.2, Phase A trust model per §10).
 //
-// INTERIM ISSUER: in Phase A the platform plays the KYC issuer's role —
+// INTERIM ISSUER: in Phase A the platform plays the KYC issuer's role;
 // clearly disclosed. The soul receives a credential secret shown ONCE
 // (their "wallet"); the platform stores only its hash. At Phase B the
 // real issuer (Lace ID / Identus) replaces this and the platform's copy
@@ -9,10 +9,10 @@
 //
 // The load-bearing structural choice: an Alias profile stores NO humanId.
 // One-Alias-per-human is enforced by the alias-registration nullifier
-// spend — the humanId is used transiently to derive it and never written
+// spend; the humanId is used transiently to derive it and never written
 // to the Alias row. No database row links a soul's two faces. (The
 // honest Phase A residual: the operator secret could re-derive the
-// registration nullifiers — that is exactly the "policy, not yet
+// registration nullifiers; that is exactly the "policy, not yet
 // cryptography" disclosure, retired at Phase C.)
 
 import { createHash, randomBytes } from "crypto";
@@ -39,9 +39,9 @@ function monthOf(date: Date): string {
 export type CeremonyResult<T> = { ok: true } & T | { ok: false; reason: string };
 
 /**
- * Stage 2 — the verification ceremony, interim issuer. Returns the
+ * Stage 2; the verification ceremony, interim issuer. Returns the
  * credential secret exactly once; only its hash persists. No profile
- * exists yet and nothing reaches the ledger — verification is an
+ * exists yet and nothing reaches the ledger; verification is an
  * issuer-side event, not a platform one.
  */
 export async function verifyHumanity(
@@ -59,11 +59,11 @@ async function humanFromCredential(db: PrismaClient, credential: string) {
 }
 
 /**
- * Stage 3 — True Self creation. One per human, enforced blind by the
+ * Stage 3; True Self creation. One per human, enforced blind by the
  * true-self-registration nullifier. Two-layer naming (Stage 3.4): the
  * @handle is the eternal attribution key, claimed against the flat
  * global taken-list; the display name is free-form. The ledger records
- * the registration immediately — handle + display name frozen in the
+ * the registration immediately; handle + display name frozen in the
  * permanent record, no internal identifiers.
  */
 export async function registerTrueSelf(
@@ -111,7 +111,7 @@ export async function registerTrueSelf(
         eventType: "trueself.registered",
         payload: { handle, displayName, nullifier: registration.nullifier },
       });
-      // The Welcome Grant (ECONOMIC §3): one per verified human — safe
+      // The Welcome Grant (ECONOMIC §3): one per verified human; safe
       // here and nowhere else, because registration is per-human.
       await grant(tx, {
         profileId: created.id,
@@ -140,15 +140,15 @@ export async function registerTrueSelf(
 class DuplicateRegistration extends Error {}
 
 /**
- * The Alias ceremony (ONBOARDING §3) — deliberately decoupled, with
+ * The Alias ceremony (ONBOARDING §3); deliberately decoupled, with
  * every timing mitigation:
  *  - initiated by credential, never from a True Self session (§3.2);
- *  - NO public trace at registration — the ledger learns nothing until
+ *  - NO public trace at registration; the ledger learns nothing until
  *    the cohort activates (§3.3–3.4);
  *  - activation at a random point inside the rail window, snapped to
  *    the next cohort boundary so no Alias ever appears alone;
  *  - coarse join period only (§3.5);
- *  - the §3.6 disclosures are blocking — the caller must have shown
+ *  - the §3.6 disclosures are blocking; the caller must have shown
  *    them (the ack is recorded on the new profile in-transaction).
  */
 export async function registerAlias(
@@ -203,7 +203,7 @@ export async function registerAlias(
       }
       const created = await tx.profile.create({
         data: {
-          // humanId deliberately absent — see the module header.
+          // humanId deliberately absent; see the module header.
           face: "ALIAS",
           handle,
           displayName,
@@ -221,7 +221,7 @@ export async function registerAlias(
         },
       });
       // The hatching grant: a new Alias isn't born traceable-by-poverty
-      // (ONBOARDING §5.5). Grants are issuance entries, not transfers —
+      // (ONBOARDING §5.5). Grants are issuance entries, not transfers;
       // nothing connects this to any other balance.
       await grant(tx, {
         profileId: created.id,
@@ -240,7 +240,7 @@ export async function registerAlias(
     return {
       ok: true,
       accessKey,
-      // Roughly when — never the exact time, so even the soul's own
+      // Roughly when; never the exact time, so even the soul's own
       // knowledge can't become a precise correlation anchor (§3.7).
       activationHint: "within the next few days",
     };
@@ -254,9 +254,9 @@ export async function registerAlias(
 
 /**
  * Release due cohorts: every pending Alias whose moment has arrived
- * activates in a batch, and the batch shares one public timestamp — the
+ * activates in a batch, and the batch shares one public timestamp; the
  * cohort's, not any individual's. Called opportunistically (hub, login)
- * — no scheduler infrastructure needed yet.
+ *; no scheduler infrastructure needed yet.
  */
 export async function activateDueAliases(db: PrismaClient): Promise<number> {
   const due = await db.profile.findMany({
@@ -285,7 +285,7 @@ export async function activateDueAliases(db: PrismaClient): Promise<number> {
 
 /**
  * Display-name change: free-form and allowed anytime, behind a rate rail
- * (free renaming is a mid-dispute impersonation vector — naming ruling
+ * (free renaming is a mid-dispute impersonation vector; naming ruling
  * 2026-07-10). Permanent-class content keeps the name frozen at
  * composition; only live surfaces update.
  */
@@ -306,7 +306,7 @@ export async function changeDisplayName(
   ) {
     return {
       ok: false,
-      reason: `Display names change at most once every ${cooldownDays} day(s) — a rail.`,
+      reason: `Display names change at most once every ${cooldownDays} day(s); a rail.`,
     };
   }
 
@@ -326,7 +326,7 @@ export async function profileForAccessKey(db: PrismaClient, accessKey: string) {
   if (profile.status !== "active") {
     return {
       ok: false as const,
-      reason: "This face has not activated yet — check back soon.",
+      reason: "This face has not activated yet; check back soon.",
     };
   }
   return { ok: true as const, profile };

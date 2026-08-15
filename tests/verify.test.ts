@@ -1,5 +1,5 @@
 // The invariant check must pass on an honest database and FAIL LOUDLY on a
-// tampered one — this is the Phase 0 checkpoint guarantee, kept under test
+// tampered one; this is the Phase 0 checkpoint guarantee, kept under test
 // forever. Runs seed.ts and verify.ts as real subprocesses against a
 // throwaway SQLite file.
 
@@ -37,7 +37,7 @@ beforeAll(() => {
 });
 
 // These tests run seed/verify as REAL subprocesses (several seconds
-// each on CI runners, and the verify suite grows every phase) — the
+// each on CI runners, and the verify suite grows every phase); the
 // default 5s vitest timeout is far too tight for them.
 const SUBPROCESS_TIMEOUT = 120_000;
 
@@ -53,7 +53,7 @@ describe("db:verify", () => {
     const result = run("scripts/verify.ts");
     expect(result.status).toBe(1);
     expect(result.stdout + result.stderr).toContain("LEDGER CHAIN BROKEN");
-    // Restore the honest row is impossible — the chain does not forgive.
+    // Restore the honest row is impossible; the chain does not forgive.
     // Rebuild the db for the next test instead.
   }, SUBPROCESS_TIMEOUT);
 
@@ -109,7 +109,7 @@ describe("db:verify", () => {
     expect(honest.status).toBe(0);
 
     // Tamper the row's external ref: the public witness and the internal
-    // record now disagree — verify must fail loudly.
+    // record now disagree; verify must fail loudly.
     sql(`UPDATE LedgerEvent SET anchorRef = 'txhash-swapped' WHERE seq = ${head!.seq};`);
     const result = run("scripts/verify.ts");
     expect(result.status).toBe(1);

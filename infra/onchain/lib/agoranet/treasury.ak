@@ -1,9 +1,9 @@
-//// AgoraNet on-chain mission treasury — Slice 1 (ONCHAIN_ECONOMY_MIGRATION.md).
+//// AgoraNet on-chain mission treasury; Slice 1 (ONCHAIN_ECONOMY_MIGRATION.md).
 ////
 //// The seed of the release authority (#5 crux): the *validator*, not an
 //// operator, decides whether funds may move. Here we prove the two pure
-//// building blocks it rests on — "a designated signer signed" and "M of N
-//// authorised signers signed" — the on-chain twin of `attestRelease`'s
+//// building blocks it rests on; "a designated signer signed" and "M of N
+//// authorised signers signed"; the on-chain twin of `attestRelease`'s
 //// co-signature threshold. Later slices lock real value behind these.
 
 use aiken/collection/list
@@ -28,7 +28,7 @@ pub fn count_signed(
 }
 
 /// The M-of-N release rule: at least `threshold` authorised signers signed.
-/// This is the mathematical form of "N members attested → release" —
+/// This is the mathematical form of "N members attested → release";
 /// no operator key can satisfy it, and none can withhold it.
 pub fn threshold_met(
   authorised: List<Signer>,
@@ -38,7 +38,7 @@ pub fn threshold_met(
   count_signed(authorised, signatories) >= threshold
 }
 
-/// Slice 4a: what the release lock stores alongside locked funds —
+/// Slice 4a: what the release lock stores alongside locked funds;
 /// the authorised signer set and how many of them must co-sign.
 /// The on-chain twin of `ReleaseAttestation`'s threshold.
 pub type ReleaseDatum {
@@ -64,7 +64,7 @@ test signer_absent() {
 }
 
 test counts_only_authorised_signers() {
-  // authorised aa,bb,cc — signed aa,cc,dd — dd is not authorised → 2.
+  // authorised aa,bb,cc; signed aa,cc,dd; dd is not authorised → 2.
   count_signed([#"aa", #"bb", #"cc"], [#"aa", #"cc", #"dd"]) == 2
 }
 

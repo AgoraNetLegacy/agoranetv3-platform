@@ -1,13 +1,13 @@
 // The Poll engine (POLLS_SPEC.md, fully ratified).
 //
-// One profile, one vote — the gate's per-poll nullifier IS the ballot
+// One profile, one vote; the gate's per-poll nullifier IS the ballot
 // key, and nothing (stake, tenure, fees) ever weights a vote. Sealed
-// means sealed: while a poll is open, no tally exists anywhere public —
+// means sealed: while a poll is open, no tally exists anywhere public;
 // votes clear the gate in PRIVATE recording mode, ballots live in the
 // primary database, and the ledger learns everything at close, at once:
 // the results, the candle reveal, and (public mode) the per-ballot
 // records. Tamper-evidence (§9 integrity condition): the close writes
-// recomputable commitments — anyone can re-derive the tallies from the
+// recomputable commitments; anyone can re-derive the tallies from the
 // published records, and db:verify does, loudly.
 //
 // The candle (governance, §8): the true close is drawn randomly inside
@@ -86,7 +86,7 @@ export async function createPoll(
      *  rule holds by construction). */
     circle?: { circleId: string; action?: string };
     // Chamber-restricted (NEURAL_POLLINATOR §9.1): the binding vote that
-    // authorizes a LARGE mission release. Same shape as `circle` above —
+    // authorizes a LARGE mission release. Same shape as `circle` above;
     // §9.1 asked for "the Circle binding-poll pattern," so it gets that
     // pattern rather than a parallel one.
     chamber?: { chamberId: string; action?: string };
@@ -121,14 +121,14 @@ export async function createPoll(
   let circleAction: string | null = null;
   if (input.circle) {
     if (input.isGovernance) {
-      return { ok: false, reason: "Circle polls are never governance polls — different rooms, different law." };
+      return { ok: false, reason: "Circle polls are never governance polls; different rooms, different law." };
     }
     const { activeMembership, validateCircleAction } = await import("./circles");
     const circle = await db.circle.findUnique({ where: { id: input.circle.circleId } });
     if (!circle) return { ok: false, reason: "No such Circle." };
     if (circle.status === "closed") return { ok: false, reason: "This Circle is closed." };
     if (!(await activeMembership(db, circle.id, profile.id))) {
-      return { ok: false, reason: "Members only — Circle decisions belong to the Circle." };
+      return { ok: false, reason: "Members only; Circle decisions belong to the Circle." };
     }
     if (input.circle.action) {
       const check = await validateCircleAction(db, circle, input.circle.action);
@@ -139,7 +139,7 @@ export async function createPoll(
       if ((input.consensusThreshold ?? 0) < check.minThreshold) {
         return {
           ok: false,
-          reason: `This decision's bar is ${Math.round(check.minThreshold * 100)}% — never lower (platform bounds).`,
+          reason: `This decision's bar is ${Math.round(check.minThreshold * 100)}%; never lower (platform bounds).`,
         };
       }
       circleAction = input.circle.action;
@@ -147,12 +147,12 @@ export async function createPoll(
   }
 
   // Chamber-restricted polls (§9.1): the binding vote for a large
-  // mission release. Members only, never governance — same law as
+  // mission release. Members only, never governance; same law as
   // Circle polls, for the same reason: different rooms, different law.
   let chamberAction: string | null = null;
   if (input.chamber) {
     if (input.isGovernance) {
-      return { ok: false, reason: "Chamber polls are never governance polls — different rooms, different law." };
+      return { ok: false, reason: "Chamber polls are never governance polls; different rooms, different law." };
     }
     if (input.circle) {
       return { ok: false, reason: "A poll belongs to one room: a Circle or a Chamber, never both." };
@@ -163,7 +163,7 @@ export async function createPoll(
       where: { chamberId: chamber.id, profileId: profile.id },
     });
     if (!member) {
-      return { ok: false, reason: "Members only — a chamber's decisions belong to the chamber." };
+      return { ok: false, reason: "Members only; a chamber's decisions belong to the chamber." };
     }
     if (input.chamber.action) {
       // A binding release vote is a consensus poll at the chamber's own
@@ -177,7 +177,7 @@ export async function createPoll(
   }
 
   const isGovernance = input.isGovernance ?? false;
-  // Governance polls are always sealed — no live-tally option, ever.
+  // Governance polls are always sealed; no live-tally option, ever.
   const liveTally = isGovernance ? false : (input.liveTally ?? false);
 
   const now = Date.now();
@@ -195,7 +195,7 @@ export async function createPoll(
     candleCommitment = candleCommitmentFor(trueCloseAt, candleSalt);
   }
 
-  // Creating a poll is its own gated action instance — the gate spend and
+  // Creating a poll is its own gated action instance; the gate spend and
   // the creation share one transaction (#25), so a rollback leaves no orphan
   // spend behind.
   try {
@@ -246,7 +246,7 @@ export async function createPoll(
     if (input.circle) {
       // Members'-room content stays in the members' room: the public
       // event hash-commits the question (tamper-evidence without
-      // disclosure — the post.recorded precedent), and the tallies at
+      // disclosure; the post.recorded precedent), and the tallies at
       // close are numbers by position, option text never leaving the
       // room. The enclosed-space rule, applied to the ledger.
       await appendEvent(tx, {
@@ -283,7 +283,7 @@ export async function createPoll(
           profileId: m.profileId,
           tier: "quiet",
           category: "circle-activity",
-          title: `Circle activity — ${circleRow.name}`,
+          title: `Circle activity; ${circleRow.name}`,
           body: "An internal poll opened. Details are in the Circle.",
           refType: "circle",
           refId: circleRow.id,
@@ -346,7 +346,7 @@ export async function castVote(
   }
 
   // Circle-restricted visibility (§4.5): the ballot box sits inside the
-  // members' room. Scope stays per-profile — the CIRCLES §7 sharp rule.
+  // members' room. Scope stays per-profile; the CIRCLES §7 sharp rule.
   // A closed Circle's room is read-only (createPost enforces the same);
   // the ballot box closes with it, so a poll still inside its window can't
   // be voted after the Circle closes.
@@ -354,7 +354,7 @@ export async function castVote(
     const { activeMembership } = await import("./circles");
     const circle = await db.circle.findUniqueOrThrow({ where: { id: poll.circleRef } });
     if (circle.status === "closed") {
-      return { ok: false, reason: "This Circle is closed — its ballot box is read-only, like its room." };
+      return { ok: false, reason: "This Circle is closed; its ballot box is read-only, like its room." };
     }
     if (!(await activeMembership(db, poll.circleRef, profile.id))) {
       return { ok: false, reason: "This poll is restricted to its Circle's members." };
@@ -372,7 +372,7 @@ export async function castVote(
     }
   }
 
-  // The vote micro-fee — checked BEFORE the gate so an underfunded
+  // The vote micro-fee; checked BEFORE the gate so an underfunded
   // attempt never spends the one-per-poll nullifier. (Identical fee for
   // everyone, ordinary and governance alike; a fee to cast is not
   // weight.)
@@ -381,12 +381,12 @@ export async function castVote(
   if ((await balanceOf(db, profile.id, "PC")) < voteFee) {
     return {
       ok: false,
-      reason: "Insufficient PollCoin for the vote micro-fee — the earnable path covers committed souls.",
+      reason: "Insufficient PollCoin for the vote micro-fee; the earnable path covers committed souls.",
     };
   }
 
   // One vote per profile: the per-poll scope makes a second attempt a
-  // DUPLICATE — refused privately (visible only to the soul). PRIVATE
+  // DUPLICATE; refused privately (visible only to the soul). PRIVATE
   // recording: sealed means sealed; the ledger learns nothing mid-poll.
   // Gate spend + fee + ballot share ONE transaction (#25): if the ballot
   // write rolls back, the poll nullifier rolls back with it, so the vote is
@@ -423,7 +423,7 @@ export async function castVote(
         pollId: poll.id,
         nullifier: gate.nullifier,
         // Public mode attaches the face by design; pseudonymous mode is
-        // nullifier-keyed only — no profile, ever (DUAL_IDENTITY §4.3).
+        // nullifier-keyed only; no profile, ever (DUAL_IDENTITY §4.3).
         voterProfileId: poll.mode === "public" ? profile.id : null,
         voterHandle: poll.mode === "public" ? profile.handle : null,
         voterDisplayName: poll.mode === "public" ? profile.displayName : null,
@@ -440,7 +440,7 @@ export async function castVote(
   }
 }
 
-/** The live tally — exists ONLY for ordinary polls whose creator enabled
+/** The live tally; exists ONLY for ordinary polls whose creator enabled
  *  it. Everywhere else, null while open: sealed means sealed. */
 export async function visibleTally(
   db: PrismaClient,
@@ -535,7 +535,7 @@ export async function closeDuePolls(db: PrismaClient): Promise<number> {
           countedBallots: counted.length,
           lateBallots: late,
           outcome,
-          // The candle reveal — verifiable against the commitment
+          // The candle reveal; verifiable against the commitment
           // published in poll.created before any vote existed.
           candleReveal: poll.candleCommitment
             ? {
@@ -549,7 +549,7 @@ export async function closeDuePolls(db: PrismaClient): Promise<number> {
         },
       });
 
-      // A binding Circle stewardship decision executes itself at close —
+      // A binding Circle stewardship decision executes itself at close;
       // if consensus passed AND "Adopt" (position 1) is the leading
       // option (a poll can "pass" on Decline; that adopts nothing).
       if (poll.circleAction && outcome === "passed") {
@@ -563,7 +563,7 @@ export async function closeDuePolls(db: PrismaClient): Promise<number> {
 
       // A large mission release rides its binding vote (§9.1: "members
       // vote, auto-executes on passage"). Same Adopt-must-lead rule as
-      // the Circle path — and the same automaticity as attested release:
+      // the Circle path; and the same automaticity as attested release:
       // the poll closing IS the payment, with no operator step between
       // (FUND_INTEGRITY §3.7).
       if (poll.chamberAction && outcome === "passed") {
@@ -576,7 +576,7 @@ export async function closeDuePolls(db: PrismaClient): Promise<number> {
       }
 
       // A Picture repair rides its acceptance poll (Phase 7): execute
-      // the community's decision — adopt appends a revision, anything
+      // the community's decision; adopt appends a revision, anything
       // else declines quietly.
       {
         const { executeRepairPoll } = await import("./domains");
@@ -587,7 +587,7 @@ export async function closeDuePolls(db: PrismaClient): Promise<number> {
       const { notifyPollResults } = await import("./notifications");
       await notifyPollResults(tx, poll.id, poll.title);
 
-      // Public mode: the per-ballot records become public at close —
+      // Public mode: the per-ballot records become public at close;
       // on this poll's record only, never compiled across polls.
       if (poll.mode === "public") {
         for (const ballot of counted) {

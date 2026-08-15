@@ -1,9 +1,9 @@
-// Track 2 Slice 6 — the Tribunal freeze, live on preprod.
+// Track 2 Slice 6; the Tribunal freeze, live on preprod.
 // The §4 hard question, answered per the owner's ruling (2026-07-18):
 // the Tribunal's key is the freeze attestation. Proven both ways:
 // a FULL-THRESHOLD release is REFUSED while frozen (the brake beats
 // the engine), and after the Tribunal lifts, the same release
-// proceeds. The freeze can only ever block — no path moves value.
+// proceeds. The freeze can only ever block; no path moves value.
 //
 // Usage: npx tsx scripts/chain/demo-freeze-roundtrip.ts
 import { loadEnvConfig } from "@next/env";
@@ -43,7 +43,7 @@ async function main() {
   const validator = blueprint.validators.find(
     (v: { title: string }) => v.title === "mission_treasury.mission_treasury.spend"
   );
-  if (!validator) throw new Error("mission_treasury missing — run aiken build.");
+  if (!validator) throw new Error("mission_treasury missing; run aiken build.");
   const scriptCbor = applyCborEncoding(validator.compiledCode);
   const scriptAddress = serializePlutusScript({ code: scriptCbor, version: "V3" }, undefined, 0)
     .address;
@@ -131,8 +131,8 @@ async function main() {
     (await provider.fetchAddressUTxOs(scriptAddress)).filter((x) =>
       (x.output.plutusData ?? "").includes(chamberHex)
     );
-  // The state thread is tracked by its EXPECTED TIP — the tx that last
-  // moved it — never by "whatever the lagging address index shows".
+  // The state thread is tracked by its EXPECTED TIP; the tx that last
+  // moved it; never by "whatever the lagging address index shows".
   const stateUtxoFrom = async (tipTxHash: string) => {
     for (let i = 0; i < 24; i++) {
       const u = (await utxosAt()).find(
@@ -254,7 +254,7 @@ async function main() {
       0
     );
     const b = new MeshTxBuilder({ fetcher: provider, submitter: provider });
-    // Explicit budgets — Mesh's per-redeemer defaults overflow the
+    // Explicit budgets; Mesh's per-redeemer defaults overflow the
     // network's per-tx memory cap once multiple scripts run.
     b.spendingPlutusScriptV3()
       .txIn(st.input.txHash, st.input.outputIndex, st.output.amount, scriptAddress)
@@ -290,7 +290,7 @@ async function main() {
   try {
     const frozenAttempt = await buildRelease(freezeHash);
     await wallet.submitTx(await coSign(frozenAttempt, [signers[0], signers[1]]));
-    throw new Error("RELEASE WHILE FROZEN WAS ACCEPTED — do not ship this.");
+    throw new Error("RELEASE WHILE FROZEN WAS ACCEPTED; do not ship this.");
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     if (msg.includes("do not ship")) throw e;
@@ -299,7 +299,7 @@ async function main() {
     );
   }
 
-  // --- 4. LIFT: same key, brake off — pending survives intact.
+  // --- 4. LIFT: same key, brake off; pending survives intact.
   const liftUnsigned = await stateSpend(
     mConStr2([0]),
     stateDatum(false, pendingTerms),
