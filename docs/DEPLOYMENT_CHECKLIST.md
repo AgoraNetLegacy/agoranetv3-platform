@@ -15,8 +15,8 @@ delete or repurpose hosted resources until their role is recorded here.
 
 - [x] Railway account authenticated.
 - [x] Project exists: `agoranet-staging`.
-- [x] Inventory completed: three standalone PostgreSQL services; no app or ops
-  service is deployed yet.
+- [x] Inventory completed: three standalone PostgreSQL services; no Railway app
+  or ops service is deployed yet.
 - [x] `Postgres` assigned as the application database.
 - [x] `Postgres-TSjx` reserved as the scratch/restore-drill database.
 - [ ] Resolve the role of the third PostgreSQL service before changing it.
@@ -39,7 +39,7 @@ delete or repurpose hosted resources until their role is recorded here.
 - [x] Run `npm run db:verify:postgres` against staging — all checks passed.
 - [x] Run `STAGING_URL=https://agoranet-staging.vercel.app npm run smoke:staging`.
 - [ ] Complete one throwaway-soul walkthrough.
-- [ ] Record final URLs and resource names here.
+- [x] Record final URLs and resource names here.
 
 ## Rules
 
@@ -55,9 +55,9 @@ All three services expose the standard Railway/Postgres variables and are
 currently empty according to their reported volume usage. Their roles have not
 yet been assigned:
 
-- `Postgres`
-- `Postgres-TSjx`
-- `Postgres-43aM`
+- `Postgres` — application database.
+- `Postgres-TSjx` — scratch/restore-drill database.
+- `Postgres-43aM` — unassigned; do not change until its role is confirmed.
 
 ## Working staging result
 

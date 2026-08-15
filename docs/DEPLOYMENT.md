@@ -1,11 +1,15 @@
 # Deployment — staging and production
 
-Phase 8 deliverable. The app is deployable from this commit: the
-Postgres track, runtime guard, backup/drill machinery, and scheduled
-ops jobs are all built and tested. What remains is provisioning —
-free accounts, no billing required at cohort scale — which is the
-owner's (Claude can't and shouldn't hold a credit card, and this path
-doesn't need one).
+Phase 8 deliverable. The app is deployed to staging and verified from
+the public internet. The Postgres track, runtime guard, backup/drill
+machinery, and scheduled ops jobs are built and tested. The scheduled
+ops service itself remains a follow-up provisioning slice.
+
+**Current staging URL:** https://agoranet-staging.vercel.app
+
+**Verified 2026-08-15:** Railway migration `0_init`, idempotent seed,
+`db:verify:postgres` (all checks), and `smoke:staging` (all public
+surfaces returned HTTP 200).
 
 **Owner directive (2026-07-13): reuse his existing stack — Vercel for
 the app, Railway for the backend infra** (his convention across his
@@ -58,10 +62,25 @@ complexity once Railway's real containers are in the picture).
 The spec stays provider-agnostic; nothing in the app code knows any
 host's name. Moving providers later costs an afternoon.
 
-## 3. Standing up staging (step by step, Vercel + Railway)
+## 3. Standing up staging (completed 2026-08-15)
 
-**What the owner does:** create a free Vercel account if he doesn't
-already have one for this repo (Railway account already exists).
+The staging application is live. The deployed resources are:
+
+- Vercel project: `agoranet-staging`, linked to
+  `projectpollify/agoranetv3-platform`.
+- Railway project: `agoranet-staging`.
+- Railway service `Postgres`: application database, TCP public access on
+  PostgreSQL port `5432`.
+- Railway service `Postgres-TSjx`: reserved scratch/restore-drill database.
+- Railway service `Postgres-43aM`: existing unassigned service; do not
+  delete or repurpose until its role is confirmed.
+
+The deployment used `vercel.json` with build command
+`npm run build:postgres`. Hosted secrets were generated and stored in
+Vercel/Railway provider configuration; no secret values are committed.
+
+The original provisioning sequence is retained below as the operational
+record.
 
 **What Claude does from there, in one sitting:**
 
@@ -94,6 +113,14 @@ already have one for this repo (Railway account already exists).
 8. Onboard one throwaway soul end to end (verify → True Self →
    consents → seed → post somewhere), then check `/commons` shows the
    funnel moved and `/transparency` shows the fee.
+
+### Remaining staging operations
+
+- Create the Railway operations service from this repository.
+- Attach persistent backup storage and configure the scheduled jobs in
+  `docs/RUNBOOK.md`.
+- Enable failure notifications for the operations service.
+- Complete the throwaway-soul cohort walkthrough.
 
 Production later = the same steps (likely on paid tiers by then, once
 there's real usage to justify it), plus DNS and the go/no-go items on

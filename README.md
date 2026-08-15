@@ -9,9 +9,11 @@ schedule.
 **Status:** Phases 0–8 (build half) checkpointed; **Phase 8.5
 (Presentation Era) and Phase 8.6 (Testnet Rails) CLOSED by owner
 ruling, 2026-07-15** — the platform runs its full showcase form on
-real test-network rails. The Phase 8 cohort checkpoint (a small real
-cohort onboarding unaided on staging) remains the owner's one open
-half, waiting on the deployment slice. Construction began 2026-07-10
+real test-network rails. **Staging is live** at
+https://agoranet-staging.vercel.app, backed by Railway PostgreSQL;
+migrations, seed, invariant verification, and public smoke tests all
+passed on 2026-08-15. The Phase 8 cohort checkpoint (a small real
+cohort onboarding unaided on staging) remains open. Construction began 2026-07-10
 against a complete ratified specification corpus. `CHECKPOINTS.md` is
 the authoritative per-phase record (Phase 8.6's tx hashes, the
 deployed contract address, and both owner demo runbooks live there);
@@ -26,8 +28,8 @@ deployed contract address, and both owner demo runbooks live there);
   credential issuer, a public zero-knowledge nullifier contract — all
   testnet, all disclosed as such; see `/transparency`) · real-money
   mechanics stay behind Phase 9's legal gate, untouched.
-- Hosting (decided, not yet stood up): Vercel (the app) + Railway
-  (Postgres + the ops jobs, including the daily chain anchor).
+- Hosting: Vercel (the app) + Railway (staging PostgreSQL; the ops jobs,
+  including the daily chain anchor, remain the next operations slice).
 - Operations: `docs/DEPLOYMENT.md` (staging setup),
   `docs/RUNBOOK.md` (backups, drills, the worst day),
   `docs/LOG_DISCIPLINE_AUDIT.md` (what is never logged, and why),
