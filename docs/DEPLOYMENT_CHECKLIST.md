@@ -15,7 +15,8 @@ delete or repurpose hosted resources until their role is recorded here.
 
 - [x] Railway account authenticated.
 - [x] Project exists: `agoranet-staging`.
-- [ ] Inventory every service and record its purpose.
+- [x] Inventory completed: three standalone PostgreSQL services; no app or ops
+  service is deployed yet.
 - [ ] Verify which PostgreSQL service is the application database.
 - [ ] Verify which PostgreSQL service is the scratch/restore-drill database.
 - [ ] Resolve the role of the third PostgreSQL service before changing it.
@@ -46,3 +47,13 @@ delete or repurpose hosted resources until their role is recorded here.
 - No deletion of Railway resources without an identified role and explicit
   confirmation at the point of deletion.
 - Never commit `.env` or provider secrets.
+
+## Current Railway inventory
+
+All three services expose the standard Railway/Postgres variables and are
+currently empty according to their reported volume usage. Their roles have not
+yet been assigned:
+
+- `Postgres`
+- `Postgres-TSjx`
+- `Postgres-43aM`
