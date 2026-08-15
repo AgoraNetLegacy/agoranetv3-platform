@@ -211,11 +211,23 @@ export default async function PollinatorPage({
           <form action={submitChamber} className="composer">
             <label>
               Title
-              <input type="text" name="title" required maxLength={80} />
+              <input
+                type="text"
+                name="title"
+                required
+                maxLength={80}
+                placeholder="A clear name for your chamber"
+              />
             </label>
             <label>
               The subject; one idea: a topic, question, inquiry, initiative, or proposal
-              <input type="text" name="subject" required maxLength={200} />
+              <input
+                type="text"
+                name="subject"
+                required
+                maxLength={200}
+                placeholder="What is this chamber exploring?"
+              />
             </label>
             <label>
               Storefront pitch; the public face of the idea
