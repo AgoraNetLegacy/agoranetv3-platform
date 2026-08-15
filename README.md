@@ -9,10 +9,13 @@ schedule.
 **Status:** Phases 0–8 (build half) checkpointed; **Phase 8.5
 (Presentation Era) and Phase 8.6 (Testnet Rails) CLOSED by owner
 ruling, 2026-07-15**; the platform runs its full showcase form on
-real test-network rails. **Staging is live** at
-https://agoranet-staging.vercel.app, backed by Railway PostgreSQL;
-migrations, seed, invariant verification, and public smoke tests all
-passed on 2026-08-15. The Phase 8 cohort checkpoint (a small real
+real test-network rails. **The platform is live** at
+https://www.agoranet.ai, with https://agoranet.ai redirecting to the
+canonical `www` hostname. The Vercel deployment URL
+https://agoranet-staging.vercel.app remains available for controlled
+deployment checks, backed by Railway PostgreSQL. Migrations, seed,
+invariant verification, and public smoke tests all passed on 2026-08-15.
+The Phase 8 cohort checkpoint (a small real
 cohort onboarding unaided on staging) remains open. Construction began 2026-07-10
 against a complete ratified specification corpus. `CHECKPOINTS.md` is
 the authoritative per-phase record (Phase 8.6's tx hashes, the
@@ -28,13 +31,19 @@ deployed contract address, and both owner demo runbooks live there);
   credential issuer, a public zero-knowledge nullifier contract; all
   testnet, all disclosed as such; see `/transparency`) · real-money
   mechanics stay behind Phase 9's legal gate, untouched.
-- Hosting: Vercel (the app) + Railway (staging PostgreSQL; the ops jobs,
+- Hosting: Vercel (the app and custom domains) + Railway (staging
+  PostgreSQL; the ops jobs,
   including the daily chain anchor, remain the next operations slice).
 - Operations: `docs/DEPLOYMENT.md` (staging setup),
   `docs/RUNBOOK.md` (backups, drills, the worst day),
   `docs/LOG_DISCIPLINE_AUDIT.md` (what is never logged, and why),
   `docs/OWNERS_GUIDE.md` (running, understanding, and explaining the
   platform to someone else; start here if that's your goal).
+
+- Security and indexing: `/.well-known/security.txt` provides the private
+  vulnerability-reporting contact, `SECURITY.md` describes the reporting
+  policy, and `/robots.txt` keeps login, verification, settings, and search
+  history routes out of routine crawler indexing.
 
 ## Getting started
 
@@ -46,6 +55,11 @@ npm run db:seed            # seed the canon (7 pillars, 49 questions)
 npm run db:verify          # the invariant check; run after any session
 npm test                   # unit + integration tests
 ```
+
+The local development database uses SQLite. The Postgres validation and
+integration paths require a PostgreSQL `DATABASE_URL`; use the Postgres
+schema and the deployment instructions in `docs/DEPLOYMENT.md` before
+running `npm run db:verify:postgres` or the full Postgres test workflow.
 
 ## Checkpoint demos (owner review)
 
