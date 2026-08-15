@@ -7,6 +7,11 @@ ops service itself remains a follow-up provisioning slice.
 
 **Current staging URL:** https://agoranet-staging.vercel.app
 
+**Custom domain:** `agoranet.ai` is attached to the `agoranet-staging`
+Vercel project. Hostinger's root A record was changed to `76.76.21.21`
+on 2026-08-15; DNS propagation is still pending, so the Vercel URL
+remains the verified staging address until `agoranet.ai` resolves there.
+
 **Verified 2026-08-15:** Railway migration `0_init`, idempotent seed,
 `db:verify:postgres` (all checks), and `smoke:staging` (all public
 surfaces returned HTTP 200).

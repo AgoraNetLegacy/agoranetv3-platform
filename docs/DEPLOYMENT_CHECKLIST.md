@@ -33,6 +33,8 @@ delete or repurpose hosted resources until their role is recorded here.
 - [x] Set build command to `npm run build:postgres`.
 - [x] Deploy the committed application.
 - [x] Verify the deployment URL: https://agoranet-staging.vercel.app
+- [x] Attach custom domain `agoranet.ai` to the Vercel project.
+- [ ] Verify `https://agoranet.ai` after DNS propagation.
 
 ## Verification
 
@@ -62,6 +64,7 @@ yet been assigned:
 ## Working staging result
 
 - Public app: https://agoranet-staging.vercel.app
+- Custom domain: `agoranet.ai` attached; DNS verification pending.
 - Railway project: `agoranet-staging`
 - Main database: `Postgres` with TCP public access enabled on port 5432.
 - Scratch database: `Postgres-TSjx` reserved for restore drills.
