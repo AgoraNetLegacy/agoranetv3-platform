@@ -2,7 +2,7 @@
   "name": "agoranetv3-platform",
   "version": "0.1.0",
   "private": true,
-  "description": "AgoraNet v3 \u2014 a purpose-built civic commons. Phase 8: deployment hardening.",
+  "description": "AgoraNet v3 — a purpose-built civic commons. Phase 8: deployment hardening.",
   "scripts": {
     "dev": "next dev",
     "build": "npm run db:generate && next build",

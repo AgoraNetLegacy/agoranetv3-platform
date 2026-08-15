@@ -17,12 +17,13 @@ const FLIP_COOKIE = "agoranet-flip";
 // local http://localhost still works.
 const SECURE_COOKIE = process.env.NODE_ENV === "production";
 
-// Production keeps this a browser-session cookie (no maxAge) by design —
-// closing the browser should drop it. Outside production, persist it so
-// manual test passes don't lose the "logged in here" state on every
-// restart; the SoulSession row still governs the real expiry server-side.
-const SESSION_COOKIE_MAX_AGE =
-  process.env.NODE_ENV === "production" ? undefined : 60 * 60 * 24 * 30;
+// Owner ruling 2026-07-23: sessions persist across browser restarts —
+// re-pasting the access key every launch was the wrong friction. 400 days
+// is the browser-enforced ceiling (Chrome caps cookie lifetime there), so
+// this is "as close to never-expiring as cookies allow". The SoulSession
+// row still governs the real expiry server-side (identity.sessionLifetimeHours
+// rail), and explicit sign-out revokes it regardless of the cookie.
+const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 400;
 
 export async function ensureSessionId(): Promise<string> {
   const jar = await cookies();

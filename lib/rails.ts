@@ -103,10 +103,12 @@ export const RAIL_DEFAULTS: RailDefault[] = [
   },
   {
     key: "identity.sessionLifetimeHours",
-    value: 24,
+    value: 9600,
     unit: "hours",
+    boundMin: 1,
+    boundMax: 9600,
     description:
-      "SoulSession lifetime — session records are short-retention by design (DUAL_IDENTITY §7.2) and purged on expiry.",
+      "SoulSession lifetime — owner ruling 2026-07-23: 9600h (400 days, the cookie ceiling) so login survives browser restarts. Departs from DUAL_IDENTITY §7.2 short-retention posture: a session where both faces sign in now holds their co-occurrence for its whole lifetime. Explicit sign-out still purges immediately.",
   },
   {
     key: "identity.displayNameCooldownDays",
