@@ -210,7 +210,7 @@ export default async function PollinatorPage({
           </summary>
           <form action={submitChamber} className="composer">
             <label>
-              Title
+              <span className="field-label">Title; the short name</span>
               <input
                 type="text"
                 name="title"
@@ -220,7 +220,9 @@ export default async function PollinatorPage({
               />
             </label>
             <label>
-              The subject; one idea: a topic, question, inquiry, initiative, or proposal
+              <span className="field-label">
+                Subject; the specific idea, question, or proposal
+              </span>
               <input
                 type="text"
                 name="subject"
