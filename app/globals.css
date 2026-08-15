@@ -582,6 +582,24 @@ ul.discussions .meta { font-size: 0.78rem; color: var(--muted); margin-top: 0.2r
 .post details { font-size: 0.8rem; margin-top: 0.3rem; }
 .post details summary { cursor: pointer; color: var(--muted); }
 
+.route-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 12rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.route-loading-mark {
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 2px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: route-loading-spin 0.8s linear infinite;
+}
+@keyframes route-loading-spin { to { transform: rotate(360deg); } }
+
 /* The chamber form is intentionally collapsible, but its entry point must
    read like an action rather than an unexplained disclosure arrow. */
 .chamber-create { margin: 0.75rem 0 1rem; }

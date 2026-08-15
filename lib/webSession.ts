@@ -5,6 +5,7 @@
 // which leak into history and logs (DUAL_IDENTITY §7.1 vector 4).
 
 import { cookies, headers } from "next/headers";
+import { cache } from "react";
 import { db } from "./db";
 import { createSession, getSession } from "./parking";
 
@@ -42,15 +43,17 @@ export async function ensureSessionId(): Promise<string> {
   return id;
 }
 
-export async function currentSession() {
+// Request-scoped only; this removes duplicate session reads in the shared
+// layout without sharing identity data across requests or faces.
+export const currentSession = cache(async function currentSession() {
   const jar = await cookies();
   const id = jar.get(SESSION_COOKIE)?.value;
   if (!id) return null;
   return getSession(db, id);
-}
+});
 
 /** The active face in this browser session, or null (reader). */
-export async function activeFace() {
+export const activeFace = cache(async function activeFace() {
   const session = await currentSession();
   if (!session?.activeProfileId) return null;
   const isSignedIn = session.faces.some(
@@ -58,17 +61,17 @@ export async function activeFace() {
   );
   if (!isSignedIn) return null;
   return db.profile.findUnique({ where: { id: session.activeProfileId } });
-}
+});
 
 /** Every face signed into this browser session (for the switch control). */
-export async function sessionFaces() {
+export const sessionFaces = cache(async function sessionFaces() {
   const session = await currentSession();
   if (!session) return [];
   return db.profile.findMany({
     where: { id: { in: session.faces.map((f) => f.profileId) } },
     orderBy: { createdAt: "asc" },
   });
-}
+});
 
 /** The client address for rate-limit keying, ONLY behind a declared
  *  proxy (TRUST_PROXY=true) where x-forwarded-for is trustworthy. The
