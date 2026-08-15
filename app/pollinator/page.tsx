@@ -209,28 +209,34 @@ export default async function PollinatorPage({
             </span>
           </summary>
           <form action={submitChamber} className="composer">
-            <label>
-              <span className="field-label">Title; the short name</span>
+            <div className="chamber-field">
+              <label htmlFor="chamber-title">
+                <span className="field-label">Title; the short name</span>
+              </label>
               <input
+                id="chamber-title"
                 type="text"
                 name="title"
                 required
                 maxLength={80}
                 placeholder="A clear name for your chamber"
               />
-            </label>
-            <label>
-              <span className="field-label">
-                Subject; the specific idea, question, or proposal
-              </span>
+            </div>
+            <div className="chamber-field">
+              <label htmlFor="chamber-subject">
+                <span className="field-label">
+                  Subject; the specific idea, question, or proposal
+                </span>
+              </label>
               <input
+                id="chamber-subject"
                 type="text"
                 name="subject"
                 required
                 maxLength={200}
                 placeholder="What is this chamber exploring?"
               />
-            </label>
+            </div>
             <label>
               Storefront pitch; the public face of the idea
               <textarea name="pitch" required maxLength={2000} />

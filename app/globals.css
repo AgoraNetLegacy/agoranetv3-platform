@@ -636,9 +636,15 @@ form.composer textarea {
 }
 form.composer label {
   display: block;
-  margin: 1.25rem 0;
+  margin: 0;
   font-weight: 600;
 }
+form.composer .chamber-field {
+  display: block;
+  width: 100%;
+  margin: 1.25rem 0;
+}
+form.composer .chamber-field > input[type="text"] { margin-top: 0.55rem; }
 form.composer .field-label {
   display: block;
   line-height: 1.35;
