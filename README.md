@@ -179,7 +179,8 @@ Full runbooks for the two owner-facing chain demos ("come try" and
   Gratium balances (a soul's two faces never bridge), the treasury,
   and a double-entry money ledger: every balance re-derives from its
   entries, and `db:verify` fails loudly on any conservation break.
-- **Every ratified fee, wired**; replies 1 PC, votes 0.25 PC (ordinary
+- **Every ratified fee, wired**; replies 2 PC with up to 1 PC participation
+  accrual returned, votes 0.25 PC (ordinary
   = governance, per law), polls and Discussions 10 PC, paid permanence
   15 G, flag deposits 5 PC (never blocking at zero balance). The
   **Welcome Grant** funds the journey: 25+25 at verification, +10 at

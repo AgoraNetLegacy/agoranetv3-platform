@@ -137,15 +137,16 @@ took each step. That's the economy working.
 it "parks" your face; one face per pillar at a time, the timing
 protection). Open a canonical question. Notice the amber banner;
 *you are standing in a permanent space*; and that the post button
-itself names its price: "· 1 PC". Post something real. Watch your
-balance drop by 1... and check it again in a minute (participation
-accrual quietly gives it back; genuine participation is net-free).
+itself names its price: "· 2 PC". Post something real. Watch your
+balance drop by 2; participation accrual can return 1 PC when the
+daily and weekly ceilings allow, so genuine participation has a net
+cost of 1 PC while still earning something back.
 Try **Edit**; you have a 15-minute grace window, with visible
 history, then your words lock forever.
 
 **E. See the machinery see you (5 min).** Open three pages:
 - **/ledger**; find your post's hash-commitment. Pseudonyms only.
-- **/transparency**; your 1 PC fee is in the books. Where money
+- **/transparency**; your 2 PC fee is in the books. Where money
   comes from and goes is public, forever.
 - **/commons**; the funnel counted your journey (arrival → verified →
   registered → consents → seed → oriented) as bare numbers. No

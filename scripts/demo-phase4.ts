@@ -64,10 +64,10 @@ async function main() {
   const canon = await db.discussion.findFirstOrThrow({ where: { permanence: "permanent-canonical" } });
   const post1 = await discussions.createPost(db, {
     discussionId: canon.id, profileId: a.trueSelfId,
-    body: "A reply that cost one PollCoin; skin in the game.",
+    body: "A reply that cost two PollCoin; skin in the game.",
   });
   if (!post1.ok) throw new Error(post1.reason);
-  console.log("Reply posted: −1 PC fee, +1 PC participation accrual (net-free for a genuine soul), +5 G first-action milestone.");
+  console.log("Reply posted: −2 PC fee, +1 PC participation accrual (net −1 PC when the ceiling allows), +5 G first-action milestone.");
 
   const pillar = await db.pillar.findFirstOrThrow();
   const poll = await polls.createPoll(db, {

@@ -120,13 +120,13 @@ describe("fees flow to the treasury", () => {
       body: "A costly word.",
     });
     expect(result.ok).toBe(true);
-    // −1 reply fee, +1 participation accrual: a genuine soul's reply is
-    // net-free until the daily ceiling saturates; the ratified intent.
-    expect(await balanceOf(db, trueSelfId, "PC")).toBe(before - 1 + 1);
+    // −2 reply fee, +1 participation accrual: a genuine soul's reply has
+    // a real net cost while still earning back one participation unit.
+    expect(await balanceOf(db, trueSelfId, "PC")).toBe(before - 2 + 1);
     // First fee-bearing action → +5 G (True Self journey milestone).
     expect(await balanceOf(db, trueSelfId, "G")).toBe(gBefore + 5);
     const treasury = await db.treasuryBalance.findUnique({ where: { currency: "PC" } });
-    expect(treasury!.amount).toBeGreaterThanOrEqual(1);
+    expect(treasury!.amount).toBeGreaterThanOrEqual(2);
   });
 
   it("refuses an action the balance cannot cover", async () => {

@@ -40,10 +40,10 @@ export interface RailDefault {
 export const RAIL_DEFAULTS: RailDefault[] = [
   {
     key: "discussion.replyFee",
-    value: 1,
+    value: 2,
     unit: "uPC",
     description:
-      "Reply micro-fee; the anchor unit (participation-cost rule, TOKENOMICS §1). Fee-bearing from Phase 1; debits wire up with Phase 4's internal balances.",
+      "Reply micro-fee; two PollCoin units charged, with one participation unit accrued back when the daily and weekly ceilings allow (participation-cost rule, TOKENOMICS §1).",
   },
   {
     key: "discussion.graceWindowMinutes",

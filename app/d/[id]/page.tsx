@@ -418,11 +418,12 @@ export default async function DiscussionPage({
     }
   }
 
-  const [posts, rules, viewer, graceMinutes] = await Promise.all([
+  const [posts, rules, viewer, graceMinutes, replyFee] = await Promise.all([
     loadPosts(discussion.id),
     db.rule.findMany({ orderBy: { id: "asc" } }),
     activeFace(),
     getRail(db, "discussion.graceWindowMinutes"),
+    getRail(db, "discussion.replyFee"),
   ]);
 
   // The save (BEACON §4): private to this face. Reading a saved thread
@@ -448,7 +449,7 @@ export default async function DiscussionPage({
   const interactive = viewer && (!discussion.circle || roomWrite);
   // The dual-token signature at micro scale (POLLINATOR §3): workshop
   // posts price in both currencies; the composer says so up front.
-  const feeLabel = discussion.chamber ? "1 PC + 1 G" : "1 PC";
+  const feeLabel = discussion.chamber ? "1 PC + 1 G" : `${replyFee} PC`;
 
   return (
     <>
