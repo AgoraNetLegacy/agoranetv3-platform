@@ -7,6 +7,7 @@
 // is additive.
 
 import type { PrismaClient } from "@prisma/client";
+import { stringToHex } from "@meshsdk/core";
 
 const TESTNETS = new Set(["preprod", "preview"]);
 
@@ -61,6 +62,40 @@ export async function recordWalletLink(
 /** The face's current testnet wallet link, if any. */
 export async function walletLinkFor(db: PrismaClient, profileId: string) {
   return db.testnetWalletLink.findUnique({ where: { profileId } });
+}
+
+export type DemoAssetBalances = {
+  pollCoin: string;
+  gratium: string;
+};
+
+/** Read the two demo assets from a linked preprod address. This is read-only;
+ * no wallet keys or transaction signing are involved. */
+export async function demoAssetBalances(
+  address: string
+): Promise<DemoAssetBalances> {
+  if (!address.startsWith("addr_test1")) {
+    throw new Error("Only preprod addresses can be queried.");
+  }
+  const net = cardanoNetwork();
+  const projectId = process.env.BLOCKFROST_PROJECT_ID;
+  const policyId = process.env.TEST_POLLCOIN_POLICY_ID;
+  if (!projectId || !policyId) {
+    throw new Error("Testnet asset configuration is incomplete.");
+  }
+  const res = await fetch(
+    `https://cardano-${net}.blockfrost.io/api/v0/addresses/${address}`,
+    { headers: { project_id: projectId }, cache: "no-store" }
+  );
+  if (!res.ok) throw new Error(`Wallet asset lookup failed (${res.status}).`);
+  const data = (await res.json()) as {
+    amount: { unit: string; quantity: string }[];
+  };
+  const amount = new Map(data.amount.map((item) => [item.unit, item.quantity]));
+  return {
+    pollCoin: amount.get(policyId + stringToHex("dPOLL")) ?? "0",
+    gratium: amount.get(policyId + stringToHex("dGRA")) ?? "0",
+  };
 }
 
 // ------------------------------------------------------------------

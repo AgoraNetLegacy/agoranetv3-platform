@@ -14,7 +14,12 @@ import {
 } from "@/app/actions";
 import { SPIRIT_LEVELS, SPIRIT_LEVEL_LABELS } from "@/lib/spirit";
 import { getRail as getRailDirect } from "@/lib/rails";
-import { cardanoNetwork, walletLinkFor, donationsFor } from "@/lib/chain";
+import {
+  cardanoNetwork,
+  walletLinkFor,
+  donationsFor,
+  demoAssetBalances,
+} from "@/lib/chain";
 import { donationScript, demoBeneficiaryHash } from "@/lib/chainDonation";
 import { LaceConnect } from "@/components/LaceConnect";
 import { SelfCustodySign } from "@/components/SelfCustodySign";
@@ -48,6 +53,9 @@ export default async function SettingsPage({
       getRail(db, "onchain.demoLockMinutes"),
     ]);
   const network = cardanoNetwork();
+  const demoAssets = walletLink
+    ? await demoAssetBalances(walletLink.cardanoAddress)
+    : null;
   // Derived only when a wallet is linked; the donation section only
   // renders then, and an unconfigured beneficiary must not take the
   // whole settings page down with it.
@@ -213,6 +221,21 @@ export default async function SettingsPage({
         <p className="lore">No wallet linked to this face yet.</p>
       )}
       <LaceConnect network={network} onLink={submitWalletLink} />
+
+      {walletLink && demoAssets && (
+        <div className="notice">
+          <strong>On-chain demo balances</strong>
+          <br />
+          PollCoin Demo: {demoAssets.pollCoin}
+          <br />
+          Gratium Demo: {demoAssets.gratium}
+          <br />
+          <span className="lore">
+            Read from Cardano {network}; this does not change your AgoraNet
+            balance.
+          </span>
+        </div>
+      )}
 
       {walletLink && (
         <>
