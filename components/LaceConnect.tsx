@@ -43,9 +43,20 @@ export function LaceConnect({
       // not accidentally linked to True Self. True Self keeps the used-address
       // preference because its demo assets already live at that address.
       const changeAddress = await wallet.getChangeAddress();
-      const usedAddresses = identity === "True Self"
-        ? await wallet.getUsedAddresses()
-        : [];
+      if (identity === "Alias") {
+        const unusedAddresses = await wallet.getUnusedAddresses();
+        const address = unusedAddresses[0] ?? changeAddress;
+        if (!address.startsWith("addr_test1")) {
+          setStatus(
+            "Lace is connected to MAINNET. This rail is testnet-only by " +
+              "design; open Lace → Settings → Network → Preprod, then try again."
+          );
+          return;
+        }
+        setCandidateAddress(address);
+        return;
+      }
+      const usedAddresses = await wallet.getUsedAddresses();
       const address = usedAddresses[0] ?? changeAddress;
       if (!address.startsWith("addr_test1")) {
         setStatus(
