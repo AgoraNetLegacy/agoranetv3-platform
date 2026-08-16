@@ -53,9 +53,17 @@ export default async function SettingsPage({
       getRail(db, "onchain.demoLockMinutes"),
     ]);
   const network = cardanoNetwork();
-  const demoAssets = walletLink
-    ? await demoAssetBalances(walletLink.cardanoAddress)
-    : null;
+  let demoAssets: Awaited<ReturnType<typeof demoAssetBalances>> | null = null;
+  let demoAssetError: string | null = null;
+  if (walletLink) {
+    try {
+      demoAssets = await demoAssetBalances(walletLink.cardanoAddress);
+    } catch {
+      // A missing chain configuration or temporary explorer outage must not
+      // undo or hide a successful wallet link.
+      demoAssetError = "On-chain demo balances are temporarily unavailable.";
+    }
+  }
   // Derived only when a wallet is linked; the donation section only
   // renders then, and an unconfigured beneficiary must not take the
   // whole settings page down with it.
@@ -236,6 +244,7 @@ export default async function SettingsPage({
           </span>
         </div>
       )}
+      {walletLink && demoAssetError && <p className="notice">{demoAssetError}</p>}
 
       {walletLink && (
         <>
