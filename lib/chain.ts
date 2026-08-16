@@ -100,6 +100,11 @@ export async function demoAssetBalances(
     `https://cardano-${net}.blockfrost.io/api/v0/addresses/${address}`,
     { headers, cache: "no-store" }
   );
+  // A newly created account has no on-chain history yet. Blockfrost reports
+  // that as 404, which means a valid zero balance, not an explorer outage.
+  if (primary.status === 404) {
+    return { pollCoin: "0", gratium: "0" };
+  }
   if (!primary.ok) throw new Error(`Wallet asset lookup failed (${primary.status}).`);
   const primaryData = (await primary.json()) as {
     amount: { unit: string; quantity: string }[];
