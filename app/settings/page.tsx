@@ -224,8 +224,8 @@ export default async function SettingsPage({
         <strong>Test network only, by design.</strong> Connecting shares
         one {network} address with the platform; no keys, no custody,
         nothing of real value anywhere on this rail. Real rails wait
-        behind their own gate. Per-face, like everything: your other
-        face connects its own wallet, or none.
+        behind their own gate. Your True Self and Alias connect separately.
+        If you connect both, use a different Cardano account for each.
       </p>
       {walletLink ? (
         <p className="lore">
@@ -239,7 +239,11 @@ export default async function SettingsPage({
       ) : (
         <p className="lore">No wallet linked to this face yet.</p>
       )}
-      <LaceConnect network={network} onLink={submitWalletLink} />
+      <LaceConnect
+        network={network}
+        identity={face.face === "TRUE_SELF" ? "True Self" : "Alias"}
+        onLink={submitWalletLink}
+      />
 
       {walletLink && demoAssets && (
         <div className="notice">
