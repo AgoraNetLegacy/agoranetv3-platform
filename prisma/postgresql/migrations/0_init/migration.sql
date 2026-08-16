@@ -3,6 +3,7 @@ CREATE TABLE "TestnetWalletLink" (
     "id" TEXT NOT NULL,
     "profileId" TEXT NOT NULL,
     "cardanoAddress" TEXT NOT NULL,
+    "cardanoAddresses" TEXT,
     "network" TEXT NOT NULL,
     "connectedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "proofTxHash" TEXT,
@@ -1324,4 +1325,3 @@ ALTER TABLE "DmExcerpt" ADD CONSTRAINT "DmExcerpt_threadId_fkey" FOREIGN KEY ("t
 
 -- AddForeignKey
 ALTER TABLE "SavedDiscussion" ADD CONSTRAINT "SavedDiscussion_discussionId_fkey" FOREIGN KEY ("discussionId") REFERENCES "Discussion"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-

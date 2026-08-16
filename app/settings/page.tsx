@@ -19,6 +19,7 @@ import {
   walletLinkFor,
   donationsFor,
   demoAssetBalances,
+  demoAssetBalancesForAddresses,
 } from "@/lib/chain";
 import { donationScript, demoBeneficiaryHash } from "@/lib/chainDonation";
 import { LaceConnect } from "@/components/LaceConnect";
@@ -57,7 +58,10 @@ export default async function SettingsPage({
   let demoAssetError: string | null = null;
   if (walletLink) {
     try {
-      demoAssets = await demoAssetBalances(walletLink.cardanoAddress);
+      const addresses = walletLink.cardanoAddresses
+        ? (JSON.parse(walletLink.cardanoAddresses) as string[])
+        : [walletLink.cardanoAddress];
+      demoAssets = await demoAssetBalancesForAddresses(addresses);
     } catch {
       // A missing chain configuration or temporary explorer outage must not
       // undo or hide a successful wallet link.

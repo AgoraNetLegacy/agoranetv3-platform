@@ -32,7 +32,7 @@ export type WalletLinkResult = { ok: true } | { ok: false; reason: string };
  *  at the door; addr1… never enters this table. */
 export async function recordWalletLink(
   db: PrismaClient,
-  input: { profileId: string; cardanoAddress: string; network: string }
+  input: { profileId: string; cardanoAddress: string; cardanoAddresses?: string[]; network: string }
 ): Promise<WalletLinkResult> {
   const addr = input.cardanoAddress.trim();
   if (!addr.startsWith("addr_test1")) {
@@ -52,9 +52,15 @@ export async function recordWalletLink(
     create: {
       profileId: input.profileId,
       cardanoAddress: addr,
+      cardanoAddresses: JSON.stringify(input.cardanoAddresses?.filter((a) => a.startsWith("addr_test1")) ?? [addr]),
       network: input.network,
     },
-    update: { cardanoAddress: addr, network: input.network, connectedAt: new Date() },
+    update: {
+      cardanoAddress: addr,
+      cardanoAddresses: JSON.stringify(input.cardanoAddresses?.filter((a) => a.startsWith("addr_test1")) ?? [addr]),
+      network: input.network,
+      connectedAt: new Date(),
+    },
   });
   return { ok: true };
 }
@@ -96,6 +102,18 @@ export async function demoAssetBalances(
     pollCoin: amount.get(policyId + stringToHex("dPOLL")) ?? "0",
     gratium: amount.get(policyId + stringToHex("dGRA")) ?? "0",
   };
+}
+
+export async function demoAssetBalancesForAddresses(
+  addresses: string[]
+): Promise<DemoAssetBalances> {
+  const totals = { pollCoin: 0n, gratium: 0n };
+  for (const address of addresses) {
+    const balance = await demoAssetBalances(address);
+    totals.pollCoin += BigInt(balance.pollCoin);
+    totals.gratium += BigInt(balance.gratium);
+  }
+  return { pollCoin: totals.pollCoin.toString(), gratium: totals.gratium.toString() };
 }
 
 // ------------------------------------------------------------------
