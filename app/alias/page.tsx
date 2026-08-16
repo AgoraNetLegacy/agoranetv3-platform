@@ -48,7 +48,7 @@ export default async function AliasPage({
         signed-in account; so the platform only ever sees a fresh,
         unattributable registration arrive.
       </p>
-      <h3>Read this first; it's the honest part</h3>
+      <h3>Before you create your Alias</h3>
       <ol className="disclosure-list">
         {ALIAS_DISCLOSURES.items.map((item, i) => (
           <li key={i}>{item}</li>

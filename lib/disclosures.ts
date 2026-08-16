@@ -15,10 +15,9 @@ export const CONSENT_VERSIONS = {
   // arrived. Version bumps re-present the screens, by design.
   permanence: "v2",
   constitution: "founding-draft-2026-07-07-plain-v2",
-  // v2 (Phase 8.6 slice 4): the unlinkability item's language upgraded
-  // honestly; the cryptographic enforcement now runs on public test
-  // rails; the live ceremony's protection is still policy.
-  "alias-disclosures": "phase-a-v2",
+  // v3 (owner walkthrough, 2026-08-15): separate the current guarantee
+  // from the future testnet migration in plain language.
+  "alias-disclosures": "phase-a-v3",
   // Profile imagery (PROFILE_PAGE_SPEC §4.5, owner-ruled 2026-07-22):
   // the Alias imagery warning; pixels out-fingerprint prose.
   "alias-imagery": "v1",
@@ -120,12 +119,12 @@ export const CONSTITUTION_ACK = {
 export const ALIAS_DISCLOSURES = {
   version: CONSENT_VERSIONS["alias-disclosures"],
   items: [
-    "What we guarantee: no database row, ledger entry, or public record " +
-      "links your Alias to your True Self. During Phase A this is " +
-      "operator policy, honestly disclosed; not yet math for the live " +
-      "ceremony. The math itself is now real: a public Midnight testnet " +
-      "contract enforces the same one-per-scope law with zero-knowledge " +
-      "proofs; the ceremony cuts over when proving is consumer-ready.",
+    "Your Alias is kept separate from your True Self. In the live system, " +
+      "we do not store a link between them in the database, ledger, or " +
+      "public record. This separation is enforced by the platform's " +
+      "current server rules; a separate Midnight testnet contract shows " +
+      "the future cryptographic version, but it is not part of this live " +
+      "ceremony yet.",
     "What we cannot protect you from: your own writing style " +
       "(stylometry is a mature research field), your own timing " +
       "patterns, and self-disclosure. If you say something as your " +
