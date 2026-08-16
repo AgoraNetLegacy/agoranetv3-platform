@@ -28,10 +28,9 @@ export default async function LoginPage({
         <button type="submit">Sign in</button>
       </form>
       <p className="interim-note">
-        New here? <a href="/verify">Verify once, act forever.</a> Holding a
-        credential and wanting a second face? The Alias ceremony lives at{" "}
-        <a href="/alias">/alias</a>; ambient documentation, never a button
-        in your settings.
+        New here? <a href="/verify">Create your True Self.</a> Holding a
+        credential and wanting a second face? Choose{" "}
+        <a href="/alias">Create an Alias</a>.
       </p>
     </div>
   );

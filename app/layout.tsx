@@ -29,7 +29,7 @@ async function FaceBar() {
       <div className="face-bar">
         <span className="face-chip reader">Reading as guest</span>
         <Link href="/login" className="mobile-login-link">Sign in</Link>
-        <Link href="/verify">verify to act</Link>
+        <Link href="/verify">Create your True Self</Link>
       </div>
     );
   }
@@ -182,7 +182,7 @@ async function ProfileBubble() {
         )}
         <div className="profile-bubble-links">
           <Link href="/profile">Profile</Link>
-          <Link href="/alias">Hatch an Alias</Link>
+          <Link href="/alias">Create an Alias</Link>
           <Link href="/settings">Settings</Link>
           <Link href="/support">Support</Link>
           <form action={signOutSession} className="inline">

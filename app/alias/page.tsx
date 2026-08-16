@@ -23,7 +23,7 @@ export default async function AliasPage({
   const early = activeSouls < smallPopulation;
   return (
     <div className="ceremony">
-      <h2>Hatch an Alias</h2>
+      <h2>Create an Alias</h2>
       <p>
         <em>Say what you can&rsquo;t afford to sign.</em>
       </p>
@@ -74,7 +74,7 @@ export default async function AliasPage({
           protected.
         </label>
         <p />
-        <button type="submit">Hatch through the gate</button>
+        <button type="submit">Create the Alias</button>
       </form>
     </div>
   );

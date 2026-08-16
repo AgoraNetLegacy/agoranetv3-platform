@@ -295,7 +295,7 @@ export default async function PollinatorPage({
         <p className="interim-note">
           Reading is free.{" "}
           <Link href={`/verify?returnTo=${encodeURIComponent("/pollinator")}`}>
-            Verify once to create or enter →
+          Create your True Self to create or enter →
           </Link>
         </p>
       )}
