@@ -10,6 +10,10 @@ import type { PrismaClient } from "@prisma/client";
 import { deserializeAddress, stringToHex } from "@meshsdk/core";
 
 const TESTNETS = new Set(["preprod", "preview"]);
+// Verified policy for the current throwaway preprod PollCoin/Gratium demo
+// assets. This is public chain data, not a secret.
+const DEMO_ASSET_POLICY_ID =
+  "70e8fedff8a8cd445705a0884c8b41db20e5005f7cdeef6a7322ad3";
 
 /** The configured Cardano testnet (§6.1). Throws on mainnet; this
  *  phase has no production posture at all, and a misconfigured env
@@ -79,10 +83,8 @@ export async function demoAssetBalances(
   }
   const net = cardanoNetwork();
   const projectId = process.env.BLOCKFROST_PROJECT_ID;
-  const policyId = process.env.TEST_POLLCOIN_POLICY_ID;
-  if (!projectId || !policyId) {
-    throw new Error("Testnet asset configuration is incomplete.");
-  }
+  const policyId = DEMO_ASSET_POLICY_ID;
+  if (!projectId) throw new Error("Testnet asset configuration is incomplete.");
   const headers = { project_id: projectId };
   const primary = await fetch(
     `https://cardano-${net}.blockfrost.io/api/v0/addresses/${address}`,
