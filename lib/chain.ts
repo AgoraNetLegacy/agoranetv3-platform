@@ -13,7 +13,7 @@ const TESTNETS = new Set(["preprod", "preview"]);
 // Verified policy for the current throwaway preprod PollCoin/Gratium demo
 // assets. This is public chain data, not a secret.
 const DEMO_ASSET_POLICY_ID =
-  "70e8fedff8a8cd445705a0884c8b41db20e5005f7cdeef6a7322ad3";
+  "70e8fedff8a8cd445705a0884c8b41db20e5005f7cdeef6a7322ad35";
 
 /** The configured Cardano testnet (§6.1). Throws on mainnet; this
  *  phase has no production posture at all, and a misconfigured env
