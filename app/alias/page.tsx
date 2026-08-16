@@ -1,7 +1,5 @@
 import { ALIAS_DISCLOSURES } from "@/lib/disclosures";
 import { hatchAlias } from "@/app/actions";
-import { db } from "@/lib/db";
-import { getRail } from "@/lib/rails";
 
 export const dynamic = "force-dynamic";
 
@@ -14,28 +12,12 @@ export default async function AliasPage({
   searchParams: Promise<{ m?: string }>;
 }) {
   const { m } = await searchParams;
-  // Early-platform honesty (DUAL_IDENTITY §7.2, vector 5): a small crowd
-  // thins anonymity, and the UX must say so rather than imply otherwise.
-  const [activeSouls, smallPopulation] = await Promise.all([
-    db.profile.count({ where: { status: "active" } }),
-    getRail(db, "identity.smallPopulationThreshold"),
-  ]);
-  const early = activeSouls < smallPopulation;
   return (
     <div className="ceremony">
       <h2>Create your Alias for private participation</h2>
       <p>
         <em>Say what you can&rsquo;t afford to sign.</em>
       </p>
-      {early && (
-        <div className="notice">
-          <strong>Your Alias is ready for separate participation.</strong> The
-          community is still growing, with fewer than {" "}
-          {smallPopulation} active souls today. Your Alias remains separate
-          from your True Self, and the community will become more diverse as
-          more people join.
-        </div>
-      )}
       <p>
         An Alias is a separate identity for participation you do not want
         tied to your True Self. We do not store a link between them. Your
