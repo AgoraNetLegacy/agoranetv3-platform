@@ -67,9 +67,18 @@ export default async function SettingsPage({
   // Derived only when a wallet is linked; the donation section only
   // renders then, and an unconfigured beneficiary must not take the
   // whole settings page down with it.
-  const [{ address: donationAddress }, beneficiaryHash] = walletLink
-    ? await Promise.all([donationScript(), demoBeneficiaryHash()])
-    : [{ address: "" }, ""];
+  let donationAddress = "";
+  let beneficiaryHash = "";
+  let donationError: string | null = null;
+  if (walletLink) {
+    try {
+      const [script, hash] = await Promise.all([donationScript(), demoBeneficiaryHash()]);
+      donationAddress = script.address;
+      beneficiaryHash = hash;
+    } catch {
+      donationError = "The donation testnet tools are temporarily unavailable.";
+    }
+  }
 
   return (
     <div className="ceremony">
@@ -277,6 +286,10 @@ export default async function SettingsPage({
           <SelfCustodySign network={network} onProof={submitSelfCustodyProof} />
 
           <h4>The non-custodial donation</h4>
+          {donationError ? (
+            <p className="notice">{donationError}</p>
+          ) : (
+            <>
           <p className="lore">
             The first real value movement on this rail: {(demoLovelace / 1_000_000).toLocaleString()} tADA
             from <strong>your</strong> wallet to the donation-lock{" "}
@@ -320,6 +333,8 @@ export default async function SettingsPage({
             lockMinutes={demoLockMinutes}
             onDonate={submitScriptDonation}
           />
+            </>
+          )}
         </>
       )}
 
