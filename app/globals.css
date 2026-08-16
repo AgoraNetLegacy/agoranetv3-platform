@@ -1383,6 +1383,7 @@ table.books tr:last-child td { border-bottom: 0; }
   .nav-toggle .pi { font-size: 1.3rem; }
   .face-bar { margin-left: auto; }
   .face-bar > a:not(.icon-link), .face-bar > form, .switch-control { display: none; }
+  .face-bar > a.mobile-login-link { display: inline-block; }
   .face-chip { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
   .shell main { padding-top: 1.5rem; }
   .stat-row { flex-wrap: wrap; }

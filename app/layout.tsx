@@ -28,7 +28,7 @@ async function FaceBar() {
     return (
       <div className="face-bar">
         <span className="face-chip reader">Reading as guest</span>
-        <Link href="/login">sign in</Link>
+        <Link href="/login" className="mobile-login-link">Sign in</Link>
         <Link href="/verify">verify to act</Link>
       </div>
     );
