@@ -211,6 +211,11 @@ export async function registerAlias(
           status: "pending",
           activateAt,
           joinedPeriod: monthOf(activateAt),
+          // An Alias begins privately. The owner can make it visible from
+          // the profile visibility control after activation.
+          spiritActive: true,
+          spiritLevel: "ghost",
+          spiritOnLogin: true,
         },
       });
       await tx.consentAck.create({

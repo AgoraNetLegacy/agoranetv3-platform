@@ -131,9 +131,9 @@ export const ALIAS_DISCLOSURES = {
       "Alias that only your True Self would know, no system can help.",
     "The parking rule protects you: one face per pillar at a time, so " +
       "your two faces never appear side by side in the same room.",
-    "The funding-trail rule: you never pay for Alias actions from " +
-      "anything connected to your True Self. At launch, the platform " +
-      "covers Alias-side fees entirely.",
+    "Your True Self and Alias each have separate PollCoin and Gratium " +
+      "balances. Alias activity uses the Alias balance; it never draws " +
+      "from your True Self balance, and the balances are never merged.",
     "Recovery is asymmetric, on purpose: a recovery path through your " +
       "identity would be a linkage channel. Guard your Alias access key " +
       "; if it's lost or stolen, the remedy is hatching a successor " +
