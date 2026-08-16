@@ -253,12 +253,6 @@ export default async function SettingsPage({
             Read from Cardano {network}; this does not change your AgoraNet
             balance.
           </span>
-          <br />
-          <small>
-            Diagnostic: {demoAssets.addressCount} address(es) checked; primary
-            address {demoAssets.primaryPollCoin} dPOLL / {demoAssets.primaryGratium} dGRA.
-            {" "}Native units returned: {demoAssets.primaryNativeUnits.join(", ") || "none"}.
-          </small>
         </div>
       )}
       {walletLink && demoAssetError && <p className="notice">{demoAssetError}</p>}

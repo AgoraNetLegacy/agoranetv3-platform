@@ -71,11 +71,6 @@ export async function walletLinkFor(db: PrismaClient, profileId: string) {
 export type DemoAssetBalances = {
   pollCoin: string;
   gratium: string;
-  addressCount: number;
-  policyId: string;
-  primaryPollCoin: string;
-  primaryGratium: string;
-  primaryNativeUnits: string[];
 };
 
 /** Read the two demo assets from a linked preprod address. This is read-only;
@@ -116,9 +111,6 @@ export async function demoAssetBalances(
     deserializeAddress(address);
   }
   const amount = new Map<string, bigint>();
-  const primaryAmount = new Map(
-    primaryData.amount.map((item) => [item.unit, item.quantity])
-  );
   for (const walletAddress of addresses) {
     const response = walletAddress === address ? primary : await fetch(
       `https://cardano-${net}.blockfrost.io/api/v0/addresses/${walletAddress}`,
@@ -135,13 +127,6 @@ export async function demoAssetBalances(
   return {
     pollCoin: (amount.get(policyId + stringToHex("dPOLL")) ?? 0n).toString(),
     gratium: (amount.get(policyId + stringToHex("dGRA")) ?? 0n).toString(),
-    addressCount: addresses.size,
-    policyId,
-    primaryPollCoin: primaryAmount.get(policyId + stringToHex("dPOLL")) ?? "0",
-    primaryGratium: primaryAmount.get(policyId + stringToHex("dGRA")) ?? "0",
-    primaryNativeUnits: primaryData.amount
-      .filter((item) => item.unit !== "lovelace")
-      .map((item) => `${item.unit}:${item.quantity}`),
   };
 }
 
