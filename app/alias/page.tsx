@@ -19,12 +19,13 @@ export default async function AliasPage({
         <em>Say what you can&rsquo;t afford to sign.</em>
       </p>
       <p>
-        An Alias gives you a private way to participate. Use it to discuss
-        unpopular ideas, report wrongdoing, or share personal experiences
+        An Alias protects honest participation in a world of doxxing,
+        character assassination, retaliation, and cancel culture. Use it to
+        question power, report wrongdoing, or discuss difficult experiences
         without putting your public or professional identity at risk. Your
         Alias stays separate from your True Self; we do not store a link
-        between them. You remain one verified person, so honest participation
-        does not require exposing who you are.
+        between them. You remain one verified person while choosing what you
+        are ready to attach to your public name.
       </p>
       <h3>Before you create your Alias</h3>
       <ol className="disclosure-list">
