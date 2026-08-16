@@ -314,6 +314,21 @@ export async function profileForAccessKey(db: PrismaClient, accessKey: string) {
   });
   if (!profile) return { ok: false as const, reason: "Access key not recognized." };
   if (profile.status !== "active") {
+    // Older Alias records were created during the former delayed-activation
+    // flow. They now activate on first owner sign-in and keep the current
+    // privacy default.
+    if (profile.face === "ALIAS" && profile.status === "pending") {
+      const activated = await db.profile.update({
+        where: { id: profile.id },
+        data: {
+          status: "active",
+          spiritActive: true,
+          spiritLevel: "ghost",
+          spiritOnLogin: true,
+        },
+      });
+      return { ok: true as const, profile: activated };
+    }
     return {
       ok: false as const,
       reason: "This Alias is still being prepared. Try again soon.",
