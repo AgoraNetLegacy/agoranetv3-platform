@@ -33,7 +33,11 @@ export function LaceConnect({
         return;
       }
       const wallet = await BrowserWallet.enable("lace");
-      const address = await wallet.getChangeAddress();
+      // Prefer a used receive address so read-only balance checks follow the
+      // address that holds the wallet's existing test assets. Fall back to
+      // the change address for a brand-new wallet.
+      const usedAddresses = await wallet.getUsedAddresses();
+      const address = usedAddresses[0] ?? (await wallet.getChangeAddress());
       if (!address.startsWith("addr_test1")) {
         setStatus(
           "Lace is connected to MAINNET. This rail is testnet-only by " +
