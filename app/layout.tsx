@@ -182,6 +182,7 @@ async function ProfileBubble() {
         )}
         <div className="profile-bubble-links">
           <Link href="/profile">Profile</Link>
+          <Link href="/alias">Hatch an Alias</Link>
           <Link href="/settings">Settings</Link>
           <Link href="/support">Support</Link>
           <form action={signOutSession} className="inline">
