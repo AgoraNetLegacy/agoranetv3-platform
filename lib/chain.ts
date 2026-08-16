@@ -51,6 +51,16 @@ export async function recordWalletLink(
   if (!TESTNETS.has(input.network)) {
     return { ok: false, reason: "Only testnet networks (preprod, preview) can be linked." };
   }
+  const existing = await db.testnetWalletLink.findFirst({
+    where: { cardanoAddress: addr, profileId: { not: input.profileId } },
+    select: { id: true },
+  });
+  if (existing) {
+    return {
+      ok: false,
+      reason: "This wallet address is already linked to another identity.",
+    };
+  }
   await db.testnetWalletLink.upsert({
     where: { profileId: input.profileId },
     create: {
