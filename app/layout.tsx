@@ -150,11 +150,14 @@ async function ProfileBubble() {
           <span className="lore">@{face.handle}</span>
         </div>
         <p className="profile-bubble-note">
-          Switching is deliberate: it ends this face&rsquo;s pillar sessions.
+          Choose an identity below to switch. Switching ends the current
+          identity&rsquo;s pillar sessions.
         </p>
         {others.length === 0 ? (
           <Link href="/login" className="profile-bubble-action">
-            Sign your other face in once <Icon name="chevron" />
+            {face.face === "TRUE_SELF"
+              ? "Sign in to your Alias"
+              : "Sign in to your True Self"} <Icon name="chevron" />
           </Link>
         ) : (
           others.map((p) => (
@@ -173,7 +176,7 @@ async function ProfileBubble() {
                     src={`/img/${p.handle}/avatar${bustFor.get(p.id) ?? ""}`}
                     alt=""
                   />
-                  Switch to {p.displayName}
+                  Switch to {p.face === "TRUE_SELF" ? "True Self" : "Alias"}
                 </span>
                 <span>{p.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"}</span>
               </button>

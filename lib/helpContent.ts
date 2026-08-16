@@ -70,8 +70,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
     category: "Your two faces",
     summary: "Sign each face in once per browser; after that, switching is one click.",
     body: [
-      "Each face signs in with its own access key at /login; never with your credential, and never from inside the other face. This is a one-time introduction per browser: once a face has been signed in here, it appears in the floating bubble at the bottom-right, and switching to it is one click, keys never asked again.",
-      "Switching is deliberate by design: it ends the departing face's pillar sessions, and the whole page turns over like a card so there is never doubt about which face is acting. If the bubble offers 'Sign your other face in once', that browser simply hasn't met your other face yet.",
+      "Your True Self and Alias each use their own access key at /login. Sign in to each one once per browser; after that, both identities appear in the profile bubble at the bottom-right.",
+      "To switch identities, open the profile bubble and select True Self or Alias. Switching ends the current identity's pillar sessions, so it is always clear which identity is acting.",
     ],
     links: [{ href: "/login", label: "Sign in a face" }],
   },
