@@ -29,9 +29,11 @@ export default async function AliasPage({
       </p>
       {early && (
         <div className="notice">
-          <strong>The community is small.</strong> Fewer than {smallPopulation}
-          active souls means patterns may identify you. Your Alias is
-          technically separate, but privacy improves as the community grows.
+          <strong>Your Alias is ready for separate participation.</strong> The
+          community is still growing, with fewer than {" "}
+          {smallPopulation} active souls today. Your Alias remains separate
+          from your True Self, and the community will become more diverse as
+          more people join.
         </div>
       )}
       <p>
