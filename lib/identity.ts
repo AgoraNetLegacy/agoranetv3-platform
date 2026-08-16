@@ -177,20 +177,6 @@ export async function registerAlias(
     return { ok: false, reason: `@${handle} is taken (handles are never recycled).` };
   }
 
-  const [minHours, maxHours, cadenceHours] = await Promise.all([
-    getRail(db, "identity.aliasActivationMinHours"),
-    getRail(db, "identity.aliasActivationMaxHours"),
-    getRail(db, "identity.aliasCohortCadenceHours"),
-  ]);
-  const randomDelayMs =
-    (minHours + Math.random() * (maxHours - minHours)) * 3_600_000;
-  const cadenceMs = cadenceHours * 3_600_000;
-  // Snap UP to the next cohort boundary (epoch-aligned): the Alias
-  // appears with its cohort, never alone at a correlatable moment.
-  const activateAt = new Date(
-    Math.ceil((Date.now() + randomDelayMs) / cadenceMs) * cadenceMs
-  );
-
   const accessKey = newSecret();
   try {
     await db.$transaction(async (tx) => {
@@ -208,11 +194,10 @@ export async function registerAlias(
           handle,
           displayName,
           accessKeyHash: sha256(accessKey),
-          status: "pending",
-          activateAt,
-          joinedPeriod: monthOf(activateAt),
-          // An Alias begins privately. The owner can make it visible from
-          // the profile visibility control after activation.
+          status: "active",
+          joinedPeriod: monthOf(new Date()),
+          // An Alias is available immediately but begins privately. The
+          // owner can make it visible from the profile visibility control.
           spiritActive: true,
           spiritLevel: "ghost",
           spiritOnLogin: true,

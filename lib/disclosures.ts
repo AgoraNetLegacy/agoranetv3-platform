@@ -139,10 +139,6 @@ export const ALIAS_DISCLOSURES = {
       "; if it's lost or stolen, the remedy is hatching a successor " +
       "(fee-gated, Light Score carries over in both directions, lineage " +
       "visible).",
-    "Your Alias activates at a random moment in roughly the next few " +
-      "days, alongside a cohort of others. Its profile will show only a " +
-      "coarse join period. We never tell anyone; including you; the " +
-      "exact moment in advance.",
     // Naming amendment, verbatim (ONBOARDING Stage 3.4, 2026-07-10):
     "Choose an Alias handle AND display name with no relation to your " +
       "True Self's; name similarity is self-deanonymization no " +

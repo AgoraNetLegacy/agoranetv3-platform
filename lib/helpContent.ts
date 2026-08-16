@@ -60,7 +60,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     body: [
       "Your True Self is the face you sign; your Alias is for what you can't afford to sign; the argument that could cost you professionally, the report you can't put your name to, the struggle you won't wear publicly.",
       "Every human gets exactly one Alias, enforced by a blind check: the platform can tell someone is trying twice without learning who. No record anywhere connects your two faces; not in the database, not in the ledger, not in search. That unlinkability is why the Alias ceremony asks for your Humanity Credential instead of your signed-in account.",
-      "A new Alias does not appear immediately: it activates with a cohort, at a random moment inside a window of days, so no Alias ever appears alone at a correlatable time. The room's color always tells you which face you are wearing; white for True Self, dark for Alias.",
+      "A new Alias is available immediately but starts invisible to the community. You decide when to make it public using the visibility control. The room's color always tells you whether you are using your True Self or Alias.",
     ],
     links: [{ href: "/alias", label: "The Alias ceremony" }],
   },

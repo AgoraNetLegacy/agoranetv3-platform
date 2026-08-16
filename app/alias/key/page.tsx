@@ -23,14 +23,10 @@ export default async function AliasKeyPage() {
           artifact on disk. */}
       <SecretBox value={accessKey} downloadAs="agoranet-access-key.txt" />
       <p>
-        Your Alias will activate at a random moment{" "}
-        <strong>within the next few days</strong>, alongside a cohort of
-        others. We never announce the exact time; not even to you; because
-        a signal to your True Self about your Alias would itself be the
-        link we promise never to create.{" "}
-        <strong>How you&rsquo;ll know: try this key at sign-in; the day it
-        works, your Alias is live.</strong> You&rsquo;ll sign it in once on
-        each browser; after that, switching faces is one click in the top
+        Your Alias is ready now, but it starts invisible to the community.
+        Sign in with this key, then use the visibility control when you
+        decide to appear publicly. You&rsquo;ll sign it in once on each
+        browser; after that, switching identities is one click in the top
         bar.
       </p>
       <form action={acknowledgeSecretSaved}>
