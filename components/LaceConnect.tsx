@@ -14,7 +14,7 @@ export function LaceConnect({
 }: {
   network: string;
   identity: "True Self" | "Alias";
-  /** Server action: records the address for the active face. */
+  /** Server action: records the address for the active identity. */
   onLink: (formData: FormData) => Promise<void>;
 }) {
   const [status, setStatus] = useState<string | null>(null);

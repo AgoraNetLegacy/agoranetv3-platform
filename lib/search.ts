@@ -194,7 +194,7 @@ export async function search(
 
   // 2; Souls: lookup, not discovery-of-persons. Display names duplicate
   // freely; @handles disambiguate. Every active profile passed the gate
-  // (verified human). NOTHING here derives from the other face; no such
+  // (verified human). NOTHING here derives from the other identity; no such
   // data exists to derive from.
   if (want(filters, "souls")) {
     const profiles = await db.profile.findMany({
@@ -229,7 +229,7 @@ export async function search(
     }
   }
 
-  // 3; Fellow souls: the viewer's own list, private to them, per-face.
+  // 3; Fellow souls: the viewer's own list, private to them, per-identity.
   if (want(filters, "fellow-souls") && viewerProfileId) {
     const bonds = await db.fellowSoulBond.findMany({
       where: { OR: [{ aProfileId: viewerProfileId }, { bProfileId: viewerProfileId }] },

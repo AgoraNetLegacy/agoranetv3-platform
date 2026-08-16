@@ -1,6 +1,6 @@
 // Direct Messages (Phase 6.5; FELLOW_SOULS_AND_DM_SPEC §5).
 //
-// Profile-to-profile, any face combination. Encrypted at rest
+// Profile-to-profile, any identity combination. Encrypted at rest
 // (lib/dmCrypto.ts; Phase A escrow posture, disclosed verbatim);
 // initiator pays to open a thread, every sender pays the per-message
 // micro-fee; recipients never pay to receive or reply. Strangers
@@ -74,7 +74,7 @@ export async function openThread(
   const body = input.body.trim();
   if (!body) return { ok: false, reason: "Say something." };
   const from = await db.profile.findUnique({ where: { id: input.fromProfileId } });
-  if (!from || from.status !== "active") return { ok: false, reason: "No active face." };
+  if (!from || from.status !== "active") return { ok: false, reason: "No active identity." };
   if (!(await hasPostingConsents(db, from.id))) {
     return { ok: false, reason: "The permanence and Constitution acknowledgments come first." };
   }
@@ -223,7 +223,7 @@ export async function sendMessage(
   const profile = await db.profile.findUniqueOrThrow({
     where: { id: input.senderProfileId },
   });
-  if (profile.status !== "active") return { ok: false, reason: "No active face." };
+  if (profile.status !== "active") return { ok: false, reason: "No active identity." };
 
   // Gate spend + fee + message share one transaction (#25).
   try {

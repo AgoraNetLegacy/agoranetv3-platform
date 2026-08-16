@@ -41,7 +41,7 @@ export ledger spent: Set<Bytes<32>>;
 witness subjectSecret(): Bytes<32>;
 
 // The two scope kinds, as two doors; mirroring ScopeKind in
-// lib/nullifier.ts. Voting-like acts are per-profile (each face an
+// lib/nullifier.ts. Voting-like acts are per-profile (each identity an
 // independent voice); registration ceremonies are per-human (the
 // one-True-Self / one-Alias enforcement itself).
 export circuit spendPerProfile(scope: Bytes<32>): [] {

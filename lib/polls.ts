@@ -108,7 +108,7 @@ export async function createPoll(
 
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
-    return { ok: false, reason: "No active face." };
+    return { ok: false, reason: "No active identity." };
   }
   if (!(await hasPostingConsents(db, profile.id))) {
     return { ok: false, reason: "The permanence and Constitution acknowledgments come first." };
@@ -342,7 +342,7 @@ export async function castVote(
 
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
-    return { ok: false, reason: "No active face." };
+    return { ok: false, reason: "No active identity." };
   }
 
   // Circle-restricted visibility (§4.5): the ballot box sits inside the
@@ -422,7 +422,7 @@ export async function castVote(
       data: {
         pollId: poll.id,
         nullifier: gate.nullifier,
-        // Public mode attaches the face by design; pseudonymous mode is
+        // Public mode attaches the identity by design; pseudonymous mode is
         // nullifier-keyed only; no profile, ever (DUAL_IDENTITY §4.3).
         voterProfileId: poll.mode === "public" ? profile.id : null,
         voterHandle: poll.mode === "public" ? profile.handle : null,

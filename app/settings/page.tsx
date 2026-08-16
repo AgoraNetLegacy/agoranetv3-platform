@@ -27,10 +27,9 @@ import { DonateToScript } from "@/components/DonateToScript";
 
 export const dynamic = "force-dynamic";
 
-// Settings, per face (Phase 8.5, PRESENTATION_SPEC §5.1). THE RULE:
-// this page renders for the ACTIVE face only; no surface ever shows
-// two faces' settings together; a shared settings screen would itself
-// be a linkage surface. Switch faces to change the other face's
+// Settings are scoped to the active identity (Phase 8.5, PRESENTATION_SPEC
+// §5.1). No surface shows both identities' settings together; a shared
+// settings screen would itself be a linkage surface. Switch identities to
 // settings; nothing here echoes across.
 export default async function SettingsPage({
   searchParams,
@@ -86,9 +85,9 @@ export default async function SettingsPage({
         Settings <span className="lore">; for {face.displayName} @{face.handle} only</span>
       </h2>
       <p className="lore">
-        Settings are per-face. Your other face; if you have one; has its
-        own settings page, reachable only by switching. That separation is
-        the design: a shared screen would itself link your faces.
+        Settings belong to the active identity. Your other identity has its
+        own settings page, reachable only by switching. This separation keeps
+        the two identities independent.
       </p>
       {m && <div className="notice">{m}</div>}
 
@@ -114,9 +113,9 @@ export default async function SettingsPage({
         <button type="submit">Change display name</button>
       </form>
 
-      <h3>Face-switch animation</h3>
+      <h3>Identity-switch animation</h3>
       <p className="lore">
-        How the room turns when you change faces. The card flip is the
+        How the room turns when you change identities. The card flip is the
         default; choose less motion if you prefer; by choice, never by
         detection.
       </p>
@@ -143,7 +142,7 @@ export default async function SettingsPage({
 
       <h3>Spirit Mode</h3>
       <p className="lore">
-        A visibility veil for this face, toggled any time from the small
+        A visibility veil for this identity, toggled any time from the small
         dot on the profile bubble; filled means visible, hollowed means
         walking unseen. Choose here how much the veil covers. Refusals it
         causes look identical to any undeliverable request, so the veil
@@ -182,7 +181,7 @@ export default async function SettingsPage({
         The feed&rsquo;s calm-pacing controls, yours to tune (or turn
         off). The timing runs entirely in your own browser; the
         platform measures nothing; it only remembers the numbers you
-        choose here, per face.
+        choose here, per identity.
       </p>
       <form action={updateFeedWellbeing}>
         <label style={{ display: "block", margin: "0.3rem 0" }}>
@@ -216,7 +215,7 @@ export default async function SettingsPage({
         and the quiet inbox), aggregated per space, nothing manufactured to
         pull you back. There is nothing to configure yet; push delivery
         arrives as a fast-follow, and its preferences will live here, per
-        face, off by default.
+        identity, off by default.
       </p>
 
       <h3>The testnet rail; connect a wallet</h3>
@@ -234,10 +233,10 @@ export default async function SettingsPage({
           <code style={{ wordBreak: "break-all" }}>{walletLink.cardanoAddress}</code>{" "}
           ({walletLink.network}, since {walletLink.connectedAt.toLocaleDateString()}).
           Switched wallets? The &ldquo;Connect Lace&rdquo; button below
-          re-links this face to whatever wallet is in your browser now.
+          re-links this identity to whatever wallet is in your browser now.
         </p>
       ) : (
-        <p className="lore">No wallet linked to this face yet.</p>
+        <p className="lore">No wallet linked to this identity yet.</p>
       )}
       <LaceConnect
         network={network}
@@ -287,7 +286,7 @@ export default async function SettingsPage({
               anytime to refresh it.
             </p>
           ) : (
-            <p className="lore">No proof signed by this face yet.</p>
+            <p className="lore">No proof signed by this identity yet.</p>
           )}
           <SelfCustodySign network={network} onProof={submitSelfCustodyProof} />
 
@@ -329,7 +328,7 @@ export default async function SettingsPage({
               ))}
             </ul>
           ) : (
-            <p className="lore">No donation from this face yet.</p>
+            <p className="lore">No donation from this identity yet.</p>
           )}
           <DonateToScript
             network={network}
@@ -344,7 +343,7 @@ export default async function SettingsPage({
         </>
       )}
 
-      <h3>This face&rsquo;s other controls</h3>
+      <h3>This identity&rsquo;s other controls</h3>
       <ul>
         <li>
           <Link href="/profile">The profile window</Link>; your about-me,
@@ -352,10 +351,11 @@ export default async function SettingsPage({
         </li>
         <li>
           <Link href="/feed/sources">Feed sources</Link>; choose what
-          feeds this face&rsquo;s feed
+          feeds this identity&rsquo;s feed
         </li>
         <li>
-          <Link href="/search/history">Search history</Link>; per-face,
+          <Link href="/search/history">Search history</Link>; private to
+          this identity,
           deletable, never used to rank
         </li>
       </ul>

@@ -1,7 +1,7 @@
 // Light Score v3; the derivation layer (LIGHT_SCORE_EXTENSION_SPEC).
 //
-// Reputation is PER FACE, PER PILLAR: a constellation, never one number.
-// This module derives one face's standing from four inputs:
+// Reputation is PER IDENTITY, PER PILLAR: a constellation, never one number.
+// This module derives one identity's standing from four inputs:
 //
 //   1. Discussion contributions (v2's core input, carried forward);
 //      posts in PUBLIC pillar Discussions. Members'-room posts never
@@ -25,7 +25,7 @@
 // total/sum/overall/global accessors that throw. Any future code; a
 // page, an export, a metric; that reaches for a universal score fails
 // loudly at runtime, and tests hold the tripwire in place. Scores are
-// also never compared across faces here: no leaderboard export exists
+// also never compared across identities here: no leaderboard export exists
 // in this module by design (Keystone's pillar leaderboards are a
 // launch-footprint item with their own spec).
 
@@ -92,7 +92,7 @@ async function casePillarId(db: DbOrTx, caseId: string): Promise<string | null> 
   return meta?.id ?? null;
 }
 
-/** Moderation-service credit per pillar for one face: per resolved case,
+/** Moderation-service credit per pillar for one identity: per resolved case,
  *  quality-gated, daily-capped (LIGHT_SCORE §2, §5.3). */
 async function moderationServiceByPillar(
   db: DbOrTx,
@@ -141,7 +141,7 @@ async function moderationServiceByPillar(
   return out;
 }
 
-/** One face's full constellation; every pillar it has standing in. */
+/** One identity's full constellation; every pillar it has standing in. */
 export async function faceConstellation(
   db: PrismaClient,
   profileId: string
@@ -241,7 +241,7 @@ export async function faceConstellation(
   return new ScoreConstellation(standings);
 }
 
-/** One face's standing in ONE pillar; the dashboard stat-row number. */
+/** One identity's standing in ONE pillar; the dashboard stat-row number. */
 export async function pillarStanding(
   db: PrismaClient,
   profileId: string,

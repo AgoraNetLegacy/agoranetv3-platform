@@ -12,7 +12,7 @@ import { submitJoinCircle } from "@/app/actions";
 export const dynamic = "force-dynamic";
 
 // The join gate (CIRCLES §5): one gate-cleared action; no application
-// essays, no founder approval. When the joining face is an Alias and the
+// essays, no founder approval. When the joining identity is an Alias and the
 // Circle is small or place-tagged, the honest warning the dual-identity
 // module commits us to is said OUT LOUD at the exact moment it matters
 // (DUAL_IDENTITY §7.1 vector 5); informed choice, never a wall.
@@ -60,7 +60,7 @@ export default async function JoinCirclePage({
         record, like leaving.
       </p>
       <p className="lore">
-        Membership is per-face: this face joins; the platform neither knows
+        Membership is per identity: this identity joins; the platform neither knows
         nor asks about any other.
       </p>
 
@@ -80,7 +80,7 @@ export default async function JoinCirclePage({
           <label>
             <input type="checkbox" name="acceptedAliasWarning" required /> I
             understand the small-community inference risk and choose to join
-            as this face.
+            as this identity.
           </label>
         )}
         <button type="submit">Clear this join; become a member</button>

@@ -18,7 +18,7 @@ decide, and prove they acted. Five sentences you can say to anyone:
 1. **Every account is one real human**; verified once at the door, so
    there are no bots and no sock puppets, but the platform never sees
    your identity documents.
-2. **Every human gets two faces:** a True Self for what you'll sign
+2. **Every human gets two identities:** a True Self for what you'll sign
    publicly, and an Alias for the argument you can't afford
    professionally; and no record anywhere links the two.
 3. **Reading is free; acting costs a little**; tiny fees instead of
@@ -47,10 +47,10 @@ LIVE gate every soul actually uses.
 | Layer | The live gate (Phase A, what every soul uses today) | Proven on testnet (Phase 8.6, real but not yet load-bearing) | Real money (Phase 9, behind the legal gate) |
 |---|---|---|---|
 | Identity verification | The platform itself plays the issuer; instant, honest stand-in | A real, self-hosted Identus issuer runs the full issue→hold→verify ceremony; §1.5 recovery proven (lose everything, re-prove who you are, get the SAME identity back) | Lace ID when it ships; independent of any platform-operated issuer |
-| Unlinkability of your two faces | Operator policy; no database row links them, and we prove it, but you're trusting us | A public Midnight contract enforces the SAME one-per-scope law with zero-knowledge proofs today; dev-grade proving (20–60s), but the math is real and checkable by anyone | The live gate itself cuts over once proving is consumer-ready |
+| Unlinkability of your two identities | Operator policy; no database row links them, and we prove it, but you're trusting us | A public Midnight contract enforces the SAME one-per-scope law with zero-knowledge proofs today; dev-grade proving (20–60s), but the math is real and checkable by anyone | The live gate itself cuts over once proving is consumer-ready |
 | PollCoin & Gratium | Internal balances; database rows with real double-entry accounting | PollCoin Demo (dPOLL); a real (test) Cardano asset, minted under a throwaway preprod policy, verifiable on a public explorer | Real Cardano assets with deposit/withdraw |
 | The civic ledger's integrity | Hash-chained, `db:verify` re-checks it locally | Anchored daily to a public Cardano preprod transaction; rewriting history now means contradicting a public blockchain's own timestamps, not just our say-so | Same mechanism; real network |
-| Wallet | A credential string you save like a password | A Lace preprod connection exists (`/settings`, per-face, mainnet refused by construction) | Lace wallet connection, real network |
+| Wallet | A credential string you save like a password | A Lace preprod connection exists (`/settings`, per identity, mainnet refused by construction) | Lace wallet connection, real network |
 | DM encryption | Real encryption; keys held by the operator in escrow | Unchanged; DM custody holds at disclosed escrow through 8.6 by owner ruling, re-evaluated after the issuer loop proved out | Keys move to your wallet; we structurally *can't* read |
 
 **The critical point for teaching and selling:** none of this is
@@ -123,7 +123,7 @@ until Lace arrives.
 **C. Become a True Self (5 min).** Enter the credential, pick a
 display name (anything, even your real name) and an @handle
 (permanent, yours forever). Save the **access key** you're shown;
-that's how this face signs in. Then the two consents: read them, they
+that’s how this identity signs in. Then the two consents: read them, they
 are load-bearing; permanence means *your words in permanent spaces
 outlive your account*. Then orientation, then the values seed (answer
 a couple honestly; they feed Circle matchmaking someday, and are
@@ -134,7 +134,7 @@ Nobody gave you crypto; the Welcome Grant funded your journey as you
 took each step. That's the economy working.
 
 **D. Speak into the permanent record (5 min).** Enter a pillar (notice
-it "parks" your face; one face per pillar at a time, the timing
+it "parks" your identity; one identity per pillar at a time, the timing
 protection). Open a canonical question. Notice the amber banner;
 *you are standing in a permanent space*; and that the post button
 itself names its price: "· 2 PC". Post something real. Watch your
@@ -157,11 +157,11 @@ history, then your words lock forever.
 platform honesty note (small crowd = thin anonymity; the platform
 refuses to oversell privacy) and the seven disclosures; this screen
 is the heart of the dual-identity promise. Hatch with your credential:
-*different* name, *different* handle. Notice it activates on a delay,
-at a random moment in a cohort; a timing protection, explained right
-there. Sign in with the Alias key when it activates and notice: separate
-balances, separate standing, separate everything. Two voices, one
-human, zero stored links.
+*different* name, *different* handle. It is available immediately, but
+starts private. Sign in with the Alias key, then deliberately make it
+visible when you are ready. Notice: separate balances, separate
+standing, separate everything. Two identities, one human, zero stored
+links.
 
 **G. The rest of the estate (5 min, skim).** **/circles** (form one;
 watch the 25 PC fee; log an action; it needs a second soul to attest,
@@ -209,7 +209,7 @@ re-learn a subsystem:
 cd ~/Documents/Claude/Projects/Agoranetv3/platform
 npm run demo:phase0    # the ledger + the gate (the foundation of trust)
 npm run demo:phase1    # permanent Discussions, grace windows, locking
-npm run demo:phase2    # two faces, zero links; the linkage audit
+npm run demo:phase2    # two identities, zero links; the linkage audit
 npm run demo:phase3    # sealed polls, the candle close, tamper-evidence
 npm run demo:phase4    # the economy: grants, fees, tips, conservation
 npm run demo:phase5    # a flag's full journey through moderation
@@ -279,6 +279,6 @@ npm run demo:phase8    # the walls, the counters, the crush, the guard
 
 **The pitch, in one line, when someone asks what you made:** *"A
 governance platform honest enough to label its own scaffolding; one
-human, one voice, two protected faces, permanent records anyone can
+human, one voice, two protected identities, permanent records anyone can
 verify, and an economy that charges pennies for participation instead
 of harvesting attention."*

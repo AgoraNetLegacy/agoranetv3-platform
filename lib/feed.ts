@@ -10,7 +10,7 @@
 // the published participation formula, identical for everyone.
 //
 // Everything here is per-profile reading state: none of it is ledgered,
-// none of it crosses faces, none of it feeds ranking anywhere.
+// none of it crosses identities, none of it feeds ranking anywhere.
 
 import type { PrismaClient } from "@prisma/client";
 import { getRail } from "./rails";
@@ -39,7 +39,7 @@ export interface LensCard extends FeedCard {
 
 /** Cold start (§5): day one, every new profile's feed = all seven
  *  pillars + the open lens + balanced diet. Idempotent; called when the
- *  feed is first visited by a face. */
+ *  feed is first visited by an identity. */
 export async function ensureFeedDefaults(db: PrismaClient, profileId: string) {
   const settings = await db.feedSettings.findUnique({ where: { profileId } });
   if (settings) return settings;

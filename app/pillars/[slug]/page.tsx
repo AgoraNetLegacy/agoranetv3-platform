@@ -98,9 +98,9 @@ async function DiscussionLenses({
       </p>
       {(lens === "mine" || lens === "saved") && !face ? (
         <p className="lore">
-          This lens is per-face. <Link href="/login">Sign in</Link> to see{" "}
+          This lens is private to your identity. <Link href="/login">Sign in</Link> to see{" "}
           {lens === "mine" ? "the threads you've spoken in" : "your saved threads"};
-          your other face has its own.
+          your other identity has its own.
         </p>
       ) : (
         <ul className="discussions">
@@ -138,9 +138,9 @@ async function DiscussionLenses({
             <li className="lore">
               {lens === "here" && "No public threads live here yet."}
               {lens === "mine" &&
-                "This face hasn't spoken in this pillar yet; every thread you post in gathers here."}
+                "This identity hasn't spoken in this pillar yet; every thread you post in gathers here."}
               {lens === "saved" &&
-                "Nothing saved in this pillar yet; the ☆ on any thread keeps it here, visible to this face alone."}
+                "Nothing saved in this pillar yet; the ☆ on any thread keeps it here, visible to this identity alone."}
             </li>
           )}
         </ul>
@@ -221,8 +221,8 @@ export default async function PillarPage({
 
       {/* The three lenses (BEACON_FEED_SPEC §5.2, owner-directed
           2026-07-21): one room, three views of its conversations;
-          everything living here, the ones this face has spoken in, and
-          the ones this face saved. Per-face by construction. */}
+          everything living here, the ones this identity has spoken in, and
+          the ones this identity saved. Per-identity by construction. */}
       <DiscussionLenses pillarId={pillar.id} slug={pillar.slug} lens={lens} />
 
       <p className="lore" style={{ marginTop: "1.5rem" }}>

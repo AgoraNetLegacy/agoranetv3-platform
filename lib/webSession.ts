@@ -1,5 +1,5 @@
 // Web plumbing for SoulSessions: one cookie names the browser's session
-// row; the session knows which faces are signed in and which is active.
+// row; the session knows which identities are signed in and which is active.
 // Secrets (credential, access keys) are handed to the soul through
 // one-time httpOnly cookies rendered exactly once; never query strings,
 // which leak into history and logs (DUAL_IDENTITY §7.1 vector 4).
@@ -44,7 +44,7 @@ export async function ensureSessionId(): Promise<string> {
 }
 
 // Request-scoped only; this removes duplicate session reads in the shared
-// layout without sharing identity data across requests or faces.
+// layout without sharing identity data across requests or identities.
 export const currentSession = cache(async function currentSession() {
   const jar = await cookies();
   const id = jar.get(SESSION_COOKIE)?.value;
@@ -52,7 +52,7 @@ export const currentSession = cache(async function currentSession() {
   return getSession(db, id);
 });
 
-/** The active face in this browser session, or null (reader). */
+/** The active identity in this browser session, or null (reader). */
 export const activeFace = cache(async function activeFace() {
   const session = await currentSession();
   if (!session?.activeProfileId) return null;
@@ -63,7 +63,7 @@ export const activeFace = cache(async function activeFace() {
   return db.profile.findUnique({ where: { id: session.activeProfileId } });
 });
 
-/** Every face signed into this browser session (for the switch control). */
+/** Every identity signed into this browser session (for the switch control). */
 export const sessionFaces = cache(async function sessionFaces() {
   const session = await currentSession();
   if (!session) return [];
@@ -102,7 +102,7 @@ export async function clearOneTimeSecret(): Promise<void> {
   jar.delete(ONE_TIME_COOKIE);
 }
 
-/** Mark that the next page load is a change of face: the page arrives
+/** Mark that the next page load is a change of identity: the page arrives
  *  as the card flip (PRESENTATION_SPEC §2.2). Short-lived by design;
  *  it self-expires so a refresh moments later doesn't replay the turn. */
 export async function markFaceFlip(): Promise<void> {
@@ -110,7 +110,7 @@ export async function markFaceFlip(): Promise<void> {
   jar.set(FLIP_COOKIE, "1", { httpOnly: true, sameSite: "lax", secure: SECURE_COOKIE, maxAge: 3 });
 }
 
-/** Is a face change landing on this render? (safe in a layout render) */
+/** Is an identity change landing on this render? (safe in a layout render) */
 export async function faceFlipPending(): Promise<boolean> {
   const jar = await cookies();
   return jar.get(FLIP_COOKIE)?.value === "1";

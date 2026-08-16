@@ -54,8 +54,8 @@ Sentinel bundles it to the Tribunal. 24h is the platform's rhythm unit
   is ~14.4h, sitting between the ratified 12h offer window and the 24h
   cycle: long enough that "camp the deadline" is a real gamble, short
   enough that honest early voters are untouched.
-- **Face-switch cooldown: NONE (owner-resolved 2026-07-11).** The
-  vision is seamless switching; the parking rule (one face per pillar)
+- **Identity-switch cooldown: NONE (owner-resolved 2026-07-11).** The
+  vision is seamless switching; the parking rule (one identity per pillar)
   remains the ratified timing mitigation, and timing-pattern risk stays
   honestly disclosed at the Alias ceremony as the soul's own to manage.
   The mechanism survives as a rail (0–15 min) should governance ever
@@ -117,13 +117,13 @@ Sentinel bundles it to the Tribunal. 24h is the platform's rhythm unit
   proven limiter**; the same declared-reuse anchor as the Light Score
   weights; with v2 values carried verbatim where the surface maps 1:1
   (posting 12, votes 120, flags 20, moderation 60, appeals 5,
-  faceSwitch 30) and mapped to the nearest v2 family where v3's surface
+  identitySwitch 30) and mapped to the nearest v2 family where v3's surface
   is new (chambers → creation, DMs → the debate wall). Windows are
   structural, not rails: the 10-minute burst window, the hour, and the
   ratified 24h day-cycle. Walls sit at machine speed; fees and
   deposits remain the ratified throttle (incentive design, per the
   anti-Sybil audit's own verdict); these are the outer wall against
-  automation. **The faceSwitch wall is NOT a cooldown** (owner resolved
+  automation. **The identity-switch wall is NOT a cooldown** (owner resolved
   cooldown = NONE, 2026-07-11): 30/10min is two orders of magnitude
   above human switching.
 - **Bucket retention: 2 day-cycles**; counters are HMAC-keyed

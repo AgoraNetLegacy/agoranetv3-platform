@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 //
 // Parking note (derived, flagged in DECISIONS_PENDING): this threshold
 // parks nothing; the hub has always been where locks release (§3.3.5),
-// and a homepage that could be blocked by your other face would break
+// and a homepage that could be blocked by your other identity would break
 // that ratified rule. The Agora's interior doors (domains, governance,
 // threads) park exactly as they always did.
 export default async function AgoraDashboard({
@@ -101,7 +101,7 @@ export default async function AgoraDashboard({
             </li>
           </ol>
           <p className="lore" style={{ marginBottom: 0 }}>
-            Whenever you want a second face for the things you can&rsquo;t
+            Whenever you want an Alias for the things you can&rsquo;t
             afford to sign, the Alias ceremony waits at{" "}
             <Link href="/alias">/alias</Link>; your own schedule, no
             pressure. And your two codes: wherever you saved them, make
@@ -124,8 +124,8 @@ export default async function AgoraDashboard({
           <p className="lore">
             Assembled only from sources you chose; {" "}
             <Link href="/feed/sources">choose what feeds it</Link>. The
-            machine never watches your behavior to guess. Per-face: your
-            other face has its own.
+            machine never watches your behavior to guess. Your True Self and
+            Alias each have their own feed.
           </p>
           <ChosenSourcesFeed profileId={face.id} compactDoor />
           <SavedAndStirring profileId={face.id} />

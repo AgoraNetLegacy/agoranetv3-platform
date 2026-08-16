@@ -43,8 +43,8 @@ production posture change, per this document's own standing rules.
 
 ## 2. The honest finding; session co-residency (vector 4)
 
-`SoulSession`/`SessionFace` is the one place both of a human's faces
-can co-occur in operator space: signing both faces into one browser
+`SoulSession`/`SessionFace` is the one place both of a human's identities
+can co-occur in operator space: signing both identities into one browser
 session creates rows sharing a `sessionId`. This is **inherent to
 Phase A** (the platform brokers sessions; there is no wallet to hold
 them) and is covered by the ratified disclosure's exact words; "no
@@ -56,7 +56,7 @@ with the same discipline as the gate secret:
 - **Short retention**: expired sessions and locks are purged, and
   db:verify check 10 *sweeps then asserts*; retention failure is a
   build failure.
-- **Never queried across personas**: no feature reads another face
+- **Never queried across personas**: no feature reads another identity
   through the session (the parking rule actively prevents co-presence
   per pillar); the linkage audit (Phase 2 checkpoint) showed 0
   co-occurrence rows on any public surface.
@@ -68,7 +68,7 @@ with the same discipline as the gate secret:
 
 | Vector | Status |
 |---|---|
-| 1. Timing | Parking rule (hard per-pillar lock) + cohort-batched randomized Alias activation + coarse `joinedPeriod`. Face-switch cooldown = NONE by owner decision (2026-07-11), risk disclosed at the ceremony as the soul's own. **Session-end jitter (OPEN_ITEMS #36's second half) dispositioned here:** no public surface renders session ends and no retained log records them (this audit's finding + guards), so in Phase A there is no observable signal to jitter; a jitter mechanism would be motion without cover. Re-check at the Phase 9 wallet-session cutover, where session brokerage changes hands. |
+| 1. Timing | Parking rule (hard per-pillar lock) + private-by-default Alias visibility + coarse `joinedPeriod`. Identity-switch cooldown = NONE by owner decision (2026-07-11), risk disclosed at the ceremony as the soul's own. **Session-end jitter (OPEN_ITEMS #36's second half) dispositioned here:** no public surface renders session ends and no retained log records them (this audit's finding + guards), so in Phase A there is no observable signal to jitter; a jitter mechanism would be motion without cover. Re-check at the Phase 9 wallet-session cutover, where session brokerage changes hands. |
 | 2. Stylometry | Cannot be fixed server-side; disclosed verbatim at hatch ("we cannot protect you from your own writing style"). |
 | 3. Funding trails | Internal balances are per-profile with blinded fee entries; no chain until Phase 9, where the paymaster posture (OPEN_ITEMS #34) kills the trail. |
 | 4. Network metadata | **This audit.** Nothing persisted (see table); host posture required; counters HMAC'd; session co-residency named in §2. |

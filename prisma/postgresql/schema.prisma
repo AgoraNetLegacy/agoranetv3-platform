@@ -26,8 +26,8 @@ generator client {
 // ------------------------------------------------------------------
 
 // Phase 8.6 (TESTNET_RAILS_SPEC §6.3): which Cardano TESTNET address a
-// face has connected. Per-face, like everything; a wallet link is
-// identity-adjacent, and the two faces' wallets must never share a row.
+// identity has connected. Per-identity, like everything; a wallet link is
+// identity-adjacent, and the two identities' wallets must never share a row.
 // Testnet-only by construction: the recording path refuses mainnet
 // addresses, and nothing here custodies anything.
 model TestnetWalletLink {
@@ -43,7 +43,7 @@ model TestnetWalletLink {
   proofAt        DateTime?
 }
 
-// On-chain migration Slice 3: donations a face's OWN wallet sent to the
+// On-chain migration Slice 3: donations an identity's OWN wallet sent to the
 // donation-lock SCRIPT address on a Cardano testnet. The platform never
 // possessed these funds; each row is recorded only after the chain
 // shows value locked at the script. The internal double-entry economy
@@ -72,7 +72,7 @@ model Profile {
   id           String        @id @default(cuid())
   // NULL for every Alias; deliberately. One-Alias-per-human is enforced
   // by the alias-registration nullifier spend, never by a stored link;
-  // no database row connects a soul's two faces (DUAL_IDENTITY §1.2).
+  // no database row connects a soul's two identities (DUAL_IDENTITY §1.2).
   // The True Self keeps its Human link: recovery routes through the
   // human, and that link never bridges to the Alias.
   humanId      String?
@@ -80,13 +80,13 @@ model Profile {
   face         String // "TRUE_SELF" | "ALIAS"
   // Two-layer naming (owner-ratified 2026-07-10, ONBOARDING Stage 3.4):
   // the @handle is the attribution key; unique across one flat global
-  // taken-list (all profiles, both faces, PLUS HandleTombstone), never
+  // taken-list (all profiles, both identities, PLUS HandleTombstone), never
   // recycled. Stored lowercase. The display name is free-form: duplicates
   // allowed, real names welcome, changeable behind a rate rail.
   handle       String        @unique
   displayName  String
   displayNameChangedAt DateTime?
-  // Per-face login secret, held soul-side, hash stored. Each face signs
+  // Per-identity login secret, held soul-side, hash stored. Each identity signs
   // in with its own key; login never routes through the Human.
   accessKeyHash String       @unique
   // Aliases are born PENDING and activate at a randomized, cohort-batched
@@ -105,23 +105,23 @@ model Profile {
   // stylometry warning verbatim.
   bio          String        @default("")
   bioPlace     String        @default("")
-  // §5.1 + §2.2: the face-switch animation is a per-face settings
+  // §5.1 + §2.2: the identity-switch animation is a per-identity settings
   // choice; "flip" (default) | "crossfade" | "instant". Motion needs
   // are served by choice, not detection.
   switchAnimation String     @default("flip")
-  // Spirit Mode (owner-ruled 2026-07-21): a per-face visibility veil,
+  // Spirit Mode (owner-ruled 2026-07-21): a per-identity visibility veil,
   // toggled at will from the bubble dot. The LEVEL is chosen in
   // Settings; all three are available, discovery-only is the default:
   //   "discovery"; hidden from the search Souls lane
   //   "inbound"; discovery + no new fellow-soul requests or DM
-  //                 threads can reach this face
+  //                 threads can reach this identity
   //   "ghost"; inbound + fellows see the soul walking unseen and
   //                 messages into existing threads are refused
   // Refusals are QUIET; the same neutral wording as a block (§5.2),
   // so spirit mode is never itself a signal.
   spiritActive  Boolean      @default(false)
   spiritLevel   String       @default("discovery")
-  // Begin each fresh sign-in already veiled (per-face choice).
+  // Begin each fresh sign-in already veiled (per-identity choice).
   spiritOnLogin Boolean      @default(false)
   createdAt    DateTime      @default(now())
   gateRequests GateRequest[]
@@ -146,7 +146,7 @@ model HandleTombstone {
 // The internal economy (TOKENOMICS_SPEC.md; amounts from
 // ECONOMIC_STARTING_DEFAULTS.md as rails). Both currencies live as
 // per-profile internal balances; fast, free, and no funding trail
-// between a soul's two faces (each face's balances are its own). The
+// between a soul's two identities (each identity's balances are its own). The
 // chain appears only at Phase 9's explicit boundaries. Money never
 // buys outcome weight; fees gate the doing, never the result.
 // ------------------------------------------------------------------
@@ -286,7 +286,7 @@ model ConsentAck {
 // Sessions & the parking rule (SEVEN_PILLAR_DASHBOARD_SPEC §3).
 //
 // A SoulSession is one browser/device context. It is the ONLY place a
-// soul's two faces ever co-occur; which is what lets the backend
+// soul's two identities ever co-occur; which is what lets the backend
 // enforce the per-pillar lock without any durable identity link. These
 // rows are ephemeral by design: short retention, purged on expiry
 // (DUAL_IDENTITY §7.2; minimal, segregated, short-retention).
@@ -297,10 +297,10 @@ model SoulSession {
   createdAt       DateTime      @default(now())
   expiresAt       DateTime
   lastSeenAt      DateTime      @default(now())
-  // The face currently selected in this session; explicit and visible,
+  // The identity currently selected in this session; explicit and visible,
   // never an ambient default (DASHBOARD §3.3.1).
   activeProfileId String?
-  lastSwitchAt    DateTime? // face-switch cooldown anchor
+  lastSwitchAt    DateTime? // identity-switch cooldown anchor
   faces           SessionFace[]
   locks           PillarLock[]
 }
@@ -314,7 +314,7 @@ model SessionFace {
   @@id([sessionId, profileId])
 }
 
-// The parking lots: one face per pillar per session, backend-enforced.
+// The parking lots: one identity per pillar per session, backend-enforced.
 model PillarLock {
   sessionId    String
   session      SoulSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
@@ -928,8 +928,8 @@ model Notification {
 // Circles (Phase 6; Circles/CIRCLES_SPEC.md): the action layer.
 // Purpose and action are radically public; deliberation is the members'
 // room. Membership is per-profile, never per-human (§1.1); the platform
-// neither knows nor asks whether a human's other face is present, and
-// both faces of one human MAY share a Circle (§7 accepts this cost).
+// neither knows nor asks whether a human's other identity is present, and
+// both identities of one human MAY share a Circle (§7 accepts this cost).
 // Almost everything reuses: the room is a Circle-scoped Discussion,
 // internal votes are Circle-restricted Polls. The one genuinely new
 // mechanism is the action log (§6).
@@ -1371,7 +1371,7 @@ model ChamberInvite {
 // answer is structural (§4): graphs are PRIVATE (your list is visible
 // to you alone, no counts, no third-party relationships), there is no
 // suggestion engine ever, and everything is per-profile; a human's
-// two faces have two disjoint social worlds. NOTHING in this section
+// two identities have two disjoint social worlds. NOTHING in this section
 // ever reaches the public ledger: social actions clear the gate in
 // PRIVATE recording mode, and db:verify hunts for leaks.
 // ------------------------------------------------------------------
@@ -1390,7 +1390,7 @@ model DmKeypair {
 
 // A fellow-soul request (§2): gate-cleared, initiator pays the rail.
 // Accept/ignore/decline are free. Ignored requests sit quietly until
-// the expiry rail; declined/ignored senders face the cooldown rail.
+// the expiry rail; declined/ignored senders meet the cooldown rail.
 model FellowSoulRequest {
   id            String    @id @default(cuid())
   fromProfileId String
@@ -1401,7 +1401,7 @@ model FellowSoulRequest {
   resolvedAt    DateTime?
 }
 
-// The bond (§1): mutual, profile-to-profile, any face combination.
+// The bond (§1): mutual, profile-to-profile, any identity combination.
 // Stored as a normalized pair (aProfileId < bProfileId). Never
 // rendered to anyone but the two members themselves (§4.4), never
 // counted publicly, never on the ledger.
@@ -1511,7 +1511,7 @@ model FeedSettings {
   balancedDiet Boolean   @default(true)
   caughtUpAt   DateTime?
   // Beacon wellbeing (BEACON_FEED_SPEC §7/§10, v2 decision 3): pacing
-  // is the soul's own to tune, per face. null = OFF (explicitly
+  // is the soul's own to tune, per identity. null = OFF (explicitly
   // disabled); an ABSENT row falls back to the nudge rail default.
   nudgeAfterMin Int?
   dailyCapMin   Int?
@@ -1552,13 +1552,13 @@ model TreasurySnapshot {
 // job deletes them after two day-cycles. Short retention is the point.
 // ------------------------------------------------------------------
 
-// A face's private bookmark on a Discussion (BEACON_FEED_SPEC §4/§10).
+// An identity's private bookmark on a Discussion (BEACON_FEED_SPEC §4/§10).
 // The unlinkability and privacy boundary: profileId, never humanId; no
-// A face's private bookmark on a Discussion (BEACON_FEED_SPEC §4/§10).
+// An identity's private bookmark on a Discussion (BEACON_FEED_SPEC §4/§10).
 // The unlinkability and privacy boundary: profileId, never humanId; no
 // public reads, no counts, never a ranking input for anyone else.
 // Profile imagery (PROFILE_PAGE_SPEC §4, owner-ruled 2026-07-22):
-// avatar and banner, per face, live-surface class; replaceable and
+// avatar and banner, per identity, live-surface class; replaceable and
 // deletable anytime, never part of the permanent record, never
 // anchored. Bytes are the re-encoded WebP ONLY: originals (and their
 // EXIF) are destroyed at ingest and never stored.
@@ -1578,7 +1578,7 @@ model SavedDiscussion {
   discussion   Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
   savedAt      DateTime   @default(now())
   // Resurfacing watermark: activity AFTER this instant counts as new.
-  // Updated when the face reads the thread; never anything but a time.
+  // Updated when the identity reads the thread; never anything but a time.
   lastSeenAt   DateTime   @default(now())
 
   @@id([profileId, discussionId])

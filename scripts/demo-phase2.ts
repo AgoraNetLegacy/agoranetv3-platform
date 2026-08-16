@@ -1,11 +1,11 @@
-// Phase 2 checkpoint demo (owner review); both faces through onboarding,
+// Phase 2 checkpoint demo (owner review); both identities through onboarding,
 // the parking lock verified, and the linkage audit: proof that nothing in
 // the database links the two. Self-contained demo db, reset each run.
 //
 //   1. Verification → True Self ceremony → consents → values seed.
-//   2. The Alias hatch: no public trace, randomized cohort activation,
+//   2. The Alias hatch: no public trace, immediate private availability,
 //      coarse join period; a second hatch refused blind.
-//   3. Cohort release → the alias.activated event (batched timestamp).
+//   3. The owner makes the Alias visible deliberately.
 //   4. The parking rule: lock, blocked-by-name, separate lots, release,
 //      switch cooldown.
 //   5. THE LINKAGE AUDIT: sweep every table for any row containing both
@@ -61,7 +61,7 @@ async function main() {
   });
   console.log("Values seed: 1/7 answered (skippable, matchmaking-only, never public).\n");
 
-  banner("2. The Alias hatch; no trace, no timing arrow");
+  banner("2. The Alias hatch; no trace, private by default");
   const eventsBefore = await db.ledgerEvent.count();
   const hatch = await identity.registerAlias(db, {
     credential, handle: "quiet-cedar-17", displayName: "quiet-cedar-17", disclosuresAccepted: true,
@@ -70,8 +70,8 @@ async function main() {
   const eventsAfter = await db.ledgerEvent.count();
   const aliasRow = await db.profile.findUniqueOrThrow({ where: { handle: "quiet-cedar-17" } });
   console.log(`Hatched. Ledger events before: ${eventsBefore}, after: ${eventsAfter}; the public learns NOTHING.`);
-  console.log(`Status: ${aliasRow.status}; activation: randomized, cohort-snapped → ${aliasRow.activateAt!.toISOString()}`);
-  console.log(`Soul is told only: "${hatch.activationHint}". Profile will show join period "${aliasRow.joinedPeriod}".`);
+  console.log(`Status: ${aliasRow.status}; private: ${aliasRow.spiritActive}; visible only by owner choice.`);
+  console.log(`Soul is told: "${hatch.visibilityHint}". Profile will show join period "${aliasRow.joinedPeriod}".`);
   console.log(`Alias row humanId: ${JSON.stringify(aliasRow.humanId)} ← no stored link, ever.`);
 
   const second = await identity.registerAlias(db, {
@@ -79,16 +79,9 @@ async function main() {
   });
   console.log(`A second hatch attempt: ${second.ok ? "UNEXPECTED!" : `refused; "${!second.ok && second.reason}" (blind, no public trace)`}`);
 
-  banner("3. The cohort releases (time-travelled for the demo)");
-  await db.profile.update({
-    where: { id: aliasRow.id },
-    data: { activateAt: new Date(Date.now() - 1000) },
-  });
-  await identity.activateDueAliases(db);
-  const actEvent = await db.ledgerEvent.findFirst({
-    where: { eventType: "alias.activated" }, orderBy: { seq: "desc" },
-  });
-  console.log(`Ledger #${actEvent!.seq}: alias.activated; the cohort's shared timestamp, not the soul's.`);
+  banner("3. The Alias chooses when to appear");
+  await db.profile.update({ where: { id: aliasRow.id }, data: { spiritActive: false } });
+  console.log("Alias is now visible by deliberate owner choice; no random activation event was needed.");
   await consent.recordAck(db, { profileId: aliasRow.id, kind: "permanence" });
   await consent.recordAck(db, { profileId: aliasRow.id, kind: "constitution" });
 

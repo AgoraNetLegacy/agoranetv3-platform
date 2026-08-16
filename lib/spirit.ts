@@ -1,5 +1,5 @@
-// Spirit Mode (owner-ruled 2026-07-21): a per-face visibility veil.
-// The face chooses a LEVEL in Settings (all three available, discovery
+// Spirit Mode (owner-ruled 2026-07-21): a per-identity visibility veil.
+// The identity chooses a LEVEL in Settings (all three available, discovery
 // is the default) and toggles the veil on/off at will from the bubble
 // dot. Enforcement lives at the same choke points as blocks, and every
 // refusal uses the block's own neutral wording (§5.2); the veil must
@@ -18,7 +18,7 @@ export const SPIRIT_LEVEL_LABELS: Record<SpiritLevel, string> = {
 
 const RANK: Record<SpiritLevel, number> = { discovery: 1, inbound: 2, ghost: 3 };
 
-/** Is this face's veil covering the given surface right now? */
+/** Is this identity's veil covering the given surface right now? */
 export function spiritCovers(
   profile: { spiritActive: boolean; spiritLevel: string },
   surface: SpiritLevel

@@ -45,7 +45,7 @@ export const WORKSHOP_ENCLOSURE_NOTE =
   "The workshop is enclosed by design: a safe space where half-formed " +
   "thinking gets worked out without the open internet watching the " +
   "drafts. Contents are deletable-class and stay inside; the public " +
-  "storefront is the chamber's face.";
+  "storefront is the chamber's public profile.";
 
 // ---------------------------------------------------------- membership
 
@@ -162,7 +162,7 @@ export async function createChamber(
     return { ok: false, reason: "Name the idea; one chamber, one subject." };
   }
   if (!pitch) {
-    return { ok: false, reason: "The storefront pitch is the chamber's public face; it can't be empty." };
+    return { ok: false, reason: "The storefront pitch is the chamber's public profile; it can't be empty." };
   }
   if (!whyCare) {
     return {
@@ -181,7 +181,7 @@ export async function createChamber(
 
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
-    return { ok: false, reason: "No active face." };
+    return { ok: false, reason: "No active identity." };
   }
   if (!(await hasPostingConsents(db, profile.id))) {
     return { ok: false, reason: "The permanence and Constitution acknowledgments come first." };
@@ -363,7 +363,7 @@ export async function enterChamber(
   if (!chamber) return { ok: false, reason: "No such chamber." };
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
-    return { ok: false, reason: "No active face." };
+    return { ok: false, reason: "No active identity." };
   }
   if (await chamberMembership(db, chamber.id, profile.id)) {
     return { ok: false, reason: "You have already entered this chamber." };

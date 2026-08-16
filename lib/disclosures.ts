@@ -26,13 +26,13 @@ export const CONSENT_VERSIONS = {
 /** The Alias imagery warning (PROFILE_PAGE_SPEC §4.5); blocking
  *  before an Alias's first upload, acknowledged once, ceremony-grade.
  *  The stylometry warning's precedent, applied to pixels: the platform
- *  cannot compare your two faces' images (and never will); this
+ *  cannot compare your two identities' images (and never will); this
  *  warning IS the protection. */
 export const ALIAS_IMAGERY_WARNING = {
   items: [
     "A photograph is a stronger fingerprint than writing style. Reverse image search exists, and it is free.",
-    "We strip hidden location and camera data from every upload; but nothing can strip what the photo shows: your face, your room, your street, your cat.",
-    "For this face, use artwork or abstraction. Never a photo of yourself or your surroundings; and never an image related, even loosely, to anything your other face has ever used anywhere.",
+    "We strip hidden location and camera data from every upload; but nothing can strip what the photo shows: your appearance, your room, your street, your cat.",
+    "For this identity, use artwork or abstraction. Never a photo of yourself or your surroundings; and never an image related, even loosely, to anything your other identity has ever used anywhere.",
   ],
 } as const;
 
@@ -129,8 +129,8 @@ export const ALIAS_DISCLOSURES = {
       "(stylometry is a mature research field), your own timing " +
       "patterns, and self-disclosure. If you say something as your " +
       "Alias that only your True Self would know, no system can help.",
-    "The parking rule protects you: one face per pillar at a time, so " +
-      "your two faces never appear side by side in the same room.",
+    "The parking rule protects you: one identity per pillar at a time, so " +
+      "your two identities never appear side by side in the same room.",
     "Your True Self and Alias each have separate PollCoin and Gratium " +
       "balances. Alias activity uses the Alias balance; it never draws " +
       "from your True Self balance, and the balances are never merged.",

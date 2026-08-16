@@ -238,7 +238,7 @@ export default async function PollinatorPage({
               />
             </div>
             <label>
-              Storefront pitch; the public face of the idea
+              Storefront pitch; the public profile of the idea
               <textarea name="pitch" required maxLength={2000} />
             </label>
             <label>

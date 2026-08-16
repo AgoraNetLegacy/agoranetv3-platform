@@ -390,7 +390,7 @@ async function main() {
     failures += linkProblems;
   }
 
-  // --- 9. Registration evidence + pending invisibility.
+  // --- 9. Registration evidence + private-by-default Alias behavior.
   const trueSelves = allProfiles.filter((p) => p.face === "TRUE_SELF");
   const aliases = allProfiles.filter((p) => p.face === "ALIAS");
   const tsSpends = await db.nullifierSpend.count({ where: { scope: "true-self-registration" } });
@@ -405,15 +405,11 @@ async function main() {
     console.error(`✗ REGISTRATION: ${aliases.length} Aliases but ${aliasSpends} registration spend(s)`);
   }
   const registeredHandles = new Set<string>();
-  const activatedHandles = new Set<string>();
   for (const ev of events) {
     try {
       const p = JSON.parse(ev.payload);
       if (ev.eventType === "trueself.registered" && typeof p?.handle === "string") {
         registeredHandles.add(p.handle);
-      }
-      if (ev.eventType === "alias.activated" && typeof p?.handle === "string") {
-        activatedHandles.add(p.handle);
       }
     } catch {
       /* covered by chain check */
@@ -426,12 +422,8 @@ async function main() {
     }
   }
   for (const p of aliases) {
-    if (p.status === "active" && !activatedHandles.has(p.handle)) {
-      regProblems++;
-      console.error(`✗ OFF-LEDGER ACTIVATION: active Alias ${p.handle} has no alias.activated event`);
-    }
     if (p.status === "pending") {
-      // A pending Alias must be invisible: its pseudonym appears nowhere.
+      // Legacy pending Aliases must be invisible: their pseudonym appears nowhere.
       for (const ev of events) {
         if (`${ev.actorId ?? ""} ${ev.payload}`.includes(p.handle)) {
           regProblems++;
@@ -442,7 +434,7 @@ async function main() {
     }
   }
   if (regProblems === 0) {
-    console.log(`✓ Registration evidence (${trueSelves.length} True Self(s), ${aliases.length} Alias(es); pending faces invisible)`);
+    console.log(`✓ Registration evidence (${trueSelves.length} True Self(s), ${aliases.length} Alias(es); private-by-default Aliases protected)`);
   } else {
     failures += regProblems;
   }

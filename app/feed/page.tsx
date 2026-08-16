@@ -39,7 +39,8 @@ export default async function FeedPage({
       <p className="lore">
         This feed is yours; <Link href="/feed/sources">choose what feeds it</Link>.
         Assembled only from sources you chose; the machine never watches
-        your behavior to guess. Per-face: your other face has its own.
+        your behavior to guess. Your True Self and Alias each have their own
+        feed.
       </p>
       {m && <div className="notice">{m}</div>}
       <ChosenSourcesFeed profileId={face.id} />

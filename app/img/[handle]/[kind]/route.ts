@@ -18,11 +18,10 @@ export async function GET(
   if (!(IMAGE_KINDS as readonly string[]).includes(kind)) {
     return new NextResponse("unknown kind", { status: 404 });
   }
-  // status: "active"; a PENDING alias is invisible everywhere else
-  // (souls page, search, DM/fellow lookups). Without this filter the
-  // route is an existence oracle (200 identicon vs 404) that would
-  // defeat the cohort activation-delay unlinkability, and would serve a
-  // pending profile's bytes. 404 exactly as for a nonexistent handle.
+  // status: "active"; a legacy PENDING Alias is invisible everywhere
+  // else (souls page, search, DM/fellow lookups). Without this filter the
+  // route is an existence oracle (200 identicon vs 404) and would serve
+  // a private profile's bytes. 404 exactly as for a nonexistent handle.
   const profile = await db.profile.findFirst({
     where: { handle: handle.toLowerCase(), status: "active" },
     select: { id: true, handle: true },

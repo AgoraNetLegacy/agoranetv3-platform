@@ -236,7 +236,7 @@ async function scaleOffers(db: PrismaClient): Promise<void> {
       tier: "time-sensitive",
       category: "badge-offer",
       title: "You've been offered a moderation badge",
-      body: `Sortition chose this face. Equip within ${offerWindowHours} hours or it passes on; freely, without penalty.`,
+      body: `Sortition chose this identity. Equip within ${offerWindowHours} hours or it passes on; freely, without penalty.`,
       refType: "badge-offer",
       refId: offer.id,
     });

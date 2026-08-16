@@ -240,7 +240,7 @@ export default async function DomainPage({
           </form>
         </details>
       ) : (
-        <p className="lore">Sign in with a verified face to submit a repair.</p>
+        <p className="lore">Sign in with a verified identity to submit a repair.</p>
       )}
 
       {message && <p className="notice">{message}</p>}

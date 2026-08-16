@@ -119,7 +119,7 @@ describe("the testnet wallet rail", () => {
     expect(s.due).toBe(true);
   });
 
-  it("records a testnet link once per face and updates on reconnect", async () => {
+  it("records a testnet link once per identity and updates on reconnect", async () => {
     const first = await recordWalletLink(db, {
       profileId: "profile-a",
       cardanoAddress: "addr_test1qz000000000000000000000000000000000000000000000000000000",
@@ -168,7 +168,7 @@ describe("the self-custody proof", () => {
     expect(consulted).toBe(false);
   });
 
-  it("refuses a proof for a face with no wallet link", async () => {
+  it("refuses a proof for an identity with no wallet link", async () => {
     const r = await recordSelfCustodyProof(
       db,
       { profileId: "profile-unlinked", txHash: goodHash },
@@ -193,7 +193,7 @@ describe("the self-custody proof", () => {
     expect(link?.proofTxHash).toBeNull();
   });
 
-  it("refuses a real tx that was NOT sent by the face's linked wallet (F3)", async () => {
+  it("refuses a real tx that was NOT sent by the identity's linked wallet (F3)", async () => {
     const r = await recordSelfCustodyProof(
       db,
       { profileId: "profile-a", txHash: goodHash },
@@ -203,7 +203,7 @@ describe("the self-custody proof", () => {
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.retryable).toBe(false);
-      expect(r.reason).toMatch(/wasn't sent by this face's linked wallet/);
+      expect(r.reason).toMatch(/wasn't sent by this identity's linked wallet/);
     }
     const link = await walletLinkFor(db, "profile-a");
     expect(link?.proofTxHash).toBeNull();
@@ -222,7 +222,7 @@ describe("the self-custody proof", () => {
     expect(link?.proofAt).toBeInstanceOf(Date);
   });
 
-  it("re-signing updates the proof in place; still one row per face", async () => {
+  it("re-signing updates the proof in place; still one row per identity", async () => {
     const newer = "b".repeat(64);
     const r = await recordSelfCustodyProof(
       db,
@@ -260,7 +260,7 @@ describe("the non-custodial donation", () => {
     expect(consulted).toBe(false);
   });
 
-  it("refuses a donation for a face with no wallet link", async () => {
+  it("refuses a donation for an identity with no wallet link", async () => {
     const r = await recordScriptDonation(
       db,
       { profileId: "profile-unlinked", txHash: hash("c"), scriptAddress: script },
@@ -302,7 +302,7 @@ describe("the non-custodial donation", () => {
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.retryable).toBe(false);
-      expect(r.reason).toMatch(/wasn't sent by this face's linked wallet/);
+      expect(r.reason).toMatch(/wasn't sent by this identity's linked wallet/);
     }
     expect(await db.testnetDonation.count()).toBe(0);
   });
@@ -521,4 +521,3 @@ describe("donation reconciliation", () => {
     expect(await db.testnetDonation.count()).toBe(2);
   });
 });
-

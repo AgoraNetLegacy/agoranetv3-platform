@@ -16,7 +16,7 @@
 //  - Insight over volume: participation points are capped PER DISCUSSION
 //    so raw volume can't be farmed.
 //  - Disagreement is NEUTRAL, never punitive.
-//  - Per-face, per-pillar; the caller derives one pillar at a time; the
+//  - Per-identity, per-pillar; the caller derives one pillar at a time; the
 //    anti-sum guard lives in lib/lightScore.ts.
 
 export interface ScoreWeights {
@@ -25,7 +25,7 @@ export interface ScoreWeights {
   participationCapPerDiscussion: number; // rail: lightScore.participationCapPerDiscussion
 }
 
-/** One discussion's worth of a face's contributions within a pillar. */
+/** One discussion's worth of an identity's contributions within a pillar. */
 export interface DiscussionContribution {
   discussionId: string;
   answers: number; // top-level posts; the substantive contribution
@@ -42,7 +42,7 @@ export interface ScoreResult {
   lines: ScoreLine[];
 }
 
-/** Score one face's Discussion contributions within one pillar. */
+/** Score one identity's Discussion contributions within one pillar. */
 export function scorePillar(
   contributions: DiscussionContribution[],
   w: ScoreWeights

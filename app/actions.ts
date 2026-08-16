@@ -2,7 +2,7 @@
 
 // Server actions. Every identity step routes through lib/identity.ts
 // ceremonies (which route through the gate); every write action checks
-// the active face from the SoulSession. No dev backdoors remain.
+// the active identity from the SoulSession. No dev backdoors remain.
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -98,7 +98,7 @@ function backTo(path: string, message?: string): never {
 
 // Feature vitals fall out of the same policy families the W4 schedule
 // names: one count per family (never a query trail), plus the
-// subject-keyed retention signal. Face-switching is a session mechanic,
+// subject-keyed retention signal. Identity switching is a session mechanic,
 // not a feature; deliberately unmeasured.
 const MEASURED_FAMILIES = new Set<RateLimitPolicyName>([
   "posting", "votes", "economy", "creation", "flags",
@@ -107,7 +107,7 @@ const MEASURED_FAMILIES = new Set<RateLimitPolicyName>([
 
 async function requireFace(policy?: RateLimitPolicyName) {
   const face = await activeFace();
-  if (!face) throw new Error("No face is active in this session.");
+  if (!face) throw new Error("No identity is active in this session.");
   if (policy) await enforceRateLimit(db, policy, face.id);
   await enforceRateLimit(db, "global", face.id);
   if (policy && MEASURED_FAMILIES.has(policy)) {
@@ -117,7 +117,7 @@ async function requireFace(policy?: RateLimitPolicyName) {
   return face;
 }
 
-/** Walls for surfaces that exist before any face does (verification,
+/** Walls for surfaces that exist before any identity does (verification,
  *  registration, sign-in): keyed on the browser session and; behind a
  *  declared proxy; the client address. */
 async function limitArrival(policy: RateLimitPolicyName): Promise<void> {
@@ -127,7 +127,7 @@ async function limitArrival(policy: RateLimitPolicyName): Promise<void> {
   if (address) await enforceRateLimit(db, policy, `addr:${address}`);
 }
 
-/** Session-keyed wall for face parking/switch controls. */
+/** Session-keyed wall for identity parking/switch controls. */
 async function limitSession(policy: RateLimitPolicyName): Promise<void> {
   const session = await currentSession();
   if (session) await enforceRateLimit(db, policy, `session:${session.id}`);
@@ -388,7 +388,7 @@ export async function saveFeedSources(formData: FormData) {
   const fellowSouls = formData.get("fellowSouls") === "on";
 
   await db.$transaction(async (tx) => {
-    // Replace this face's chosen sources with the submitted set;
+    // Replace this identity's chosen sources with the submitted set;
     // one screen, adjustable anytime. (Domain/poll rows can only be
     // UNCHECKED here; they're added from their own pages.)
     await tx.feedSource.deleteMany({
@@ -478,7 +478,7 @@ export async function clearSearchHistory() {
 }
 
 // ------------------------------------------------------------------ saves
-// BEACON_FEED_SPEC §4 (owner-ratified 2026-07-21): per-face, private,
+// BEACON_FEED_SPEC §4 (owner-ratified 2026-07-21): per-identity, private,
 // free; a bookmark in your own book, never a signal to anyone else.
 
 export async function submitSaveDiscussion(formData: FormData) {
@@ -500,8 +500,8 @@ export async function submitUnsaveDiscussion(formData: FormData) {
 }
 
 /** Beacon wellbeing (BEACON_FEED_SPEC §7): the nudge threshold and the
- *  daily cap are the face's own choice; calm defaults, fully
- *  adjustable, per face. "off"/"" mean exactly that; the server stores
+ *  daily cap are the identity's own choice; calm defaults, fully
+ *  adjustable, per identity. "off"/"" mean exactly that; the server stores
  *  thresholds and measures nothing. */
 export async function updateFeedWellbeing(formData: FormData) {
   const face = await requireFace("settings");
@@ -525,12 +525,12 @@ export async function updateFeedWellbeing(formData: FormData) {
     update: { nudgeAfterMin, dailyCapMin },
   });
   revalidatePath("/", "layout");
-  backTo("/settings", "Beacon pacing set for this face.");
+  backTo("/settings", "Beacon pacing set for this identity.");
 }
 
 // ---------------------------------------------------------------- imagery
 // PROFILE_PAGE_SPEC §4 (owner-ruled 2026-07-22): upload only, strip &
-// re-encode always, live-surface class, per-face. The Alias imagery
+// re-encode always, live-surface class, per-identity. The Alias imagery
 // warning is a blocking, once-acknowledged consent (§4.5).
 
 export async function submitProfileImage(formData: FormData) {
@@ -547,7 +547,7 @@ export async function submitProfileImage(formData: FormData) {
       if (formData.get("imageryWarningAccepted") !== "on") {
         backTo(
           "/profile",
-          "The imagery warning must be acknowledged before this face's first upload."
+          "The imagery warning must be acknowledged before this identity's first upload."
         );
       }
       await recordAck(db, { profileId: face.id, kind: "alias-imagery" });
@@ -1026,7 +1026,7 @@ export async function createTrueSelf(formData: FormData) {
   if (!result.ok) backTo(`/verify/trueself${query}`, result.reason);
   await recordEvent(db, "funnel.trueself", result.profileId);
 
-  // Sign the new face in and make it active. The world turns from blue
+  // Sign the new identity in and make it active. The world turns from blue
   // to white here; becoming a participant is visible (§2.4).
   const sessionId = await ensureSessionId();
   await addFace(db, { sessionId, profileId: result.profileId });
@@ -1104,7 +1104,7 @@ export async function updateProfileBio(formData: FormData) {
 }
 
 /** The testnet wallet link (Phase 8.6, TESTNET_RAILS_SPEC §6.3): the
- *  active face records which TESTNET address it connected. Mainnet is
+ *  active identity records which TESTNET address it connected. Mainnet is
  *  refused inside recordWalletLink; addr1… never enters the table. */
 export async function submitWalletLink(formData: FormData) {
   const face = await requireFace("settings");
@@ -1118,7 +1118,7 @@ export async function submitWalletLink(formData: FormData) {
   backTo(
     "/settings",
     result.ok
-      ? `Testnet wallet linked to this face: ${String(formData.get("cardanoAddress") ?? "")
+      ? `Testnet wallet linked to this identity: ${String(formData.get("cardanoAddress") ?? "")
           .trim()
           .slice(0, 24)}…`
       : result.reason
@@ -1160,7 +1160,7 @@ export async function submitScriptDonation(formData: FormData) {
   return result;
 }
 
-/** §5.1 + §2.2: the switch animation is a per-face choice; flip
+/** §5.1 + §2.2: the switch animation is a per-identity choice; flip
  *  (default), crossfade, or instant. By choice, never by detection. */
 export async function setSwitchAnimation(formData: FormData) {
   const method = String(formData.get("method") ?? "flip");
@@ -1170,7 +1170,7 @@ export async function setSwitchAnimation(formData: FormData) {
   }
   await db.profile.update({ where: { id: face.id }, data: { switchAnimation: method } });
   revalidatePath("/", "layout");
-  backTo("/settings", "Switch animation set for this face.");
+  backTo("/settings", "Switch animation set for this identity.");
 }
 
 /** Spirit Mode (owner-ruled 2026-07-21): the bubble dot flips the veil
@@ -1197,7 +1197,7 @@ export async function updateSpiritSettings(formData: FormData) {
     data: { spiritLevel: level, spiritOnLogin: onLogin },
   });
   revalidatePath("/", "layout");
-  backTo("/settings", "Spirit Mode set for this face.");
+  backTo("/settings", "Spirit Mode set for this identity.");
 }
 
 // ------------------------------------------------------------------ session
@@ -1213,8 +1213,8 @@ export async function loginFace(formData: FormData) {
   const sessionId = await ensureSessionId();
   const session = await currentSession();
   await addFace(db, { sessionId, profileId: result.profile.id });
-  // Spirit Mode: a face that chose to begin sign-ins veiled arrives
-  // veiled (Settings choice, per face).
+  // Spirit Mode: an identity that chose to begin sign-ins veiled arrives
+  // veiled (Settings choice, per identity).
   if (result.profile.spiritOnLogin && !result.profile.spiritActive) {
     await db.profile.update({
       where: { id: result.profile.id },
@@ -1247,7 +1247,7 @@ export async function switchToFace(formData: FormData) {
   backTo("/", result.ok ? undefined : result.reason);
 }
 
-/** Returning to the hub ends the active face's pillar sessions (§3.3.5). */
+/** Returning to the hub ends the active identity's pillar sessions (§3.3.5). */
 export async function returnToHub() {
   await limitSession("faceSwitch");
   const session = await currentSession();
@@ -1261,7 +1261,7 @@ export async function returnToHub() {
   redirect("/");
 }
 
-/** The blocked-entry path forward: end the other face's pillar session. */
+/** The blocked-entry path forward: end the other identity's pillar session. */
 export async function releasePillar(formData: FormData) {
   const pillarId = String(formData.get("pillarId") ?? "");
   const pillarSlug = String(formData.get("pillarSlug") ?? "");

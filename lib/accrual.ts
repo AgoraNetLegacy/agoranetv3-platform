@@ -4,7 +4,7 @@
 //
 // PollCoin accrues through positive participation; the guarantee that a
 // committed human without money can always earn a voice. Per-profile,
-// never per-human (the standing linkage rule: each face earns its own).
+// never per-human (the standing linkage rule: each identity earns its own).
 //
 // THE FORMULA IS PRIVATE by ratified design: souls see their balance
 // grow, never the meter. The constants below are the v0 private weights

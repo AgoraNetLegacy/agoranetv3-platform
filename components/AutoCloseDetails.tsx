@@ -6,7 +6,7 @@ import { useRef, type ReactNode } from "react";
  *  Client-side navigation keeps the layout; and this element's open
  *  state; mounted, so a panel opened from the persistent chrome would
  *  otherwise linger over the next page. Form submits are already
- *  handled elsewhere (the face key remounts the bubble on a switch);
+ *  handled elsewhere (the identity key remounts the bubble on a switch);
  *  this covers the plain links (Profile, Settings). */
 export function AutoCloseDetails({
   className,

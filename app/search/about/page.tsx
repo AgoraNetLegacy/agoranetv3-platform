@@ -45,7 +45,7 @@ export default async function SearchAboutPage() {
         <li>Moderator and badge-holder identity (anti-lobbying law).</li>
         <li>
           Anything cross-persona: search must never bridge a soul&rsquo;s
-          two faces, and no data exists from which to bridge them.
+          two identities, and no data exists from which to bridge them.
         </li>
       </ul>
     </>

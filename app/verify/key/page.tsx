@@ -6,7 +6,7 @@ import { JourneySteps } from "@/components/JourneySteps";
 
 export const dynamic = "force-dynamic";
 
-// The face's access key; per-face login secret, shown once. Each face
+// The identity's access key; per-identity login secret, shown once. Each identity
 // has its own key so signing in never routes through the human.
 export default async function AccessKeyPage({
   searchParams,

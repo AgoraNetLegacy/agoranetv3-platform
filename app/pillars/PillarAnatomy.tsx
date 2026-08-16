@@ -96,7 +96,7 @@ export async function PillarAnatomy({
     repairStatus(db, (await db.domain.findMany({ where: { pillarId: pillar.id }, select: { id: true } })).map((d) => d.id)),
   ]);
 
-  // The stat row (§5.2); this pillar only, this face only; never a
+  // The stat row (§5.2); this pillar only, this identity only; never a
   // cross-pillar or global number.
   const viewerCircleCount = viewer
     ? circles.filter((c) => c.members.some((m) => m.profileId === viewer.id)).length
@@ -165,7 +165,7 @@ export async function PillarAnatomy({
 
   return (
     <>
-      {/* The stat row (§5.2); this pillar, this face, nothing global. */}
+      {/* The stat row (§5.2); this pillar, this identity, nothing global. */}
       <div className="stat-row">
         <div className="stat">
           <div className="stat-number">
@@ -194,7 +194,7 @@ export async function PillarAnatomy({
         </div>
       </div>
       <p className="lore">
-        Standing is per-face, per-pillar; insight over volume, positions
+        Standing is per identity and per pillar; insight over volume, positions
         never scored. No universal score exists, by design.
       </p>
 

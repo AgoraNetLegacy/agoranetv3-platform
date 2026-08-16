@@ -3,12 +3,12 @@
 
    THEME = IDENTITY. The room you are standing in tells you who you
    are right now:
-     reader     (signed out / no face); the aqua-blue theme
+     reader     (signed out / no identity); the aqua-blue theme
      true-self; white with aqua accents
      alias; dark with the same aqua
-   One brand color threads all three. Theme follows FACE, never OS
+   One brand color threads all three. Theme follows identity, never OS
    preference; this is a safety surface (DUAL_IDENTITY §7: the
-   wrong-face error is the self-doxxing error), so the signal always
+   wrong-identity error is the self-doxxing error), so the signal always
    wins and prefers-color-scheme is deliberately not consulted.
    ===================================================================== */
 
@@ -29,7 +29,7 @@
   --flip-duration: 640ms;
 
   /* ---- §2.3 cross-theme constants: identical in every room ---------
-     The permanence amber, refusal notices, and the ◆/◇ face chips
+     The permanence amber, refusal notices, and the ◆/◇ identity chips
      must read the same on all three themes; some truths outrank
      identity. Never theme these. */
   --permanent: #92400e;
@@ -159,7 +159,7 @@ a:hover { text-decoration: underline; }
 
 /* ---- §2.2 the card flip: the page arrives like a playing card
    turning over; white side, dark side, one human, one card. The
-   method becomes a per-face settings choice (crossfade / instant)
+   method becomes a per-identity settings choice (crossfade / instant)
    in §5.1; flip is the default. ---- */
 .page-shell.flip-in {
   animation: card-flip-in var(--flip-duration) cubic-bezier(0.2, 0.7, 0.25, 1);
@@ -286,7 +286,7 @@ header.site .brand { font-weight: 700; color: var(--ink); font-family: var(--fon
 .switch-panel p { margin: 0 0 0.4rem; font-size: 0.75rem; }
 .switch-panel form { margin: 0.25rem 0; }
 
-/* Floating identity control: keeps face switching and session actions
+/* Floating identity control: keeps identity switching and session actions
    available without spending the header's horizontal space. */
 .profile-bubble-anchor {
   position: fixed;
@@ -698,7 +698,7 @@ form.inline { display: inline; }
 .pillar-grid li { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 0.8rem; }
 .pillar-grid .lore { font-size: 0.78rem; color: var(--muted); }
 
-/* Phase 7; the platform's face */
+/* Phase 7; the platform's identity model */
 .pillar-grid.hub .tile-title { font-size: 1.05rem; }
 .pillar-grid.hub .hook { font-size: 0.82rem; margin: 0.3rem 0; }
 .agora-tile {
@@ -1488,7 +1488,7 @@ table.books tr:last-child td { border-bottom: 0; }
   font-weight: inherit;
 }
 
-/* Face-switch rows wear their OWN face's motif (owner directive
+/* Identity-switch rows wear their OWN identity's motif (owner directive
    2026-07-22): True Self rows white and bright, Alias rows dark;
    absolute colors, identical in every room, like the ◆/◇ chips.
    The row you'd switch INTO looks like where you'd land. */

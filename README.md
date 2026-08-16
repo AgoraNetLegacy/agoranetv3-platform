@@ -2,7 +2,7 @@
 
 A purpose-built civic commons: deliberation, decision-making, permanent
 records, and provable collective action; one verified human, two
-protected faces, an economy of assent instead of attention, and a
+protected identities, an economy of assent instead of attention, and a
 constitution that hands the platform to its community on a seven-year
 schedule.
 
@@ -103,11 +103,11 @@ Full runbooks for the two owner-facing chain demos ("come try" and
 ## What exists (Phase 8.5 & 8.6; the presentation era and the testnet rails)
 
 - **Theme = identity** (`app/globals.css`, `app/layout.tsx`); three
-  rooms keyed to the active face (reader blue / True Self white /
+  rooms keyed to the active identity (reader blue / True Self white /
   Alias dark), never OS preference; the Agora dashboard IS the
   platform's home page; the blessed left nav, doors, and one-liners.
 - **The Cardano rail** (`lib/chain.ts`, `lib/chainMint.ts`,
-  `lib/chainAnchor.ts`, `scripts/chain/`); a per-face testnet wallet
+  `lib/chainAnchor.ts`, `scripts/chain/`); a per-identity testnet wallet
   link (mainnet refused by construction), PollCoin Demo (dPOLL) minted
   under a throwaway preprod policy, and a railed daily anchor
   (`npm run chain:anchor`) witnessing the civic ledger's head hash in
@@ -142,7 +142,7 @@ Full runbooks for the two owner-facing chain demos ("come try" and
   reporting into the unchanged moderation path.
 - **Light Score & the dashboards** (`lib/lightScore.ts`, the hub,
   pillar and domain pages, `/transparency`, `/feed`, `/search`); 56
-  domains as data, per-face per-pillar standing (never a sum), the
+  domains as data, per-identity per-pillar standing (never a sum), the
   Picture repair loop, the published feed formula, nine-entity search.
 - **Chambers** (`lib/chambers.ts`, `/pollinator`); the idea
   incubator: public storefronts, enclosed workshops, dual-token fees.
@@ -176,7 +176,7 @@ Full runbooks for the two owner-facing chain demos ("come try" and
 ## What exists (Phase 4)
 
 - **The internal economy** (`lib/economy.ts`); per-profile PollCoin and
-  Gratium balances (a soul's two faces never bridge), the treasury,
+  Gratium balances (a soul's two identities never bridge), the treasury,
   and a double-entry money ledger: every balance re-derives from its
   entries, and `db:verify` fails loudly on any conservation break.
 - **Every ratified fee, wired**; replies 2 PC with up to 1 PC participation
@@ -221,14 +221,15 @@ Full runbooks for the two owner-facing chain demos ("come try" and
   first post); the seven-question values seed (skippable,
   matchmaking-only).
 - **The Alias ceremony** (`/alias`); decoupled from any session, no
-  public trace at registration, randomized cohort-batched activation,
-  coarse join period, the §3.6 disclosures blocking at hatch. **An Alias
+  public trace at registration, immediately available but private by
+  default, coarse join period, and the §3.6 disclosures blocking at
+  hatch. **An Alias
   row stores no humanId**; one-per-human is the registration nullifier,
   not a stored link; `db:verify` fails loudly if a linked Alias ever
   appears.
 - **The parking rule** (`lib/parking.ts`); hard per-pillar session lock,
-  blocked entry names the holding face, deliberate face-switch with a
-  cooldown rail, persistent per-face profile indicator (violet ◆ True
+  blocked entry names the holding identity, deliberate identity switch with a
+  cooldown rail, persistent per-identity profile indicator (violet ◆ True
   Self / teal ◇ Alias).
 - **Phase A disclosures verbatim** (`lib/disclosures.ts`); every
   load-bearing disclosure mapped to its named moment in the flow.

@@ -281,7 +281,7 @@ export async function donateToMission(
 
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
-    return { ok: false, reason: "No active face." };
+    return { ok: false, reason: "No active identity." };
   }
 
   // Every write action clears the gate; no exceptions, even where

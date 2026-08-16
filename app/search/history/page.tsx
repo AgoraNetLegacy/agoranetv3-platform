@@ -25,12 +25,13 @@ export default async function SearchHistoryPage() {
       </p>
       <h1>Your search history</h1>
       <p className="lore">
-        Visible to you alone, per-face, deletable; and never used to rank
-        anything. @{face.handle}&rsquo;s searches; your other face has its
+        Visible to you alone, private to this identity, deletable; and never
+        used to rank anything. @{face.handle}&rsquo;s searches; your other
+        identity has its
         own page.
       </p>
       {queries.length === 0 ? (
-        <p className="lore">No searches recorded for this face.</p>
+        <p className="lore">No searches recorded for this identity.</p>
       ) : (
         <>
           <form action={clearSearchHistory}>

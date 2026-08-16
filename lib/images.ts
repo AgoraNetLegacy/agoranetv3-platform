@@ -7,7 +7,7 @@
 //   - upload only, never fetch; serving is same-origin (CSP img-src
 //     'self' already enforces the read side).
 //   - live-surface class: replace destroys the old bytes, no archive.
-//   - per-face, no cross-face anything; the Alias imagery warning
+//   - per-identity, no cross-identity anything; the Alias imagery warning
 //     (consent ack, ceremony-grade) is the protection, not detection.
 
 import sharp from "sharp";

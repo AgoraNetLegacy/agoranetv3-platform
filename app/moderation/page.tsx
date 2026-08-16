@@ -60,7 +60,7 @@ export default async function ModerationPage({
       {offer && (
         <div className="door-banner">
           <Icon name="badge" /> <strong>You've been offered a moderation badge.</strong>{" "}
-          Sortition chose this face; equip it or pass freely; passing
+          Sortition chose this identity; equip it or pass freely; passing
           concentrates nothing. Offer expires{" "}
           {offer.expiresAt.toLocaleString()}. Service is compensated, never
           charged.
@@ -80,7 +80,7 @@ export default async function ModerationPage({
       {term ? (
         <>
           {/* §5.3 design pass: the bench at a glance; this term, this
-              face, nothing global. */}
+              identity, nothing global. */}
           <div className="stat-row">
             <div className="stat">
               <div className="stat-number">{files.length}</div>
@@ -184,7 +184,7 @@ export default async function ModerationPage({
       ) : (
         !offer && (
           <p className="lore">
-            No badge on this face. Badges arrive by sortition when the queue
+            No badge on this identity. Badges arrive by sortition when the queue
             needs hands; watch your inbox; offers expire in 12 hours.
           </p>
         )

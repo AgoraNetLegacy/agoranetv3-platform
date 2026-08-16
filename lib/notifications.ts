@@ -4,7 +4,7 @@
 // inflation, no third tier. The category list is exhaustive by design.
 //
 // Per-persona is the hard constraint: state is stored per-profile and
-// rendered only to the active face (the parking rule scopes the inbox).
+// rendered only to the active identity (the parking rule scopes the inbox).
 // High-volume events collapse into one updating entry (aggregationKey).
 //
 // In-app inbox is the launch channel; push is the ratified fast-follow.

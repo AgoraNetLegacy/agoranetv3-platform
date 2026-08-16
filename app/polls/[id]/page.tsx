@@ -34,7 +34,7 @@ export default async function PollPage({
 
   // Circle-restricted polls live inside the members' room: read access
   // is the room's (CIRCLES §7), and the parking rule does NOT apply;
-  // a Circle is not a pillar surface, and both of a soul's faces may
+  // a Circle is not a pillar surface, and both of a soul's identities may
   // legitimately be members (§7 accepts that cost by design).
   let circle: { id: string; name: string; status: string } | null = null;
   if (poll.visibilityScope === "circle" && poll.circleRef) {

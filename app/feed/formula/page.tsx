@@ -81,7 +81,7 @@ export default async function FormulaPage() {
         <li>
           The only personal signal is your own watermark; the moment
           you last read the thread. A time, and nothing else. Your saves
-          are private to your face, never a ranking input for anyone
+          are private to your identity, never a ranking input for anyone
           else, and never counted or shown to authors.
         </li>
       </ul>

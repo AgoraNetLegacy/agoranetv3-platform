@@ -11,8 +11,8 @@ import { hasAck } from "@/lib/consent";
 
 export const dynamic = "force-dynamic";
 
-// The face's own profile window (Phase 8.5, PRESENTATION_SPEC §5.2):
-// about-me and optional fields, per face ALWAYS; an Alias bio and a
+// The identity's own profile window (Phase 8.5, PRESENTATION_SPEC §5.2):
+// about-me and optional fields, per identity ALWAYS; an Alias bio and a
 // True Self bio never share a database row or a writing surface. Bios
 // are live-surface content (editable), never permanent-record. Display
 // name and other controls moved to /settings (§5.1).
@@ -60,7 +60,7 @@ export default async function ProfilePage({
         <Link href="/settings">settings</Link>
       </p>
 
-      <h3>Your images; this face&rsquo;s mark and banner</h3>
+      <h3>Your images; this identity&rsquo;s mark and banner</h3>
       <p className="lore">
         Live-surface, like the bio: replaceable or removable anytime,
         never part of the permanent record. Uploads are re-encoded and
@@ -70,7 +70,7 @@ export default async function ProfilePage({
       </p>
       {needsImageryWarning && (
         <div className="notice">
-          <strong>Before this face&rsquo;s first image; read this
+          <strong>Before this identity&rsquo;s first image; read this
           honestly.</strong>
           <ol className="disclosure-list">
             {ALIAS_IMAGERY_WARNING.items.map((item, i) => (
@@ -121,7 +121,7 @@ export default async function ProfilePage({
       )}
       {m && <div className="notice">{m}</div>}
 
-      <h3>About you; this face&rsquo;s window</h3>
+      <h3>About you; this identity&rsquo;s profile</h3>
       <p className="lore">
         Live-surface content: editable anytime, shown on your public soul
         window, never part of the permanent record.

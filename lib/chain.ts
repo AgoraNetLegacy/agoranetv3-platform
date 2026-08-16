@@ -2,7 +2,7 @@
 // TESTNET-ONLY BY CONSTRUCTION: the network selector refuses mainnet
 // values, the wallet-link path refuses mainnet addresses, and nothing
 // in this module custodies anything; the wallet stays the soul's;
-// the platform records only which testnet address a face chose to
+// the platform records only which testnet address an identity chose to
 // connect. The Phase A gate machinery is untouched (§6.6): this rail
 // is additive.
 
@@ -31,8 +31,8 @@ export function cardanoNetwork(): "preprod" | "preview" {
 
 export type WalletLinkResult = { ok: true } | { ok: false; reason: string };
 
-/** Record which testnet address this face connected (§6.3). One link
- *  per face (re-connecting updates it); mainnet addresses are refused
+/** Record which testnet address this identity connected (§6.3). One link
+ *  per identity (re-connecting updates it); mainnet addresses are refused
  *  at the door; addr1… never enters this table. */
 export async function recordWalletLink(
   db: PrismaClient,
@@ -73,7 +73,7 @@ export async function recordWalletLink(
   return { ok: true };
 }
 
-/** The face's current testnet wallet link, if any. */
+/** The identity's current testnet wallet link, if any. */
 export async function walletLinkFor(db: PrismaClient, profileId: string) {
   return db.testnetWalletLink.findUnique({ where: { profileId } });
 }
@@ -199,12 +199,12 @@ export async function txInputAddressesOnConfiguredTestnet(
 }
 
 const NOT_SENT_BY_LINKED =
-  "That transaction exists, but it wasn't sent by this face's linked " +
+  "That transaction exists, but it wasn't sent by this identity's linked " +
   "wallet; records here are only ever YOUR wallet's own acts. Nothing was recorded.";
 
-/** Record the face's self-custody proof; but only once the tx is
+/** Record the identity's self-custody proof; but only once the tx is
  *  actually visible on the configured testnet AND provably sent by
- *  the face's own linked wallet (F3). Not-yet-found is retryable
+ *  the identity's own linked wallet (F3). Not-yet-found is retryable
  *  (propagation takes seconds to a couple of minutes); the caller
  *  polls. Verifiers are injectable for tests. */
 export async function recordSelfCustodyProof(
@@ -223,7 +223,7 @@ export async function recordSelfCustodyProof(
     return {
       ok: false,
       retryable: false,
-      reason: "No wallet is linked to this face yet; connect one first.",
+      reason: "No wallet is linked to this identity yet; connect one first.",
     };
   }
   const found = await verify(txHash);
@@ -294,7 +294,7 @@ export async function lockedAtScriptOnConfiguredTestnet(
     );
 }
 
-/** Record a face's donation to the script; but only once the chain
+/** Record an identity's donation to the script; but only once the chain
  *  shows value locked there in that transaction. The verifier is
  *  injectable for tests; recording is idempotent per tx hash. */
 export async function recordScriptDonation(
@@ -314,7 +314,7 @@ export async function recordScriptDonation(
     return {
       ok: false,
       retryable: false,
-      reason: "No wallet is linked to this face yet; connect one first.",
+      reason: "No wallet is linked to this identity yet; connect one first.",
     };
   }
   const lovelace = await verify(txHash, input.scriptAddress);
@@ -358,7 +358,7 @@ export async function recordScriptDonation(
   return { ok: true, txHash, lovelace };
 }
 
-/** This face's recorded script donations, newest first. */
+/** This identity's recorded script donations, newest first. */
 export async function donationsFor(db: PrismaClient, profileId: string) {
   return db.testnetDonation.findMany({
     where: { profileId },

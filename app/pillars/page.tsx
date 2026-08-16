@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 // §1.3): six diagnostic tiles + The Agora set apart; which since Phase
 // 8.5 IS the platform dashboard, so its tile points home. Each tile:
 // the pillar's color, icon, Display Name, one hook line, and the active
-// face's standing side by side; a constellation, never a sum.
+// identity's standing side by side; a constellation, never a sum.
 export default async function SevenPillars() {
   const [pillars, face] = await Promise.all([
     db.pillar.findMany({
@@ -60,7 +60,7 @@ export default async function SevenPillars() {
             equips. The community inherits.
           </p>
           <p>
-            Entering a pillar parks your active face there; one face
+            Entering a pillar parks your active identity there; one identity
             per pillar at a time; and each pillar carries a flagship
             Stoic principle as its compass. Your standing in each pillar
             grows from what you contribute inside it: a constellation,
@@ -70,7 +70,7 @@ export default async function SevenPillars() {
       </h1>
       <p>
         Six pillars diagnose; The Agora equips. Read freely; verify to
-        act. Entering a pillar parks your active face there; one face per
+        act. Entering a pillar parks your active identity there; one identity per
         pillar at a time.
       </p>
       <ul className="pillar-grid hub">

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 // The persistent profile indicator (DASHBOARD §3.4): always visible,
-// visually distinct per face, switching is deliberate; never a silent
+// visually distinct per identity, switching is deliberate; never a silent
 // toggle. Readers see their reading state plainly.
 async function FaceBar() {
   const [face, faces] = await Promise.all([activeFace(), sessionFaces()]);
@@ -131,13 +131,13 @@ async function ProfileBubble() {
           title={face.spiritActive ? "Walking unseen; click to reappear" : "Spirit Mode"}
         />
       </form>
-      {/* Keyed by the active face: a successful switch remounts the
+      {/* Keyed by the active identity: a successful switch remounts the
           <details>, which resets its uncontrolled `open` state; the
           panel closes itself after a switch instead of lingering. On a
-          refused switch the face (and key) are unchanged, so the panel
+          refused switch the identity (and key) are unchanged, so the panel
           stays open to show the refusal. */}
       <AutoCloseDetails className="profile-bubble" key={face.id}>
-      <summary aria-label="Profile mode and face switching">
+      <summary aria-label="Profile mode and identity switching">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="bubble-avatar" src={avatarSrc} alt="" />
       </summary>
@@ -270,7 +270,7 @@ async function SideNav() {
       </Link>
       {face && (
         <Link className="navlink" href="/profile">
-          <span className="nav-icon"><Icon name="profile" /></span><span>This Face&rsquo;s Profile</span>
+          <span className="nav-icon"><Icon name="profile" /></span><span>This Identity&rsquo;s Profile</span>
         </Link>
       )}
       {showWorkbench && (
@@ -283,13 +283,13 @@ async function SideNav() {
 }
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  // THEME = IDENTITY (PRESENTATION_SPEC §2): the theme follows the FACE,
+  // THEME = IDENTITY (PRESENTATION_SPEC §2): the theme follows the identity,
   // never OS preference; the room's color is a safety signal, so the
   // signal always wins. Resolved server-side so no render ever flashes
   // the wrong room.
   const [face, flip] = await Promise.all([activeFace(), faceFlipPending()]);
   const theme = !face ? "reader" : face.face === "TRUE_SELF" ? "true-self" : "alias";
-  // §5.1: the switch-animation method is the face's own choice (flip
+  // §5.1: the switch-animation method is the identity's own choice (flip
   // default; crossfade / instant for less motion; by choice, never
   // detection). Readers get the default.
   const flipMethod = face?.switchAnimation ?? "flip";

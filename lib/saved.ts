@@ -2,11 +2,11 @@
 // §4, owner-ratified 2026-07-21).
 //
 // The law of the save, enforced here structurally:
-//   - Per-face and PRIVATE: every read keys on profileId; nothing in
+//   - Per-identity and PRIVATE: every read keys on profileId; nothing in
 //     this module can answer "who saved this thread" or "how many";
 //     those queries deliberately do not exist.
 //   - Never a ranking input for anyone else: no aggregate leaves this
-//     module; the only thing a save ranks is the saving face's own
+//     module; the only thing a save ranks is the saving identity's own
 //     saved current.
 //   - Free: no fee, no gate spend, no ledger event; a save is a
 //     private act, not a civic one.
@@ -18,10 +18,10 @@ import { getRail } from "./rails";
 import { roomAccess } from "./circles";
 import { workshopAccess } from "./chambers";
 
-/** Can this face read this thread right now? Public spaces are always
+/** Can this identity read this thread right now? Public spaces are always
  *  readable; enclosed rooms require current membership; the same rule
  *  the thread page itself enforces. Load-bearing for saves: a saved
- *  enclosed room must stop leaking the moment the face loses access
+ *  enclosed room must stop leaking the moment the identity loses access
  *  (privacy audit 2026-07-22). */
 async function canRead(
   db: DbOrTx,
@@ -110,7 +110,7 @@ export async function touchSavedWatermark(
   });
 }
 
-/** The face's own saved threads, optionally scoped to one pillar;
+/** The identity's own saved threads, optionally scoped to one pillar;
  *  the per-pillar Saved lens and the unified dashboard list. */
 export async function savedThreadsFor(
   db: PrismaClient,
@@ -139,7 +139,7 @@ export async function savedThreadsFor(
     orderBy: { savedAt: "desc" },
   });
   // Defense in depth: a save can outlive access (member left the room).
-  // Never surface an enclosed room the face can no longer read.
+  // Never surface an enclosed room the identity can no longer read.
   const readable = [];
   for (const s of saves) {
     if (await canRead(db, s.discussion, profileId)) readable.push(s);
@@ -147,8 +147,8 @@ export async function savedThreadsFor(
   return readable;
 }
 
-/** The memory current (§3.3): the face's saved threads that have
- *  genuinely stirred; new posts since the face's own watermark;
+/** The memory current (§3.3): the identity's saved threads that have
+ *  genuinely stirred; new posts since the identity's own watermark;
  *  ranked by the published resurfacing formula:
  *
  *    resurface priority = new posts + new unique contributors since
@@ -175,7 +175,7 @@ export async function stirringSavesFor(db: PrismaClient, profileId: string) {
   });
   const stirring = [];
   for (const s of saves) {
-    // A save can outlive access; never resurface a room the face can
+    // A save can outlive access; never resurface a room the identity can
     // no longer read (privacy audit 2026-07-22).
     if (!(await canRead(db, s.discussion, profileId))) continue;
     const fresh = await db.post.findMany({

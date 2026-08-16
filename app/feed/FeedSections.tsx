@@ -150,9 +150,9 @@ export async function LensSection() {
 }
 
 // Saved & stirring; the Beacon's memory current (BEACON_FEED_SPEC
-// §3.3/§5.3, owner-ratified 2026-07-21): the face's own saved threads,
-// surfaced only when they've genuinely grown since that face last read
-// them. Per-face and private; the resurfacing formula is published on
+// §3.3/§5.3, owner-ratified 2026-07-21): the identity's own saved threads,
+// surfaced only when they've genuinely grown since that identity last read
+// them. Per-identity and private; the resurfacing formula is published on
 // /feed/formula. The section stays silent when nothing stirs; the
 // feed still ends.
 export async function SavedAndStirring({ profileId }: { profileId: string }) {
@@ -163,7 +163,7 @@ export async function SavedAndStirring({ profileId }: { profileId: string }) {
       <h3>Saved &amp; stirring</h3>
       <p className="lore">
         Threads you saved, back only because they&rsquo;ve grown; never
-        because a machine watched you. Private to this face.{" "}
+        because a machine watched you. Private to this identity.{" "}
         <Link href="/feed/formula">How resurfacing works</Link>.
       </p>
       <ul className="discussions">
@@ -253,7 +253,7 @@ export async function CommonsNow() {
   );
 }
 
-// Server shim: resolve the face's wellbeing thresholds and hand them
+// Server shim: resolve the identity's wellbeing thresholds and hand them
 // to the client-side nudge (BEACON §7; the browser does the timing;
 // the server only knows the chosen numbers).
 export async function BeaconWellbeingMount({ profileId }: { profileId: string }) {

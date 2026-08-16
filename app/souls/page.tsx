@@ -37,7 +37,7 @@ export default async function SoulsPage({
       <>
         <h1>Fellow souls</h1>
         <p className="interim-note">
-          The social layer is per-face.{" "}
+          The social layer is private to each identity.{" "}
           <Link href={`/verify?returnTo=${encodeURIComponent("/souls")}`}>
             Verify once to act →
           </Link>{" "}
@@ -71,7 +71,7 @@ export default async function SoulsPage({
       </p>
       <p className="lore">
         Good people find each other. Bonds are mutual consent between two
-        faces; your graph is yours alone; no public lists, no counts, no
+        identities; your graph is yours alone; no public lists, no counts, no
         suggestions, ever.
       </p>
       {m && <div className="notice">{m}</div>}
@@ -198,7 +198,7 @@ export default async function SoulsPage({
 
       <h3>Blocked ({blockedProfiles.length})</h3>
       <p className="lore">
-        One-way, per-face, quiet: a blocked soul cannot message or request
+        One-way and private: a blocked soul cannot message or request
         you, and is never told.
       </p>
       <ul>

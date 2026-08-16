@@ -26,18 +26,18 @@ export default async function TourPage({
           founding questions; that's where Discussions live.
         </li>
         <li>
-          <strong>The parking rule protects you.</strong> One face per
+          <strong>The parking rule protects you.</strong> One identity per
           pillar at a time, enforced; your True Self and Alias can never
           appear in the same room together. Blocked entry isn't an error;
           it's the protection working.
         </li>
         <li>
-          <strong>Light Score</strong> is per-face and per-pillar; never
-          a single number, never global, and your two faces' standings
+          <strong>Light Score</strong> is per identity and per pillar; never
+          a single number, never global, and your two identities&rsquo; standings
           never touch.
         </li>
         <li>
-          <strong>Aliases exist.</strong> When you want a second face;
+          <strong>Aliases exist.</strong> When you want a second identity;
           for the argument you can't afford professionally, the struggle
           you won't wear publicly; you can create one later, on your own
           schedule. It's deliberately not a button in settings; when the

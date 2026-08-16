@@ -10,7 +10,7 @@
 // The load-bearing structural choice: an Alias profile stores NO humanId.
 // One-Alias-per-human is enforced by the alias-registration nullifier
 // spend; the humanId is used transiently to derive it and never written
-// to the Alias row. No database row links a soul's two faces. (The
+// to the Alias row. No database row links a soul's two identities. (The
 // honest Phase A residual: the operator secret could re-derive the
 // registration nullifiers; that is exactly the "policy, not yet
 // cryptography" disclosure, retired at Phase C.)
@@ -143,10 +143,10 @@ class DuplicateRegistration extends Error {}
  * The Alias ceremony (ONBOARDING §3); deliberately decoupled, with
  * every timing mitigation:
  *  - initiated by credential, never from a True Self session (§3.2);
- *  - NO public trace at registration; the ledger learns nothing until
- *    the cohort activates (§3.3–3.4);
- *  - activation at a random point inside the rail window, snapped to
- *    the next cohort boundary so no Alias ever appears alone;
+ *  - NO public trace at registration; the ledger learns nothing when the
+ *    Alias is created;
+ *  - available immediately, but private by default; the owner chooses
+ *    when to become visible;
  *  - coarse join period only (§3.5);
  *  - the §3.6 disclosures are blocking; the caller must have shown
  *    them (the ack is recorded on the new profile in-transaction).
@@ -159,7 +159,7 @@ export async function registerAlias(
     displayName: string;
     disclosuresAccepted: boolean;
   }
-): Promise<CeremonyResult<{ accessKey: string; activationHint: string }>> {
+): Promise<CeremonyResult<{ accessKey: string; visibilityHint: string }>> {
   const handle = normalizeHandle(input.handle);
   if (!handle) {
     return { ok: false, reason: "Handles are 3–30 characters: letters, digits, _ or -." };
@@ -230,9 +230,7 @@ export async function registerAlias(
     return {
       ok: true,
       accessKey,
-      // Roughly when; never the exact time, so even the soul's own
-      // knowledge can't become a precise correlation anchor (§3.7).
-      activationHint: "within the next few days",
+      visibilityHint: "available now; private until you choose to be visible",
     };
   } catch (err) {
     if (err instanceof DuplicateRegistration) {
@@ -243,10 +241,9 @@ export async function registerAlias(
 }
 
 /**
- * Release due cohorts: every pending Alias whose moment has arrived
- * activates in a batch, and the batch shares one public timestamp; the
- * cohort's, not any individual's. Called opportunistically (hub, login)
- *; no scheduler infrastructure needed yet.
+ * Legacy compatibility: release any Alias rows created by the former
+ * delayed-activation flow. New Aliases are active immediately and private
+ * by default, so this is only for older pending rows during migration.
  */
 export async function activateDueAliases(db: PrismaClient): Promise<number> {
   const due = await db.profile.findMany({
@@ -307,7 +304,7 @@ export async function changeDisplayName(
   return { ok: true };
 }
 
-/** Per-face login: each face has its own key; login never touches the Human. */
+/** Per-identity login: each identity has its own key; login never touches the Human. */
 export async function profileForAccessKey(db: PrismaClient, accessKey: string) {
   const profile = await db.profile.findUnique({
     where: { accessKeyHash: sha256(accessKey.trim()) },

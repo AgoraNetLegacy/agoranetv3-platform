@@ -18,7 +18,7 @@ export const CONSTITUTION_MARKDOWN = `
 
 AgoraNet exists so that good people can find each other, combine what
 they know and what they have, and act on real problems together. It
-gives every verified human two protected faces; a True Self and an
+gives every verified human two protected identities; a True Self and an
 Alias; and a public square whose records cannot be quietly rewritten.
 
 This constitution has one purpose: to keep that square standing. It is
@@ -43,7 +43,7 @@ if possible at all, is governed by Article IV, Class 3.)
 2. **One human: at most one True Self and one Alias**; and the two
    are structurally unlinkable. The platform must remain *unable* to
    connect them, not merely unwilling.
-3. **No universal score exists.** Reputation is per-face and
+3. **No universal score exists.** Reputation is per identity and
    per-pillar, never summed, never global.
 4. **One profile, one vote.** Voting power never derives from wealth,
    stake, tenure, office, or reputation; and is never delegated. No
@@ -80,7 +80,7 @@ this constitution or any rule is ambiguous, read it in their light.
 3. **One set of rules** *(Justice)*; identical treatment regardless
    of wealth, standing, office, or popularity; the powerful get no
    special channel.
-4. **Two faces, protected** *(Freedom)*; the dual identity is a
+4. **Two identities, protected** *(Freedom)*; the dual identity is a
    right, not a feature; protecting it outranks convenience, curiosity,
    and commerce.
 5. **Power diffuses** *(Unity)*; authority is brief, random,
@@ -100,7 +100,7 @@ this constitution or any rule is ambiguous, read it in their light.
 ### Section 1; The Community
 
 The community is its verified humans, each present through up to two
-faces. Readers; the unverified public; are welcome in every public
+identities. Readers; the unverified public; are welcome in every public
 space, without account or fee, always.
 
 ### Section 2; Rights of Participants
@@ -111,9 +111,9 @@ Every verified profile holds, without qualification:
    exactly once.
 2. The right to due process: no penalty without a cited rule, no
    removal without a recorded ruling, and one appeal of any ruling.
-3. The right to the other face's privacy; no process of this
+3. The right to the other identity's privacy; no process of this
    platform, including moderation and governance, may require or
-   attempt linkage of a person's two faces.
+   attempt linkage of a person's two identities.
 4. The right to dissent: lawful, rule-compliant speech is never
    penalized for its viewpoint; including criticism of the platform,
    its founders, and its officers.
@@ -219,7 +219,7 @@ re-author; this document.
 |---|---|---|
 | **1; Guardrail parameters** | Any dial in Appendix A | Ordinary governance poll, within the Appendix's stated bounds |
 | **2; Constitutional text** | Tenets, Article III structure, this table's defaults | Supermajority (67%) of votes cast + minimum participation quorum + 30-day deliberation window + Tribunal constitutionality review |
-| **3; The Invariants** | Article I | **Ratified (owner, 2026-07-07):** an extreme bar; 90% supermajority + high quorum + 90-day deliberation + the platform's one **per-human** vote (each human votes once, regardless of faces), reserved for exactly this and nothing else. Even bedrock keeps an emergency exit; the exit is nearly impossible to use |
+| **3; The Invariants** | Article I | **Ratified (owner, 2026-07-07):** an extreme bar; 90% supermajority + high quorum + 90-day deliberation + the platform's one **per-human** vote (each human votes once, regardless of identities), reserved for exactly this and nothing else. Even bedrock keeps an emergency exit; the exit is nearly impossible to use |
 
 No amendment of any class may take effect retroactively, and none may
 target an identifiable person or case (rules are general or they are

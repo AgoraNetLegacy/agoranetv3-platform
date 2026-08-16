@@ -57,7 +57,7 @@ export async function createPollDiscussion(
 
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
-    return { ok: false, reason: "No active face." };
+    return { ok: false, reason: "No active identity." };
   }
   if (!(await hasPostingConsents(db, profile.id))) {
     return {
@@ -281,7 +281,7 @@ export async function createPost(
   });
   if (!profile) return { ok: false, reason: "No such profile." };
   if (profile.status !== "active") {
-    return { ok: false, reason: "This face has not activated yet." };
+    return { ok: false, reason: "This identity has not activated yet." };
   }
   // The members' room (Phase 6, CIRCLES §2.2): a Circle-scoped
   // Discussion writes only for active members of a living Circle.

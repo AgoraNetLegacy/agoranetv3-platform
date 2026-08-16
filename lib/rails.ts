@@ -92,7 +92,7 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     boundMin: 0,
     boundMax: 15,
     description:
-      "Face-switch cooldown; OWNER-RESOLVED (2026-07-11, DUAL_ID OQ5): NONE; seamless switching is the product vision. The parking rule remains the timing mitigation. Mechanism retained as a rail (0–15 min) should governance ever want it.",
+      "Identity-switch cooldown; OWNER-RESOLVED (2026-07-11, DUAL_ID OQ5): NONE; seamless switching is the product vision. The parking rule remains the timing mitigation. Mechanism retained as a rail (0–15 min) should governance ever want it.",
   },
   {
     key: "identity.pillarSessionTimeoutMinutes",
@@ -108,7 +108,7 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     boundMin: 1,
     boundMax: 9600,
     description:
-      "SoulSession lifetime; owner ruling 2026-07-23: 9600h (400 days, the cookie ceiling) so login survives browser restarts. Departs from DUAL_IDENTITY §7.2 short-retention posture: a session where both faces sign in now holds their co-occurrence for its whole lifetime. Explicit sign-out still purges immediately.",
+      "SoulSession lifetime; owner ruling 2026-07-23: 9600h (400 days, the cookie ceiling) so login survives browser restarts. Departs from DUAL_IDENTITY §7.2 short-retention posture: a session where both identities sign in now holds their co-occurrence for its whole lifetime. Explicit sign-out still purges immediately.",
   },
   {
     key: "identity.displayNameCooldownDays",
@@ -672,84 +672,84 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     value: 12,
     unit: "actions",
     description:
-      "Posts/edits per burst window per face (v2 answer wall verbatim). A deliberating human writes slower; a flood writes faster.",
+      "Posts/edits per burst window per identity (v2 answer wall verbatim). A deliberating human writes slower; a flood writes faster.",
   },
   {
     key: "ratelimit.votes",
     value: 120,
     unit: "actions",
     description:
-      "Ballots per burst window per face (v2 vote wall verbatim). Generous; a soul working through every open poll never meets it.",
+      "Ballots per burst window per identity (v2 vote wall verbatim). Generous; a soul working through every open poll never meets it.",
   },
   {
     key: "ratelimit.economy",
     value: 30,
     unit: "actions",
     description:
-      "Tips/permanence upgrades per burst window per face (v2 debate wall). Tips already cost; this stops tip-bot cycling.",
+      "Tips/permanence upgrades per burst window per identity (v2 debate wall). Tips already cost; this stops tip-bot cycling.",
   },
   {
     key: "ratelimit.creation",
     value: 6,
     unit: "actions",
     description:
-      "Space/poll/action creations per hour per face (v2 creation wall). Creations carry real fees; this is the automation backstop.",
+      "Space/poll/action creations per hour per identity (v2 creation wall). Creations carry real fees; this is the automation backstop.",
   },
   {
     key: "ratelimit.flags",
     value: 20,
     unit: "actions",
     description:
-      "Flags/reports per hour per face (v2 flag wall verbatim). Deposits price flag abuse; the wall stops flag-storms outright.",
+      "Flags/reports per hour per identity (v2 flag wall verbatim). Deposits price flag abuse; the wall stops flag-storms outright.",
   },
   {
     key: "ratelimit.moderation",
     value: 60,
     unit: "actions",
     description:
-      "Moderation acts per hour per face (v2 moderate wall verbatim). A badge-holder working a full queue stays far under it.",
+      "Moderation acts per hour per identity (v2 moderate wall verbatim). A badge-holder working a full queue stays far under it.",
   },
   {
     key: "ratelimit.appeals",
     value: 5,
     unit: "actions",
     description:
-      "Appeals/restorative acceptances per day-cycle per face (v2 appeal wall verbatim). Appeals also carry the 25u deposit.",
+      "Appeals/restorative acceptances per day-cycle per identity (v2 appeal wall verbatim). Appeals also carry the 25u deposit.",
   },
   {
     key: "ratelimit.social",
     value: 20,
     unit: "actions",
     description:
-      "Social acts (requests, joins, attestations, invites, thread opens) per burst window per face (v2 stance wall). Initiator-pays does the real anti-spam work.",
+      "Social acts (requests, joins, attestations, invites, thread opens) per burst window per identity (v2 stance wall). Initiator-pays does the real anti-spam work.",
   },
   {
     key: "ratelimit.dmMessages",
     value: 30,
     unit: "actions",
     description:
-      "Direct messages per burst window per face (v2 debate wall). Conversation-speed is untouched; scripted blasts are not.",
+      "Direct messages per burst window per identity (v2 debate wall). Conversation-speed is untouched; scripted blasts are not.",
   },
   {
     key: "ratelimit.settings",
     value: 60,
     unit: "actions",
     description:
-      "Preference changes (feed sources, follows, mutes, reads) per burst window per face. Cheap writes, generous wall.",
+      "Preference changes (feed sources, follows, mutes, reads) per burst window per identity. Cheap writes, generous wall.",
   },
   {
     key: "ratelimit.faceSwitch",
     value: 30,
     unit: "actions",
     description:
-      "Face switches per burst window per session (v2 switch wall verbatim). NOT a cooldown; the owner resolved that to NONE (2026-07-11); this is an anti-automation wall two orders of magnitude above human switching.",
+      "Identity switches per burst window per session (v2 switch wall verbatim). NOT a cooldown; the owner resolved that to NONE (2026-07-11); this is an anti-automation wall two orders of magnitude above human switching.",
   },
   {
     key: "ratelimit.global",
     value: 240,
     unit: "actions",
     description:
-      "The backstop: total write actions per burst window per face/session; 2x the most generous family wall. Nothing human meets it.",
+      "The backstop: total write actions per burst window per identity/session; 2x the most generous family wall. Nothing human meets it.",
   },
   // --- The Beacon Feed (BEACON_FEED_SPEC §11, owner-ratified 2026-07-21) ---
   {
@@ -759,7 +759,7 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     boundMin: 1,
     boundMax: 10,
     description:
-      "Saved current: new posts since the face's own watermark before a saved thread resurfaces in the feed (BEACON §3.3).",
+      "Saved current: new posts since the identity's own watermark before a saved thread resurfaces in the feed (BEACON §3.3).",
   },
   {
     key: "feed.saved.maxResurfacedCards",
@@ -804,7 +804,7 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     boundMin: 5,
     boundMax: 120,
     description:
-      "Wellbeing: default minutes of continuous feed reading before the calm go-act nudge for faces that haven't tuned it; each face adjusts or disables in Settings (BEACON §7).",
+      "Wellbeing: default minutes of continuous feed reading before the calm go-act nudge for identities that haven't tuned it; each identity adjusts or disables in Settings (BEACON §7).",
   },
 ];
 

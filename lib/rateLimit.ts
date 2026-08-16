@@ -18,7 +18,7 @@
 // - Fixed windows aligned to the epoch; the window index is folded into
 //   the bucket key, so increments are single atomic upserts and expired
 //   windows are simply old rows (pruned by scripts/prune-rate-limits.ts).
-// - NOT a face-switch cooldown: the owner resolved that to NONE
+// - NOT an identity-switch cooldown: the owner resolved that to NONE
 //   (2026-07-11); `faceSwitch` here is an anti-automation wall two
 //   orders of magnitude above human switching, not a timing mitigation.
 
@@ -41,7 +41,7 @@ export interface RateLimitPolicy {
 }
 
 // The consolidated schedule (W4). Limits live in rails; this table fixes
-// each policy's window and scope. Keyed per-profile once a face exists;
+// each policy's window and scope. Keyed per-profile once an identity exists;
 // pre-identity surfaces key on the browser session + (behind a declared
 // proxy) the client address.
 export const RATE_LIMIT_POLICIES = {
@@ -60,7 +60,7 @@ export const RATE_LIMIT_POLICIES = {
   social: { name: "social", windowMs: BURST, surface: "social acts" },
   dmMessages: { name: "dmMessages", windowMs: BURST, surface: "direct messages" },
   settings: { name: "settings", windowMs: BURST, surface: "preference changes" },
-  faceSwitch: { name: "faceSwitch", windowMs: BURST, surface: "face switches" },
+  faceSwitch: { name: "faceSwitch", windowMs: BURST, surface: "identity switches" },
   // --- the backstop over every write action
   global: { name: "global", windowMs: BURST, surface: "actions" },
 } as const satisfies Record<string, RateLimitPolicy>;

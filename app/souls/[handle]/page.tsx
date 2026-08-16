@@ -16,7 +16,7 @@ function asTab(v: string | undefined): SoulTab {
 export const dynamic = "force-dynamic";
 
 // The public soul window (Phase 8.5, PRESENTATION_SPEC §5.2): what one
-// face chooses to show; display name, @handle, face kind, coarse join
+// identity chooses to show; display name, @handle, identity kind, coarse join
 // period, and the live-surface bio. Nothing here is new information:
 // every field is either already public or written by the soul for this
 // exact window. Pending Aliases don't exist publicly, here or anywhere.
@@ -43,7 +43,7 @@ export default async function SoulWindow({
     select: { updatedAt: true },
   });
   // Cache-bust coarsened to DAY granularity: millisecond upload times
-  // in public HTML are a correlation signal (two suspected faces'
+  // in public HTML are a correlation signal (two suspected identities'
   // exact upload moments could bridge them). Day resolution refreshes
   // the image within a day of replacement without publishing the
   // moment (privacy audit 2026-07-22).

@@ -27,7 +27,7 @@ capture (queue-only, private). Evidence: `demo:phase1`, 32 tests.
 ## Phase 2; Dual Identity Complete ✅ OWNER-RATIFIED (2026-07-10)
 
 Onboarding Stages 1–6 · Alias ceremony with every timing mitigation ·
-NO stored link between faces (Alias has no humanId) · parking rule ·
+NO stored link between identities (Alias has no humanId) · parking rule ·
 Phase A disclosures verbatim · two-layer naming amendment (display
 name + eternal @handle, tombstoned never recycled). Evidence:
 `demo:phase2` (the linkage audit: 0 co-occurrence rows), 48 tests.
@@ -41,7 +41,7 @@ pre-vote, revealed verifiably) · records that re-derive. Evidence:
 
 ## Phase 4; The Internal Economy ✅ SELF-VERIFIED (2026-07-11)
 
-**Shipped:** per-profile PC/G balances (faces never bridge) · treasury ·
+**Shipped:** per-profile PC/G balances (identities never bridge) · treasury ·
 double-entry money ledger · every ratified fee wired (reply, vote,
 poll, discussion, paid permanence, flag deposit; never blocking at
 zero) · Welcome Grant (verification/seed/orientation/first-action/
@@ -100,7 +100,7 @@ penalty amounts (2/5 uG) and LS deductions (5/10 × tier) are
 build-time rails; Sentinel brigade threshold 5 flags/24h.
 
 **If you choose to look (15 min):** get flagged content ruled; post
-with one face, flag with another, `/moderation` with a third (or run
+with one identity, flag with another, `/moderation` with a third (or run
 `npm run demo:phase5`), watch the blur, the ruling, the tombstone
 citing the rule, and both inboxes learning their outcomes without
 learning any names.
@@ -114,7 +114,7 @@ rewrite what it claimed to be) · browse/filter discovery + the
 transparent values-alignment signal with its why in plain language
 ("Shown because you answered the X values question…"; no black-box
 ranking, per the product-identity commitment) · join gate with the
-DUAL_IDENTITY §7.1 small-community warning VERBATIM for Alias faces
+DUAL_IDENTITY §7.1 small-community warning VERBATIM for Alias identities
 (small OR place-tagged; informed choice with required acknowledgment,
 never a wall) · members' room = Discussion primitive Circle-scoped
 (members-only including reads, deletable class, never ledger-committed,
@@ -169,7 +169,7 @@ inactivity label 90 days · LS credits 5/1/cap 10 · removal bar default
 **If you choose to look (15 min):** `/circles` → form one (watch the
 fee) → join it with your Alias somewhere place-tagged (read the warning
 ; that's DUAL_IDENTITY vector 5, said at the exact right moment) → log
-an action → have another face attest → watch the badge flip and find
+an action → have another identity attest → watch the badge flip and find
 the whole story on `/ledger`. Judge: does the action layer make the
 mission literal; is this where "we talked about it" becomes "here's
 proof we did it"?
@@ -178,7 +178,7 @@ proof we did it"?
 
 **Shipped:** the social layer, spec-complete against
 `Fellow Souls and DMs/FELLOW_SOULS_AND_DM_SPEC.md`; mutual-consent
-bonds between profiles, any face combination (the platform neither
+bonds between profiles, any identity combination (the platform neither
 knows nor asks whether two bonded profiles share a human) ·
 initiator-pays requests (2u rail; accept/ignore/decline free; declines
 SILENT; 30d cooldown + 30d expiry rails, swept) · **private graphs,
@@ -233,7 +233,7 @@ hosts.
 
 **If you choose to look (15 min):** sign in → souls → send a request
 (watch the fee and the recipient's quiet inbox) → accept as the other
-face's owner → open a conversation (read the escrow disclosure; that
+identity's owner → open a conversation (read the escrow disclosure; that
 honesty is the design) → exchange a few words → report one message and
 run `npm run db:verify`. Judge: does "good people find each other"
 feel mechanical now; and does the graph feel like nobody's business
@@ -245,7 +245,7 @@ Self-verified 2026-07-11; owner walked the checkpoint the same day
 (signed in as a minted review soul, submitted a repair through the
 live UI) and ratified: "that worked. we're good to proceed."
 
-**Shipped:** standing became visible and the platform got its face.
+**Shipped:** standing became visible and the platform got its identity model.
 **Domains became data:** all 56 domains (8 × 7 pillars, the Agora
 included; its ratified capstone provides the full canon template)
 extracted VERBATIM from the corpus breakdowns by a committed generator
@@ -254,7 +254,7 @@ Opening-Question thread (the canon reconciliation's second ring) and
 its Picture as revision 1 of a living content object. **Light Score
 v3:** the v2 engine ported deliberately (weights as rails; v2's
 vote-received inputs don't exist in v3 by design; tips are NOT a score
-input), deriving per-face per-pillar standing from public Discussion
+input), deriving per-identity per-pillar standing from public Discussion
 contributions (members'-room posts never feed standing) + the
 already-recorded adjustment rows (Circle credits, Phase 5 deductions
 decaying on the strike clock) + moderation service derived per resolved
@@ -295,7 +295,7 @@ ranked by the published formula; versioned, rendered LIVE from the
 rails at /feed/formula, arithmetic shown on every card, identical for
 everyone. **Search:** nine entity types, visibility-scoped at the query
 (rooms and DMs structurally absent; moderator identity unsearchable;
-nothing cross-persona exists to leak), published ranking, per-face
+nothing cross-persona exists to leak), published ranking, per-identity
 deletable history never used to rank, §4.2 filters, and in-space room
 search (owner-resolved: ships at launch). Circle formation gained the
 domain tag; the Phase 6 flag, resolved.
@@ -342,7 +342,7 @@ its poll behind the Governance door → `/profile` for your constellation
 and change log → `/transparency` (drill into a category) → `/feed`
 (tune sources, read the why-lines, reach "you're caught up") →
 `/search` for your city. Judge: does standing feel earned and
-explainable; and is this the face you wanted the platform to have?
+explainable; and is this the identity system you wanted the platform to have?
 
 ## Phase 7.5; Chambers (Pollinator v1) ✅ SELF-VERIFIED (2026-07-11)
 
@@ -364,7 +364,7 @@ chamber's is minimal; name + private marker), the workshop
 enter-to-see (the Discussion primitive chamber-scoped; threading,
 grace windows, moderation all reuse; NO bespoke machinery), the Arena
 reserved for post-launch · **the creator's Light Score public on
-public storefronts** (owner addition; per-face per-pillar, never a
+public storefronts** (owner addition; per-identity per-pillar, never a
 sum; transparency instead of gatekeeping per resolved OQ5: entry =
 the gate + carrying both tokens, no Light Score floor) · **the
 enclosure is structural**: chamber membership is enclosed-space
@@ -421,7 +421,7 @@ storefront the way a stranger would (your standing is on it) → work
 the idea in the workshop (1 PC + 1 G per post) → sign out and try the
 workshop URL, then search for your draft's words (nothing), then your
 chamber's title (storefront) → `npm run db:verify`. Judge: is this
-the incubator you designed; public face, enclosed workbench, priced
+the incubator you designed; public profile, enclosed workbench, priced
 in both tokens?
 
 ## Phase 8; Deployment Hardening ⚙ BUILD HALF SELF-VERIFIED (2026-07-11); checkpoint awaits YOUR cohort
@@ -468,7 +468,7 @@ the joint review. The build half is ready for that day.
   HMAC-keyed and pruned, host access logs identified as the one
   out-of-repo vector with a binding posture requirement. The honest
   finding, named: SoulSession co-residency is the one operator-space
-  surface both faces share; inherent to Phase A, within the ratified
+  surface both identities share; inherent to Phase A, within the ratified
   disclosure's words, swept short-retention, dissolves at Phase 9.
 - **The analytics funnel** (ANALYTICS_SPEC, privacy-constrained):
   in-house-minimal pipeline (tool selection resolved + flagged #13;
@@ -553,14 +553,14 @@ verified; the phase closes when you walk it.**
 **Shipped (five slices, committed in sequence fa336b6 → ace7258):**
 - **THEME = IDENTITY (§2):** a design-token system in globals.css;
   three rooms; reader (aqua blue: "free to read" made visible),
-  True Self (white), Alias (dark); keyed to the FACE server-side;
+  True Self (white), Alias (dark); keyed to the identity server-side;
   prefers-color-scheme deliberately not consulted (the safety signal
   always wins). §2.3 cross-theme constants pinned: the permanence
   amber, refusal notices, and the ◆/◇ chips render identically in
   all three rooms; the True Self chip IS the white card even in the
-  dark room. The card flip (§2.2) fires on every face change,
+  dark room. The card flip (§2.2) fires on every identity change,
   including the §2.4 blue→white verification moment; crossfade and
-  instant ship behind the per-face setting.
+  instant ship behind the per-identity setting.
 - **The Agora dashboard IS the platform dashboard (§1.1,
   owner-corrected):** / carries the what-is-this-place framing, the
   feed (per-persona / open lens), the Agora pillar's full anatomy,
@@ -574,9 +574,9 @@ verified; the phase closes when you walk it.**
   page (top AND bottom) carries "Join the Discussion; N voices" in
   a door style that can never be confused with the amber permanence
   threshold; all eight blessed one-liners lead their features.
-- **Settings + the profile window (§5.1–5.2):** /settings per-face
+- **Settings + the profile window (§5.1–5.2):** /settings per identity
   (the linkage-surface rule stated on the page); display name moved
-  there; switch animation per face; /profile is the window (bio +
+  there; switch animation per identity; /profile is the window (bio +
   self-placed place, live-surface never permanent; the Alias
   composer renders the ceremony's stylometry warning VERBATIM by
   importing the constant); /souls/[handle] is the public window;
@@ -629,10 +629,10 @@ The owner walked the build the same day (his own browser, his own
 souls; hatched @bradpitt through the real ceremony). Findings, all
 addressed in commit b9cb2c7: one-time secrets needed a copy control
 (built, with layered clipboard fallbacks); the once-per-browser
-nature of face login was never stated (now stated at both key
+nature of identity login was never stated (now stated at both key
 screens and login); no way to know when an Alias activates (the
 key screen now says: try the key; the day it works, it's live;
-and why no notification can ever say so); single-face sessions now
+and why no notification can ever say so); single-identity sessions now
 point at where the switch control will appear. His sequential-
 parking question was answered from the ratified record (the lock
 forbids co-presence, not succession; the cooldown rail; HIS dial,
@@ -653,7 +653,7 @@ began his 8.6 §6.5 setup (Blockfrost ✓, Docker ✓, Lace in progress)
 
 **Slice 1; the Cardano rail: LIVE.** The owner's dev wallet
 (tAgoranetv3, preprod, 10,000 faucet tADA) connected through the new
-per-face testnet-rail section in /settings (TestnetWalletLink model;
+per-identity testnet-rail section in /settings (TestnetWalletLink model;
 mainnet refused at every layer, 4 tests pin it). PollCoin Demo
 (dPOLL, owner-ruled name) minted: 1,000,000 units under throwaway
 policy 70e8fedff8a8cd445705a0884c8b41db20e5005f7cdeef6a7322ad35, tx
@@ -790,7 +790,7 @@ rehearsed live this session.
    framing card. Click "verify the minting policy" (dPOLL on
    cardanoscan) and "verify the transaction" (the latest anchor).
    Two browser tabs of PUBLIC proof, no trust required.
-2. In /settings (True Self face): the testnet wallet link; connect
+2. In /settings (True Self identity): the testnet wallet link; connect
    Lace (preprod). Mainnet is refused by construction; say so.
 3. Sign out → the blue room → /verify: read the TWO notices aloud;
    what is math today, what is still trust, in plain words. Verify a
@@ -854,7 +854,7 @@ Download (alias key downloads under the same generic filename; no
 linkage artifact on disk); "enforced blind by the registration
 nullifier" and kin became plain words on both ceremony pages; the
 values seed no longer collapses unanswered questions (read as "you
-only get two"). Vocabulary question face→Persona PARKED by owner
+only get two"). Vocabulary question identity→Persona PARKED by owner
 (DECISIONS_PENDING #23). His sharpest demo question; "the system
 could alter something and then stamp it"; and its answer (each
 stamp closes the past; a post-alteration stamp publicly contradicts
@@ -1142,7 +1142,7 @@ earn identically, because an auditor paid for finding problems will find
 problems; and **a finding is a signal, never a penalty**; an auditor who
 could freeze money would be an operator with extra steps). Sentinel's
 mission watch flags self-dealing *patterns*, never a single
-reimbursement, and says on its face that it is "a question, not an
+reimbursement, and says directly that it is "a question, not an
 accusation." Numbers are build-time defaults, flagged (#19).
 
 ---
@@ -1330,7 +1330,7 @@ wallet and nothing was recorded"), zero console errors.
 **Owner walkthrough findings (both fixed same-session):** (1) "Reconnect
 below to update it" pointed at no visible control; now names the
 Connect Lace button; (2) the post-link flash said only "Testnet wallet
-linked to this face" while the rail section showed the address; the
+linked to this identity" while the rail section showed the address; the
 flash now echoes the address it linked.
 
 **NEXT:** Slice 3; simplest non-custodial donation to a script on
@@ -1640,7 +1640,7 @@ absolute blockers before real value):**
   only pending-clearing path). Fix designed: propose sanity + a
   threshold-gated Cancel.
 - **F3; record integrity (LOW, cosmetic):** proof/donation submit
-  paths verify the tx on-chain but not that the FACE's wallet sent it;
+  paths verify the tx on-chain but not that the identity's wallet sent it;
   someone else's tx is claimable as one's record. No funds at risk.
 - **F4/F5 (notes):** continuing-state checks preserve lovelace+NFT
   only (token-stripping impossible today, relevant later); no End/burn
@@ -1657,13 +1657,13 @@ with designs, not discovered later with funds.**
 The review's record-integrity finding, closed the only way this rail
 closes anything; verified against the chain: `recordSelfCustodyProof`,
 `recordScriptDonation`, AND the reconciliation sweep now require the
-face's linked wallet to appear among the transaction's INPUTS before
+identity's linked wallet to appear among the transaction's INPUTS before
 recording (`txInputAddressesOnConfiguredTestnet`). The sweep needed it
 most: Blockfrost's address listing includes txs that merely PAID a
 wallet, so a stranger's donation could have been mis-attributed by the
 sweep with no user action at all. Proven live on preprod: claiming the
 dev wallet's real donation (7292911a…) as the owner's → REFUSED
-("wasn't sent by this face's linked wallet"); his genuine a4ce0332… →
+("wasn't sent by this identity's linked wallet"); his genuine a4ce0332… →
 accepted, idempotent, one row. Tests 295/295 (3 new: proof refusal,
 donation refusal, sweep mis-attribution). `npm run check` exit 0.
 Known limit, recorded: matching is by the linked ADDRESS; fine for
@@ -1696,17 +1696,17 @@ behavioral watching stays out, revisitable by community governance.
 Built overnight on explicit owner authorization ("finish the feed
 tonight while i sleep"), one commit per slice:
 
-- S1 `d89b49f`; the save system: per-face private bookmarks
+- S1 `d89b49f`; the save system: per-identity private bookmarks
   (SavedDiscussion), ☆ control on threads, watermark on read, feed.*
-  rails, 5 tests incl. cross-face isolation.
+  rails, 5 tests incl. cross-identity isolation.
 - S2 `96daf1d`; pillar three-lens tabs: All here / My Discussions /
-  Saved, enclosed rooms never surface, per-face gating for readers.
+Saved, enclosed rooms never surface, per-identity gating for readers.
 - S3 `f731204`; General Discussions (sidebar + /discussions =
   Agora-homed only); the cross-pillar stream rehomed to the dashboard
   as "The commons now" (feed.commons.windowHours rail).
 - S4 `6df997f`; "Saved & stirring" memory current on the dashboard;
   beacon-resurface-v1 published on /feed/formula, live from rails.
-- S5 `86dd5bc`; wellbeing: per-face nudge + daily budget in
+- S5 `86dd5bc`; wellbeing: per-identity nudge + daily budget in
   FeedSettings (null=off, absent=rail default); timing runs entirely
   in the soul's browser, platform measures nothing. Postgres init
   migration reconsolidated; parity 31/31.

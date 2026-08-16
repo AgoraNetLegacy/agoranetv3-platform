@@ -51,7 +51,7 @@ export const HONEST_CLAIM =
  *  a wall. */
 export const ALIAS_SMALL_COMMUNITY_WARNING =
   "Small, local groups shrink the crowd you're anonymous within. " +
-  "Consider whether joining as this face is right for you.";
+  "Consider whether joining as this identity is right for you.";
 
 function entryContentHash(input: {
   body: string;
@@ -208,7 +208,7 @@ export async function formCircle(
 
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
-    return { ok: false, reason: "No active face." };
+    return { ok: false, reason: "No active identity." };
   }
   if (!(await hasPostingConsents(db, profile.id))) {
     return { ok: false, reason: "The permanence and Constitution acknowledgments come first." };
@@ -391,7 +391,7 @@ export async function editPurpose(
 
 /**
  * Does this join need the Alias small-community warning (§5)? Alias
- * face AND (membership below the rail OR place-tagged). Computed
+ * identity AND (membership below the rail OR place-tagged). Computed
  * server-side so the join page can show it BEFORE the action.
  */
 export async function joinNeedsAliasWarning(
@@ -426,7 +426,7 @@ export async function joinCircle(
   }
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
-    return { ok: false, reason: "No active face." };
+    return { ok: false, reason: "No active identity." };
   }
   // Membership is a public permanent record; the same blocking
   // acknowledgments that gate the pen gate the list.

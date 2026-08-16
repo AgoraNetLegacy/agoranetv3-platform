@@ -9,8 +9,8 @@ import { Icon, PillarMark } from "@/components/Icon";
 export const dynamic = "force-dynamic";
 
 // Source management (§2.1): one screen, adjustable anytime. Everything
-// here is this face's own reading state; never public, never ledgered,
-// never shared with the other face.
+// here is this identity's own reading state; never public, never ledgered,
+// never shared with the other identity.
 export default async function FeedSourcesPage({
   searchParams,
 }: {
@@ -68,7 +68,7 @@ export default async function FeedSourcesPage({
       <p className="lore">
         Chosen, not inferred: the machine never watches your behavior to
         guess your interests. These choices belong to{" "}
-        <strong>@{face.handle}</strong> alone; your other face has its own
+        <strong>@{face.handle}</strong> alone; your other identity has its own
         screen, and nothing crosses between them, ever.
       </p>
       {m && <div className="notice">{m}</div>}
@@ -89,7 +89,7 @@ export default async function FeedSourcesPage({
 
         <h3>Your Circles</h3>
         {myCircles.length === 0 ? (
-          <p className="lore">You belong to no Circles with this face.</p>
+          <p className="lore">You belong to no Circles with this identity.</p>
         ) : (
           myCircles.map((mc) => (
             <label key={mc.circle.id} style={{ display: "block" }}>
@@ -106,7 +106,7 @@ export default async function FeedSourcesPage({
 
         <h3>Chambers you&rsquo;ve entered</h3>
         {myChambers.length === 0 ? (
-          <p className="lore">You&rsquo;ve entered no chambers with this face.</p>
+          <p className="lore">You&rsquo;ve entered no chambers with this identity.</p>
         ) : (
           myChambers.map((mc) => (
             <label key={mc.chamber.id} style={{ display: "block" }}>

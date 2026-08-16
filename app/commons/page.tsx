@@ -77,7 +77,7 @@ export default async function CommonsPage() {
       <div className="stat-row">
         <div className="stat">
           <div className="stat-number">{souls}</div>
-          <div className="stat-label">Active souls (faces)</div>
+          <div className="stat-label">Active identities</div>
         </div>
         <div className="stat">
           <div className="stat-number">{humans}</div>

@@ -1,7 +1,7 @@
 "use client";
 
 // The refusal boundary. Server actions refuse loudly (walls, missing
-// faces, spec-gated actions); production masks thrown messages, so this
+// identities, spec-gated actions); production masks thrown messages, so this
 // boundary keeps the refusal humane. Pace-wall refusals are the common
 // case a stranger could meet; say so honestly.
 

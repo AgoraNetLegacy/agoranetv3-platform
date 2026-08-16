@@ -174,14 +174,23 @@ describe("search", () => {
     expect(place?.title).toBe("Kelowna Repair Crew");
   });
 
-  it("looks up souls by handle and display name; lookup, not discovery", async () => {
+  it("looks up visible souls by handle and display name; private Aliases stay hidden", async () => {
     const hits = await search(db, "dana", { types: ["souls"] });
     expect(hits.some((h) => h.title.includes("@dana"))).toBe(true);
-    // Both faces appear as what they are; separate souls; nothing marks
-    // them as related, because no data exists from which to relate them.
+    // A newly created Alias is private until its owner chooses to appear.
     const veil = await search(db, "dana-veil", { types: ["souls"] });
-    expect(veil.some((h) => h.title.includes("@dana-veil"))).toBe(true);
-    for (const h of [...hits, ...veil]) {
+    expect(veil.some((h) => h.title.includes("@dana-veil"))).toBe(false);
+
+    await db.profile.update({
+      where: { id: humanAliasId },
+      data: { spiritActive: false },
+    });
+    const visibleAlias = await search(db, "dana-veil", { types: ["souls"] });
+    expect(visibleAlias.some((h) => h.title.includes("@dana-veil"))).toBe(true);
+
+    // Both identities appear as separate public records when visible;
+    // nothing marks them as related.
+    for (const h of [...hits, ...visibleAlias]) {
       expect(h.badge ?? "").not.toContain("alias of");
     }
   });

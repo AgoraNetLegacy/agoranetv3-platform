@@ -105,7 +105,7 @@ describe("the True Self ceremony", () => {
   });
 });
 
-describe("the Alias ceremony; timing mitigations", () => {
+describe("the Alias ceremony; private by default", () => {
   let credential: string;
 
   beforeAll(async () => {
@@ -115,7 +115,7 @@ describe("the Alias ceremony; timing mitigations", () => {
     if (!ts.ok) throw new Error(ts.reason);
   });
 
-  it("hatches with no public trace, a randomized cohort activation, and a coarse join period", async () => {
+  it("hatches with no public trace and starts private but immediately available", async () => {
     const eventsBefore = await db.ledgerEvent.count();
     const result = await registerAlias(db, {
       credential,
@@ -125,7 +125,7 @@ describe("the Alias ceremony; timing mitigations", () => {
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.activationHint).toBe("within the next few days");
+    expect(result.visibilityHint).toBe("available now; private until you choose to be visible");
 
     // No ledger trace at registration.
     expect(await db.ledgerEvent.count()).toBe(eventsBefore);
@@ -133,21 +133,12 @@ describe("the Alias ceremony; timing mitigations", () => {
     const alias = await db.profile.findUniqueOrThrow({
       where: { handle: "night-face-8" },
     });
-    expect(alias.status).toBe("pending");
+    expect(alias.status).toBe("active");
     expect(alias.humanId).toBeNull();
     expect(alias.joinedPeriod).toMatch(/^\d{4}-\d{2}$/);
-
-    // Activation inside the rail window, snapped to a cohort boundary.
-    const [minH, maxH, cadenceH] = await Promise.all([
-      getRail(db, "identity.aliasActivationMinHours"),
-      getRail(db, "identity.aliasActivationMaxHours"),
-      getRail(db, "identity.aliasCohortCadenceHours"),
-    ]);
-    const delayMs = alias.activateAt!.getTime() - Date.now();
-    expect(delayMs).toBeGreaterThan(minH * 3_600_000 - 1000);
-    // Cohort snap can push past the raw max by up to one cadence.
-    expect(delayMs).toBeLessThanOrEqual((maxH + cadenceH) * 3_600_000);
-    expect(alias.activateAt!.getTime() % (cadenceH * 3_600_000)).toBe(0);
+    expect(alias.spiritActive).toBe(true);
+    expect(alias.spiritLevel).toBe("ghost");
+    expect(alias.activateAt).toBeNull();
   });
 
   it("refuses the disclosures being skipped", async () => {
@@ -161,13 +152,10 @@ describe("the Alias ceremony; timing mitigations", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("a pending Alias cannot sign in; an activated one can; and activation is a cohort event", async () => {
+  it("can sign in immediately while remaining private until the owner appears", async () => {
     const alias = await db.profile.findUniqueOrThrow({
       where: { handle: "night-face-8" },
     });
-    // Pending: access key exists but sign-in is refused. (We can't know
-    // the key here; assert via status path in profileForAccessKey using
-    // a fresh hatch below instead.)
     const v = await verifyHumanity(db);
     const ts = await registerTrueSelf(db, { credential: v.credential, handle: "keyed-ts-3", displayName: "keyed-ts-3" });
     expect(ts.ok).toBe(true);
@@ -180,26 +168,18 @@ describe("the Alias ceremony; timing mitigations", () => {
     expect(hatched.ok).toBe(true);
     if (!hatched.ok) return;
 
-    const pendingLogin = await profileForAccessKey(db, hatched.accessKey);
-    expect(pendingLogin.ok).toBe(false);
-
-    // Release the cohort (time-travel); both pending aliases activate.
-    await db.profile.updateMany({
-      where: { status: "pending" },
-      data: { activateAt: new Date(Date.now() - 1000) },
-    });
-    const released = await activateDueAliases(db);
-    expect(released).toBeGreaterThanOrEqual(2);
-
-    const activatedLogin = await profileForAccessKey(db, hatched.accessKey);
-    expect(activatedLogin.ok).toBe(true);
-
-    const event = await db.ledgerEvent.findFirst({
-      where: { eventType: "alias.activated" },
-      orderBy: { seq: "desc" },
-    });
-    expect(event).not.toBeNull();
-    expect(JSON.parse(event!.payload).cohort).toBeDefined();
+    const login = await profileForAccessKey(db, hatched.accessKey);
+    expect(login.ok).toBe(true);
+    if (login.ok) {
+      expect(login.profile.status).toBe("active");
+      expect(login.profile.spiritActive).toBe(true);
+      expect(login.profile.spiritLevel).toBe("ghost");
+    }
+    expect(
+      await db.ledgerEvent.findFirst({
+        where: { eventType: "alias.activated", payload: { contains: "keyed-alias-3" } },
+      })
+    ).toBeNull();
     void alias;
   });
 });
@@ -308,7 +288,7 @@ describe("the parking rule", () => {
     });
     const third = await switchFace(db, { sessionId, fromProfileId: aliasId, toProfileId: tsId });
     expect(third.ok).toBe(false);
-    if (!third.ok) expect(third.reason).toContain("cooldown");
+    if (!third.ok) expect(third.reason).toContain("Identity-switch limit");
     await db.rail.update({
       where: { key: "identity.faceSwitchCooldownMinutes" },
       data: { value: 0 },

@@ -357,7 +357,7 @@ export default async function DiscussionPage({
 
   // The members' room (CIRCLES §2.2): a Circle-scoped Discussion is
   // members-only; reading included; and exempt from the parking rule
-  // (a Circle is not a pillar surface; both of a soul's faces may be
+  // (a Circle is not a pillar surface; both of a soul's identities may be
   // members, §7). Everything else keeps the pillar parking check.
   let roomWrite = true;
   if (discussion.circle) {
@@ -426,7 +426,7 @@ export default async function DiscussionPage({
     getRail(db, "discussion.replyFee"),
   ]);
 
-  // The save (BEACON §4): private to this face. Reading a saved thread
+  // The save (BEACON §4): private to this identity. Reading a saved thread
   // advances its resurfacing watermark; a time and nothing else.
   const saved = viewer
     ? await isSaved(db, { profileId: viewer.id, discussionId: discussion.id })
@@ -478,7 +478,7 @@ export default async function DiscussionPage({
           <button
             type="submit"
             className="linklike"
-            title="Private to this face; nobody else ever sees your saves."
+            title="Private to this identity; nobody else ever sees your saves."
           >
             {saved ? "★ Saved · unsave" : "☆ Save for later"}
           </button>

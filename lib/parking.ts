@@ -1,13 +1,13 @@
 // Sessions & the parking rule (SEVEN_PILLAR_DASHBOARD_SPEC §3).
 //
 // A SoulSession is one browser context; the only place a soul's two
-// faces ever co-occur, and only while both are signed in there. That
-// shared context is what lets the backend enforce "one face per pillar
-// at a time" without holding any durable link between the faces. The
+// identities ever co-occur, and only while both are signed in there. That
+// shared context is what lets the backend enforce "one identity per pillar
+// at a time" without holding any durable link between the identities. The
 // rows are short-retention by design and purged on expiry (DUAL_IDENTITY
 // §7.2). A soul using two separate browsers steps outside the lock's
 // enforceable context; the lock protects them within the session that
-// knows both faces; it cannot (and must not) consult a cross-face
+// knows both identities; it cannot (and must not) consult a cross-identity
 // registry that doesn't exist.
 
 import type { PrismaClient } from "@prisma/client";
@@ -27,7 +27,7 @@ export async function createSession(db: PrismaClient): Promise<string> {
   return session.id;
 }
 
-/** Purge expired sessions (cascades faces + locks) and stale pillar locks. */
+/** Purge expired sessions (cascades identities + locks) and stale pillar locks. */
 export async function purgeExpired(db: PrismaClient): Promise<void> {
   const timeoutMinutes = await getRail(db, "identity.pillarSessionTimeoutMinutes");
   await db.soulSession.deleteMany({ where: { expiresAt: { lte: new Date() } } });
@@ -44,7 +44,7 @@ export async function getSession(db: PrismaClient, sessionId: string) {
   });
 }
 
-/** Sign a face into this session (after access-key login). */
+/** Sign an identity into this session (after access-key login). */
 export async function addFace(
   db: PrismaClient,
   input: { sessionId: string; profileId: string }
@@ -66,9 +66,9 @@ export type ParkingResult =
   | { allowed: false; heldByHandle: string; heldByFace: string };
 
 /**
- * The hard lock (§3.3): a face entering a pillar takes the lot; the
- * session's OTHER face is blocked until that lot is released. Blocked
- * entry names the holding face plainly; expected behavior, not an
+ * The hard lock (§3.3): an identity entering a pillar takes the lot; the
+ * session's OTHER identity is blocked until that lot is released. Blocked
+ * entry names the holding identity plainly; expected behavior, not an
  * error state.
  */
 export async function enterPillar(
@@ -91,7 +91,7 @@ export async function enterPillar(
     const holder = await db.profile.findUnique({ where: { id: lock.profileId } });
     return {
       allowed: false,
-      heldByHandle: holder?.handle ?? "your other face",
+      heldByHandle: holder?.handle ?? "your other identity",
       heldByFace: holder?.face === "TRUE_SELF" ? "True Self" : "Alias",
     };
   }
@@ -113,7 +113,7 @@ export async function enterPillar(
   return { allowed: true };
 }
 
-/** Returning to the hub ends this face's pillar sessions (§3.3.5). */
+/** Returning to the hub ends this identity's pillar sessions (§3.3.5). */
 export async function releaseLocks(
   db: PrismaClient,
   input: { sessionId: string; profileId: string }
@@ -134,8 +134,8 @@ export async function releaseLock(
 }
 
 /**
- * The face-switch flow (§3.4): a deliberate control. Ends the departing
- * face's locks, then enforces the cooldown rail before the next switch
+ * The identity-switch flow (§3.4): a deliberate control. Ends the departing
+ * identity's locks, then enforces the cooldown rail before the next switch
  * (DUAL_IDENTITY §7.2 timing mitigation).
  */
 export async function switchFace(
@@ -149,7 +149,7 @@ export async function switchFace(
   if (!session) return { ok: false, reason: "Session expired." };
 
   const target = session.faces.find((f) => f.profileId === input.toProfileId);
-  if (!target) return { ok: false, reason: "That face is not signed in here." };
+  if (!target) return { ok: false, reason: "That identity is not signed in here." };
 
   const cooldownMinutes = await getRail(db, "identity.faceSwitchCooldownMinutes");
   const lastSwitchAt = session.lastSwitchAt;
@@ -164,7 +164,7 @@ export async function switchFace(
     );
     return {
       ok: false,
-      reason: `Face-switch cooldown: try again in about ${wait} minute(s).`,
+      reason: `Identity-switch limit: try again in about ${wait} minute(s).`,
     };
   }
 

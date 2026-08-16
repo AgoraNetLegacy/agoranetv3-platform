@@ -80,7 +80,7 @@ export async function submitRepair(
   if (!proposedText) return { ok: false, reason: "A repair proposes the full corrected Picture text." };
 
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
-  if (!profile || profile.status !== "active") return { ok: false, reason: "No active face." };
+  if (!profile || profile.status !== "active") return { ok: false, reason: "No active identity." };
   if (!(await hasPostingConsents(db, profile.id))) {
     return { ok: false, reason: "The permanence and Constitution acknowledgments come first." };
   }

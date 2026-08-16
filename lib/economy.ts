@@ -1,7 +1,7 @@
 // The internal economy (TOKENOMICS_SPEC.md). Two currencies, two jobs:
 // PollCoin pays fees and stakes support; Gratium is earned appreciation,
 // spent on tips and permanence. Both live as per-profile internal
-// balances; a soul's two faces are never bridged. Every flow is a
+// balances; a soul's two identities are never bridged. Every flow is a
 // double-entry EconomyEntry; balances are always the sum of entries,
 // and db:verify re-derives them (conservation, loudly).
 //

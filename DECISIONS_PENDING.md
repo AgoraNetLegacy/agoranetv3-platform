@@ -20,7 +20,7 @@ need from you.)
 *(Nothing. #23 parked by owner 2026-07-15; kept below for the
 record.)*
 
-23. ~~**"Face" → "Persona" vocabulary rename**~~; **PARKED by owner
+23. ~~**Legacy identity vocabulary rename**~~; **PARKED by owner
     (2026-07-15): "it doesn't fix anything and for now we focus on
     what's important."** Raised during his walkthrough, recommendation
     (adopt Persona; specs already say per-persona) stands on file for
@@ -136,7 +136,7 @@ record.)*
       any incentive to farm bare verifications.
     - **Hard cap: 7 confirmed, rewarded referrals per human**
       (enforced naturally per-True-Self-profile, since a human has
-      exactly one True Self ever; no cross-face bookkeeping needed).
+      exactly one True Self ever; no cross-identity bookkeeping needed).
       The 8th+ referred person is still welcomed; the inviter simply
       isn't paid again. Chose 7 partly for the anti-farming ceiling
       (bounds the "humans for hire" residual risk, W3 in
@@ -272,13 +272,13 @@ record.)*
      Chambers already carry (Phase 7's resolution), so one
      declaration surfaces matching Discussions, Circles, AND Chambers
 ; one declaration, three content types, zero new tagging system.
-   - **Per-persona, never compared across faces; and a structural
+   - **Per-identity, never compared across identities; and a structural
      non-goal stated explicitly: no interest-similarity/"people like
      you" surface is EVER built, for any two profiles**, not just a
-     soul's own two faces. Stays single-profile feed tuning, full
+     soul's own two identities. Stays single-profile feed tuning, full
      stop.
    - **Private by default**, public display an explicit per-profile
-     opt-in; natural home: the per-face profile window
+     opt-in; natural home: the per-identity profile window
      (Presentation Backlog #7).
    - **Used for exactly one thing; that profile's own feed/
      discovery** (never ads, sale, or marketing; constitutional
@@ -425,7 +425,7 @@ at the Phase 9 real-money re-review regardless.
    symmetry priced equally on both sides), LS deductions 5/10 ×tier
    (= v2 engine's answer weight / participation cap), Sentinel 5
    flags/24h (= an appeal-deposit's worth of collective stake in one
-   day-cycle), poll-closing-soon 6h (¼ day-cycle). Face-switch
+   day-cycle), poll-closing-soon 6h (¼ day-cycle). Identity-switch
    cooldown RESOLVED by you (2026-07-11): none; seamless switching is
    the vision; mechanism retained as a 0–15 min rail. Supervision
    cold-start interim unchanged (a rule, not a number).
@@ -559,9 +559,9 @@ at the Phase 9 real-money re-review regardless.
     dashboard IS the platform dashboard) meets the ratified parking
     rule (§3.3.5: returning to the hub RELEASES locks) at one point
     the specs never had to reconcile before: does landing on the
-    platform dashboard park your face in the Agora? **Derived answer:
+   platform dashboard park your identity in the Agora? **Derived answer:
     NO; the threshold parks nothing.** The alternative would let one
-    face's Agora session block the OTHER face from the homepage
+    identity's Agora session block the OTHER identity from the homepage
     itself, contradicting §3.3.5 and making the front door refusable.
     The Agora's INTERIOR doors (its domain pages, Governance room,
     discussion threads) park exactly as they always did; the

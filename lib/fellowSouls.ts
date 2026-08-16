@@ -1,6 +1,6 @@
 // Fellow Souls (Phase 6.5; FELLOW_SOULS_AND_DM_SPEC §1–§4).
 //
-// The bond is mutual consent between two PROFILES; any face
+// The bond is mutual consent between two PROFILES; any identity
 // combination; the platform neither knows nor asks whether two bonded
 // profiles share a human. The load-bearing privacy rules (§4) are
 // structural here:
@@ -93,14 +93,14 @@ export async function isBlocked(
 /**
  * Send a fellow-soul request (§2): gate-cleared (private recording;
  * social actions are not civic record), initiator pays the rail, one
- * optional short note. Declined/ignored senders face the cooldown rail.
+ * optional short note. Declined/ignored senders meet the cooldown rail.
  */
 export async function sendFellowSoulRequest(
   db: PrismaClient,
   input: { fromProfileId: string; toHandle: string; note?: string }
 ): Promise<SocialResult> {
   const from = await db.profile.findUnique({ where: { id: input.fromProfileId } });
-  if (!from || from.status !== "active") return { ok: false, reason: "No active face." };
+  if (!from || from.status !== "active") return { ok: false, reason: "No active identity." };
   if (!(await hasPostingConsents(db, from.id))) {
     return { ok: false, reason: "The permanence and Constitution acknowledgments come first." };
   }
@@ -323,7 +323,7 @@ export async function expireStaleRequests(db: PrismaClient): Promise<void> {
 }
 
 /** Everything the viewer's requests area shows (§5.3: requests are
- *  quiet): incoming fellow-soul requests, for this face only. */
+ *  quiet): incoming fellow-soul requests, for this identity only. */
 export async function requestsFor(db: PrismaClient, profileId: string) {
   const incoming = await db.fellowSoulRequest.findMany({
     where: { toProfileId: profileId, status: "pending" },

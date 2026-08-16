@@ -27,7 +27,7 @@ export default async function DonePage({
       )}
       <p className="interim-note">
         A note kept deliberately out of your settings: whenever you want a
-        second face, the Alias ceremony starts from your credential; see
+        second identity, the Alias ceremony starts from your credential; see
         the orientation notes, or ask any soul where aliases hatch.
       </p>
     </div>

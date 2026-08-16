@@ -78,7 +78,7 @@ export default async function StorefrontPage({
     select: { displayName: true },
   });
   // The creator's Light Score; public record on public-chamber
-  // storefronts (owner-ratified 2026-07-09): per-face, per-pillar, like
+  // storefronts (owner-ratified 2026-07-09): per-identity, per-pillar, like
   // everywhere. Transparency instead of gatekeeping (OQ5): souls judge
   // standing with their own eyes; the platform never pre-filters.
   const constellation = chamber.isPublic
@@ -138,7 +138,7 @@ export default async function StorefrontPage({
             curtain. Judge with your own eyes.
           </p>
           {constellation.pillars.length === 0 ? (
-            <p className="lore">No standing yet; this face is new or quiet.</p>
+            <p className="lore">No standing yet; this identity is new or quiet.</p>
           ) : (
             <ul className="discussions">
               {constellation.pillars.map((p) => (

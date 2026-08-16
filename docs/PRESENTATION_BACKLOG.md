@@ -57,7 +57,7 @@ in a browser walkthrough with tests green.
 ## D. New surfaces (small feature work, not just style)
 
 7. **User profile window; souls add information about themselves.**
-   Per-face, always (an Alias bio and a True Self bio must never
+   Per-identity, always (an Alias bio and a True Self bio must never
    share a database row or a writing surface). ⚠ Privacy flag to
    design around: free-text self-description is a self-disclosure and
    stylometry vector (DUAL_IDENTITY §7.1 v2/v6); the composer should
@@ -72,7 +72,7 @@ in a browser walkthrough with tests green.
    change (currently buried on /profile), notification/feed
    preferences (currently scattered on their own surfaces), and the
    future profile-bio editing (#7). Design rule: settings are
-   PER-FACE wherever they touch identity or expression; an Alias's
+   PER-IDENTITY wherever they touch identity or expression; an Alias's
    settings screen must never display or echo the True Self's
    choices (a shared "account settings" page would itself be a
    linkage surface). Browser-level choices like animation method can
@@ -89,15 +89,15 @@ in a browser walkthrough with tests green.
 12. **THEME = IDENTITY (owner's vision, 2026-07-11).** True Self =
     white theme with the platform's aqua blue; Alias = dark/black
     theme with the same blue; the blue is the brand thread across
-    both; one brand, two faces. **Face switching = the card flip:**
+    both; one brand, two identities. **Identity switching = the card flip:**
     the entire page flips like a playing card, white side to dark
-    side. The soul always knows which face they're wearing from the
+    side. The soul always knows which identity they're using from the
     room's color alone; the dual-identity invariant rendered as
     ambient, unmissable state. Design notes: theme-as-signal
     deliberately overrides personal light/dark preference (the
-    safety signal wins; posting as the wrong face is the error that
+    safety signal wins; posting as the wrong identity is the error that
     self-doxxes); **the reader state is the BLUE theme** (owner,
-    2026-07-11): signed-out / no-face = the aqua blue itself; blue
+    2026-07-11): signed-out / no identity = the aqua blue itself; blue
     means reading, white means True Self, dark means Alias, and the
     brand color doubles as "free to read" made visible; **the switch
     animation method is a soul's choice in settings** (card flip

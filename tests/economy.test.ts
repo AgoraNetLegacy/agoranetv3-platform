@@ -223,8 +223,8 @@ describe("fees flow to the treasury", () => {
         body: "Back the next day.",
       });
       expect(r.ok).toBe(true);
-      // −1 fee, +1 base accrual, +1 streak bonus.
-      expect(await balanceOf(db, soul.id, "PC")).toBe(before - 1 + 1 + 1);
+      // −2 fee, +1 base accrual, +1 streak bonus.
+      expect(await balanceOf(db, soul.id, "PC")).toBe(before - 2 + 1 + 1);
       const streak = await db.economyEntry.count({
         where: { toProfileId: soul.id, kind: "accrual.streak" },
       });
