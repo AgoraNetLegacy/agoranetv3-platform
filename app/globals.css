@@ -346,7 +346,14 @@ header.site .brand { font-weight: 700; color: var(--ink); font-family: var(--fon
   background: transparent;
   box-shadow: 0 0 0 1px var(--muted);
 }
-.profile-mode-dot:hover { box-shadow: 0 0 0 2px var(--accent); }
+.profile-mode-dot:not(.spirit):hover {
+  background: #22e065;
+  box-shadow: 0 0 0 2px var(--accent), 0 0 9px rgba(34, 224, 101, .8);
+}
+.profile-mode-dot.spirit:hover {
+  background: transparent;
+  box-shadow: 0 0 0 2px var(--accent);
+}
 /* The same visual language on the fellow-souls list: a green presence
    dot beside each fellow; empty dot + faded name for a soul walking
    unseen (ghost level; the one crack in the veil, fellows only). */
