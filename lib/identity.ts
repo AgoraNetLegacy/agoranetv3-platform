@@ -316,7 +316,7 @@ export async function profileForAccessKey(db: PrismaClient, accessKey: string) {
   if (profile.status !== "active") {
     return {
       ok: false as const,
-      reason: "This face has not activated yet; check back soon.",
+      reason: "This Alias is still being prepared. Try again soon.",
     };
   }
   return { ok: true as const, profile };

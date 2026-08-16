@@ -10,14 +10,11 @@ export default async function LoginPage({
   const { m } = await searchParams;
   return (
     <div className="ceremony">
-      <h2>Sign in a face</h2>
+      <h2>Sign in to AgoraNet</h2>
       <p>
-        Each face signs in with its own access key; never with your
-        credential, and never through the other face. Paste it; hand-typing
-        64 characters is nobody&rsquo;s job. <strong>This is a one-time
-        introduction per browser:</strong> once a face is signed in here,
-        switching to it is one click in the top bar, keys never asked
-        again.
+        Use the access key for the identity you want to use. Your True Self
+        and Alias have separate keys. Sign in once on each browser; after
+        that, choose True Self or Alias from the profile menu.
       </p>
       {m && <div className="notice">{m}</div>}
       <form action={loginFace}>
@@ -28,9 +25,9 @@ export default async function LoginPage({
         <button type="submit">Sign in</button>
       </form>
       <p className="interim-note">
-        New here? <a href="/verify">Create your True Self.</a> Holding a
-        credential and wanting a second face? Choose{" "}
-        <a href="/alias">Create an Alias</a>.
+        New here? <a href="/verify">Create your True Self.</a> Already have
+        a True Self? <a href="/alias">Create an Alias</a> for private
+        participation.
       </p>
     </div>
   );
