@@ -1109,17 +1109,9 @@ export async function updateProfileBio(formData: FormData) {
 export async function submitWalletLink(formData: FormData) {
   const face = await requireFace("settings");
   const { recordWalletLink } = await import("@/lib/chain");
-  let cardanoAddresses: string[] = [];
-  try {
-    const parsed = JSON.parse(String(formData.get("cardanoAddresses") ?? "[]"));
-    if (Array.isArray(parsed)) cardanoAddresses = parsed.filter((a): a is string => typeof a === "string");
-  } catch {
-    // Fall back to the primary address below.
-  }
   const result = await recordWalletLink(db, {
     profileId: face.id,
     cardanoAddress: String(formData.get("cardanoAddress") ?? ""),
-    cardanoAddresses,
     network: String(formData.get("network") ?? ""),
   });
   revalidatePath("/settings");

@@ -47,7 +47,6 @@ export function LaceConnect({
       }
       const formData = new FormData();
       formData.set("cardanoAddress", address);
-      formData.set("cardanoAddresses", JSON.stringify(usedAddresses.length ? usedAddresses : [address]));
       formData.set("network", network);
       startTransition(async () => {
         await onLink(formData);

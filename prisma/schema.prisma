@@ -32,7 +32,6 @@ model TestnetWalletLink {
   id             String    @id @default(cuid())
   profileId      String    @unique
   cardanoAddress String
-  cardanoAddresses String? // JSON array of used addresses in this wallet account
   network        String // "preprod" | "preview"; never "mainnet", enforced at write
   connectedAt    DateTime  @default(now())
   // On-chain migration Slice 2: the user-signed self-custody proof tx.
