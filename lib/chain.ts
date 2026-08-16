@@ -7,7 +7,7 @@
 // is additive.
 
 import type { PrismaClient } from "@prisma/client";
-import { stringToHex } from "@meshsdk/core";
+import { deserializeAddress, stringToHex } from "@meshsdk/core";
 
 const TESTNETS = new Set(["preprod", "preview"]);
 
@@ -83,18 +83,48 @@ export async function demoAssetBalances(
   if (!projectId || !policyId) {
     throw new Error("Testnet asset configuration is incomplete.");
   }
-  const res = await fetch(
+  const headers = { project_id: projectId };
+  const primary = await fetch(
     `https://cardano-${net}.blockfrost.io/api/v0/addresses/${address}`,
-    { headers: { project_id: projectId }, cache: "no-store" }
+    { headers, cache: "no-store" }
   );
-  if (!res.ok) throw new Error(`Wallet asset lookup failed (${res.status}).`);
-  const data = (await res.json()) as {
+  if (!primary.ok) throw new Error(`Wallet asset lookup failed (${primary.status}).`);
+  const primaryData = (await primary.json()) as {
     amount: { unit: string; quantity: string }[];
+    stake_address?: string;
   };
-  const amount = new Map(data.amount.map((item) => [item.unit, item.quantity]));
+  const addresses = new Set([address]);
+  if (primaryData.stake_address) {
+    const account = await fetch(
+      `https://cardano-${net}.blockfrost.io/api/v0/accounts/${primaryData.stake_address}/addresses`,
+      { headers, cache: "no-store" }
+    );
+    if (account.ok) {
+      const accountAddresses = (await account.json()) as { address: string }[];
+      for (const item of accountAddresses) addresses.add(item.address);
+    }
+  } else {
+    // Keep the validation explicit for linked addresses even if a provider
+    // returns an unexpected address shape.
+    deserializeAddress(address);
+  }
+  const amount = new Map<string, bigint>();
+  for (const walletAddress of addresses) {
+    const response = walletAddress === address ? primary : await fetch(
+      `https://cardano-${net}.blockfrost.io/api/v0/addresses/${walletAddress}`,
+      { headers, cache: "no-store" }
+    );
+    if (!response.ok) continue;
+    const data = (walletAddress === address ? primaryData : await response.json()) as {
+      amount: { unit: string; quantity: string }[];
+    };
+    for (const item of data.amount) {
+      amount.set(item.unit, (amount.get(item.unit) ?? 0n) + BigInt(item.quantity));
+    }
+  }
   return {
-    pollCoin: amount.get(policyId + stringToHex("dPOLL")) ?? "0",
-    gratium: amount.get(policyId + stringToHex("dGRA")) ?? "0",
+    pollCoin: (amount.get(policyId + stringToHex("dPOLL")) ?? 0n).toString(),
+    gratium: (amount.get(policyId + stringToHex("dGRA")) ?? 0n).toString(),
   };
 }
 
