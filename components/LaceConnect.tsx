@@ -37,11 +37,16 @@ export function LaceConnect({
         return;
       }
       const wallet = await BrowserWallet.enable("lace");
-      // Prefer a used receive address so read-only balance checks follow the
-      // address that holds the wallet's existing test assets. Fall back to
-      // the change address for a brand-new wallet.
-      const usedAddresses = await wallet.getUsedAddresses();
-      const address = usedAddresses[0] ?? (await wallet.getChangeAddress());
+      // Lace's used-address list can include the first account even after the
+      // user selects another account in the authorization dialog. For Alias,
+      // use the current account's change address so the selected account is
+      // not accidentally linked to True Self. True Self keeps the used-address
+      // preference because its demo assets already live at that address.
+      const changeAddress = await wallet.getChangeAddress();
+      const usedAddresses = identity === "True Self"
+        ? await wallet.getUsedAddresses()
+        : [];
+      const address = usedAddresses[0] ?? changeAddress;
       if (!address.startsWith("addr_test1")) {
         setStatus(
           "Lace is connected to MAINNET. This rail is testnet-only by " +
