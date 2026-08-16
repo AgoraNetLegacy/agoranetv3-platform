@@ -84,6 +84,58 @@ export async function mintDemoPollCoin(quantity = "1000000") {
   return { policyId, unit: policyId + assetNameHex, assetNameHex, txHash, address: addr };
 }
 
+/** Mint and deliver the two demo currencies to a user-owned preprod address.
+ * TESTNET ONLY: the assets have no value, the recipient must be addr_test1,
+ * and the operator wallet only pays the preprod transaction fee.
+ */
+export async function mintDemoCurrenciesToAddress(
+  recipient: string,
+  pollCoinQuantity = "1000",
+  gratiumQuantity = "1000"
+) {
+  if (!recipient.startsWith("addr_test1")) {
+    throw new Error("Refusing to send demo currencies anywhere except a preprod address.");
+  }
+  const wallet = await mintWallet();
+  const operatorAddress =
+    (await wallet.getUsedAddresses())[0] ?? (await wallet.getChangeAddress());
+  const forge = ForgeScript.withOneSignature(operatorAddress);
+  const policyId = resolveScriptHash(forge);
+  const pollCoinName = "dPOLL";
+  const gratiumName = "dGRA";
+  const pollCoinUnit = policyId + stringToHex(pollCoinName);
+  const gratiumUnit = policyId + stringToHex(gratiumName);
+
+  const tx = new Transaction({ initiator: wallet });
+  tx.mintAsset(forge, {
+    assetName: pollCoinName,
+    assetQuantity: pollCoinQuantity,
+    metadata: {
+      name: "PollCoin Demo",
+      ticker: pollCoinName,
+      desc: "AgoraNet preprod test asset; no real value.",
+    },
+    label: "721",
+    recipient,
+  });
+  tx.mintAsset(forge, {
+    assetName: gratiumName,
+    assetQuantity: gratiumQuantity,
+    metadata: {
+      name: "Gratium Demo",
+      ticker: gratiumName,
+      desc: "AgoraNet preprod test asset; no real value.",
+    },
+    label: "721",
+    recipient,
+  });
+
+  const unsigned = await tx.build();
+  const signed = await wallet.signTx(unsigned);
+  const txHash = await wallet.submitTx(signed);
+  return { txHash, policyId, pollCoinUnit, gratiumUnit, recipient };
+}
+
 /** Anchor one civic-ledger hash into a preprod transaction's metadata
  *  (§3, CIP-20 style). The chain becomes an external, public witness
  *  to the internal ledger's integrity; anyone can look it up. */
