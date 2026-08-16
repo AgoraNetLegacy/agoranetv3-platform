@@ -75,6 +75,7 @@ export type DemoAssetBalances = {
   policyId: string;
   primaryPollCoin: string;
   primaryGratium: string;
+  primaryNativeUnits: string[];
 };
 
 /** Read the two demo assets from a linked preprod address. This is read-only;
@@ -138,6 +139,9 @@ export async function demoAssetBalances(
     policyId,
     primaryPollCoin: primaryAmount.get(policyId + stringToHex("dPOLL")) ?? "0",
     primaryGratium: primaryAmount.get(policyId + stringToHex("dGRA")) ?? "0",
+    primaryNativeUnits: primaryData.amount
+      .filter((item) => item.unit !== "lovelace")
+      .map((item) => `${item.unit}:${item.quantity}`),
   };
 }
 
