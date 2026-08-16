@@ -29,24 +29,16 @@ export default async function AliasPage({
       </p>
       {early && (
         <div className="notice">
-          <strong>The platform is young; read this honestly.</strong> An
-          Alias hides you in a crowd, and right now the crowd is small
-          (fewer than {smallPopulation} active souls). In a small
-          population, patterns identify people regardless of cryptography;
-          &ldquo;the only soul active in both of two niche places&rdquo; is
-          a signature. Your Alias is still unlinkable in every record we
-          keep; the crowd it hides in simply hasn&rsquo;t arrived yet. This
-          note lifts itself as the commons grows.
+          <strong>The community is small.</strong> Fewer than {smallPopulation}
+          active souls means patterns may identify you. Your Alias is
+          technically separate, but privacy improves as the community grows.
         </div>
       )}
       <p>
-        Your second face: for the argument you can't afford professionally,
-        the report you can't sign, the struggle you won't wear publicly.
-        Every human gets exactly one; and the check that enforces this is
-        blind: it can tell someone is trying twice without learning who.
-        This ceremony asks for your Humanity Credential; not your
-        signed-in account; so the platform only ever sees a fresh,
-        unattributable registration arrive.
+        An Alias is a separate identity for participation you do not want
+        tied to your True Self. We do not store a link between them. Your
+        Humanity Credential proves that you may create one Alias without
+        identifying you to the platform.
       </p>
       <h3>Before you create your Alias</h3>
       <ol className="disclosure-list">
