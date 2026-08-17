@@ -80,6 +80,19 @@ export async function markRead(
   });
 }
 
+export async function deleteOne(
+  db: PrismaClient,
+  input: { profileId: string; notificationId: string }
+): Promise<void> {
+  await db.notification.deleteMany({
+    where: { id: input.notificationId, profileId: input.profileId },
+  });
+}
+
+export async function deleteAll(db: PrismaClient, profileId: string): Promise<void> {
+  await db.notification.deleteMany({ where: { profileId } });
+}
+
 export async function inboxFor(db: PrismaClient, profileId: string) {
   const all = await db.notification.findMany({
     where: { profileId },

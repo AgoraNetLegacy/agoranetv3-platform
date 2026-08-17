@@ -4,7 +4,11 @@ import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { inboxFor, notifyClosingPolls } from "@/lib/notifications";
 import { runModerationSweeps } from "@/lib/moderation";
-import { markNotificationRead } from "@/app/actions";
+import {
+  clearNotifications,
+  deleteNotification,
+  markNotificationRead,
+} from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +23,7 @@ export default async function InboxPage() {
   await runModerationSweeps(db);
   await notifyClosingPolls(db);
   const inbox = await inboxFor(db, face.id);
+  const past = [...inbox.timeSensitive, ...inbox.quiet].filter((n) => n.readAt);
 
   const renderItem = (n: (typeof inbox.timeSensitive)[number]) => (
     <div key={n.id} className={`post ${n.readAt ? "" : "unread"}`}>
@@ -41,6 +46,10 @@ export default async function InboxPage() {
             </button>
           </form>
         )}
+        <form action={deleteNotification} className="inline">
+          <input type="hidden" name="notificationId" value={n.id} />
+          <button type="submit" className="linklike">delete</button>
+        </form>
       </div>
     </div>
   );
@@ -52,19 +61,29 @@ export default async function InboxPage() {
         This identity's inbox only. Time-sensitive first; the quiet tier waits
         for you; no streaks, no red-dot games, ever.
       </p>
+      <form action={clearNotifications}>
+        <button type="submit" className="linklike">Clear all notifications</button>
+      </form>
 
       <h3>Time-sensitive</h3>
-      {inbox.timeSensitive.length > 0 ? (
-        inbox.timeSensitive.map(renderItem)
+      {inbox.timeSensitive.filter((n) => !n.readAt).length > 0 ? (
+        inbox.timeSensitive.filter((n) => !n.readAt).map(renderItem)
       ) : (
         <p className="lore">Nothing needs you right now.</p>
       )}
 
       <h3>Quiet inbox (daily digest by default)</h3>
-      {inbox.quiet.length > 0 ? (
-        inbox.quiet.map(renderItem)
+      {inbox.quiet.filter((n) => !n.readAt).length > 0 ? (
+        inbox.quiet.filter((n) => !n.readAt).map(renderItem)
       ) : (
         <p className="lore">All quiet.</p>
+      )}
+
+      <h3>Past notifications</h3>
+      {past.length > 0 ? (
+        past.map(renderItem)
+      ) : (
+        <p className="lore">No past notifications yet.</p>
       )}
     </>
   );

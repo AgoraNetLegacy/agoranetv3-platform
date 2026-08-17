@@ -59,7 +59,7 @@ import {
   appealCase,
   acceptRestorative,
 } from "@/lib/moderation";
-import { markRead } from "@/lib/notifications";
+import { markRead, deleteOne, deleteAll } from "@/lib/notifications";
 import {
   verifyHumanity,
   registerTrueSelf,
@@ -1003,6 +1003,21 @@ export async function markNotificationRead(formData: FormData) {
     profileId: face.id,
     notificationId: String(formData.get("notificationId") ?? ""),
   });
+  redirect("/inbox");
+}
+
+export async function deleteNotification(formData: FormData) {
+  const face = await requireFace("settings");
+  await deleteOne(db, {
+    profileId: face.id,
+    notificationId: String(formData.get("notificationId") ?? ""),
+  });
+  redirect("/inbox");
+}
+
+export async function clearNotifications() {
+  const face = await requireFace("settings");
+  await deleteAll(db, face.id);
   redirect("/inbox");
 }
 
