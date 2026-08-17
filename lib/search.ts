@@ -83,6 +83,7 @@ export async function search(
 ): Promise<SearchHit[]> {
   const q = query.trim();
   if (!q) return [];
+  const soulQuery = q.replace(/^@/, "");
   const hits: SearchHit[] = [];
   const created = dateWhere(filters);
 
@@ -203,7 +204,7 @@ export async function search(
         // Spirit Mode: every level of the veil covers discovery; a
         // veiled soul simply isn't in this lane (lib/spirit.ts).
         spiritActive: false,
-        OR: [{ handle: { contains: q.toLowerCase().replace(/^@/, "") } }, { displayName: { contains: q } }],
+        OR: [{ handle: { contains: soulQuery.toLowerCase() } }, { displayName: { contains: soulQuery } }],
       },
       take: LIMIT_PER_TYPE,
     });
@@ -218,11 +219,11 @@ export async function search(
       bonds.map((b) => (b.aProfileId === viewerProfileId ? b.bProfileId : b.aProfileId))
     );
     for (const p of profiles) {
-      const exact = p.handle === q.toLowerCase().replace(/^@/, "");
+      const exact = p.handle === soulQuery.toLowerCase();
       hits.push({
         type: "souls",
         title: `${p.displayName} @${p.handle}`,
-        href: `/souls?q=${encodeURIComponent(p.handle)}`,
+        href: `/souls/${encodeURIComponent(p.handle)}`,
         badge: `verified human · joined ${p.joinedPeriod}${bonded.has(p.id) ? " · your fellow soul" : ""}`,
         score: exact ? 4 : 2,
       });
@@ -238,7 +239,7 @@ export async function search(
     const matches = await db.profile.findMany({
       where: {
         id: { in: ids },
-        OR: [{ handle: { contains: q.toLowerCase() } }, { displayName: { contains: q } }],
+        OR: [{ handle: { contains: soulQuery.toLowerCase() } }, { displayName: { contains: soulQuery } }],
       },
       take: LIMIT_PER_TYPE,
     });
