@@ -65,13 +65,13 @@ describe("the spirit level model", () => {
 });
 
 describe("discovery level", () => {
-  it("hides the veiled soul from the search Souls lane, and only while active", async () => {
+  it("keeps registered souls in the search Souls lane while offline", async () => {
     const before = await search(db, "veiled-soul", { types: ["souls"] }, null);
     expect(before.some((h) => h.title.includes("@veiled-soul"))).toBe(true);
 
     await setSpirit(veiledId, true, "discovery");
     const during = await search(db, "veiled-soul", { types: ["souls"] }, null);
-    expect(during.some((h) => h.title.includes("@veiled-soul"))).toBe(false);
+    expect(during.some((h) => h.title.includes("@veiled-soul"))).toBe(true);
 
     await setSpirit(veiledId, false);
     const after = await search(db, "veiled-soul", { types: ["souls"] }, null);
@@ -94,26 +94,24 @@ describe("discovery level", () => {
 });
 
 describe("inbound level", () => {
-  it("refuses new fellow-soul requests with the block's neutral wording", async () => {
+  it("does not block fellow-soul requests while offline", async () => {
     await setSpirit(veiledId, true, "inbound");
     const result = await sendFellowSoulRequest(db, {
       fromProfileId: seekerId,
       toHandle: "veiled-soul",
     });
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.reason).toBe("This request can't be delivered.");
+    expect(result.ok).toBe(true);
     await setSpirit(veiledId, false);
   });
 
-  it("refuses NEW threads but not existing conversations", async () => {
+  it("allows new and existing threads while offline", async () => {
     await setSpirit(veiledId, true, "inbound");
     const refused = await openThread(db, {
       fromProfileId: seekerId,
       toHandle: "veiled-soul",
       body: "Hello?",
     });
-    expect(refused.ok).toBe(false);
-    if (!refused.ok) expect(refused.reason).toBe("This message can't be delivered.");
+    expect(refused.ok).toBe(true);
 
     // Open a thread while visible, then re-veil at inbound: messages
     // into the existing thread still flow (only ghost stops those).
@@ -147,7 +145,7 @@ describe("inbound level", () => {
 });
 
 describe("ghost level", () => {
-  it("refuses messages into existing threads while ghosted, then lets them resume", async () => {
+  it("keeps messages available while offline", async () => {
     const thread = await db.dmThread.findFirstOrThrow({});
 
     await setSpirit(veiledId, true, "ghost");
@@ -156,8 +154,7 @@ describe("ghost level", () => {
       senderProfileId: seekerId,
       body: "Are you there?",
     });
-    expect(refused.ok).toBe(false);
-    if (!refused.ok) expect(refused.reason).toBe("This message can't be delivered.");
+    expect(refused.ok).toBe(true);
 
     // The veiled soul's own outbound messages are never blocked.
     const outbound = await sendMessage(db, {

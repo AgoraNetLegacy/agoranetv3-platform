@@ -145,7 +145,10 @@ Full runbooks for the two owner-facing chain demos ("come try" and
 - **Fellow Souls & DMs** (`lib/fellowSouls.ts`, `lib/dm.ts`, `/souls`)
 ; mutual-consent bonds, structurally private graphs, encrypted
   threads (Phase A escrow, disclosed verbatim), recipient-side
-  reporting into the unchanged moderation path.
+  reporting into the unchanged moderation path. Cross-device request,
+  acceptance, first message, and reply have been verified live in
+  production. Registered identities remain searchable while their
+  presence is shown separately as online or offline.
 - **Light Score & the dashboards** (`lib/lightScore.ts`, the hub,
   pillar and domain pages, `/transparency`, `/feed`, `/search`); 56
   domains as data, per-identity per-pillar standing (never a sum), the

@@ -18,7 +18,6 @@ import { randomUUID } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx, Tx } from "./db";
 import { clearGateTx } from "./gate";
-import { spiritCovers } from "./spirit";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
 import { chargeToTreasury, maybeFirstActionGrant } from "./economy";
@@ -119,11 +118,6 @@ export async function sendFellowSoulRequest(
   // Blocks are quiet (§5.2): the same neutral refusal a stranger would
   // see for any undeliverable request; never a block notice.
   if (await isBlocked(db, to.id, from.id)) {
-    return { ok: false, reason: "This request can't be delivered." };
-  }
-  // Spirit Mode at inbound or above refuses new requests; with the
-  // block's exact wording, so the veil is never itself a signal.
-  if (spiritCovers(to, "inbound")) {
     return { ok: false, reason: "This request can't be delivered." };
   }
   const pending = await db.fellowSoulRequest.findFirst({

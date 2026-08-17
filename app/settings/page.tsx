@@ -7,12 +7,10 @@ import {
   updateDisplayName,
   setSwitchAnimation,
   updateFeedWellbeing,
-  updateSpiritSettings,
   submitWalletLink,
   submitSelfCustodyProof,
   submitScriptDonation,
 } from "@/app/actions";
-import { SPIRIT_LEVELS, SPIRIT_LEVEL_LABELS } from "@/lib/spirit";
 import { getRail as getRailDirect } from "@/lib/rails";
 import {
   cardanoNetwork,
@@ -138,44 +136,6 @@ export default async function SettingsPage({
           </label>
         ))}
         <button type="submit">Save animation choice</button>
-      </form>
-
-      <h3>Spirit Mode</h3>
-      <p className="lore">
-        Choose whether this identity appears online. The green dot means
-        visible; the white dot means offline. New identities begin offline
-        until you choose to appear. The small dot on the profile bubble
-        toggles this instantly. Choose here how much the offline mode covers.
-        Refusals it
-        causes look identical to any undeliverable request, so the veil
-        is never itself a signal. What&rsquo;s already in the permanent
-        record stays attributed; no veil rewrites the record.
-      </p>
-      <form action={updateSpiritSettings}>
-        {SPIRIT_LEVELS.map((value) => (
-          <label key={value} style={{ display: "block", margin: "0.3rem 0" }}>
-            <input
-              type="radio"
-              name="spiritLevel"
-              value={value}
-              defaultChecked={face.spiritLevel === value}
-            />{" "}
-            {SPIRIT_LEVEL_LABELS[value]}
-          </label>
-        ))}
-        <label style={{ display: "block", margin: "0.55rem 0 0.3rem" }}>
-          <input
-            type="checkbox"
-            name="spiritOnLogin"
-            defaultChecked={face.spiritOnLogin}
-          />{" "}
-          Begin each fresh sign-in with Spirit Mode already on
-        </label>
-        <p className="lore" style={{ margin: "0.35rem 0" }}>
-          Right now: {face.spiritActive ? "offline (white dot)" : "online (green dot)"};
-          the dot on the bubble flips this instantly.
-        </p>
-        <button type="submit">Save Spirit Mode</button>
       </form>
 
       <h3>The Beacon; pacing</h3>

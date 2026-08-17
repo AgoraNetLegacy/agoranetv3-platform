@@ -223,6 +223,14 @@ both ways, recipient revealed one message and filed the report; case
 open in the queue with deposit held and rule cited, and a final scan
 showing zero social trace on the public ledger.
 
+**Latest live verification (2026-08-16):** two users on separate devices
+completed the full cross-device path: Jane received ShawnB's Fellow Soul
+request, accepted it, ShawnB sent the first message, and Jane replied.
+Both messages arrived successfully. Registered identities remain in the
+Souls registry while their presence dot can show white/offline; the dot is
+presence only, not a registry or messaging gate. New identities begin
+offline, and unregistered visitors remain read-only.
+
 **Derived rules set this phase (flagged):** releasing a bond
 (consent is ongoing; either side may withdraw, quietly) · DM-conduct
 strikes land in the meta pillar (moderation is pillar-scoped; DMs have

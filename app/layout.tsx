@@ -116,19 +116,13 @@ async function ProfileBubble() {
     // <details> because closed-details content is hidden and a button
     // inside <summary> would also toggle the panel.
     <div className="profile-bubble-anchor">
-      {/* Spirit Mode dot (owner-ruled 2026-07-21): the small dot on the
-          bubble IS the veil toggle; filled when visible, hollowed when
-          walking unseen. The level itself is a Settings choice. */}
+      {/* Presence dot: green means online; white means offline. */}
       <form action={toggleSpiritMode} className="spirit-toggle">
         <button
           type="submit"
           className={`profile-mode-dot ${chipClass}${face.spiritActive ? " spirit" : ""}`}
-          aria-label={
-            face.spiritActive
-              ? "Spirit Mode is on; click to become visible"
-              : "Click to enter Spirit Mode (visibility veil)"
-          }
-          title={face.spiritActive ? "Walking unseen; click to reappear" : "Spirit Mode"}
+          aria-label={face.spiritActive ? "Offline; click to appear online" : "Online; click to appear offline"}
+          title={face.spiritActive ? "Offline" : "Online"}
         />
       </form>
       {/* Keyed by the active identity: a successful switch remounts the

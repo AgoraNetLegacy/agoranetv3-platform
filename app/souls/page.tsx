@@ -160,7 +160,7 @@ export default async function SoulsPage({
       </p>
       <ul>
         {souls.map((s) => {
-          const unseen = s.spiritActive && s.spiritLevel === "ghost";
+          const unseen = s.spiritActive;
           return (
           <li key={s.id} className={unseen ? "soul-unseen" : undefined}>
             <span
@@ -170,7 +170,7 @@ export default async function SoulsPage({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="avatar-sm" src={`/img/${s.handle}/avatar`} alt="" />
             <Link href={`/souls/${s.handle}`} className="pseudonym">{s.displayName}</Link> @{s.handle}{" "}
-            {unseen && <span className="lore">· walking unseen</span>}{" "}
+            {unseen && <span className="lore">· offline</span>}{" "}
             <form action={submitReleaseBond} className="inline">
               <input type="hidden" name="otherProfileId" value={s.id} />
               <button type="submit">Release bond (quiet)</button>

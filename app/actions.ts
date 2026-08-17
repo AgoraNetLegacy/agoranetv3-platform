@@ -1215,9 +1215,7 @@ export async function setSwitchAnimation(formData: FormData) {
   backTo("/settings", "Switch animation set for this identity.");
 }
 
-/** Spirit Mode (owner-ruled 2026-07-21): the bubble dot flips the veil
- *  on/off at will; the level itself is a Settings choice. No redirect;
- *  the toggle must not yank the soul off the page they're reading. */
+/** Presence toggle: green dot online, white dot offline. */
 export async function toggleSpiritMode() {
   const face = await requireFace("settings");
   await db.profile.update({
@@ -1227,9 +1225,8 @@ export async function toggleSpiritMode() {
   revalidatePath("/", "layout");
 }
 
-/** The Settings side of Spirit Mode: which level the veil uses (all
- *  three available; discovery is the default) and whether fresh
- *  sign-ins begin already veiled. */
+/** Legacy onboarding settings retained for newly created/unregistered
+ *  identities; registered users use only the presence toggle. */
 export async function updateSpiritSettings(formData: FormData) {
   const face = await requireFace("settings");
   const level = asSpiritLevel(String(formData.get("spiritLevel") ?? "discovery"));
@@ -1239,7 +1236,7 @@ export async function updateSpiritSettings(formData: FormData) {
     data: { spiritLevel: level, spiritOnLogin: onLogin },
   });
   revalidatePath("/", "layout");
-  backTo("/settings", "Spirit Mode set for this identity.");
+  backTo("/settings", "Presence settings saved.");
 }
 
 // ------------------------------------------------------------------ session
@@ -1255,8 +1252,8 @@ export async function loginFace(formData: FormData) {
   const sessionId = await ensureSessionId();
   const session = await currentSession();
   await addFace(db, { sessionId, profileId: result.profile.id });
-  // Spirit Mode: an identity that chose to begin sign-ins veiled arrives
-  // veiled (Settings choice, per identity).
+  // Newly created identities may begin offline; the registered user can
+  // switch online with the presence dot.
   if (result.profile.spiritOnLogin && !result.profile.spiritActive) {
     await db.profile.update({
       where: { id: result.profile.id },

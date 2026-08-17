@@ -36,7 +36,6 @@ export default async function SoulWindow({
   if (!soul) notFound();
   const viewer = await activeFace();
   const isOwn = viewer?.id === soul.id;
-  if (soul.spiritActive && !isOwn) notFound();
 
   const images = await db.profileImage.findMany({
     where: { profileId: soul.id },
