@@ -886,7 +886,7 @@ header.site {
   -webkit-backdrop-filter: blur(22px) saturate(1.4);
 }
 
-button.linklike.brand {
+header.site .brand {
   display: inline-flex;
   align-items: center;
   gap: 0.72rem;
@@ -896,6 +896,7 @@ button.linklike.brand {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+header.site .brand:hover { text-decoration: none; }
 .brand-mark {
   display: grid;
   place-items: center;
