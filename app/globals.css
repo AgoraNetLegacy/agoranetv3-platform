@@ -1100,6 +1100,44 @@ header.site .brand:hover { text-decoration: none; }
   background: var(--surface);
 }
 .icon-link:hover { border-color: var(--accent); text-decoration: none; }
+.light-score-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+.light-score-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.light-score-menu > summary::-webkit-details-marker { display: none; }
+.light-score-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 80;
+  width: 250px;
+  padding: 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.light-score-menu:not([open]) .light-score-panel { display: none; }
+.light-score-menu:not([open]):hover .light-score-panel,
+.light-score-menu:not([open]):focus-within .light-score-panel { display: block; }
+.light-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.42rem 0.5rem;
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 0.78rem;
+}
+.light-score-row + .light-score-row { border-top: 1px solid var(--line); }
+.light-score-row span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.light-score-row .pillar-mark { width: 17px; height: 17px; }
+.light-score-row strong { font-variant-numeric: tabular-nums; }
 .notification-dot {
   position: absolute;
   top: -5px;

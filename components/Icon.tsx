@@ -66,6 +66,12 @@ const PATHS = {
       <path d="M10 20.2h4" />
     </>
   ),
+  lightScore: (
+    <>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 2.5v3M12 18.5v3M3.8 7.2l2.6 1.5M17.6 15.3l2.6 1.5M3.8 16.8l2.6-1.5M17.6 8.7l2.6-1.5" />
+    </>
+  ),
   wallet: (
     <>
       <rect x="3" y="5" width="18" height="14" rx="3" />
