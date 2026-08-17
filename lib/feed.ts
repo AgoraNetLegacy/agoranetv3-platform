@@ -282,6 +282,8 @@ export interface StorefrontCard {
   title: string;
   subject: string;
   whyCare: string;
+  coverImageUrl: string | null;
+  coverImageAlt: string | null;
   creatorHandle: string;
   members: number;
   createdAt: Date;
@@ -309,6 +311,8 @@ export async function chamberStorefrontCards(
     title: c.title,
     subject: c.subject,
     whyCare: c.whyCare,
+    coverImageUrl: c.coverImageUrl,
+    coverImageAlt: c.coverImageAlt,
     creatorHandle: c.creatorHandle,
     members: c.members.length,
     createdAt: c.createdAt,

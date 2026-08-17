@@ -102,6 +102,9 @@ export async function PollinatorStrip() {
       <ul className="discussions">
         {storefronts.map((c) => (
           <li key={c.chamberId}>
+            {c.coverImageUrl && (
+              <img className="storefront-card-image" src={c.coverImageUrl} alt={c.coverImageAlt ?? ""} />
+            )}
             <Link href={`/pollinator/${c.chamberId}`}><Icon name="hive" /> {c.title}</Link>{" "}
             <span className="badge permanent">Public chamber</span>
             <div className="meta">

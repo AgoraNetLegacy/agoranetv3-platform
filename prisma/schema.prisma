@@ -1109,6 +1109,11 @@ model Chamber {
   // attention.
   pitch   String
   whyCare String
+  // Optional public storefront cover; binary data lives in Vercel Blob.
+  coverImageUrl  String?
+  coverImageAlt  String?
+  coverImageHash String?
+  coverImageUpdatedAt DateTime?
   // Public/private, FIXED at creation (§4.1; conversion is the §10.6
   // lifecycle open item; not built). Private chambers never qualify
   // for the tournament (owner-ratified); no conversion path is needed

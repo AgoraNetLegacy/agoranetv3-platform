@@ -57,6 +57,11 @@ function sideOf(thread: ThreadRow, profileId: string): "initiator" | "other" | n
   return null;
 }
 
+function notificationPreview(body: string): string {
+  const compact = body.replace(/\s+/g, " ").trim();
+  return compact.length > 180 ? `${compact.slice(0, 177)}…` : compact;
+}
+
 // ------------------------------------------------------------------ threads
 
 /**
@@ -156,8 +161,8 @@ export async function openThread(
       });
 
       // §5.3: fellow-soul DMs are time-sensitive (a human is waiting);
-      // stranger requests wait quietly. Aggregated per thread; content
-      // never rides a notification.
+      // stranger requests wait quietly. Aggregated per thread; the
+      // recipient gets a short preview and a direct thread link.
       await notify(tx, {
         profileId: to.id,
         tier: bonded ? "time-sensitive" : "quiet",
@@ -166,7 +171,7 @@ export async function openThread(
           ? `A message from a fellow soul`
           : "A stranger opened a conversation",
         body: bonded
-          ? "A fellow soul wrote to you; the message is in your threads."
+          ? `“${notificationPreview(body)}”`
           : "It waits in your Requests. Reply to open the thread, ignore it, or decline; all free.",
         refType: "dm-thread",
         refId: thread.id,
@@ -262,7 +267,7 @@ export async function sendMessage(
           tier: bonded ? "time-sensitive" : "quiet",
           category: bonded ? "dm" : "request",
           title: bonded ? "A message from a fellow soul" : "A reply in your thread",
-          body: "New words in your thread.",
+          body: `“${notificationPreview(body)}”`,
           refType: "dm-thread",
           refId: thread.id,
           aggregationKey: `dm:${thread.id}`,
