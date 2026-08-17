@@ -847,6 +847,12 @@ body::before {
 }
 
 html[data-theme="alias"] body::before { opacity: 0.5; }
+html[data-theme="true-self"] body {
+  background: #ffffff;
+}
+html[data-theme="true-self"] body::before {
+  opacity: 0;
+}
 
 h1, h2, h3, h4 {
   font-family: var(--font-text);
