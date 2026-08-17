@@ -1326,7 +1326,9 @@ export async function switchToFace(formData: FormData) {
 
 /** Returning to the hub ends the active identity's pillar sessions (§3.3.5). */
 export async function returnToHub() {
-  await limitSession("faceSwitch");
+  // This is navigation, not an identity switch. It must remain available
+  // even when the session has recently switched identities or navigated
+  // quickly; the cleanup below is idempotent and scoped to this session.
   const session = await currentSession();
   if (session?.activeProfileId) {
     await releaseLocks(db, {
