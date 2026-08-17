@@ -85,6 +85,7 @@ async function FaceBar() {
           <Icon name="lightScore" />
         </summary>
         <div className="light-score-panel">
+          <div className="light-score-heading">Light Score</div>
           {diagnosticPillars.map((pillar) => (
             <div className="light-score-row" key={pillar.id}>
               <span><PillarMark slug={pillar.slug} /> {pillar.name}</span>

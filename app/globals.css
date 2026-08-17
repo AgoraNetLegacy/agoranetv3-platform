@@ -1124,6 +1124,13 @@ header.site .brand:hover { text-decoration: none; }
 .light-score-menu:not([open]) .light-score-panel { display: none; }
 .light-score-menu:not([open]):hover .light-score-panel,
 .light-score-menu:not([open]):focus-within .light-score-panel { display: block; }
+.light-score-heading {
+  padding: 0.35rem 0.5rem 0.55rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
 .light-score-row {
   display: flex;
   align-items: center;
