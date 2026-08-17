@@ -138,8 +138,8 @@ button:not(.linklike):not(.navlink-button):not(.profile-mode-dot):hover {
 }
 .ceremony button[type="submit"]:not(.linklike),
 form.composer button[type="submit"]:not(.linklike) {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: #dc2626;
+  color: #ffffff;
   border-color: var(--accent);
 }
 .ceremony button[type="submit"]:not(.linklike):hover,
@@ -793,15 +793,15 @@ html[data-theme="reader"] {
 }
 
 html[data-theme="true-self"] {
-  --bg: #f7fafb;
-  --surface: rgba(255, 255, 255, 0.9);
-  --surface-2: rgba(239, 247, 249, 0.78);
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #ffffff;
   --ink: #172d35;
   --muted: #60777f;
   --line: rgba(29, 82, 96, 0.12);
   --accent: #087f99;
   --accent-soft: rgba(25, 188, 216, 0.1);
-  --header-bg: rgba(255, 255, 255, 0.84);
+  --header-bg: #ffffff;
   --glow: rgba(16, 176, 204, 0.17);
 }
 
@@ -1332,7 +1332,7 @@ html[data-theme="true-self"] .agora-dashboard-backdrop {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: #eef2fb url("/brand/agora/agora-hero-starfield-light.png") center / cover no-repeat;
+  background: #ffffff;
 }
 /* The Alias room gets the dark rendering as the page's own backdrop,
    softly blurred (owner ask); the hero card keeps the sharp copy, so
