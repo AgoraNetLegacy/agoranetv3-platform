@@ -1374,7 +1374,9 @@ table.books tr:last-child td { border-bottom: 0; }
 .switch-panel { border-radius: 14px; box-shadow: var(--shadow-raised); }
 
 @media (max-width: 1120px) {
-  .balance-chip { display: none; }
+  /* Balances remain visible on tablets and phones; they are core state,
+     not desktop-only decoration. */
+  .balance-chip { display: inline-flex; flex-shrink: 0; }
   .search-door { min-width: 42px; width: 42px; padding: 0; justify-content: center; }
   .search-door span { display: none; }
 }
@@ -1389,6 +1391,8 @@ table.books tr:last-child td { border-bottom: 0; }
   .nav-toggle { display: grid; place-items: center; width: 38px; height: 38px; padding: 0; }
   .nav-toggle .pi { font-size: 1.3rem; }
   .face-bar { margin-left: auto; }
+  .balance-chip { gap: 0.35rem; padding: 0.28rem 0.45rem; font-size: 0.72rem; }
+  .balance-divider { height: 13px; }
   .face-bar > a:not(.icon-link), .face-bar > form, .switch-control { display: none; }
   .face-bar > a.mobile-login-link { display: inline-block; }
   .face-chip { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
@@ -1402,6 +1406,9 @@ table.books tr:last-child td { border-bottom: 0; }
   .search-door { display: none; }
   .face-chip { max-width: 145px; font-size: 0.68rem; }
   .icon-link { width: 34px; height: 34px; }
+  .balance-chip { gap: 0.25rem; padding: 0.24rem 0.35rem; }
+  .balance-chip .currency-symbol { display: none; }
+  .balance-divider { height: 12px; }
   h1 { font-size: 2rem; }
   .why-banner { border-radius: 20px; }
   .pillar-grid, .domain-grid { grid-template-columns: 1fr; }
