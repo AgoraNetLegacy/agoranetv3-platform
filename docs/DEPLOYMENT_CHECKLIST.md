@@ -40,6 +40,8 @@ delete or repurpose hosted resources until their role is recorded here.
 
 - [x] Run `npm run db:verify:postgres` against staging; all checks passed.
 - [x] Run `STAGING_URL=https://agoranet-staging.vercel.app npm run smoke:staging`.
+- [x] Enable Cloudflare Turnstile in Vercel Production and verify the live
+  `/verify` flow on `agoranet.ai`.
 - [ ] Complete one throwaway-soul walkthrough.
 - [x] Record final URLs and resource names here.
 
@@ -71,3 +73,5 @@ yet been assigned:
 - Verification: Postgres invariant suite passed; all public smoke surfaces
   returned HTTP 200 with their expected landmarks; Railway operations service
   is active with scheduled jobs and failure notifications configured.
+- Anti-bot gate: Cloudflare Turnstile is enabled in Production; `/verify`
+  successfully renders and validates the challenge.

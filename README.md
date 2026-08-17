@@ -9,7 +9,8 @@ seven-year schedule.
 
 **Status:** Phases 0–8.7 are substantially built and checkpointed,
 including the Presentation Era (8.5), Testnet Rails (8.6), Treasury
-expansion (8.7), Beacon Feed, and staging deployment. The platform runs
+expansion (8.7), Beacon Feed, staging deployment, and the live Turnstile
+anti-bot gate. The platform runs
 its full showcase form on real test-network rails. **The platform is live** at
 https://www.agoranet.ai, with https://agoranet.ai redirecting to the
 canonical `www` hostname. The Vercel deployment URL

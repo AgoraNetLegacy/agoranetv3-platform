@@ -58,7 +58,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     category: "Your two identities",
     summary: "Every human gets exactly one of each; the platform never stores a link between them.",
     body: [
-      "Your True Self is the identity you sign; your Alias is for what you can't afford to sign; the argument that could cost you professionally, the report you can't put your name to, the struggle you won't wear publicly.",
+      "Your True Self is the identity you sign publicly. Every user can also have one Alias for sensitive conversations, personal experiences, or arguments they do not want tied to their public name.",
       "Every human gets exactly one Alias, enforced by a blind check: the platform can tell someone is trying twice without learning who. No record anywhere connects your two identities; not in the database, not in the ledger, not in search. That unlinkability is why the Alias ceremony asks for your Humanity Credential instead of your signed-in account.",
       "A new Alias is available immediately but starts invisible to the community. You decide when to make it public using the visibility control. The room's color always tells you whether you are using your True Self or Alias.",
     ],

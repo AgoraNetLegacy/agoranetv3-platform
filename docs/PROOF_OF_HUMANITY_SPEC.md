@@ -76,10 +76,16 @@ be described as proof only with the issuer, claim scope, and limitations named.
   unlinkable nullifier is sufficient.
 - Duplicate proof, replay, expired proof, revoked proof, and issuer mismatch
   must fail closed without revealing which other account caused a collision.
+- Every True Self registration, Alias registration, and governance vote must
+  require the strongest currently available freshness check. In Phase A this
+  is a server-verified Turnstile check; after issuer cutover it becomes a fresh
+  issuer-backed POH presentation.
 
-## 6. Random proof-of-humanity checks
+## 6. Random proof-of-humanity checks for active users
 
-Random checks are part of the intended product, but they must be credential
+Random checks are a separate feature from enrollment. Every True Self
+registration is checked; the randomized cadence applies to users who are
+already participating on the platform. The checks must be credential
 presentations, not surprise CAPTCHA punishment.
 
 - At enrollment, obtain an A2 proof and establish the True-Self registration
@@ -131,4 +137,3 @@ Until an independent issuer is live, the gate must say that AgoraNet
 operates an interim issuer, the credential is not independent proof of
 humanity, duplicate re-verification is not fully detectable, and the
 testnet Identus rail is not the production gate.
-

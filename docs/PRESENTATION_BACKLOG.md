@@ -26,7 +26,8 @@ in a browser walkthrough with tests green.
 ## A. Information architecture (needs a short spec + owner ratification before building)
 
 1. **The Agora is the hub.** Home/default screen = The Agora, matching
-   the thesis ("the six diagnose, The Agora equips"). The feed lives
+   the thesis ("the six examine the forces that hold us back; The Agora
+   equips us to act"). The feed lives
    there. Design wrinkle to solve: home-Agora vs. the Agora pillar's
    own dashboard must feel like one place at two depths.
 2. **Left-sidebar feature navigation.** The 7 Pillars become one

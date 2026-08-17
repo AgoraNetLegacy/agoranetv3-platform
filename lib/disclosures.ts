@@ -97,20 +97,22 @@ export const PERMANENCE_CONSENT = {
 export const CONSTITUTION_ACK = {
   version: CONSENT_VERSIONS.constitution,
   summary:
-    "The AgoraNet Constitution sets the rails this platform runs on. " +
-    "Seven promises no vote can casually set aside: the public record " +
-    "only ever shows your chosen name, never who you really are; one " +
-    "human gets two identities; a True Self and an Alias; that can " +
-    "never be connected, even by us; no score ever sums you up as one " +
-    "number; one profile, one vote; money never buys outcomes; reading " +
-    "is always free, acting requires being verified as one real human; " +
-    "records cannot be quietly rewritten; and the community itself " +
-    "inherits the platform's governance over time. Rules are enforced " +
-    "by community members drawn at random for short terms; there are " +
-    "no staff moderators; and nobody can be punished except under a " +
-    "written rule, with every ruling citing the rule it enforces and " +
-    "one appeal to a community Tribunal. By continuing you acknowledge " +
-    "the Constitution as the terms of this space.",
+    "The Constitution sets the rules of this space. By continuing, you " +
+    "agree to these core promises:",
+  items: [
+    "Your public record shows only the name you choose; never your legal identity.",
+    "One human may use one True Self and one Alias; the platform keeps them separate.",
+    "Light Score is AgoraNet's version of reputation: it reflects your standing in each pillar, never as one global ranking; your True Self and Alias standings never touch.",
+    "One profile gets one vote.",
+    "Money cannot buy an outcome or paid visibility.",
+    "Reading is free. Acting requires passing the current interim humanity check.",
+    "Permanent records cannot be quietly rewritten.",
+    "The community inherits governance of the platform over time.",
+  ],
+  enforcement:
+    "Written rules are enforced by randomly selected community members, not " +
+    "staff moderators. Every ruling must cite the rule it enforces, and each " +
+    "case has one appeal to a community Tribunal.",
 };
 
 /**
@@ -130,8 +132,11 @@ export const ALIAS_DISCLOSURES = {
       "(stylometry is a mature research field), your own timing " +
       "patterns, and self-disclosure. If you say something as your " +
       "Alias that only your True Self would know, no system can help.",
-    "The parking rule protects you: one identity per pillar at a time, so " +
-      "your two identities never appear side by side in the same room.",
+    "Your identities use separate rooms. Each pillar allows only one of " +
+      "your identities at a time. If you enter as your True Self, your Alias " +
+      "must wait until you leave; the two can never appear there together. " +
+      "A blocked-entry message is the privacy protection working, not an " +
+      "error.",
     "Your True Self and Alias each have separate PollCoin and Gratium " +
       "balances. Alias activity uses the Alias balance; it never draws " +
       "from your True Self balance, and the balances are never merged.",

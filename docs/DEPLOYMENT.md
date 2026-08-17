@@ -14,7 +14,9 @@ is `www.agoranet.ai`; `agoranet.ai` redirects there.
 **Verified 2026-08-16:** Railway migration `0_init`, idempotent seed,
 `db:verify:postgres` (all checks), and `smoke:staging` (all public
 surfaces returned HTTP 200). The Railway operations service is also
-configured for scheduled jobs and failure notifications.
+configured for scheduled jobs and failure notifications. Cloudflare
+Turnstile is enabled in Vercel Production and the live `/verify` flow on
+`agoranet.ai` successfully renders and validates the anti-bot challenge.
 
 **Owner directive (2026-07-13): reuse his existing stack; Vercel for
 the app, Railway for the backend infra** (his convention across his

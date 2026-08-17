@@ -6,6 +6,7 @@ import { activeFace } from "@/lib/webSession";
 import { followInFeed } from "@/app/actions";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
 import { submitVote, startPollDiscussion } from "@/app/actions";
+import { TurnstileField } from "@/components/TurnstileField";
 import { PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
@@ -173,6 +174,9 @@ export default async function PollPage({
                   {tally && `; ${tally.get(o.id) ?? 0} so far`}
                 </label>
               ))}
+              {poll.isGovernance && (
+                <TurnstileField siteKey={process.env.TURNSTILE_SITE_KEY} />
+              )}
               <button type="submit">
                 Cast vote as {viewer.displayName} @{viewer.handle}
               </button>

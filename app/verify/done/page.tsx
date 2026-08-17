@@ -14,7 +14,7 @@ export default async function DonePage({
   const { returnTo } = await searchParams;
   return (
     <div className="ceremony">
-      <h2>You're verified; one human, one voice</h2>
+      <h2>You&apos;re verified; one human, two identities</h2>
       {returnTo ? (
         <p>
           Now finish what you came to do:{" "}
@@ -26,9 +26,9 @@ export default async function DonePage({
         </p>
       )}
       <p className="interim-note">
-        A note kept deliberately out of your settings: whenever you want a
-        second identity, the Alias ceremony starts from your credential; see
-        the orientation notes, or ask any soul where aliases hatch.
+        You can use your True Self or create one Alias later. Both identities
+        can speak, but they remain separate, and together they count as one
+        verified human and one vote.
       </p>
     </div>
   );

@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 // Agora). It carries: the what-is-this-place framing for first arrivals,
 // the feed (per-persona for signed-in souls; the open lens for readers),
 // the Agora pillar's own anatomy, and doors to everything else. The
-// thesis rendered literally: the six diagnose, The Agora equips.
+// thesis: six pillars examine what holds us back; The Agora equips us to act.
 //
 // Parking note (derived, flagged in DECISIONS_PENDING): this threshold
 // parks nothing; the hub has always been where locks release (§3.3.5),
@@ -64,8 +64,8 @@ export default async function AgoraDashboard({
           {agora.classicalName}; {agora.loreName}
         </p>
         <p className="why-text">
-          A purpose-built civic commons. Six pillars diagnose what's
-          broken; The Agora; this room; holds the tools to fix it
+          A purpose-built civic commons. Six pillars examine the forces that
+          hold us back; The Agora; this room; holds the tools to address them
           together: permanent public discussion, sealed collective
           decisions, provable action. Reading is free, forever. Acting
           requires proving you're one real human, once.

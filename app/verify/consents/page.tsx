@@ -57,6 +57,12 @@ export default async function ConsentsPage({
       <JourneySteps current="consents" />
       <h2>The Constitution; the rules of this space</h2>
       <p>{CONSTITUTION_ACK.summary}</p>
+      <ol className="consent-list">
+        {CONSTITUTION_ACK.items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ol>
+      <p>{CONSTITUTION_ACK.enforcement}</p>
       <p className="interim-note">
         <Link href="/constitution">Read the full Constitution →</Link>{" "}
         It is public and free to read, before and after you agree; as is{" "}

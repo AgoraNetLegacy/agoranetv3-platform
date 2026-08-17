@@ -62,9 +62,9 @@ export const PILLAR_EDITORIAL: PillarEditorial[] = [
   },
   {
     pillarSlug: "agoranet",
-    hookLine: "The instrument layer: the six diagnose, The Agora equips, the community inherits.",
+    hookLine: "The instrument layer: six examine what holds us back, The Agora equips, the community inherits.",
     whyBanner:
-      "The six pillars end in questions; The Agora is what makes the questions answerable. It is not a seventh value; it is the instrument layer: an economy that cannot sell attention because it never captures it, records that cannot be revised because no one holds the pen, judges that cannot be bought because they cannot be predicted, and a founder whose power is constitutionally scheduled to dissolve into the community it served. The six diagnose. The Agora equips. The community inherits.",
+      "The six pillars end in questions; The Agora is what makes the questions answerable. It is not a seventh value; it is the instrument layer: an economy that cannot sell attention because it never captures it, records that cannot be revised because no one holds the pen, judges that cannot be bought because they cannot be predicted, and a founder whose power is constitutionally scheduled to dissolve into the community it served. The six examine the forces that hold us back. The Agora equips us to act. The community inherits.",
     stoicPrinciple: "The Discipline of Assent",
   },
 ];

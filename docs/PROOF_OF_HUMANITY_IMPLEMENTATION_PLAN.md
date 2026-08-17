@@ -1,9 +1,9 @@
 # Proof of Humanity Implementation Plan
 
-Status: Phase 0/Turnstile integration implemented locally; production
-enablement still requires provider keys and deployment verification.
+Status: Phase 0/Turnstile integration deployed and verified in Vercel
+Production; independent proof-of-humanity issuer selection remains open.
 
-## Phase 0 — Correct the present-tense claim ✅ local implementation
+## Phase 0 — Correct the present-tense claim ✅ deployed
 
 - Replace the live gate introduction's “independent issuer,” “one real
   human,” and “community with no bots” wording with the Phase A interim
@@ -16,13 +16,15 @@ enablement still requires provider keys and deployment verification.
 Exit condition: the live copy accurately describes what Phase A does and does
 not prove.
 
-## Phase 1 — Baseline anti-abuse controls ⚙ Turnstile slice implemented
+## Phase 1 — Baseline anti-abuse controls ✅ Turnstile deployed
 
 - Keep the existing globally unique, never-recycled handle constraint.
-- Add a server-verified CAPTCHA adapter at verification, registration, and
-  suspicious retry paths; prefer invisible or risk-triggered challenges.
-  The first slice adds Cloudflare Turnstile at the verification gate; it is
-  disabled until `TURNSTILE_ENABLED=true` and hosted keys are configured.
+- Add a server-verified CAPTCHA adapter at verification and registration;
+  prefer invisible or risk-triggered challenges only for future secondary
+  flows. Every True Self and Alias registration is mandatory, not randomized.
+  The first slice adds Cloudflare Turnstile at the verification gate and both
+  registration ceremonies; it is disabled until `TURNSTILE_ENABLED=true` and
+  hosted keys are configured.
 - Keep rate limits, IP handling, and retention within the existing log
   discipline rules.
 - Make challenge failures retryable and avoid account-linkage disclosures.
@@ -92,10 +94,15 @@ Exit condition: a new account can complete the independent flow, create one
 True Self, hatch one Alias, and fail a duplicate enrollment without linking
 the two public identities.
 
-## Phase 5 — Random freshness checks
+## Phase 5 — Random freshness checks for active users
 
 - Add a freshness record scoped to the human proof, not to both public
   identities.
+- Require a fresh check for every governance vote. During Phase A this is
+  Turnstile; after issuer cutover it is an issuer-backed POH presentation.
+- Separately schedule randomized checks for active users at an approximate
+  cadence of once per day to once every few active days. This cadence applies
+  after registration, not instead of the registration check.
 - Generate unpredictable challenge tokens with expiration and one-time use.
 - Add a risk/action policy: ordinary actions, posting, and governance voting
   may require different freshness windows.

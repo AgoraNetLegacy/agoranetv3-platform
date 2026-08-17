@@ -86,7 +86,7 @@ import { recordEvent, type AnalyticsEventName } from "@/lib/analytics";
 import { asSpiritLevel } from "@/lib/spirit";
 import { saveDiscussion, unsaveDiscussion } from "@/lib/saved";
 import { ingestProfileImage, removeProfileImage, IMAGE_KINDS, IMAGE_LIMITS, type ImageKind } from "@/lib/images";
-import { randomTurnstileEscalation, verifyTurnstile } from "@/lib/turnstile";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
@@ -271,6 +271,17 @@ export async function submitVote(formData: FormData) {
   const face = await requireFace("votes");
   const pollId = String(formData.get("pollId") ?? "");
   const optionIds = formData.getAll("optionIds").map(String).filter(Boolean);
+  const poll = await db.poll.findUnique({
+    where: { id: pollId },
+    select: { isGovernance: true },
+  });
+  if (poll?.isGovernance) {
+    const turnstile = await verifyTurnstile(
+      String(formData.get("turnstileToken") ?? ""),
+      await clientAddress()
+    );
+    if (!turnstile.ok) backTo(`/polls/${pollId}`, turnstile.reason);
+  }
 
   const result = await castVote(db, { pollId, profileId: face.id, optionIds });
   revalidatePath(`/polls/${pollId}`);
@@ -1027,13 +1038,11 @@ export async function createTrueSelf(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "");
   const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
   await limitArrival("register");
-  if (randomTurnstileEscalation()) {
-    const turnstile = await verifyTurnstile(
-      String(formData.get("turnstileToken") ?? ""),
-      await clientAddress()
-    );
-    if (!turnstile.ok) backTo(`/verify/trueself${query}`, turnstile.reason);
-  }
+  const turnstile = await verifyTurnstile(
+    String(formData.get("turnstileToken") ?? ""),
+    await clientAddress()
+  );
+  if (!turnstile.ok) backTo(`/verify/trueself${query}`, turnstile.reason);
 
   const result = await registerTrueSelf(db, { credential, handle, displayName });
   if (!result.ok) backTo(`/verify/trueself${query}`, result.reason);
@@ -1081,13 +1090,11 @@ export async function hatchAlias(formData: FormData) {
   const displayName = String(formData.get("displayName") ?? "");
   const disclosuresAccepted = formData.get("disclosuresAccepted") === "on";
   await limitArrival("register");
-  if (randomTurnstileEscalation()) {
-    const turnstile = await verifyTurnstile(
-      String(formData.get("turnstileToken") ?? ""),
-      await clientAddress()
-    );
-    if (!turnstile.ok) backTo("/alias", turnstile.reason);
-  }
+  const turnstile = await verifyTurnstile(
+    String(formData.get("turnstileToken") ?? ""),
+    await clientAddress()
+  );
+  if (!turnstile.ok) backTo("/alias", turnstile.reason);
 
   const result = await registerAlias(db, {
     credential,

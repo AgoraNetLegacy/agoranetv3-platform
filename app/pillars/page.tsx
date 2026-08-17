@@ -56,8 +56,8 @@ export default async function SevenPillars() {
             is not a seventh value but the instrument layer; the
             platform itself, with the tools that make the other six
             answerable: permanent public discussion, sealed collective
-            decisions, provable action. The six diagnose. The Agora
-            equips. The community inherits.
+            decisions, provable action. The six examine the forces that
+            hold us back. The Agora equips us to act. The community inherits.
           </p>
           <p>
             Entering a pillar parks your active identity there; one identity
@@ -69,7 +69,8 @@ export default async function SevenPillars() {
         </LearnMore>
       </h1>
       <p>
-        Six pillars diagnose; The Agora equips. Read freely; verify to
+        Six pillars examine the forces that hold us back; The Agora equips
+        us to act. Read freely; verify to
         act. Entering a pillar parks your active identity there; one identity per
         pillar at a time.
       </p>

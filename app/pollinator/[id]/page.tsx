@@ -132,8 +132,9 @@ export default async function StorefrontPage({
       {constellation && (
         <>
           <p className="lore">
-            The creator&apos;s Light Score is public record on a public
-            chamber&apos;s storefront: per-pillar, never a sum. A
+            Light Score is AgoraNet&apos;s version of reputation. The
+            creator&apos;s score is public record on a public chamber&apos;s
+            storefront: per-pillar, never a sum or global ranking. A
             bad-standing creator can still build; but never behind a
             curtain. Judge with your own eyes.
           </p>

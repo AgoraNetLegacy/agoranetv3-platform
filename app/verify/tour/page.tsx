@@ -20,16 +20,17 @@ export default async function TourPage({
       <h2>Sixty seconds of orientation</h2>
       <ul>
         <li>
-          <strong>Seven pillars.</strong> Six diagnose what's broken;
-          Compassion, Hope, Justice, Freedom, Unity, Harmony. The seventh,
+          <strong>Seven pillars.</strong> Six examine the forces that hold us
+          back: Compassion, Hope, Justice, Freedom, Unity, Harmony. The seventh,
           The Agora, examines the platform itself. Each carries seven
           founding questions; that's where Discussions live.
         </li>
         <li>
-          <strong>The parking rule protects you.</strong> One identity per
-          pillar at a time, enforced; your True Self and Alias can never
-          appear in the same room together. Blocked entry isn't an error;
-          it's the protection working.
+          <strong>Your identities use separate rooms.</strong> Each pillar
+          allows only one of your identities at a time. If you enter a pillar
+          as your True Self, your Alias must wait until you leave; the two can
+          never appear there together. A blocked-entry message is the privacy
+          protection working, not an error.
         </li>
         <li>
           <strong>Light Score</strong> is per identity and per pillar; never
@@ -37,17 +38,15 @@ export default async function TourPage({
           never touch.
         </li>
         <li>
-          <strong>Aliases exist.</strong> When you want a second identity;
-          for the argument you can't afford professionally, the struggle
-          you won't wear publicly; you can create one later, on your own
-          schedule. It's deliberately not a button in settings; when the
-          moment comes, the Alias page will ask for the credential you
-          saved today.
+          <strong>Everyone can have one Alias.</strong> Use it when you want
+          to speak about something sensitive, share an experience privately,
+          or make an argument without using your public name. You can create
+          your Alias whenever you are ready.
         </li>
         <li>
-          <strong>Permanent spaces are labeled at the door</strong>; the
-          amber banner and the composer badge. You already consented to
-          what that means.
+          <strong>Permanent spaces preserve what you write.</strong> Look for
+          the amber banner and composer badge before you post. They show that
+          your words cannot be quietly changed or deleted.
         </li>
       </ul>
       <form action={completeOrientation}>

@@ -33,7 +33,8 @@ decide, and prove they acted. Five sentences you can say to anyone:
 
 The seven pillars (Compassion, Hope, Justice, Freedom, Unity, Harmony,
 The Agora) are the map; 49 canonical questions plus 56 domains are the
-territory. *The six diagnose. The Agora equips. The community inherits.*
+territory. *The six examine the forces that hold us back. The Agora equips
+us to act. The community inherits.*
 
 ## 2. What's real and what's simulated (say this honestly, always)
 

@@ -1720,3 +1720,14 @@ Gate: 311/311 tests, tsc clean, production build clean. All SSR
 surfaces verified via authenticated curl (permission-classifier kept
 the browser pane out of reach overnight). NOTE for the owner's morning:
 restart the dev server (stale Prisma client) and hard-refresh.
+
+## 2026-08-16; Interim anti-bot gate deployed
+
+Cloudflare Turnstile is now enabled in Vercel Production. The live
+`/verify` flow on `agoranet.ai` renders and successfully validates the
+Turnstile challenge before issuing the Phase A interim credential.
+Every True Self and Alias registration is checked. This is anti-bot
+protection only; it is not independent proof of humanity or uniqueness.
+Random timed checks for active users, the independent issuer, and
+random proof-of-humanity re-presentation remain future work under the
+Proof of Humanity specification.
