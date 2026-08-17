@@ -138,8 +138,8 @@ button:not(.linklike):not(.navlink-button):not(.profile-mode-dot):hover {
 }
 .ceremony button[type="submit"]:not(.linklike),
 form.composer button[type="submit"]:not(.linklike) {
-  background: #dc2626;
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 .ceremony button[type="submit"]:not(.linklike):hover,
@@ -1100,8 +1100,8 @@ button.linklike.brand {
   display: grid;
   place-items: center;
   border-radius: 9px;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: #dc2626;
+  color: #ffffff;
   font-size: 0.62rem;
   font-weight: 800;
 }
