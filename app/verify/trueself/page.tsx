@@ -1,5 +1,6 @@
 import { createTrueSelf } from "@/app/actions";
 import { JourneySteps } from "@/components/JourneySteps";
+import { TurnstileField } from "@/components/TurnstileField";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,7 @@ export default async function TrueSelfPage({
           @handle (3–30 characters: letters, digits, _ or -)
           <input type="text" name="handle" required maxLength={30} />
         </label>
+        <TurnstileField siteKey={process.env.TURNSTILE_SITE_KEY} />
         <button type="submit">Register through the gate</button>
       </form>
     </div>

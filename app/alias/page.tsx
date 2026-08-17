@@ -1,5 +1,6 @@
 import { ALIAS_DISCLOSURES } from "@/lib/disclosures";
 import { hatchAlias } from "@/app/actions";
+import { TurnstileField } from "@/components/TurnstileField";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,7 @@ export default async function AliasPage({
           protected.
         </label>
         <p />
+        <TurnstileField siteKey={process.env.TURNSTILE_SITE_KEY} />
         <button type="submit">Create the Alias</button>
       </form>
     </div>

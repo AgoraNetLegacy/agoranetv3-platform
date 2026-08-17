@@ -86,6 +86,7 @@ import { recordEvent, type AnalyticsEventName } from "@/lib/analytics";
 import { asSpiritLevel } from "@/lib/spirit";
 import { saveDiscussion, unsaveDiscussion } from "@/lib/saved";
 import { ingestProfileImage, removeProfileImage, IMAGE_KINDS, IMAGE_LIMITS, type ImageKind } from "@/lib/images";
+import { randomTurnstileEscalation, verifyTurnstile } from "@/lib/turnstile";
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
@@ -999,6 +1000,11 @@ export async function markNotificationRead(formData: FormData) {
 export async function beginVerification(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "");
   await limitArrival("verify");
+  const turnstile = await verifyTurnstile(
+    String(formData.get("turnstileToken") ?? ""),
+    await clientAddress()
+  );
+  if (!turnstile.ok) backTo(`/verify${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`, turnstile.reason);
   await recordEvent(db, "funnel.gate");
   const { credential } = await verifyHumanity(db);
   // Phase A's interim issuer verifies instantly; the two funnel steps
@@ -1021,6 +1027,13 @@ export async function createTrueSelf(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "");
   const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
   await limitArrival("register");
+  if (randomTurnstileEscalation()) {
+    const turnstile = await verifyTurnstile(
+      String(formData.get("turnstileToken") ?? ""),
+      await clientAddress()
+    );
+    if (!turnstile.ok) backTo(`/verify/trueself${query}`, turnstile.reason);
+  }
 
   const result = await registerTrueSelf(db, { credential, handle, displayName });
   if (!result.ok) backTo(`/verify/trueself${query}`, result.reason);
@@ -1068,6 +1081,13 @@ export async function hatchAlias(formData: FormData) {
   const displayName = String(formData.get("displayName") ?? "");
   const disclosuresAccepted = formData.get("disclosuresAccepted") === "on";
   await limitArrival("register");
+  if (randomTurnstileEscalation()) {
+    const turnstile = await verifyTurnstile(
+      String(formData.get("turnstileToken") ?? ""),
+      await clientAddress()
+    );
+    if (!turnstile.ok) backTo("/alias", turnstile.reason);
+  }
 
   const result = await registerAlias(db, {
     credential,

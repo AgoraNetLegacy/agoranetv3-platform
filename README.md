@@ -1,23 +1,25 @@
 # AgoraNet v3
 
-A purpose-built civic commons: deliberation, decision-making, permanent
-records, and provable collective action; one verified human, two
-protected identities, an economy of assent instead of attention, and a
-constitution that hands the platform to its community on a seven-year
-schedule.
+A purpose-built civic commons grounded in a first-principles
+philosophical framework: deliberation, decision-making, permanent
+immutable records, and provable collective action; one verified human,
+two protected identities, an economy of assent instead of attention,
+and a constitution that hands the platform to its community on a
+seven-year schedule.
 
-**Status:** Phases 0–8 (build half) checkpointed; **Phase 8.5
-(Presentation Era) and Phase 8.6 (Testnet Rails) CLOSED by owner
-ruling, 2026-07-15**; the platform runs its full showcase form on
-real test-network rails. **The platform is live** at
+**Status:** Phases 0–8.7 are substantially built and checkpointed,
+including the Presentation Era (8.5), Testnet Rails (8.6), Treasury
+expansion (8.7), Beacon Feed, and staging deployment. The platform runs
+its full showcase form on real test-network rails. **The platform is live** at
 https://www.agoranet.ai, with https://agoranet.ai redirecting to the
 canonical `www` hostname. The Vercel deployment URL
 https://agoranet-staging.vercel.app remains available for controlled
 deployment checks, backed by Railway PostgreSQL. Migrations, seed,
 invariant verification, and public smoke tests all passed on 2026-08-15.
-The Phase 8 cohort checkpoint (a small real
-cohort onboarding unaided on staging) remains open. Construction began 2026-07-10
-against a complete ratified specification corpus. `CHECKPOINTS.md` is
+The remaining work is the Phase 8 cohort
+checkpoint (a small real cohort onboarding unaided on staging), and
+Phase 9's real-money and legal-gated rails. Construction began
+2026-07-10 against a complete ratified specification corpus. `CHECKPOINTS.md` is
 the authoritative per-phase record (Phase 8.6's tx hashes, the
 deployed contract address, and both owner demo runbooks live there);
 `DECISIONS_PENDING.md` is the owner's queue.
@@ -32,11 +34,14 @@ deployed contract address, and both owner demo runbooks live there);
   testnet, all disclosed as such; see `/transparency`) · real-money
   mechanics stay behind Phase 9's legal gate, untouched.
 - Hosting: Vercel (the app and custom domains) + Railway (staging
-  PostgreSQL; the ops jobs,
-  including the daily chain anchor, remain the next operations slice).
+  PostgreSQL and the configured operations service, including scheduled
+  chain-anchor and maintenance jobs).
 - Operations: `docs/DEPLOYMENT.md` (staging setup),
   `docs/RUNBOOK.md` (backups, drills, the worst day),
   `docs/LOG_DISCIPLINE_AUDIT.md` (what is never logged, and why),
+  `docs/PROOF_OF_HUMANITY_SPEC.md` and
+  `docs/PROOF_OF_HUMANITY_IMPLEMENTATION_PLAN.md` (the independent
+  humanity-verification design and rollout plan),
   `docs/OWNERS_GUIDE.md` (running, understanding, and explaining the
   platform to someone else; start here if that's your goal).
 

@@ -96,6 +96,14 @@ export function validateRuntimeConfig(
       "Hosted environments require TRUST_PROXY=true behind the deployment proxy."
     );
   }
+  if (env.TURNSTILE_ENABLED === "true") {
+    if (!isStrongSecret(env.TURNSTILE_SECRET_KEY)) {
+      errors.push("TURNSTILE_SECRET_KEY must be configured when Turnstile is enabled.");
+    }
+    if (!env.TURNSTILE_SITE_KEY || isPlaceholder(env.TURNSTILE_SITE_KEY)) {
+      errors.push("TURNSTILE_SITE_KEY must be configured when Turnstile is enabled.");
+    }
+  }
   return errors;
 }
 

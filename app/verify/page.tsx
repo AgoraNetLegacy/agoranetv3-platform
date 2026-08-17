@@ -3,6 +3,7 @@ import { beginVerification } from "@/app/actions";
 import { db } from "@/lib/db";
 import { recordEvent } from "@/lib/analytics";
 import { JourneySteps } from "@/components/JourneySteps";
+import { TurnstileField } from "@/components/TurnstileField";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function VerifyIntro({
       <p className="notice">{GATE_INTRO.interimIssuer}</p>
       <form action={beginVerification}>
         <input type="hidden" name="returnTo" value={returnTo ?? ""} />
+        <TurnstileField siteKey={process.env.TURNSTILE_SITE_KEY} />
         <button type="submit">Begin verification</button>
       </form>
       <p className="interim-note">

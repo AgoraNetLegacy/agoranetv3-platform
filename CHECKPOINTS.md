@@ -1683,8 +1683,10 @@ overdue anchor cadence then witnessed everything through his run:
 check 27. Rulings #17/#18/#19 had already landed 2026-07-16. Phase
 pointers advanced (CLAUDE.md + BUILD_KICKOFF_PROMPT.md + PDF
 regenerated). **Phases 0–8.7 are now all closed; the one phase-half
-still open anywhere is the Phase 8 cohort checkpoint, gated on the
-deployment slice (#14, unscheduled). The owner's open items: the
+still open anywhere is the Phase 8 cohort checkpoint, now unblocked by
+the completed staging deployment. DNS for `agoranet.ai` is verified,
+the Railway operations service is active, and the remaining checkpoint
+is the throwaway-soul cohort walkthrough. The owner's open items: the
 Tournament leaderboard-metrics design session, and the lawyer date.**
 
 ## 2026-07-22; The Beacon Feed (overnight build, owner-authorized)

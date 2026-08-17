@@ -25,12 +25,13 @@ export default async function CredentialPage({
       <h2>Your Humanity Credential</h2>
       <p>
         <strong>Step 2 of 7; the first of two secrets you&rsquo;ll save
-        today.</strong> This one is your proof of being one real human;
-        think of it as a passport. You&rsquo;ll present it at big moments
-        only: creating your True Self in the next step, and creating your
-        Alias if you ever choose to. (The second secret, two steps from
-        now, is different: it&rsquo;s the everyday sign-in key for one
-        profile; a house key, not a passport.)
+        today.</strong> This is your interim Humanity Credential. It is
+        issued by AgoraNet during Phase A and is used at important moments:
+        creating your True Self in the next step, and creating your Alias
+        if you ever choose to. It prevents reuse of the same credential,
+        but it is not independent proof of one real human. (The second
+        secret, two steps from now, is different: it&rsquo;s the everyday
+        sign-in key for one profile; a house key, not a passport.)
       </p>
       <p>
         <strong>Save it now; Copy or Download. It is shown exactly

@@ -41,11 +41,12 @@ export type ConsentKind = keyof typeof CONSENT_VERSIONS;
 /** Stage 1; the gate introduces itself (ambient, not blocking). */
 export const GATE_INTRO = {
   substance:
-    "Participation requires proving you're one real human; once. " +
-    "AgoraNet never sees or stores your identity documents; verification " +
-    "happens with an independent issuer and the proof lives on your " +
-    "device. What you get: a voice that counts exactly once, in a " +
-    "community with no bots. What it costs: a few minutes, and a wallet.",
+    "Participation starts with an interim humanity check. For now, " +
+    "AgoraNet operates the issuer and stores only a scrambled fingerprint " +
+    "of the credential; we do not collect identity documents. This phase " +
+    "reduces automated abuse and prevents one credential from being reused, " +
+    "but it is not yet independent proof that one real human gets one voice. " +
+    "What it costs: a few minutes, and a wallet.",
   phaseA: PHASE_A_DISCLOSURE,
   interimIssuer:
     "INTERIM (Phase A): AgoraNet itself still plays the issuer's role " +

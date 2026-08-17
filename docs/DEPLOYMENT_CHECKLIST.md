@@ -15,8 +15,8 @@ delete or repurpose hosted resources until their role is recorded here.
 
 - [x] Railway account authenticated.
 - [x] Project exists: `agoranet-staging`.
-- [x] Inventory completed: three standalone PostgreSQL services; no Railway app
-  or ops service is deployed yet.
+- [x] Inventory completed: three standalone PostgreSQL services; the Railway
+  operations service is deployed and configured.
 - [x] `Postgres` assigned as the application database.
 - [x] `Postgres-TSjx` reserved as the scratch/restore-drill database.
 - [ ] Resolve the role of the third PostgreSQL service before changing it.
@@ -24,7 +24,7 @@ delete or repurpose hosted resources until their role is recorded here.
 - [x] Configure database variables without exposing secret values.
 - [x] Run PostgreSQL migrations (`0_init`).
 - [x] Seed the staging database.
-- [ ] Add and configure the operations service after the app is working.
+- [x] Add and configure the operations service after the app is working.
 
 ## Vercel; application hosting
 
@@ -34,7 +34,7 @@ delete or repurpose hosted resources until their role is recorded here.
 - [x] Deploy the committed application.
 - [x] Verify the deployment URL: https://agoranet-staging.vercel.app
 - [x] Attach custom domain `agoranet.ai` to the Vercel project.
-- [ ] Verify `https://agoranet.ai` after DNS propagation.
+- [x] Verify `https://agoranet.ai` after DNS propagation.
 
 ## Verification
 
@@ -64,9 +64,10 @@ yet been assigned:
 ## Working staging result
 
 - Public app: https://agoranet-staging.vercel.app
-- Custom domain: `agoranet.ai` attached; DNS verification pending.
+- Custom domain: `agoranet.ai` verified and redirecting to canonical `www` hostname.
 - Railway project: `agoranet-staging`
 - Main database: `Postgres` with TCP public access enabled on port 5432.
 - Scratch database: `Postgres-TSjx` reserved for restore drills.
 - Verification: Postgres invariant suite passed; all public smoke surfaces
-  returned HTTP 200 with their expected landmarks.
+  returned HTTP 200 with their expected landmarks; Railway operations service
+  is active with scheduled jobs and failure notifications configured.

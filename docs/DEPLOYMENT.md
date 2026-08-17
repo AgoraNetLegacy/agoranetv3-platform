@@ -2,19 +2,19 @@
 
 Phase 8 deliverable. The app is deployed to staging and verified from
 the public internet. The Postgres track, runtime guard, backup/drill
-machinery, and scheduled ops jobs are built and tested. The scheduled
-ops service itself remains a follow-up provisioning slice.
+machinery, and scheduled ops jobs are built, configured, and tested.
+The Railway operations service is provisioned and active.
 
 **Current staging URL:** https://agoranet-staging.vercel.app
 
 **Custom domain:** `agoranet.ai` is attached to the `agoranet-staging`
-Vercel project. Hostinger's root A record was changed to `76.76.21.21`
-on 2026-08-15; DNS propagation is still pending, so the Vercel URL
-remains the verified staging address until `agoranet.ai` resolves there.
+Vercel project, and DNS is fully verified. The canonical public hostname
+is `www.agoranet.ai`; `agoranet.ai` redirects there.
 
-**Verified 2026-08-15:** Railway migration `0_init`, idempotent seed,
+**Verified 2026-08-16:** Railway migration `0_init`, idempotent seed,
 `db:verify:postgres` (all checks), and `smoke:staging` (all public
-surfaces returned HTTP 200).
+surfaces returned HTTP 200). The Railway operations service is also
+configured for scheduled jobs and failure notifications.
 
 **Owner directive (2026-07-13): reuse his existing stack; Vercel for
 the app, Railway for the backend infra** (his convention across his
@@ -121,10 +121,6 @@ record.
 
 ### Remaining staging operations
 
-- Create the Railway operations service from this repository.
-- Attach persistent backup storage and configure the scheduled jobs in
-  `docs/RUNBOOK.md`.
-- Enable failure notifications for the operations service.
 - Complete the throwaway-soul cohort walkthrough.
 
 Production later = the same steps (likely on paid tiers by then, once
