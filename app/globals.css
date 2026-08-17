@@ -585,6 +585,15 @@ ul.discussions .meta { font-size: 0.78rem; color: var(--muted); margin-top: 0.2r
 .post .byline { font-size: 0.78rem; color: var(--muted); }
 .post .byline .pseudonym { font-weight: 600; color: var(--ink); }
 .post .body { margin: 0.25rem 0 0.4rem; white-space: pre-wrap; }
+.inbox-item {
+  padding: 0.95rem 1rem 1rem 1.1rem;
+  margin: 0.9rem 0;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.inbox-item.unread { border-left-color: #dc2626; }
 .post details { font-size: 0.8rem; margin-top: 0.3rem; }
 .post details summary { cursor: pointer; color: var(--muted); }
 
@@ -1105,6 +1114,7 @@ button.linklike.brand {
   font-size: 0.62rem;
   font-weight: 800;
 }
+.post .byline form.inline { margin-left: 0.7rem; }
 .face-chip { padding: 0.35rem 0.7rem; box-shadow: 0 7px 18px rgba(0,0,0,.06); }
 
 button:not(.linklike):not(.navlink-button):not(.profile-mode-dot) {

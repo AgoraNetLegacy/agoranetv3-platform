@@ -26,7 +26,7 @@ export default async function InboxPage() {
   const past = [...inbox.timeSensitive, ...inbox.quiet].filter((n) => n.readAt);
 
   const renderItem = (n: (typeof inbox.timeSensitive)[number]) => (
-    <div key={n.id} className={`post ${n.readAt ? "" : "unread"}`}>
+    <div key={n.id} className={`post inbox-item ${n.readAt ? "" : "unread"}`}>
       <div className="byline">
         {n.readAt ? "" : "● "}
         {n.updatedAt.toLocaleString()} · {n.category}
