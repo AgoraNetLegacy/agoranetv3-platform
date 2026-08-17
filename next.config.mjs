@@ -1,10 +1,11 @@
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://cardano-preprod.blockfrost.io https://cardano-preview.blockfrost.io",
+  "connect-src 'self' https://cardano-preprod.blockfrost.io https://cardano-preview.blockfrost.io https://challenges.cloudflare.com",
+  "frame-src 'self' https://challenges.cloudflare.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
