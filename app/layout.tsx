@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { balanceOf } from "@/lib/economy";
 import { activeTermFor } from "@/lib/moderation";
 import { activeFace, sessionFaces, faceFlipPending } from "@/lib/webSession";
-import { returnToHub, switchToFace, signOutSession, toggleSpiritMode } from "./actions";
+import { switchToFace, signOutSession, toggleSpiritMode } from "./actions";
 import { Icon } from "@/components/Icon";
 import { AutoCloseDetails } from "@/components/AutoCloseDetails";
 
@@ -212,14 +212,12 @@ async function SideNav() {
   }
   return (
     <nav className="sidebar" aria-label="The platform">
-      <form action={returnToHub}>
-        <button type="submit" className="navlink navlink-button">
+      <Link href="/" className="navlink navlink-button">
           <span className="nav-icon"><Icon name="agora" /></span>
           <span>The Agora
           <span className="nav-note">the platform dashboard</span>
           </span>
-        </button>
-      </form>
+      </Link>
       <div className="nav-section-label">Explore</div>
       <Link className="navlink" href="/pillars">
         <span className="nav-icon"><Icon name="pillars" /></span><span>The Seven Pillars</span>
@@ -295,12 +293,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <label htmlFor="nav-open" className="nav-toggle" aria-label="Menu">
             <Icon name="menu" />
           </label>
-          <form action={returnToHub} className="inline">
-            <button type="submit" className="linklike brand">
+          <Link href="/" className="brand">
               <span className="brand-mark"><Icon name="agora" /></span>
               <span>AgoraNet<small>Civic observatory</small></span>
-            </button>
-          </form>
+          </Link>
           <Link href="/search" className="search-door"><Icon name="search" /><span>Search</span></Link>
           <FaceBar />
         </header>
