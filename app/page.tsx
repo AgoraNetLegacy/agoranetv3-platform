@@ -28,11 +28,12 @@ export default async function AgoraDashboard({
   searchParams: Promise<{ sort?: string; m?: string; welcome?: string }>;
 }) {
   // Opportunistic jobs ride the highest-traffic page load.
-  await activateDueAliases(db);
-  await closeDuePolls(db);
+  // These independent maintenance sweeps should not serialize the
+  // dashboard's first response.
+  await Promise.all([activateDueAliases(db), closeDuePolls(db)]);
 
-  const { m, welcome } = await searchParams;
-  const sort = asSortKey((await searchParams).sort);
+  const { m, welcome, sort: sortParam } = await searchParams;
+  const sort = asSortKey(sortParam);
 
   const [pillars, face] = await Promise.all([
     db.pillar.findMany({
