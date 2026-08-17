@@ -1538,31 +1538,3 @@ table.books tr:last-child td { border-bottom: 0; }
   background: var(--chip-alias-bg);
   border-color: var(--accent);
 }
-.field-help {
-  display: block;
-  margin-top: 0.25rem;
-  color: var(--muted);
-  font-size: 0.82rem;
-}
-.chamber-cover {
-  margin: 1rem 0 1.5rem;
-  max-width: 58rem;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  overflow: hidden;
-  background: var(--surface-2);
-}
-.chamber-cover img {
-  display: block;
-  width: 100%;
-  max-height: 24rem;
-  object-fit: cover;
-}
-.storefront-card-image {
-  display: block;
-  width: min(100%, 24rem);
-  max-height: 10rem;
-  margin-bottom: 0.6rem;
-  border-radius: 10px;
-  object-fit: cover;
-}

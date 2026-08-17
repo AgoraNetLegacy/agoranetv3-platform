@@ -47,9 +47,6 @@ import {
   reportMessage,
 } from "@/lib/dm";
 import { Prisma } from "@prisma/client";
-import { put } from "@vercel/blob";
-import { createHash } from "crypto";
-import { appendEvent } from "@/lib/ledger";
 import { tip, grantOnce } from "@/lib/economy";
 import { getRail } from "@/lib/rails";
 import { fileFlag } from "@/lib/flags";
@@ -320,23 +317,6 @@ export async function submitCircle(formData: FormData) {
 
 export async function submitChamber(formData: FormData) {
   const face = await requireFace("creation");
-  const coverImage = formData.get("coverImage");
-  const coverImageAlt = String(formData.get("coverImageAlt") ?? "").trim();
-  let cover: { file: File; alt: string; hash: string; ext: string } | null = null;
-  if (coverImage instanceof File && coverImage.size > 0) {
-    const allowed = new Map([
-      ["image/jpeg", "jpg"],
-      ["image/png", "png"],
-      ["image/webp", "webp"],
-      ["image/gif", "gif"],
-    ]);
-    const ext = allowed.get(coverImage.type);
-    if (!ext) backTo("/pollinator", "Cover images must be JPEG, PNG, WebP, or GIF.");
-    if (coverImage.size > 5 * 1024 * 1024) backTo("/pollinator", "Cover images must be 5 MB or smaller.");
-    if (!coverImageAlt) backTo("/pollinator", "Add a short description for the cover image.");
-    const bytes = Buffer.from(await coverImage.arrayBuffer());
-    cover = { file: coverImage, alt: coverImageAlt, hash: createHash("sha256").update(bytes).digest("hex"), ext };
-  }
   const result = await createChamber(db, {
     profileId: face.id,
     title: String(formData.get("title") ?? ""),
@@ -351,24 +331,6 @@ export async function submitChamber(formData: FormData) {
     },
   });
   if (!result.ok) backTo("/pollinator", result.reason);
-  if (cover) {
-    if (!process.env.BLOB_READ_WRITE_TOKEN) backTo("/pollinator", "Image storage is not configured yet; create the chamber without an image or try again later.");
-    const blob = await put(`chambers/${result.chamberId}/cover-${cover.hash}.${cover.ext}`, cover.file, {
-      access: "public",
-      addRandomSuffix: false,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-    });
-    await db.chamber.update({
-      where: { id: result.chamberId },
-      data: { coverImageUrl: blob.url, coverImageAlt: cover.alt, coverImageHash: cover.hash, coverImageUpdatedAt: new Date() },
-    });
-    await appendEvent(db, {
-      actorType: "soul",
-      actorId: face.handle,
-      eventType: "chamber.cover-image.added",
-      payload: { chamberRef: result.chamberId, sha256: cover.hash, altText: cover.alt },
-    });
-  }
   redirect(`/pollinator/${result.chamberId}`);
 }
 

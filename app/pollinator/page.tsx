@@ -140,9 +140,6 @@ export default async function PollinatorPage({
       <ul className="discussions">
         {publicChambers.map((c) => (
           <li key={c.id}>
-            {c.coverImageUrl && (
-              <img className="storefront-card-image" src={c.coverImageUrl} alt={c.coverImageAlt ?? ""} />
-            )}
             <Link href={`/pollinator/${c.id}`}>{c.title}</Link>{" "}
             {activity.get(c.id) === "active" ? (
               <span className="badge permanent">Active this week</span>
@@ -243,15 +240,6 @@ export default async function PollinatorPage({
             <label>
               Storefront pitch; the public profile of the idea
               <textarea name="pitch" required maxLength={2000} />
-            </label>
-            <label>
-              Optional cover image; one image that represents the idea
-              <input name="coverImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif" />
-              <span className="field-help">Up to 5 MB. This image is public on the storefront.</span>
-            </label>
-            <label>
-              Image description; what should a screen reader know?
-              <input name="coverImageAlt" type="text" maxLength={160} placeholder="A hopeful image of people rebuilding together" />
             </label>
             <label>
               Why should people care; what problem, for whom, why now

@@ -109,12 +109,6 @@ export default async function StorefrontPage({
       </p>
       {m && <div className="notice">{m}</div>}
 
-      {chamber.coverImageUrl && (
-        <figure className="chamber-cover">
-          <img src={chamber.coverImageUrl} alt={chamber.coverImageAlt ?? "Chamber cover image"} />
-        </figure>
-      )}
-
       <h3>The idea</h3>
       <p>{chamber.subject}</p>
 
