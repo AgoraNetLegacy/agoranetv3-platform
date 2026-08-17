@@ -101,7 +101,7 @@ export const CONSTITUTION_ACK = {
     "agree to these core promises:",
   items: [
     "Your public record shows only the name you choose; never your legal identity.",
-    "One human may use one True Self and one Alias; the platform keeps them separate.",
+    "One human may use one True Self and one Alias; the platform keeps them cryptographically separate.",
     "Light Score is AgoraNet's version of reputation: it reflects your standing in each pillar, never as one global ranking; your True Self and Alias standings never touch.",
     "One profile gets one vote.",
     "Money cannot buy an outcome or paid visibility.",
