@@ -36,6 +36,7 @@ export default async function InboxPage() {
       <div className="body">{n.body}</div>
       <div className="byline">
         {n.refType === "poll" && n.refId && <Link href={`/polls/${n.refId}`}>open →</Link>}
+        {n.refType === "souls" && <Link href="/souls">open Souls →</Link>}
         {n.refType === "post" && n.refId && <span className="lore">see the thread</span>}
         {n.category === "badge-offer" && <Link href="/moderation">to the workbench →</Link>}{" "}
         {!n.readAt && (

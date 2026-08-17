@@ -142,9 +142,11 @@ export default async function SettingsPage({
 
       <h3>Spirit Mode</h3>
       <p className="lore">
-        A visibility veil for this identity, toggled any time from the small
-        dot on the profile bubble; filled means visible, hollowed means
-        walking unseen. Choose here how much the veil covers. Refusals it
+        Choose whether this identity appears online. The green dot means
+        visible; the white dot means offline. New identities begin offline
+        until you choose to appear. The small dot on the profile bubble
+        toggles this instantly. Choose here how much the offline mode covers.
+        Refusals it
         causes look identical to any undeliverable request, so the veil
         is never itself a signal. What&rsquo;s already in the permanent
         record stays attributed; no veil rewrites the record.
@@ -170,7 +172,7 @@ export default async function SettingsPage({
           Begin each fresh sign-in with Spirit Mode already on
         </label>
         <p className="lore" style={{ margin: "0.35rem 0" }}>
-          Right now: {face.spiritActive ? "walking unseen" : "visible"};
+          Right now: {face.spiritActive ? "offline (white dot)" : "online (green dot)"};
           the dot on the bubble flips this instantly.
         </p>
         <button type="submit">Save Spirit Mode</button>

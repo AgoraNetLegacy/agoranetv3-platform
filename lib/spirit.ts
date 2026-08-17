@@ -9,7 +9,7 @@ export const SPIRIT_LEVELS = ["discovery", "inbound", "ghost"] as const;
 export type SpiritLevel = (typeof SPIRIT_LEVELS)[number];
 
 export const SPIRIT_LEVEL_LABELS: Record<SpiritLevel, string> = {
-  discovery: "Discovery only; hidden from the search Souls lane",
+  discovery: "Offline; hidden from the search Souls lane",
   inbound:
     "Discovery + inbound; also refuses new fellow-soul requests and new message threads",
   ghost:

@@ -201,8 +201,8 @@ export async function search(
     const profiles = await db.profile.findMany({
       where: {
         status: "active",
-        // Spirit Mode: every level of the veil covers discovery; a
-        // veiled soul simply isn't in this lane (lib/spirit.ts).
+        // Spirit Mode hides an identity from the public Souls lane until
+        // the owner turns the veil off.
         spiritActive: false,
         OR: [{ handle: { contains: soulQuery.toLowerCase() } }, { displayName: { contains: soulQuery } }],
       },
