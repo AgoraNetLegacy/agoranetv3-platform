@@ -106,25 +106,15 @@ describe("inbound level", () => {
 
   it("allows new and existing threads while offline", async () => {
     await setSpirit(veiledId, true, "inbound");
-    const refused = await openThread(db, {
+    const opened = await openThread(db, {
       fromProfileId: seekerId,
       toHandle: "veiled-soul",
       body: "Hello?",
     });
-    expect(refused.ok).toBe(true);
-
-    // Open a thread while visible, then re-veil at inbound: messages
-    // into the existing thread still flow (only ghost stops those).
-    await setSpirit(veiledId, false);
-    const opened = await openThread(db, {
-      fromProfileId: seekerId,
-      toHandle: "veiled-soul",
-      body: "First contact.",
-    });
     expect(opened.ok).toBe(true);
     if (!opened.ok) return;
 
-    // The recipient replies so the thread leaves "request" status.
+    // The recipient replies so the request becomes an existing thread.
     await topUpForTests(db, veiledId, { pc: 50 });
     const reply = await sendMessage(db, {
       threadId: opened.threadId,
@@ -133,11 +123,10 @@ describe("inbound level", () => {
     });
     expect(reply.ok).toBe(true);
 
-    await setSpirit(veiledId, true, "inbound");
     const stillFlows = await sendMessage(db, {
       threadId: opened.threadId,
       senderProfileId: seekerId,
-      body: "Good; existing threads keep working at inbound.",
+      body: "Good; existing threads keep working while you are offline.",
     });
     expect(stillFlows.ok).toBe(true);
     await setSpirit(veiledId, false);

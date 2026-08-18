@@ -1223,7 +1223,11 @@ async function main() {
 
   const { threadKeyFor, openMessage } = await import("../lib/dmCrypto");
   const threadById = new Map(threads.map((t) => [t.id, t]));
-  const decryptedBodies: string[] = [];
+  const decryptedMessages: Array<{
+    body: string;
+    threadId: string;
+    recipientProfileId: string;
+  }> = [];
   for (const t of threads) {
     const expectedKey = [t.initiatorProfileId, t.otherProfileId].sort().join(":");
     if (t.pairKey !== expectedKey || t.initiatorProfileId === t.otherProfileId) {
@@ -1248,21 +1252,43 @@ async function main() {
     }
     try {
       const key = await threadKeyFor(db, thread);
-      decryptedBodies.push(
-        openMessage(key, thread.id, message.senderProfileId, message.ciphertext)
-      );
+      decryptedMessages.push({
+        body: openMessage(key, thread.id, message.senderProfileId, message.ciphertext),
+        threadId: thread.id,
+        recipientProfileId:
+          message.senderProfileId === thread.initiatorProfileId
+            ? thread.otherProfileId
+            : thread.initiatorProfileId,
+      });
     } catch {
       dmProblems++;
       console.error(`✗ CIPHERTEXT BROKEN: message ${message.id} fails authentication; altered, or plaintext smuggled into the column`);
     }
   }
-  // Notification bodies never carry message content (§6's enclosed-
-  // content rule applied to DMs).
-  const allNotifications = await db.notification.findMany({ select: { id: true, body: true } });
+  // Recipient-only DM previews are allowed by owner ruling (2026-08-17).
+  // The same plaintext anywhere else remains a structural content leak.
+  const allNotifications = await db.notification.findMany({
+    select: {
+      id: true,
+      profileId: true,
+      category: true,
+      body: true,
+      refType: true,
+      refId: true,
+    },
+  });
   for (const n of allNotifications) {
-    if (decryptedBodies.some((b) => b.length >= 8 && n.body.includes(b))) {
-      dmProblems++;
-      console.error(`✗ CONTENT LEAK: notification ${n.id} carries DM plaintext`);
+    for (const message of decryptedMessages) {
+      if (message.body.length < 8 || !n.body.includes(message.body)) continue;
+      const allowedRecipientPreview =
+        n.profileId === message.recipientProfileId &&
+        (n.category === "dm" || n.category === "request") &&
+        n.refType === "dm-thread" &&
+        n.refId === message.threadId;
+      if (!allowedRecipientPreview) {
+        dmProblems++;
+        console.error(`✗ CONTENT LEAK: notification ${n.id} exposes DM plaintext outside its recipient thread preview`);
+      }
     }
   }
   // Requests hygiene: sweep, then assert (the sessions pattern).
