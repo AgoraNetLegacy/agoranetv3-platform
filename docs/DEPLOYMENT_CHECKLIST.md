@@ -6,10 +6,11 @@ delete or repurpose hosted resources until their role is recorded here.
 ## Local application
 
 - [x] Review the pending session-lifetime changes.
-- [x] Run test suite: 22 files, 319 tests passed.
+- [x] Run test suite: 22 files, 321 tests passed.
 - [x] Run TypeScript validation.
 - [x] Run `npm run build:postgres` successfully.
-- [x] Commit clean working tree: `5fc9f81`.
+- [x] Commit and push the migration-first Chamber-cover release through
+  `629571e`.
 
 ## Railway; staging infrastructure
 
@@ -22,7 +23,8 @@ delete or repurpose hosted resources until their role is recorded here.
 - [ ] Resolve the role of the third PostgreSQL service before changing it.
 - [x] Enable Railway TCP public access for `Postgres` on PostgreSQL port 5432.
 - [x] Configure database variables without exposing secret values.
-- [x] Run PostgreSQL migrations (`0_init`).
+- [x] Run PostgreSQL migrations (`0_init`, reply-fee update, and
+  `20260817_chamber_cover_metadata`).
 - [x] Seed the staging database.
 - [x] Add and configure the operations service after the app is working.
 
@@ -35,6 +37,10 @@ delete or repurpose hosted resources until their role is recorded here.
 - [x] Verify the deployment URL: https://agoranet-staging.vercel.app
 - [x] Attach custom domain `agoranet.ai` to the Vercel project.
 - [x] Verify `https://agoranet.ai` after DNS propagation.
+- [x] Provision and connect the public `agoranet-chamber-covers` Vercel Blob
+  store without committing its token.
+- [x] Deploy Chamber-cover code with uploads disabled, smoke-test, then enable
+  `CHAMBER_COVERS_ENABLED` and redeploy.
 
 ## Verification
 
@@ -47,7 +53,8 @@ delete or repurpose hosted resources until their role is recorded here.
 
 ## Rules
 
-- No production deployment.
+- Production changes follow backup → migration → disabled code → smoke test →
+  feature enablement; database-reading code never leads its migration.
 - No mainnet or custody configuration.
 - No deletion of Railway resources without an identified role and explicit
   confirmation at the point of deletion.
@@ -55,9 +62,8 @@ delete or repurpose hosted resources until their role is recorded here.
 
 ## Current Railway inventory
 
-All three services expose the standard Railway/Postgres variables and are
-currently empty according to their reported volume usage. Their roles have not
-yet been assigned:
+All three services expose the standard Railway/Postgres variables. Their
+recorded roles are:
 
 - `Postgres`; application database.
 - `Postgres-TSjx`; scratch/restore-drill database.
@@ -75,3 +81,6 @@ yet been assigned:
   is active with scheduled jobs and failure notifications configured.
 - Anti-bot gate: Cloudflare Turnstile is enabled in Production; `/verify`
   successfully renders and validates the challenge.
+- Public image lane: Vercel Blob store `agoranet-chamber-covers`; Chamber
+  cover uploads are sanitized, metadata-stripped, limited to 5 MB, and tracked
+  by append-only ledger events.

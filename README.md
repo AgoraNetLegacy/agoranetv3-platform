@@ -36,7 +36,9 @@ deployed contract address, and both owner demo runbooks live there);
   mechanics stay behind Phase 9's legal gate, untouched.
 - Hosting: Vercel (the app and custom domains) + Railway (staging
   PostgreSQL and the configured operations service, including scheduled
-  chain-anchor and maintenance jobs).
+  chain-anchor and maintenance jobs) + Vercel Blob (sanitized public
+  Chamber storefront covers). Cover metadata migrations are deployed and
+  verified before cover-reading application code is released.
 - Operations: `docs/DEPLOYMENT.md` (staging setup),
   `docs/RUNBOOK.md` (backups, drills, the worst day),
   `docs/LOG_DISCIPLINE_AUDIT.md` (what is never logged, and why),

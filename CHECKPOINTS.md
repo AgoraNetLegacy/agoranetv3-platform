@@ -432,14 +432,13 @@ chamber's title (storefront) → `npm run db:verify`. Judge: is this
 the incubator you designed; public profile, enclosed workbench, priced
 in both tokens?
 
-## Phase 8; Deployment Hardening ⚙ BUILD HALF SELF-VERIFIED (2026-07-11); checkpoint awaits YOUR cohort
+## Phase 8; Deployment Hardening ✅ BUILD COMPLETE; cohort checkpoint remains open
 
 **The split, stated plainly:** everything BUILD_ORDER names for Phase 8
 is built and verified below. The checkpoint itself; a small real
 cohort (not you) onboarding unaided, funnel and logs reviewed together
-; is inherently yours: recruiting the cohort, provisioning the staging
-host (DECISIONS_PENDING #14; billing/accounts are owner-inherent), and
-the joint review. The build half is ready for that day.
+; is inherently yours: recruiting the cohort and completing the joint
+review. Hosting, DNS, database operations, and the build are complete.
 
 **Shipped:**
 - **The Postgres track** (DATABASE_SETUP.md; Build Law rule 4's
@@ -490,11 +489,11 @@ the joint review. The build half is ready for that day.
   honest growth numbers public; analytics NEVER feeds ranking (feed/
   search importing the pipeline fails the suite).
 - **Staging deployability**: docs/DEPLOYMENT.md (host requirements
-  matrix, step-by-step staging setup), hosting recommendation Render
-  (flagged #14; provisioning is yours), smoke:staging (signed-out
-  landmarks on the eight public surfaces). Deliberately NOT set up:
-  observability SaaS (needs its own §7 review first), email, CDN,
-  object storage.
+  matrix, step-by-step staging setup), the live Vercel + Railway split,
+  and smoke:staging (signed-out landmarks on the eight public surfaces).
+  Observability SaaS, email, and custom CDN configuration remain
+  deliberately absent. Vercel Blob is now narrowly enabled for public,
+  sanitized Chamber storefront covers.
 - **Cold start confirmed + early-platform honesty**: fresh-seed
   walkthrough green (canon + pillar content IS the seed; 105
   Discussions alive with zero user content; every empty state honest);
@@ -512,7 +511,7 @@ vocabulary, scoped HMAC subject-keying, retention honored with crush
 grace, ledger clean); both demonstrated FAILING LOUDLY under test (a
 raw session id smuggled as a counter key; a sourceIp field in an ops
 payload; a 'dwell.time.ms' event). `demo:phase8` walks the checkpoint
-build-half end to end; all 31 checks pass on the exercised database.
+deployment-hardening path end to end; all 31 checks pass on the exercised database.
 **Live against a real PostgreSQL 17:** migrate deploy (0_init) → seed
 → ALL 31 CHECKS PASS → backup → restore drill green end to end (the
 restored ledger verifies untampered), and a deliberately corrupted
@@ -536,11 +535,9 @@ are yours) · #15 invite mechanics / launch gating (recommendation:
 cohort via unlisted URL, decide gating for public launch) · #16 the
 early-platform crowd-size note wording.
 
-**What only you can do to close Phase 8:** (1) provision staging per
-docs/DEPLOYMENT.md §3 (~an hour of dashboard work); (2) recruit the
-small cohort and hand them the URL; (3) when they've onboarded
-unaided, we review the funnel (/commons) and the logs together. The
-build will be waiting.
+**What only you can do to close Phase 8:** recruit a small cohort, hand
+them the live URL, and let them onboard without guidance; then review the
+funnel (`/commons`) and logs together. The platform and hosting are ready.
 
 **If you choose to look (15 min, no staging needed):** `npm run
 demo:phase8` (the walls, the counters that know nobody, the crush, the
@@ -551,12 +548,12 @@ try to verify 6 times fast (meet the wall, read its refusal) →
 (read the early-platform honesty note). Judge: is this a platform
 other humans can touch?
 
-## Phase 8.5; The Presentation Era ⚙ BUILD SELF-VERIFIED (2026-07-14); checkpoint is YOUR walkthrough, by design
+## Phase 8.5; The Presentation Era ✅ OWNER WALKTHROUGH COMPLETE
 
 **The gate this phase answers to is different from every other phase:
 §8 of the ratified spec makes YOUR eyes the checkpoint; "is it
-neither bland nor confusing?" The build half below is complete and
-verified; the phase closes when you walk it.**
+neither bland nor confusing?" The implementation below was verified and
+the owner walkthrough is recorded in the addendum.**
 
 **Shipped (five slices, committed in sequence fa336b6 → ace7258):**
 - **THEME = IDENTITY (§2):** a design-token system in globals.css;
@@ -1739,3 +1736,20 @@ protection only; it is not independent proof of humanity or uniqueness.
 Random timed checks for active users, the independent issuer, and
 random proof-of-humanity re-presentation remain future work under the
 Proof of Humanity specification.
+
+## 2026-08-17; Chamber storefront covers restored safely
+
+Optional public Chamber covers now use the `agoranet-chamber-covers` Vercel
+Blob store. JPEG, PNG, and WebP inputs are limited to 5 MB, decoded under a
+pixel ceiling, auto-oriented, cropped to 16:9, stripped of metadata, and stored
+as content-hashed WebP. Alt text is required. Only the Chamber creator may add
+or replace a cover, and every change produces an append-only public ledger
+event without exposing the creator's internal profile ID. Private workshop
+content has no image path.
+
+This release also establishes the production migration-first rule after the
+first cover attempt exposed a missing Railway column and took down dashboard
+rendering: verified backup → nullable migration → unchanged-app smoke test →
+feature code with flag off → smoke test → flag on → final smoke test. The
+database migration is `20260817_chamber_cover_metadata`; feature commit is
+`629571e`.

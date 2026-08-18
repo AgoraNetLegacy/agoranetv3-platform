@@ -18,6 +18,14 @@ configured for scheduled jobs and failure notifications. Cloudflare
 Turnstile is enabled in Vercel Production and the live `/verify` flow on
 `agoranet.ai` successfully renders and validates the anti-bot challenge.
 
+**Verified 2026-08-17:** Chamber storefront-cover metadata was released
+with a migration-first deployment: a production backup was verified, the
+nullable Railway columns were migrated, the app was deployed with uploads
+disabled, and all public smoke surfaces passed before the feature was
+enabled. Public covers use the `agoranet-chamber-covers` Vercel Blob store;
+original uploads are never retained by the application and sanitized WebP
+bytes are stored only after type, size, decode, and metadata-removal checks.
+
 **Owner directive (2026-07-13): reuse his existing stack; Vercel for
 the app, Railway for the backend infra** (his convention across his
 other projects; he already holds both accounts). This lands cheaper
@@ -36,6 +44,7 @@ than Render and needs no new signups.
 | Proxy that sets `x-forwarded-for` | Rate-limit keying | `TRUST_PROXY=true` declared |
 | **Access-log retention configurable (off or ≤7 days), log drains OFF** | docs/LOG_DISCIPLINE_AUDIT.md #4; binding | host dashboard; note the setting here when configured |
 | Failure alerts on the ops jobs | A failed drill is a production incident | host dashboard notifications |
+| Public object storage for Chamber covers | Storefront media must not live in a serverless filesystem | Vercel Blob token + `CHAMBER_COVERS_ENABLED` rollout flag |
 
 ## 2. Provider decision; Vercel + Railway (owner-ratified 2026-07-13)
 
@@ -75,6 +84,9 @@ The staging application is live. The deployed resources are:
 
 - Vercel project: `agoranet-staging`, linked to
   `projectpollify/agoranetv3-platform`.
+- Vercel Blob store: `agoranet-chamber-covers`, public, connected to
+  Production and Preview credentials. Upload UI is controlled separately by
+  `CHAMBER_COVERS_ENABLED`.
 - Railway project: `agoranet-staging`.
 - Railway service `Postgres`: application database, TCP public access on
   PostgreSQL port `5432`.
@@ -121,6 +133,22 @@ record.
    consents → seed → post somewhere), then check `/commons` shows the
    funnel moved and `/transparency` shows the fee.
 
+### Migration-first release law
+
+Any application change that reads a new database column follows this order:
+
+1. Take and verify a production backup.
+2. Deploy the backward-compatible migration by itself.
+3. Confirm migration status and smoke-test the unchanged application.
+4. Deploy the new code with its user-facing feature disabled.
+5. Smoke-test the dashboard and every public surface.
+6. Enable the feature flag and redeploy; smoke-test again.
+
+Never release column-reading code before Railway reports the corresponding
+migration applied. The Chamber-cover outage on 2026-08-17 was caused by
+violating this ordering; `Chamber.coverImageUrl` was queried before the column
+existed.
+
 ### Remaining staging operations
 
 - Complete the throwaway-soul cohort walkthrough.
@@ -137,5 +165,6 @@ the Phase 8 checkpoint.
   adding one later must respect `force-dynamic` pages.
 - **No email provider**; nothing sends email (notifications are
   in-app by ratified design; recovery is key-based).
-- **No object storage**; no uploads at launch (BACKUP_DR §6.2 notes
-  the future media lane).
+- **Object storage is narrowly scoped** to sanitized public Chamber covers in
+  Vercel Blob. Private workshop content and original uploads are never stored
+  in this lane.
