@@ -6,7 +6,7 @@ delete or repurpose hosted resources until their role is recorded here.
 ## Local application
 
 - [x] Review the pending session-lifetime changes.
-- [x] Run test suite: 22 files, 321 tests passed.
+- [x] Run test suite: 22 files, 323 tests passed.
 - [x] Run TypeScript validation.
 - [x] Run `npm run build:postgres` successfully.
 - [x] Commit and push the migration-first Chamber-cover release through

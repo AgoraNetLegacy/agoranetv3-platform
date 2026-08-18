@@ -160,6 +160,28 @@ describe("dual-provider parity (DATABASE_SETUP.md)", () => {
   });
 });
 
+describe("global layout performance", () => {
+  it("loads the expensive Light Score constellation only on menu intent", () => {
+    const layout = readFileSync(join(REPO_ROOT, "app/layout.tsx"), "utf8");
+    const menu = readFileSync(
+      join(REPO_ROOT, "components/LightScoreMenu.tsx"),
+      "utf8"
+    );
+    const action = readFileSync(
+      join(REPO_ROOT, "app/lightScoreActions.ts"),
+      "utf8"
+    );
+
+    expect(layout).not.toContain("faceConstellation");
+    expect(layout).toContain("<LightScoreMenu");
+    expect(menu).toContain("onMouseEnter");
+    expect(menu).toContain("onToggle");
+    expect(menu).toContain("loadActiveLightScores");
+    expect(action).toContain("faceConstellation(db, face.id)");
+    expect(action).not.toMatch(/loadActiveLightScores\s*\([^)]/);
+  });
+});
+
 describe("minimal-log discipline guards (DUAL_IDENTITY §7.1 vector 4)", () => {
   const sourceFiles = (dir: string): string[] => {
     const { readdirSync, statSync } = require("fs") as typeof import("fs");

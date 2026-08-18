@@ -31,7 +31,6 @@
 
 import type { PrismaClient } from "@prisma/client";
 import type { DbOrTx } from "./db";
-import { getRail } from "./rails";
 import { scorePillar, type ScoreLine, type ScoreWeights } from "./score";
 
 export interface PillarStanding {
@@ -63,57 +62,65 @@ export class ScoreConstellation {
   }
 }
 
-async function scoreWeights(db: DbOrTx): Promise<ScoreWeights> {
+const LIGHT_SCORE_RAIL_KEYS = [
+  "lightScore.answerPoints",
+  "lightScore.debatePostPoints",
+  "lightScore.participationCapPerDiscussion",
+  "lightScore.moderationCaseCredit",
+  "lightScore.moderationDailyCapPoints",
+] as const;
+
+type LightScoreRailKey = (typeof LIGHT_SCORE_RAIL_KEYS)[number];
+type LightScoreRails = Record<LightScoreRailKey, number>;
+
+async function lightScoreRails(db: DbOrTx): Promise<LightScoreRails> {
+  const rows = await db.rail.findMany({
+    where: { key: { in: [...LIGHT_SCORE_RAIL_KEYS] } },
+    select: { key: true, value: true },
+  });
+  const values = new Map(rows.map((row) => [row.key, row.value]));
+  for (const key of LIGHT_SCORE_RAIL_KEYS) {
+    if (!values.has(key)) throw new Error(`Rail not seeded: ${key}`);
+  }
+  return Object.fromEntries(
+    LIGHT_SCORE_RAIL_KEYS.map((key) => [key, values.get(key)!])
+  ) as LightScoreRails;
+}
+
+function scoreWeights(rails: LightScoreRails): ScoreWeights {
   return {
-    answer: await getRail(db, "lightScore.answerPoints"),
-    debatePost: await getRail(db, "lightScore.debatePostPoints"),
-    participationCapPerDiscussion: await getRail(
-      db,
-      "lightScore.participationCapPerDiscussion"
-    ),
+    answer: rails["lightScore.answerPoints"],
+    debatePost: rails["lightScore.debatePostPoints"],
+    participationCapPerDiscussion:
+      rails["lightScore.participationCapPerDiscussion"],
   };
 }
 
-/** The pillar a case's service credits: the room actually served;
- *  post cases credit the post's pillar; DM cases have no pillar and
- *  land in the meta pillar (the DECISIONS_PENDING #9 interim rule,
- *  applied consistently on the credit side). */
-async function casePillarId(db: DbOrTx, caseId: string): Promise<string | null> {
-  const modCase = await db.modCase.findUnique({ where: { id: caseId } });
-  if (!modCase) return null;
-  if (modCase.postId) {
-    const post = await db.post.findUnique({
-      where: { id: modCase.postId },
-      select: { discussion: { select: { pillarId: true } } },
-    });
-    return post?.discussion.pillarId ?? null;
-  }
-  const meta = await db.pillar.findFirst({ where: { isMeta: true } });
-  return meta?.id ?? null;
-}
+type ModerationServiceRuling = { caseId: string; createdAt: Date };
 
-/** Moderation-service credit per pillar for one identity: per resolved case,
- *  quality-gated, daily-capped (LIGHT_SCORE §2, §5.3). */
-async function moderationServiceByPillar(
+async function moderationServiceRulings(
   db: DbOrTx,
   profileId: string
-): Promise<Map<string, { points: number; cases: number }>> {
-  const credit = await getRail(db, "lightScore.moderationCaseCredit");
-  const dailyCap = await getRail(db, "lightScore.moderationDailyCapPoints");
-
-  const rulings = await db.ruling.findMany({
+): Promise<ModerationServiceRuling[]> {
+  return db.ruling.findMany({
     where: {
       moderatorProfileId: profileId,
-      // The quality gate: a ruling its supervisor overrode accrues
-      // nothing. (Appeal-overturned consequences already unwind their
-      // adjustments; the supervision gate is the service-credit filter.)
       supervision: { not: "overridden" },
       case: { status: "resolved" },
     },
     select: { caseId: true, createdAt: true },
     orderBy: { createdAt: "asc" },
   });
+}
 
+/** Moderation-service credit per pillar for one identity: per resolved case,
+ *  quality-gated, daily-capped (LIGHT_SCORE §2, §5.3). */
+async function moderationServiceByPillar(
+  db: DbOrTx,
+  rulings: ModerationServiceRuling[],
+  credit: number,
+  dailyCap: number
+): Promise<Map<string, { points: number; cases: number }>> {
   // Daily cap first (service is service, whatever the room), then credit
   // each counted case to its own pillar.
   const byDay = new Map<string, typeof rulings>();
@@ -129,9 +136,47 @@ async function moderationServiceByPillar(
     counted.push(...list.slice(0, maxCases));
   }
 
+  if (counted.length === 0) return new Map();
+
+  // Resolve every case and post in batches. The previous implementation
+  // performed one or two serial queries per ruling, which made the global
+  // header increasingly slow for experienced moderators.
+  const cases = await db.modCase.findMany({
+    where: { id: { in: counted.map((ruling) => ruling.caseId) } },
+    select: { id: true, postId: true },
+  });
+  const postIds = cases.flatMap((modCase) =>
+    modCase.postId ? [modCase.postId] : []
+  );
+  const needsMetaPillar = cases.some((modCase) => !modCase.postId);
+  const [posts, meta] = await Promise.all([
+    postIds.length
+      ? db.post.findMany({
+          where: { id: { in: postIds } },
+          select: {
+            id: true,
+            discussion: { select: { pillarId: true } },
+          },
+        })
+      : Promise.resolve([]),
+    needsMetaPillar
+      ? db.pillar.findFirst({
+          where: { isMeta: true },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
+  ]);
+  const caseById = new Map(cases.map((modCase) => [modCase.id, modCase]));
+  const pillarByPostId = new Map(
+    posts.map((post) => [post.id, post.discussion.pillarId])
+  );
+
   const out = new Map<string, { points: number; cases: number }>();
   for (const r of counted) {
-    const pillarId = await casePillarId(db, r.caseId);
+    const modCase = caseById.get(r.caseId);
+    const pillarId = modCase?.postId
+      ? pillarByPostId.get(modCase.postId) ?? null
+      : meta?.id ?? null;
     if (!pillarId) continue;
     const cell = out.get(pillarId) ?? { points: 0, cases: 0 };
     cell.points += credit;
@@ -146,12 +191,12 @@ export async function faceConstellation(
   db: PrismaClient,
   profileId: string
 ): Promise<ScoreConstellation> {
-  const [pillars, weights, posts, adjustments, service] = await Promise.all([
+  const [pillars, rails, posts, adjustments, serviceRulings] = await Promise.all([
     db.pillar.findMany({
       select: { id: true, slug: true, name: true, icon: true },
       orderBy: { position: "asc" },
     }),
-    scoreWeights(db),
+    lightScoreRails(db),
     // Public Discussion contributions only: never members'-room posts
     // (the room is not the record), never hidden content.
     db.post.findMany({
@@ -175,8 +220,15 @@ export async function faceConstellation(
         OR: [{ decaysAt: null }, { decaysAt: { gt: new Date() } }],
       },
     }),
-    moderationServiceByPillar(db, profileId),
+    moderationServiceRulings(db, profileId),
   ]);
+  const weights = scoreWeights(rails);
+  const service = await moderationServiceByPillar(
+    db,
+    serviceRulings,
+    rails["lightScore.moderationCaseCredit"],
+    rails["lightScore.moderationDailyCapPoints"]
+  );
 
   // pillarId -> discussionId -> contribution
   const byPillar = new Map<string, Map<string, { answers: number; debatePosts: number }>>();

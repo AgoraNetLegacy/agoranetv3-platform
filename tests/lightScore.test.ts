@@ -211,6 +211,33 @@ describe("the constellation (derivation)", () => {
     expect(standing.points).toBe(1); // one counted case × 1-point rail
     expect(standing.lines.some((l) => l.label.startsWith("Moderation service"))).toBe(true);
   });
+
+  it("derives a constellation with a bounded number of database queries", async () => {
+    const measured = new PrismaClient({
+      datasources: { db: { url } },
+      log: [{ emit: "event", level: "query" }],
+    });
+    let queries = 0;
+    const statements: string[] = [];
+    measured.$on("query", (event) => {
+      if (!/^SELECT 1\b/.test(event.query.trim())) {
+        queries += 1;
+        statements.push(event.query);
+      }
+    });
+    try {
+      await measured.pillar.count();
+      queries = 0;
+      statements.length = 0;
+      await faceConstellation(measured, authorId);
+      // Parallel base reads, followed by batched case and post/meta
+      // resolution. Prisma hydrates two selected relations separately,
+      // but the count stays bounded as moderation history grows.
+      expect(queries, statements.join("\n---\n")).toBeLessThanOrEqual(9);
+    } finally {
+      await measured.$disconnect();
+    }
+  });
 });
 
 describe("the Picture repair loop", () => {

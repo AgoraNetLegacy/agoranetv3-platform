@@ -1131,6 +1131,11 @@ header.site .brand:hover { text-decoration: none; }
   font-size: 0.82rem;
   font-weight: 750;
 }
+.light-score-status {
+  padding: 0.65rem 0.5rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
 .light-score-row {
   display: flex;
   align-items: center;

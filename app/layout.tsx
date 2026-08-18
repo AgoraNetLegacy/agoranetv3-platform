@@ -7,11 +7,11 @@ import "./globals.css";
 import { db } from "@/lib/db";
 import { balanceOf } from "@/lib/economy";
 import { activeTermFor } from "@/lib/moderation";
-import { faceConstellation } from "@/lib/lightScore";
 import { activeFace, sessionFaces, faceFlipPending } from "@/lib/webSession";
 import { switchToFace, signOutSession, toggleSpiritMode } from "./actions";
-import { Icon, PillarMark } from "@/components/Icon";
+import { Icon } from "@/components/Icon";
 import { AutoCloseDetails } from "@/components/AutoCloseDetails";
+import { LightScoreMenu } from "@/components/LightScoreMenu";
 
 export const dynamic = "force-dynamic";
 
@@ -36,16 +36,10 @@ async function FaceBar() {
   }
   const others = faces.filter((f) => f.id !== face.id);
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
-  const [pc, g, unread, constellation, diagnosticPillars] = await Promise.all([
+  const [pc, g, unread] = await Promise.all([
     balanceOf(db, face.id, "PC"),
     balanceOf(db, face.id, "G"),
     db.notification.count({ where: { profileId: face.id, readAt: null } }),
-    faceConstellation(db, face.id),
-    db.pillar.findMany({
-      where: { isMeta: false },
-      select: { id: true, slug: true, name: true },
-      orderBy: { position: "asc" },
-    }),
   ]);
   return (
     <div className="face-bar">
@@ -80,20 +74,7 @@ async function FaceBar() {
           {g.toFixed(2)} G
         </span>
       </span>
-      <details className="light-score-menu">
-        <summary className="icon-link" aria-label="Light Score by pillar" title="Light Score">
-          <Icon name="lightScore" />
-        </summary>
-        <div className="light-score-panel">
-          <div className="light-score-heading">Light Score</div>
-          {diagnosticPillars.map((pillar) => (
-            <div className="light-score-row" key={pillar.id}>
-              <span><PillarMark slug={pillar.slug} /> {pillar.name}</span>
-              <strong>{constellation.forPillar(pillar.id)?.points ?? 0}</strong>
-            </div>
-          ))}
-        </div>
-      </details>
+      <LightScoreMenu key={face.handle} />
       <Link href="/inbox" className="icon-link" aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}>
         <Icon name="bell" />
         {unread > 0 && <span className="notification-dot">{unread}</span>}

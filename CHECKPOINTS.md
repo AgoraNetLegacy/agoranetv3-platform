@@ -1753,3 +1753,18 @@ rendering: verified backup → nullable migration → unchanged-app smoke test �
 feature code with flag off → smoke test → flag on → final smoke test. The
 database migration is `20260817_chamber_cover_metadata`; feature commit is
 `629571e`.
+
+## 2026-08-17; Light Score menu performance correction
+
+The six-pillar Light Score menu no longer derives a full score constellation
+during every signed-in page render. The header renders immediately; hovering,
+focusing, or opening the score icon requests the active identity's scores on
+demand. The request accepts no profile identifier and resolves the active
+identity from the server session, preserving True Self/Alias isolation.
+
+The underlying derivation now reads all five Light Score rails in one query
+and resolves moderation cases and their pillar posts in batches rather than
+one or two serial queries per ruling. A regression guard keeps the expensive
+derivation out of the global layout, and a query-budget test keeps the score
+calculation bounded as moderation history grows. Full gate: 323/323 tests,
+provider-schema parity, TypeScript, and the PostgreSQL production build.
