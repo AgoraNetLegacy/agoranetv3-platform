@@ -577,6 +577,54 @@ ul.discussions li {
 }
 ul.discussions .meta { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
 
+/* Fellow-soul lists and private conversations use the same clear card
+   boundaries as the notification inbox. The distinction is visual only;
+   identity and message privacy remain unchanged. */
+.souls-thread-list {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0.8rem 0 1rem;
+}
+.souls-thread-list li { margin-bottom: 0; padding: 0.95rem 1.05rem; border-radius: 12px; }
+.post.souls-item {
+  padding: 0.95rem 1rem 1rem 1.1rem;
+  margin: 0.9rem 0;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.souls-list {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0;
+  margin: 0.8rem 0 1rem;
+  list-style: none;
+}
+.soul-card {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.souls-list.compact .soul-card { padding-block: 0.65rem; }
+.soul-card form.inline { margin-left: auto; }
+
+.post.dm-message {
+  padding: 0.95rem 1rem 1rem 1.1rem;
+  margin: 0.9rem 0;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.dm-message.mine { border-left-color: var(--accent); }
+.dm-message .body { margin-top: 0.5rem; }
+
 .post {
   border-left: 2px solid var(--line);
   padding: 0.5rem 0 0.5rem 0.9rem;

@@ -58,7 +58,10 @@ export default async function DmThreadPage({
       )}
 
       {messages.map((msg) => (
-        <div className="post" key={msg.id}>
+        <div
+          className={`post dm-message${msg.mine ? " mine" : " incoming"}`}
+          key={msg.id}
+        >
           <div className="byline">
             <span className="pseudonym">
               {msg.mine ? "You" : `@${thread.otherHandle}`}

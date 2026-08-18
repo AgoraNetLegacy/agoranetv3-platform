@@ -81,7 +81,7 @@ export default async function SoulsPage({
         <p className="lore">Nothing waits. Requests expire quietly after their window.</p>
       )}
       {requests.map((r) => (
-        <div className="post" key={r.id}>
+        <div className="post souls-item" key={r.id}>
           <div className="byline">
             <span className="pseudonym">{r.from?.displayName}</span>{" "}
             @{r.from?.handle} asks to be your fellow soul ·{" "}
@@ -100,7 +100,7 @@ export default async function SoulsPage({
         </div>
       ))}
       {threads.requests.map((t) => (
-        <div className="post" key={t.id}>
+        <div className="post souls-item" key={t.id}>
           <div className="byline">
             <span className="pseudonym">{t.other?.displayName}</span>{" "}
             @{t.other?.handle} opened a conversation ·{" "}
@@ -119,7 +119,7 @@ export default async function SoulsPage({
       ))}
 
       <h3>Threads</h3>
-      <ul className="discussions">
+      <ul className="discussions souls-thread-list">
         {threads.inbox.map((t) => (
           <li key={t.id}>
             <Link href={`/dm/${t.id}`}>
@@ -158,24 +158,27 @@ export default async function SoulsPage({
         suggests souls; a friend graph is a fingerprint, so yours is
         never computed against.
       </p>
-      <ul>
+      <ul className="souls-list">
         {souls.map((s) => {
           const unseen = s.spiritActive;
           return (
-          <li key={s.id} className={unseen ? "soul-unseen" : undefined}>
-            <span
-              className={`presence-dot${unseen ? " unseen" : ""}`}
-              aria-hidden="true"
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="avatar-sm" src={`/img/${s.handle}/avatar`} alt="" />
-            <Link href={`/souls/${s.handle}`} className="pseudonym">{s.displayName}</Link> @{s.handle}{" "}
-            {unseen && <span className="lore">· offline</span>}{" "}
-            <form action={submitReleaseBond} className="inline">
-              <input type="hidden" name="otherProfileId" value={s.id} />
-              <button type="submit">Release bond (quiet)</button>
-            </form>
-          </li>
+            <li
+              key={s.id}
+              className={`soul-card${unseen ? " soul-unseen" : ""}`}
+            >
+              <span
+                className={`presence-dot${unseen ? " unseen" : ""}`}
+                aria-hidden="true"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="avatar-sm" src={`/img/${s.handle}/avatar`} alt="" />
+              <Link href={`/souls/${s.handle}`} className="pseudonym">{s.displayName}</Link> @{s.handle}{" "}
+              {unseen && <span className="lore">· offline</span>}{" "}
+              <form action={submitReleaseBond} className="inline">
+                <input type="hidden" name="otherProfileId" value={s.id} />
+                <button type="submit">Release bond (quiet)</button>
+              </form>
+            </li>
           );
         })}
         {souls.length === 0 && <li className="lore">None yet; send a request below.</li>}
@@ -201,9 +204,9 @@ export default async function SoulsPage({
         One-way and private: a blocked soul cannot message or request
         you, and is never told.
       </p>
-      <ul>
+      <ul className="souls-list compact">
         {blockedProfiles.map((b) => (
-          <li key={b.id}>
+          <li key={b.id} className="soul-card">
             @{b.handle}{" "}
             <form action={submitUnblock} className="inline">
               <input type="hidden" name="blockedProfileId" value={b.id} />
