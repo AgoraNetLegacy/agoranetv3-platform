@@ -10,6 +10,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { spawnSync } from "child_process";
+import sharp from "sharp";
 import { createTestDb, REPO_ROOT } from "./helpers/testDb";
 
 const { url } = createTestDb("chambers");
@@ -52,6 +53,7 @@ import { faceConstellation } from "../lib/lightScore";
 import { buildFeed, openLens, chamberStorefrontCards } from "../lib/feed";
 import { search } from "../lib/search";
 import { makeOnboardedSoul, topUpForTests } from "./helpers/souls";
+import { prepareChamberCover, recordChamberCover } from "../lib/chamberCovers";
 
 const db = new PrismaClient({ datasources: { db: { url } } });
 
@@ -218,6 +220,87 @@ describe("creation; the dual-token signature", () => {
   });
 });
 
+describe("public storefront covers", () => {
+  it("sanitizes an image, enforces creator ownership, and records every change", async () => {
+    const onePixelPng = await sharp({
+      create: {
+        width: 2,
+        height: 2,
+        channels: 3,
+        background: { r: 24, g: 135, b: 157 },
+      },
+    }).png().toBuffer();
+    const prepared = await prepareChamberCover({
+      bytes: onePixelPng,
+      declaredMime: "image/png",
+      altText: "Neighbors carrying rescued food into a community pantry",
+    });
+    expect(prepared.ok).toBe(true);
+    if (!prepared.ok) return;
+    expect(prepared.cover.contentHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(prepared.cover.bytes.subarray(0, 4).toString("hex")).toBe("52494646"); // WebP RIFF
+
+    const refused = await recordChamberCover(db, {
+      chamberId: publicChamberId,
+      profileId: workerId,
+      imageUrl: "https://example.public.blob.vercel-storage.com/refused.webp",
+      altText: prepared.cover.altText,
+      contentHash: prepared.cover.contentHash,
+    });
+    expect(refused.ok).toBe(false);
+
+    const added = await recordChamberCover(db, {
+      chamberId: publicChamberId,
+      profileId: creatorId,
+      imageUrl: "https://example.public.blob.vercel-storage.com/first.webp",
+      altText: prepared.cover.altText,
+      contentHash: prepared.cover.contentHash,
+    });
+    expect(added.ok).toBe(true);
+    const chamber = await db.chamber.findUniqueOrThrow({ where: { id: publicChamberId } });
+    expect(chamber.coverImageUrl).toContain("first.webp");
+    expect(chamber.coverImageAlt).toBe(prepared.cover.altText);
+
+    const replacementHash = "b".repeat(64);
+    const replaced = await recordChamberCover(db, {
+      chamberId: publicChamberId,
+      profileId: creatorId,
+      imageUrl: "https://example.public.blob.vercel-storage.com/second.webp",
+      altText: "Volunteers sorting fresh food around a shared table",
+      contentHash: replacementHash,
+    });
+    expect(replaced.ok).toBe(true);
+    const events = await db.ledgerEvent.findMany({
+      where: { eventType: { startsWith: "chamber.cover-image." } },
+      orderBy: { seq: "asc" },
+    });
+    expect(events.map((event) => event.eventType)).toEqual([
+      "chamber.cover-image.added",
+      "chamber.cover-image.replaced",
+    ]);
+    expect(events[1].payload).toContain(prepared.cover.contentHash);
+    expect(events.every((event) => !event.payload.includes(creatorId))).toBe(true);
+  });
+
+  it("rejects unsupported or inaccessible image input", async () => {
+    const rejected = await prepareChamberCover({
+      bytes: Buffer.from("<svg><script>alert(1)</script></svg>"),
+      declaredMime: "image/svg+xml",
+      altText: "Unsafe vector",
+    });
+    expect(rejected.ok).toBe(false);
+    if (!rejected.ok) expect(rejected.reason).toContain("JPEG, PNG, or WebP");
+
+    const noAlt = await prepareChamberCover({
+      bytes: Buffer.from("not an image"),
+      declaredMime: "image/png",
+      altText: " ",
+    });
+    expect(noAlt.ok).toBe(false);
+    if (!noAlt.ok) expect(noAlt.reason).toContain("description");
+  });
+});
+
 describe("entry; gate + carrying both tokens, and nothing else", () => {
   it("refuses a soul carrying only one token, and admits them once they carry both", async () => {
     // The pauper spent Gratium down but still holds some (15 tipped of
@@ -262,7 +345,14 @@ describe("entry; gate + carrying both tokens, and nothing else", () => {
     const memberEvents = await db.ledgerEvent.findMany({
       where: { eventType: { contains: "chamber" } },
     });
-    expect(memberEvents.every((e) => e.eventType === "chamber.created")).toBe(true);
+    expect(
+      memberEvents.every(
+        (e) =>
+          !e.eventType.includes("entered") &&
+          !e.eventType.includes("member") &&
+          !e.eventType.includes("joined")
+      )
+    ).toBe(true);
   });
 
   it("notifies existing members quietly, aggregated, space-name-only", async () => {

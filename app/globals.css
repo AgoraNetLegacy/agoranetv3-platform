@@ -1430,6 +1430,54 @@ html[data-theme="true-self"] .why-banner.agora-hero .why-text { color: var(--mut
 table.books { border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
 table.books th, table.books td { border: 0; border-bottom: 1px solid var(--line); padding: 0.7rem 0.8rem; }
 table.books tr:last-child td { border-bottom: 0; }
+
+.field-help {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.chamber-cover-fields {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.chamber-cover,
+.chamber-cover-editor {
+  margin: 1rem 0 1.5rem;
+  max-width: 58rem;
+}
+
+.chamber-cover {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.chamber-cover img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.chamber-cover figcaption {
+  padding: 0.6rem 0.8rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.storefront-card-image {
+  display: block;
+  width: min(100%, 24rem);
+  aspect-ratio: 16 / 9;
+  margin-bottom: 0.6rem;
+  border-radius: 10px;
+  object-fit: cover;
+}
 .badge { padding: 0.18rem 0.55rem; letter-spacing: 0.02em; }
 .discussion-door { padding: 0.42rem 0.88rem; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
 .switch-panel { border-radius: 14px; box-shadow: var(--shadow-raised); }

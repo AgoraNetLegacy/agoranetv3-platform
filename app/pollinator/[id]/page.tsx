@@ -8,8 +8,9 @@ import {
   carriesBothTokens,
 } from "@/lib/chambers";
 import { faceConstellation } from "@/lib/lightScore";
-import { submitEnterChamber } from "@/app/actions";
+import { submitChamberCover, submitEnterChamber } from "@/app/actions";
 import { Icon, PillarMark } from "@/components/Icon";
+import { chamberCoversEnabled } from "@/lib/chamberCovers";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ export default async function StorefrontPage({
 }) {
   const { id } = await params;
   const { m } = await searchParams;
+  const coversEnabled = chamberCoversEnabled();
 
   const chamber = await db.chamber.findUnique({
     where: { id },
@@ -108,6 +110,50 @@ export default async function StorefrontPage({
         inside · opened {chamber.createdAt.toLocaleDateString()}
       </p>
       {m && <div className="notice">{m}</div>}
+
+      {chamber.coverImageUrl && (
+        <figure className="chamber-cover">
+          <img
+            src={chamber.coverImageUrl}
+            alt={chamber.coverImageAlt ?? "Chamber storefront cover"}
+          />
+          {chamber.coverImageAlt && <figcaption>{chamber.coverImageAlt}</figcaption>}
+        </figure>
+      )}
+
+      {coversEnabled && viewer?.id === chamber.creatorProfileId && (
+        <details className="chamber-cover-editor">
+          <summary>
+            {chamber.coverImageUrl ? "Replace storefront cover" : "Add a storefront cover"}
+          </summary>
+          <form action={submitChamberCover} className="composer">
+            <input type="hidden" name="chamberId" value={chamber.id} />
+            <label>
+              Cover image
+              <input
+                name="coverImage"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                required
+              />
+              <span className="field-help">JPEG, PNG, or WebP; up to 5 MB.</span>
+            </label>
+            <label>
+              Image description
+              <input
+                name="coverImageAlt"
+                type="text"
+                maxLength={160}
+                defaultValue={chamber.coverImageAlt ?? ""}
+                required
+              />
+            </label>
+            <button type="submit">
+              {chamber.coverImageUrl ? "Replace cover" : "Add cover"}
+            </button>
+          </form>
+        </details>
+      )}
 
       <h3>The idea</h3>
       <p>{chamber.subject}</p>

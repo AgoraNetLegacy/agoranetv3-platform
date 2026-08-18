@@ -6,6 +6,7 @@ import { getRail } from "@/lib/rails";
 import { submitChamber } from "@/app/actions";
 import { Icon } from "@/components/Icon";
 import { LearnMore } from "@/components/LearnMore";
+import { chamberCoversEnabled } from "@/lib/chamberCovers";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default async function PollinatorPage({
   searchParams: Promise<{ m?: string; q?: string }>;
 }) {
   const { m, q } = await searchParams;
+  const coversEnabled = chamberCoversEnabled();
   const [viewer, feePc, feeG, postPc, postG] = await Promise.all([
     activeFace(),
     getRail(db, "chamber.creationFeePc"),
@@ -140,6 +142,13 @@ export default async function PollinatorPage({
       <ul className="discussions">
         {publicChambers.map((c) => (
           <li key={c.id}>
+            {c.coverImageUrl && (
+              <img
+                className="storefront-card-image"
+                src={c.coverImageUrl}
+                alt={c.coverImageAlt ?? ""}
+              />
+            )}
             <Link href={`/pollinator/${c.id}`}>{c.title}</Link>{" "}
             {activity.get(c.id) === "active" ? (
               <span className="badge permanent">Active this week</span>
@@ -241,6 +250,36 @@ export default async function PollinatorPage({
               Storefront pitch; the public profile of the idea
               <textarea name="pitch" required maxLength={2000} />
             </label>
+            {coversEnabled && (
+              <fieldset className="chamber-cover-fields">
+                <legend>Optional storefront cover</legend>
+                <label>
+                  Cover image
+                  <input
+                    name="coverImage"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                  />
+                  <span className="field-help">
+                    JPEG, PNG, or WebP; up to 5 MB. We remove metadata and
+                    prepare a consistent public cover.
+                  </span>
+                </label>
+                <label>
+                  Image description
+                  <input
+                    name="coverImageAlt"
+                    type="text"
+                    maxLength={160}
+                    placeholder="People rebuilding something together"
+                  />
+                  <span className="field-help">
+                    Required when an image is selected; describe what the
+                    image communicates.
+                  </span>
+                </label>
+              </fieldset>
+            )}
             <label>
               Why should people care; what problem, for whom, why now
               <textarea

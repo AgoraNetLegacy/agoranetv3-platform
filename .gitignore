@@ -16,3 +16,4 @@ infra/midnight/node_modules/
 infra/midnight/midnight-level-db/
 infra/midnight/*.log
 .vercel
+.env.local

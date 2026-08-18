@@ -87,6 +87,14 @@ import { asSpiritLevel } from "@/lib/spirit";
 import { saveDiscussion, unsaveDiscussion } from "@/lib/saved";
 import { ingestProfileImage, removeProfileImage, IMAGE_KINDS, IMAGE_LIMITS, type ImageKind } from "@/lib/images";
 import { verifyTurnstile } from "@/lib/turnstile";
+import { put } from "@vercel/blob";
+import {
+  CHAMBER_COVER_MAX_UPLOAD_BYTES,
+  chamberCoversEnabled,
+  prepareChamberCover,
+  recordChamberCover,
+  type PreparedChamberCover,
+} from "@/lib/chamberCovers";
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
@@ -315,8 +323,75 @@ export async function submitCircle(formData: FormData) {
 
 // -------------------------------------------------------------- chambers
 
+async function chamberCoverFromForm(
+  formData: FormData
+): Promise<
+  | { ok: true; cover: PreparedChamberCover | null }
+  | { ok: false; reason: string }
+> {
+  const file = formData.get("coverImage");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: true, cover: null };
+  }
+  if (!chamberCoversEnabled()) {
+    return { ok: false, reason: "Chamber cover images are not enabled yet." };
+  }
+  // Reject before materializing an oversized upload in memory. The image
+  // pipeline checks the true byte length again after reading.
+  if (file.size > CHAMBER_COVER_MAX_UPLOAD_BYTES) {
+    return { ok: false, reason: "Cover images must be 5 MB or smaller." };
+  }
+  return prepareChamberCover({
+    bytes: Buffer.from(await file.arrayBuffer()),
+    declaredMime: file.type,
+    altText: String(formData.get("coverImageAlt") ?? ""),
+  });
+}
+
+async function uploadChamberCover(input: {
+  chamberId: string;
+  profileId: string;
+  cover: PreparedChamberCover;
+}) {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    return {
+      ok: false as const,
+      reason: "The chamber is open, but image storage is not available yet.",
+    };
+  }
+  try {
+    const blob = await put(
+      `chambers/${input.chamberId}/covers/${input.cover.contentHash}.webp`,
+      input.cover.bytes,
+      {
+        access: "public",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        contentType: "image/webp",
+        token,
+      }
+    );
+    return recordChamberCover(db, {
+      chamberId: input.chamberId,
+      profileId: input.profileId,
+      imageUrl: blob.url,
+      altText: input.cover.altText,
+      contentHash: input.cover.contentHash,
+    });
+  } catch {
+    // Blob outages never turn into dashboard or Chamber render failures.
+    return {
+      ok: false as const,
+      reason: "The chamber is open, but its cover could not be uploaded. Try the cover again later.",
+    };
+  }
+}
+
 export async function submitChamber(formData: FormData) {
   const face = await requireFace("creation");
+  const prepared = await chamberCoverFromForm(formData);
+  if (!prepared.ok) backTo("/pollinator", prepared.reason);
   const result = await createChamber(db, {
     profileId: face.id,
     title: String(formData.get("title") ?? ""),
@@ -331,7 +406,42 @@ export async function submitChamber(formData: FormData) {
     },
   });
   if (!result.ok) backTo("/pollinator", result.reason);
+  if (prepared.cover) {
+    const uploaded = await uploadChamberCover({
+      chamberId: result.chamberId,
+      profileId: face.id,
+      cover: prepared.cover,
+    });
+    if (!uploaded.ok) backTo(`/pollinator/${result.chamberId}`, uploaded.reason);
+  }
   redirect(`/pollinator/${result.chamberId}`);
+}
+
+export async function submitChamberCover(formData: FormData) {
+  const face = await requireFace("creation");
+  const chamberId = String(formData.get("chamberId") ?? "");
+  const chamber = await db.chamber.findUnique({ where: { id: chamberId } });
+  if (!chamber) backTo("/pollinator", "No such chamber.");
+  if (chamber.creatorProfileId !== face.id) {
+    backTo(`/pollinator/${chamberId}`, "Only the chamber creator can change its cover.");
+  }
+
+  const prepared = await chamberCoverFromForm(formData);
+  if (!prepared.ok) backTo(`/pollinator/${chamberId}`, prepared.reason);
+  if (!prepared.cover) backTo(`/pollinator/${chamberId}`, "Choose an image first.");
+
+  const uploaded = await uploadChamberCover({
+    chamberId,
+    profileId: face.id,
+    cover: prepared.cover,
+  });
+  revalidatePath("/pollinator");
+  revalidatePath(`/pollinator/${chamberId}`);
+  revalidatePath("/feed");
+  backTo(
+    `/pollinator/${chamberId}`,
+    uploaded.ok ? "The storefront cover is live." : uploaded.reason
+  );
 }
 
 export async function submitEnterChamber(formData: FormData) {
