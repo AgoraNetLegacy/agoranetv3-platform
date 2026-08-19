@@ -52,25 +52,30 @@ export const currentSession = cache(async function currentSession() {
   return getSession(db, id);
 });
 
+// One request-scoped identity context for the entire persistent shell.
+// Profiles are loaded only from this session's signed-in face rows; this
+// neither joins nor derives a human-level link between True Self and Alias.
+export const sessionContext = cache(async function sessionContext() {
+  const session = await currentSession();
+  if (!session) return null;
+  const profiles = await db.profile.findMany({
+    where: { id: { in: session.faces.map((f) => f.profileId) } },
+    orderBy: { createdAt: "asc" },
+  });
+  const active = session.activeProfileId
+    ? profiles.find((profile) => profile.id === session.activeProfileId) ?? null
+    : null;
+  return { session, profiles, active };
+});
+
 /** The active identity in this browser session, or null (reader). */
 export const activeFace = cache(async function activeFace() {
-  const session = await currentSession();
-  if (!session?.activeProfileId) return null;
-  const isSignedIn = session.faces.some(
-    (f) => f.profileId === session.activeProfileId
-  );
-  if (!isSignedIn) return null;
-  return db.profile.findUnique({ where: { id: session.activeProfileId } });
+  return (await sessionContext())?.active ?? null;
 });
 
 /** Every identity signed into this browser session (for the switch control). */
 export const sessionFaces = cache(async function sessionFaces() {
-  const session = await currentSession();
-  if (!session) return [];
-  return db.profile.findMany({
-    where: { id: { in: session.faces.map((f) => f.profileId) } },
-    orderBy: { createdAt: "asc" },
-  });
+  return (await sessionContext())?.profiles ?? [];
 });
 
 /** The client address for rate-limit keying, ONLY behind a declared

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { activeFace } from "@/lib/webSession";
 import { ChosenSourcesFeed, LensSection, PollinatorStrip } from "./FeedSections";
 
@@ -27,8 +28,10 @@ export default async function FeedPage({
           the sources <em>you</em> choose; until then, here is the open
           lens everyone sees: same formula, same results, for everyone.
         </p>
-        <LensSection />
-        <PollinatorStrip />
+        <Suspense fallback={<p className="lore">Loading the open lens…</p>}>
+          <LensSection />
+        </Suspense>
+        <Suspense fallback={null}><PollinatorStrip /></Suspense>
       </>
     );
   }
@@ -43,9 +46,13 @@ export default async function FeedPage({
         feed.
       </p>
       {m && <div className="notice">{m}</div>}
-      <ChosenSourcesFeed profileId={face.id} />
-      <LensSection />
-      <PollinatorStrip />
+      <Suspense fallback={<p className="lore">Loading your chosen sources…</p>}>
+        <ChosenSourcesFeed profileId={face.id} />
+      </Suspense>
+      <Suspense fallback={<p className="lore">Loading the open lens…</p>}>
+        <LensSection />
+      </Suspense>
+      <Suspense fallback={null}><PollinatorStrip /></Suspense>
     </>
   );
 }

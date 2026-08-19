@@ -646,15 +646,37 @@ ul.discussions .meta { font-size: 0.78rem; color: var(--muted); margin-top: 0.2r
 .post details summary { cursor: pointer; color: var(--muted); }
 
 .route-loading {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  width: min(680px, 100%);
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.route-loading-label {
+  display: block;
+  margin-bottom: 0.8rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.route-loading-line {
+  height: 0.72rem;
+  margin: 0.55rem 0;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 20%,
+    color-mix(in srgb, var(--accent-soft) 70%, var(--surface)) 50%,
+    var(--surface-2) 80%
+  );
+  background-size: 220% 100%;
+  animation: route-loading-sweep 1.15s ease-in-out infinite;
+}
+.route-loading-line.short { width: 62%; }
+@keyframes route-loading-sweep {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
 }
 
 /* The chamber form is intentionally collapsible, but its entry point must
@@ -806,6 +828,7 @@ form.inline { display: inline; }
 .deep-dive summary { cursor: pointer; color: var(--muted); }
 .reference-doc h2, .reference-doc h3, .reference-doc h4 { margin-top: 1.2rem; }
 .why-line { font-size: 0.72rem; color: var(--muted); font-style: italic; }
+.feed-lane-loading { min-height: 2.5rem; padding: 0.6rem 0; }
 .caught-up {
   text-align: center;
   border: 1px dashed var(--line);
@@ -1308,7 +1331,7 @@ input, textarea, select {
 .search-filters {
   display: flex;
   flex-wrap: wrap;
-  align-items: end;
+  align-items: flex-end;
   gap: 0.6rem 0.8rem;
   margin: 0.85rem 0 1.3rem;
 }
@@ -1425,7 +1448,7 @@ textarea { padding: 0.8rem !important; }
    the shared .why-banner dark-on-light defaults. Card-scoped (image
    cropped to fit just this card) for Reader and Alias. */
 .why-banner.agora-hero {
-  background: #05070d url("/brand/agora/agora-hero-starfield.png") center / cover no-repeat;
+  background: #05070d url("/brand/agora/agora-hero-starfield-v1.webp") center / cover no-repeat;
   color: #eef2f7;
 }
 .why-banner.agora-hero::after { display: none; }
@@ -1458,7 +1481,7 @@ html[data-theme="alias"] .agora-dashboard-backdrop {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: #05070d url("/brand/agora/agora-hero-starfield.png") center / cover no-repeat;
+  background: #05070d url("/brand/agora/agora-hero-starfield-v1.webp") center / cover no-repeat;
   filter: blur(7px) brightness(.85);
   transform: scale(1.05);
 }
@@ -1580,6 +1603,7 @@ table.books tr:last-child td { border-bottom: 0; }
 @media (prefers-reduced-motion: reduce) {
   .navlink, .pillar-grid li, .domain-grid li, ul.discussions li,
   button:not(.linklike):not(.navlink-button) { transition: none; }
+  .route-loading-line { animation: none; }
 }
 
 /* The Beacon's calm nudge (BEACON §7): one quiet card, never a modal,

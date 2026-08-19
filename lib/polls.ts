@@ -473,6 +473,15 @@ export async function closeDuePolls(db: PrismaClient): Promise<number> {
 
   for (const poll of due) {
     await db.$transaction(async (tx) => {
+      // Claim this poll inside the transaction. A scheduled maintenance run
+      // and a user opening Governance may discover the same due poll; only
+      // one is allowed to close it and append its permanent ledger event.
+      const claimed = await tx.poll.updateMany({
+        where: { id: poll.id, status: "open" },
+        data: { status: "closing" },
+      });
+      if (claimed.count === 0) return;
+
       // The candle: only ballots cast before the hidden true close count.
       const counted = poll.ballots.filter((b) => b.castAt <= poll.trueCloseAt);
       const late = poll.ballots.length - counted.length;

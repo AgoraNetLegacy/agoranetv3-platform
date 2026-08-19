@@ -3,7 +3,7 @@
 // consolidated rate-limit schedule (ANTI_SYBIL_CONSOLIDATION §3 W4).
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { readFileSync } from "fs";
+import { readFileSync, statSync } from "fs";
 import { join } from "path";
 import { spawnSync } from "child_process";
 import { createTestDb, REPO_ROOT } from "./helpers/testDb";
@@ -179,6 +179,67 @@ describe("global layout performance", () => {
     expect(menu).toContain("loadActiveLightScores");
     expect(action).toContain("faceConstellation(db, face.id)");
     expect(action).not.toMatch(/loadActiveLightScores\s*\([^)]/);
+  });
+
+  it("keeps compute near Railway and housekeeping off ordinary session reads", () => {
+    const vercel = JSON.parse(
+      readFileSync(join(REPO_ROOT, "vercel.json"), "utf8")
+    );
+    const parking = readFileSync(join(REPO_ROOT, "lib/parking.ts"), "utf8");
+    const getSessionBody = parking.match(
+      /export async function getSession[\s\S]*?\n}\n/
+    )?.[0];
+
+    expect(vercel.regions).toEqual(["sfo1"]);
+    expect(getSessionBody).toBeTruthy();
+    expect(getSessionBody).not.toContain("purgeExpired");
+    expect(getSessionBody).not.toContain("locks: true");
+    expect(getSessionBody).toContain("expiresAt: { gt:");
+  });
+
+  it("shares one request-scoped shell loader without human-level identity reads", () => {
+    const layout = readFileSync(join(REPO_ROOT, "app/layout.tsx"), "utf8");
+    const chrome = readFileSync(join(REPO_ROOT, "lib/chromeData.ts"), "utf8");
+    expect(layout).toContain('import { chromeData }');
+    expect(layout.match(/await chromeData\(\)/g)?.length).toBeGreaterThanOrEqual(3);
+    expect(chrome).toContain("sessionContext");
+    expect(chrome).not.toContain("humanId");
+    expect(chrome).toContain("profileId: face.id");
+  });
+
+  it("ships compact, versioned chrome artwork instead of multi-megabyte originals", () => {
+    const layout = readFileSync(join(REPO_ROOT, "app/layout.tsx"), "utf8");
+    const css = readFileSync(join(REPO_ROOT, "app/globals.css"), "utf8");
+    const token = join(
+      REPO_ROOT,
+      "public/brand/pollcoin/pollcoin-token-v1.webp"
+    );
+    const starfield = join(
+      REPO_ROOT,
+      "public/brand/agora/agora-hero-starfield-v1.webp"
+    );
+    expect(layout).toContain("pollcoin-token-v1.webp");
+    expect(css).toContain("agora-hero-starfield-v1.webp");
+    expect(statSync(token).size).toBeLessThan(25_000);
+    expect(statSync(starfield).size).toBeLessThan(100_000);
+  });
+
+  it("checks in the launch-readiness index migration", () => {
+    const migration = readFileSync(
+      join(
+        REPO_ROOT,
+        "prisma/postgresql/migrations/20260818_performance_indexes/migration.sql"
+      ),
+      "utf8"
+    );
+    for (const name of [
+      "SoulSession_expiresAt_idx",
+      "Notification_profileId_readAt_updatedAt_idx",
+      "Post_discussionId_status_createdAt_idx",
+      "FellowSoulBond_aProfileId_idx",
+    ]) {
+      expect(migration).toContain(name);
+    }
   });
 });
 

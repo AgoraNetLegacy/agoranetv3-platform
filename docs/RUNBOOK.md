@@ -34,6 +34,7 @@ The platform's schedule (all times UTC):
 
 | When | Command | What it is |
 |---|---|---|
+| `*/5 * * * *` (every 5 minutes) | `cd /app && npm run platform:maintain` | Idempotent short sweeps: expired sessions/locks and social requests, legacy Alias activation, due poll closure, moderation seating, and closing-soon notifications. User routes retain narrow fallback checks until this schedule is independently verified. |
 | `0 3 * * *` (03:00 daily) | `cd /app && npm run db:backup:postgres` | The nightly backup. Cadence = the RPO rail; tightening RPO means adding lines (e.g. hourly `0 * * * *`), nothing else changes. |
 | `30 3 * * *` (03:30 daily) | `cd /app && npm run rate-limits:prune` | Deletes expired rate-limit counters (minimal-log discipline). |
 | `0 4 1 * *` (04:00, 1st of month) | `cd /app && npm run db:restore-drill` | The monthly automated restore drill (§4). **A failed drill is a production incident**; the job exits nonzero so the host's failure alert fires; make sure that alert is switched on. |

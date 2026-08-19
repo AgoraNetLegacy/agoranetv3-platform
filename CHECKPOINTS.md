@@ -1768,3 +1768,43 @@ one or two serial queries per ruling. A regression guard keeps the expensive
 derivation out of the global layout, and a query-budget test keeps the score
 calculation bounded as moderation history grows. Full gate: 323/323 tests,
 provider-schema parity, TypeScript, and the PostgreSQL production build.
+
+## 2026-08-18; Launch-readiness performance pass
+
+The deployment is configured to run Vercel Functions in San Francisco
+(`sfo1`), alongside Railway's California (`us-west2`) PostgreSQL region,
+instead of sending every database round-trip to Virginia. Ordinary session
+reads no longer run deletion sweeps or load unused parking locks; those
+sweeps move to rare session creation and the new idempotent
+`platform:maintain` operations command. The dashboard no longer performs
+legacy Alias activation or poll-closing jobs before rendering.
+
+The persistent shell now resolves one request-scoped session/profile context
+and batches balances, unread notifications, avatar versions, and moderator
+access. Public identical-for-everyone feed calculations carry a 30-second
+shared cache; personal feeds, sessions, balances, social graphs, messages,
+and Light Scores remain uncached and identity-scoped. Feed membership and
+Pollinator reads that were serial now run in parallel. Dashboard lanes sit
+behind independent streaming boundaries, allowing the frame and hero to
+respond while slower lanes finish instead of holding the whole route closed.
+
+The 1.9 MB PollCoin header image is replaced on the live path by a 4 KB,
+128-pixel WebP, and the 1.1 MB dashboard starfield by a 40 KB WebP; both use
+versioned immutable URLs. Route changes now show a visible, reduced-motion-
+aware loading card. A migration adds targeted indexes for session expiry,
+notifications, feed activity, polls, memberships, and Fellow Souls without
+changing any columns or identity rules.
+
+The live Railway inventory audit found only the three PostgreSQL services,
+contrary to earlier documentation claiming an active operations service.
+No provider resource was created or deleted; cron remains an explicit
+deployment follow-up, and narrow route-level fallbacks preserve correctness.
+
+Release gate: 327/327 tests, PostgreSQL schema parity, TypeScript,
+runtime-configuration checks, the optimized PostgreSQL production build, and
+`git diff --check` all pass. Before application release, a PostgreSQL 18
+production backup was created and its archive verified readable; the
+index-only `20260818_performance_indexes` migration then deployed
+successfully. Production invariants passed except ciphertext authentication
+when run from Railway without Vercel's `DM_MASTER_SECRET`; the migration did
+not read or alter message rows.

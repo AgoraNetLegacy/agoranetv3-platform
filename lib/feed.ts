@@ -140,19 +140,21 @@ export async function buildFeed(
   // Candidate discussions from every chosen source. Members'-room
   // discussions surface ONLY through a circle-membership source and only
   // to a current member (checked below); the enclosed-space rule.
-  const memberships = await db.circleMember.findMany({
-    where: { profileId, leftAt: null },
-    select: { circleId: true },
-  });
+  const [memberships, chamberMemberships] = await Promise.all([
+    db.circleMember.findMany({
+      where: { profileId, leftAt: null },
+      select: { circleId: true },
+    }),
+    db.chamberMember.findMany({
+      where: { profileId },
+      select: { chamberId: true },
+    }),
+  ]);
   const memberCircleIds = new Set(memberships.map((m) => m.circleId));
   const followedCircleIds = [...sources.circleIds].filter((id) => memberCircleIds.has(id));
   // Entered chambers (Phase 7.5): workshops surface ONLY through a
   // chamber source and only to a soul who entered; the enclosed-space
   // rule, chamber edition. The card carries space-level facts only.
-  const chamberMemberships = await db.chamberMember.findMany({
-    where: { profileId },
-    select: { chamberId: true },
-  });
   const memberChamberIds = new Set(chamberMemberships.map((m) => m.chamberId));
   const followedChamberIds = [...sources.chamberIds].filter((id) => memberChamberIds.has(id));
 

@@ -127,6 +127,7 @@ model Profile {
   consentAcks  ConsentAck[]
 
   @@unique([humanId, face])
+  @@index([status, activateAt])
 }
 
 // Handles are never recycled: revocation (hatching), deletion, or
@@ -250,6 +251,7 @@ model PostSource {
   createdAt     DateTime     @default(now())
 
   @@unique([postId, sourceId])
+  @@index([createdAt])
 }
 
 // The values seed (ONBOARDING Stage 5): per-profile answers to the seven
@@ -301,6 +303,8 @@ model SoulSession {
   lastSwitchAt    DateTime? // identity-switch cooldown anchor
   faces           SessionFace[]
   locks           PillarLock[]
+
+  @@index([expiresAt])
 }
 
 model SessionFace {
@@ -321,6 +325,7 @@ model PillarLock {
   lastActiveAt DateTime    @default(now())
 
   @@id([sessionId, pillarId])
+  @@index([lastActiveAt])
 }
 
 // ------------------------------------------------------------------
@@ -344,6 +349,8 @@ model GateRequest {
   nullifier       String? // set when the proof is checked; HMAC output, never a raw id
   createdAt       DateTime  @default(now())
   resolvedAt      DateTime?
+
+  @@index([scope, status])
 }
 
 // One nullifier may clear a given scope exactly once. The composite key
@@ -590,6 +597,10 @@ model Discussion {
   createdAt  DateTime  @default(now())
   posts      Post[]
   saves      SavedDiscussion[]
+
+  @@index([pillarId, createdAt])
+  @@index([circleId])
+  @@index([chamberId])
 }
 
 // ------------------------------------------------------------------
@@ -652,6 +663,9 @@ model Poll {
   options          PollOption[]
   ballots          Ballot[]
   discussions      Discussion[]
+
+  @@index([status, nominalCloseAt])
+  @@index([visibilityScope, status, createdAt])
 }
 
 model PollOption {
@@ -730,6 +744,10 @@ model Post {
   flagsOn      Flag[]
   tips         Tip[]
   sources      PostSource[]
+
+  @@index([discussionId, status, createdAt])
+  @@index([authorProfileId, createdAt])
+  @@index([status, createdAt])
 }
 
 // Visible edit history within the grace window (§8: "typo repair with
@@ -846,6 +864,8 @@ model BadgeOffer {
   expiresAt DateTime // 12h rail; unanswered passes automatically
   status    String    @default("offered") // "offered" | "equipped" | "passed" | "expired"
   term      BadgeTerm?
+
+  @@index([profileId, status, expiresAt])
 }
 
 model BadgeTerm {
@@ -857,6 +877,8 @@ model BadgeTerm {
   endsAt         DateTime // hard 48h cutoff; access revokes sharply
   casesCompleted Int        @default(0)
   gratiumEarned  Float      @default(0)
+
+  @@index([profileId, endsAt])
 }
 
 // Strikes: the record is permanent; the ACTIVE count decays (6-month
@@ -920,6 +942,7 @@ model Notification {
   updatedAt      DateTime  @default(now())
 
   @@unique([profileId, aggregationKey])
+  @@index([profileId, readAt, updatedAt])
 }
 
 // ------------------------------------------------------------------
@@ -1001,6 +1024,9 @@ model CircleMember {
   handle    String // public; the membership list speaks in pseudonyms
   joinedAt  DateTime  @default(now())
   leftAt    DateTime?
+
+  @@index([profileId, leftAt])
+  @@index([circleId, leftAt])
 }
 
 // The action log (§6); the heart of the feature. Entries are permanent
@@ -1350,6 +1376,7 @@ model ChamberMember {
   enteredAt DateTime @default(now())
 
   @@unique([chamberId, profileId])
+  @@index([profileId])
 }
 
 // Private-chamber invites (§4.2): the creator selects who gets
@@ -1403,6 +1430,9 @@ model FellowSoulRequest {
   status        String    @default("pending") // "pending" | "accepted" | "declined" | "expired"
   createdAt     DateTime  @default(now())
   resolvedAt    DateTime?
+
+  @@index([toProfileId, status, createdAt])
+  @@index([status, createdAt])
 }
 
 // The bond (§1): mutual, profile-to-profile, any identity combination.
@@ -1416,6 +1446,8 @@ model FellowSoulBond {
   createdAt  DateTime @default(now())
 
   @@unique([aProfileId, bProfileId])
+  @@index([aProfileId])
+  @@index([bProfileId])
 }
 
 // A DM thread (§5): strangers arrive as requests, fellow souls land

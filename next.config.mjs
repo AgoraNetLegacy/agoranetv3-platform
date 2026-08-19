@@ -45,7 +45,17 @@ const nextConfig = {
   // lib/images.ts enforces the real per-kind limits (2026-07-22).
   experimental: { serverActions: { bodySizeLimit: "6mb" } },
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    return [
+      { source: "/(.*)", headers: securityHeaders },
+      {
+        source: "/brand/pollcoin/pollcoin-token-v1.webp",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        source: "/brand/agora/agora-hero-starfield-v1.webp",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+    ];
   },
 };
 

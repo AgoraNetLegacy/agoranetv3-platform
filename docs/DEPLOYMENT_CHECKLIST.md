@@ -6,9 +6,12 @@ delete or repurpose hosted resources until their role is recorded here.
 ## Local application
 
 - [x] Review the pending session-lifetime changes.
-- [x] Run test suite: 22 files, 323 tests passed.
+- [x] Run test suite: 22 files, 327 tests passed.
 - [x] Run TypeScript validation.
 - [x] Run `npm run build:postgres` successfully.
+- [x] Create and verify a PostgreSQL 18 production backup, then deploy the
+  index-only `20260818_performance_indexes` migration before the performance
+  application release.
 - [x] Commit and push the migration-first Chamber-cover release through
   `629571e`.
 
@@ -16,8 +19,7 @@ delete or repurpose hosted resources until their role is recorded here.
 
 - [x] Railway account authenticated.
 - [x] Project exists: `agoranet-staging`.
-- [x] Inventory completed: three standalone PostgreSQL services; the Railway
-  operations service is deployed and configured.
+- [x] Inventory completed: three standalone PostgreSQL services.
 - [x] `Postgres` assigned as the application database.
 - [x] `Postgres-TSjx` reserved as the scratch/restore-drill database.
 - [ ] Resolve the role of the third PostgreSQL service before changing it.
@@ -26,7 +28,8 @@ delete or repurpose hosted resources until their role is recorded here.
 - [x] Run PostgreSQL migrations (`0_init`, reply-fee update, and
   `20260817_chamber_cover_metadata`).
 - [x] Seed the staging database.
-- [x] Add and configure the operations service after the app is working.
+- [ ] Re-provision and verify the operations service; the 2026-08-18 Railway
+  inventory contains only the three PostgreSQL services.
 
 ## Vercel; application hosting
 
@@ -76,9 +79,10 @@ recorded roles are:
 - Railway project: `agoranet-staging`
 - Main database: `Postgres` with TCP public access enabled on port 5432.
 - Scratch database: `Postgres-TSjx` reserved for restore drills.
-- Verification: Postgres invariant suite passed; all public smoke surfaces
-  returned HTTP 200 with their expected landmarks; Railway operations service
-  is active with scheduled jobs and failure notifications configured.
+- Verification: Postgres invariant suite passed and all public smoke surfaces
+  returned HTTP 200 with their expected landmarks. The repository contains the
+  scheduled commands, but the Railway operations service is absent from the
+  live 2026-08-18 inventory and must be re-provisioned before relying on cron.
 - Anti-bot gate: Cloudflare Turnstile is enabled in Production; `/verify`
   successfully renders and validates the challenge.
 - Public image lane: Vercel Blob store `agoranet-chamber-covers`; Chamber

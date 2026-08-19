@@ -32,36 +32,37 @@ export default async function PollinatorPage({
     getRail(db, "chamber.postFeeG"),
   ]);
 
-  const chambers = await db.chamber.findMany({
-    where: q
-      ? {
-          OR: [
-            { title: { contains: q } },
-            // Private storefronts are minimal (name + private marker):
-            // only public chambers match on their pitch content.
-            { isPublic: true, subject: { contains: q } },
-            { isPublic: true, whyCare: { contains: q } },
-          ],
-        }
-      : {},
-    include: { members: { select: { id: true } } },
-    orderBy: { lastActivityAt: "desc" },
-  });
+  const [chambers, enteredRows, invites] = await Promise.all([
+    db.chamber.findMany({
+      where: q
+        ? {
+            OR: [
+              { title: { contains: q } },
+              // Private storefronts are minimal (name + private marker):
+              // only public chambers match on their pitch content.
+              { isPublic: true, subject: { contains: q } },
+              { isPublic: true, whyCare: { contains: q } },
+            ],
+          }
+        : {},
+      include: { members: { select: { id: true } } },
+      orderBy: { lastActivityAt: "desc" },
+    }),
+    viewer
+      ? db.chamberMember.findMany({
+          where: { profileId: viewer.id },
+          select: { chamberId: true },
+        })
+      : Promise.resolve([]),
+    viewer ? pendingInvitesFor(db, viewer.id) : Promise.resolve([]),
+  ]);
 
   const activity = new Map<string, "active" | "quiet">();
-  for (const c of chambers) activity.set(c.id, await chamberActivityLevel(db, c));
+  for (const chamber of chambers) {
+    activity.set(chamber.id, chamberActivityLevel(db, chamber));
+  }
 
-  const entered = viewer
-    ? new Set(
-        (
-          await db.chamberMember.findMany({
-            where: { profileId: viewer.id },
-            select: { chamberId: true },
-          })
-        ).map((mm) => mm.chamberId)
-      )
-    : new Set<string>();
-  const invites = viewer ? await pendingInvitesFor(db, viewer.id) : [];
+  const entered = new Set(enteredRows.map((membership) => membership.chamberId));
 
   const publicChambers = chambers.filter((c) => c.isPublic);
   const privateVisible = chambers.filter(

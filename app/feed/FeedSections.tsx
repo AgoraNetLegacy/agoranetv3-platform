@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import { buildFeed, openLens, chamberStorefrontCards } from "@/lib/feed";
 import { stirringSavesFor } from "@/lib/saved";
@@ -8,6 +9,195 @@ import { STOIC_LESSONS } from "@/lib/stoicContent.generated";
 import { BeaconNudge } from "@/components/BeaconNudge";
 import { markCaughtUp } from "@/app/actions";
 import { Icon } from "@/components/Icon";
+
+// These computations contain public storefront/commons data only. A short
+// shared cache keeps every visitor from rebuilding the same rankings while
+// ensuring new civic activity appears quickly. Identity-specific feeds,
+// saves, wellbeing settings, balances, and messages never enter this cache.
+const cachedStorefrontCards = unstable_cache(
+  async () => chamberStorefrontCards(db),
+  ["public-storefront-cards-v1"],
+  { revalidate: 30 }
+);
+
+const cachedOpenLens = unstable_cache(
+  async (limit: number, pillarSlug?: string) => {
+    const rows = await openLens(db, limit, pillarSlug);
+    return rows.map((row) => ({
+      ...row,
+      lastActivityAt: row.lastActivityAt.toISOString(),
+    }));
+  },
+  ["public-open-lens-v1"],
+  { revalidate: 30 }
+);
+
+async function sharedOpenLens(limit = 10, pillarSlug?: string) {
+  const rows = await cachedOpenLens(limit, pillarSlug);
+  return rows.map((row) => ({
+    ...row,
+    lastActivityAt: new Date(row.lastActivityAt),
+  }));
+}
+
+const cachedCommonsNow = unstable_cache(
+  async () => {
+    const windowHours = await getRail(db, "feed.commons.windowHours");
+    const cutoff = new Date(Date.now() - windowHours * 3_600_000);
+    const recent = await db.discussion.findMany({
+      where: {
+        circleId: null,
+        chamberId: null,
+        OR: [
+          { createdAt: { gte: cutoff } },
+          { posts: { some: { status: "visible", createdAt: { gte: cutoff } } } },
+        ],
+      },
+      include: {
+        pillar: { select: { name: true, slug: true, isMeta: true } },
+        posts: {
+          where: { status: "visible" },
+          select: { createdAt: true },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+        _count: { select: { posts: { where: { status: "visible" } } } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+    return {
+      windowHours,
+      rows: recent
+        .map((discussion) => ({
+          id: discussion.id,
+          title: discussion.title,
+          permanence: discussion.permanence,
+          pillar: discussion.pillar,
+          postCount: discussion._count.posts,
+          lastActivityAt: (
+            discussion.posts[0]?.createdAt ?? discussion.createdAt
+          ).toISOString(),
+        }))
+        .sort(
+          (a, b) =>
+            new Date(b.lastActivityAt).getTime() - new Date(a.lastActivityAt).getTime()
+        )
+        .slice(0, 10),
+    };
+  },
+  ["public-commons-now-v1"],
+  { revalidate: 30 }
+);
+
+const cachedFeaturedPillar = unstable_cache(
+  async () => {
+    const outer = await db.pillar.findMany({
+      where: { isMeta: false },
+      orderBy: { position: "asc" },
+    });
+    if (outer.length === 0) return null;
+    const dayIndex = Math.floor(Date.now() / 86_400_000);
+    return outer[dayIndex % outer.length];
+  },
+  ["public-featured-pillar-v1"],
+  { revalidate: 3600 }
+);
+
+const cachedBeaconCards = unstable_cache(
+  async () => {
+    const [storyRow, questions] = await Promise.all([
+      db.actionEntry.findFirst({
+        where: { attestedAt: { not: null } },
+        orderBy: { attestedAt: "desc" },
+        include: {
+          circle: { select: { id: true, name: true, placeTag: true } },
+          attestations: { select: { id: true } },
+        },
+      }),
+      db.question.findMany({
+        include: {
+          pillar: { select: { name: true, isMeta: true } },
+          discussion: {
+            select: { id: true, _count: { select: { posts: true } } },
+          },
+        },
+      }),
+    ]);
+    const prompt = questions
+      .filter((question) => question.discussion && !question.pillar.isMeta)
+      .sort(
+        (a, b) =>
+          (a.discussion?._count.posts ?? 0) - (b.discussion?._count.posts ?? 0)
+      )[0];
+    return {
+      story: storyRow
+        ? {
+            body: storyRow.body,
+            attestedAt: storyRow.attestedAt!.toISOString(),
+            attestationCount: storyRow.attestations.length,
+            circle: storyRow.circle,
+          }
+        : null,
+      prompt: prompt
+        ? {
+            text: prompt.text,
+            position: prompt.position,
+            pillar: prompt.pillar,
+            discussion: prompt.discussion,
+          }
+        : null,
+    };
+  },
+  ["public-beacon-cards-v1"],
+  { revalidate: 30 }
+);
+
+const cachedSourcesRadar = unstable_cache(
+  async (pillarId: string) => {
+    const [cap, windowHours] = await Promise.all([
+      getRail(db, "feed.lane.radarSources"),
+      getRail(db, "feed.commons.windowHours"),
+    ]);
+    const cutoff = new Date(Date.now() - windowHours * 3_600_000);
+    const usages = await db.postSource.findMany({
+      where: {
+        createdAt: { gte: cutoff },
+        post: {
+          status: "visible",
+          discussion: { pillarId, circleId: null, chamberId: null },
+        },
+      },
+      include: {
+        source: { select: { id: true, url: true } },
+        post: { select: { discussionId: true } },
+      },
+    });
+    const bySource = new Map<
+      string,
+      { url: string; count: number; discussionId: string }
+    >();
+    for (const usage of usages) {
+      const entry = bySource.get(usage.source.id);
+      if (entry) entry.count += 1;
+      else {
+        bySource.set(usage.source.id, {
+          url: usage.source.url,
+          count: 1,
+          discussionId: usage.post.discussionId,
+        });
+      }
+    }
+    return {
+      windowHours,
+      top: [...bySource.values()]
+        .sort((a, b) => b.count - a.count)
+        .slice(0, Math.max(1, Math.round(cap))),
+    };
+  },
+  ["public-sources-radar-v1"],
+  { revalidate: 30 }
+);
 
 // Shared feed rendering (FEED_AND_SEARCH_SPEC), mounted in two places
 // since Phase 8.5: the full /feed page and the platform dashboard;
@@ -94,7 +284,7 @@ export async function ChosenSourcesFeed({
 // host): discovery of new/active PUBLIC chambers. The ordering rule is
 // legible and stated; only the public storefront rides the card.
 export async function PollinatorStrip() {
-  const storefronts = await chamberStorefrontCards(db);
+  const storefronts = await cachedStorefrontCards();
   if (storefronts.length === 0) return null;
   return (
     <>
@@ -124,7 +314,7 @@ export async function PollinatorStrip() {
 }
 
 export async function LensSection() {
-  const lens = await openLens(db);
+  const lens = await sharedOpenLens();
   return (
     <>
       <h3>Popular now; the open lens</h3>
@@ -202,35 +392,8 @@ export async function SavedAndStirring({ profileId }: { profileId: string }) {
 // Same for everyone, recency within a published rail window; no
 // personalization, nothing hidden.
 export async function CommonsNow() {
-  const windowHours = await getRail(db, "feed.commons.windowHours");
-  const cutoff = new Date(Date.now() - windowHours * 3_600_000);
-  const recent = await db.discussion.findMany({
-    where: {
-      circleId: null,
-      chamberId: null,
-      OR: [
-        { createdAt: { gte: cutoff } },
-        { posts: { some: { status: "visible", createdAt: { gte: cutoff } } } },
-      ],
-    },
-    include: {
-      pillar: { select: { name: true, slug: true, isMeta: true } },
-      posts: {
-        where: { status: "visible" },
-        select: { createdAt: true },
-        orderBy: { createdAt: "desc" },
-        take: 1,
-      },
-      _count: { select: { posts: { where: { status: "visible" } } } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
-  const ranked = recent
-    .map((d) => ({ d, lastActivity: d.posts[0]?.createdAt ?? d.createdAt }))
-    .sort((a, b) => b.lastActivity.getTime() - a.lastActivity.getTime())
-    .slice(0, 10);
-  if (ranked.length === 0) return null;
+  const { windowHours, rows } = await cachedCommonsNow();
+  if (rows.length === 0) return null;
   return (
     <>
       <h3>The commons now</h3>
@@ -240,18 +403,18 @@ export async function CommonsNow() {
         stream for every soul, nothing personalized.
       </p>
       <ul className="discussions">
-        {ranked.map(({ d, lastActivity }) => (
-          <li key={d.id}>
-            <Link href={`/d/${d.id}`}>{d.title}</Link>{" "}
-            {d.permanence.startsWith("permanent") ? (
+        {rows.map((discussion) => (
+          <li key={discussion.id}>
+            <Link href={`/d/${discussion.id}`}>{discussion.title}</Link>{" "}
+            {discussion.permanence.startsWith("permanent") ? (
               <span className="badge permanent">Permanent record</span>
             ) : (
               <span className="badge locked">Author-deletable</span>
             )}
             <div className="meta">
-              {d.pillar.isMeta ? "General" : d.pillar.name} · {d._count.posts}{" "}
-              post{d._count.posts === 1 ? "" : "s"} · last activity{" "}
-              {lastActivity.toLocaleString()}
+              {discussion.pillar.isMeta ? "General" : discussion.pillar.name} ·{" "}
+              {discussion.postCount} post{discussion.postCount === 1 ? "" : "s"} · last activity{" "}
+              {new Date(discussion.lastActivityAt).toLocaleString()}
             </div>
           </li>
         ))}
@@ -282,31 +445,7 @@ export async function BeaconWellbeingMount({ profileId }: { profileId: string })
 // with the fewest voices; every card says why, every card exits into
 // the core loop.
 export async function BeaconCards() {
-  const [story, questions] = await Promise.all([
-    db.actionEntry.findFirst({
-      where: { attestedAt: { not: null } },
-      orderBy: { attestedAt: "desc" },
-      include: {
-        circle: { select: { id: true, name: true, placeTag: true } },
-        attestations: { select: { id: true } },
-      },
-    }),
-    db.question.findMany({
-      include: {
-        pillar: { select: { name: true, isMeta: true } },
-        discussion: {
-          select: { id: true, _count: { select: { posts: true } } },
-        },
-      },
-    }),
-  ]);
-
-  const prompt = questions
-    .filter((q) => q.discussion && !q.pillar.isMeta)
-    .sort(
-      (a, b) =>
-        (a.discussion?._count.posts ?? 0) - (b.discussion?._count.posts ?? 0)
-    )[0];
+  const { story, prompt } = await cachedBeaconCards();
 
   if (!story && !prompt) return null;
   return (
@@ -320,10 +459,10 @@ export async function BeaconCards() {
             </Link>{" "}
             <span className="badge permanent">Attested action</span>
             <div className="meta">
-              {story.attestations.length} member
-              {story.attestations.length === 1 ? "" : "s"} staked their names
+              {story.attestationCount} member
+              {story.attestationCount === 1 ? "" : "s"} staked their names
               on this{story.circle.placeTag ? ` · 📍 ${story.circle.placeTag}` : ""} ·{" "}
-              {story.attestedAt!.toLocaleDateString()}
+              {new Date(story.attestedAt).toLocaleDateString()}
             </div>
             <div className="why-line">
               Provable good: the newest ledger-attested Circle action; real
@@ -355,13 +494,8 @@ export async function BeaconCards() {
 // same pillar for every soul, no personal signal, stated in the
 // why-line.
 async function featuredPillarOfTheDay(dbc: typeof db) {
-  const outer = await dbc.pillar.findMany({
-    where: { isMeta: false },
-    orderBy: { position: "asc" },
-  });
-  if (outer.length === 0) return null;
-  const dayIndex = Math.floor(Date.now() / 86_400_000);
-  return outer[dayIndex % outer.length];
+  void dbc;
+  return cachedFeaturedPillar();
 }
 
 // pillar-pulse: the open-lens formula scoped to the featured pillar.
@@ -369,7 +503,7 @@ export async function PillarPulse() {
   const pillar = await featuredPillarOfTheDay(db);
   if (!pillar) return null;
   const [cap] = await Promise.all([getRail(db, "feed.lane.pulseCards")]);
-  const cards = (await openLens(db, Math.max(1, Math.round(cap)), pillar.slug));
+  const cards = await sharedOpenLens(Math.max(1, Math.round(cap)), pillar.slug);
   if (cards.length === 0) return null;
   return (
     <>
@@ -401,42 +535,8 @@ export async function PillarPulse() {
 export async function SourcesRadar() {
   const pillar = await featuredPillarOfTheDay(db);
   if (!pillar) return null;
-  const [cap, windowHours] = await Promise.all([
-    getRail(db, "feed.lane.radarSources"),
-    getRail(db, "feed.commons.windowHours"),
-  ]);
-  const cutoff = new Date(Date.now() - windowHours * 3_600_000);
-  const usages = await db.postSource.findMany({
-    where: {
-      createdAt: { gte: cutoff },
-      post: {
-        status: "visible",
-        discussion: { pillarId: pillar.id, circleId: null, chamberId: null },
-      },
-    },
-    include: {
-      source: { select: { id: true, url: true } },
-      post: { select: { discussionId: true } },
-    },
-  });
-  if (usages.length === 0) return null;
-  const bySource = new Map<
-    string,
-    { url: string; count: number; discussionId: string }
-  >();
-  for (const u of usages) {
-    const entry = bySource.get(u.source.id);
-    if (entry) entry.count += 1;
-    else
-      bySource.set(u.source.id, {
-        url: u.source.url,
-        count: 1,
-        discussionId: u.post.discussionId,
-      });
-  }
-  const top = [...bySource.values()]
-    .sort((a, b) => b.count - a.count)
-    .slice(0, Math.max(1, Math.round(cap)));
+  const { windowHours, top } = await cachedSourcesRadar(pillar.id);
+  if (top.length === 0) return null;
   return (
     <>
       <h3>The sources radar; {pillar.name}</h3>

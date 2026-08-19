@@ -15,6 +15,9 @@ import { randomBytes } from "crypto";
 import { getRail } from "./rails";
 
 export async function createSession(db: PrismaClient): Promise<string> {
+  // Cleanup belongs on the rare session-creation path, not every page view.
+  // Expiry is still enforced independently by getSession's WHERE clause.
+  await purgeExpired(db);
   const lifetimeHours = await getRail(db, "identity.sessionLifetimeHours");
   // The session id IS the browser's bearer token (it's the cookie value),
   // so it must be unguessable; not the schema's default cuid(), whose
@@ -37,10 +40,9 @@ export async function purgeExpired(db: PrismaClient): Promise<void> {
 }
 
 export async function getSession(db: PrismaClient, sessionId: string) {
-  await purgeExpired(db);
   return db.soulSession.findFirst({
     where: { id: sessionId, expiresAt: { gt: new Date() } },
-    include: { faces: true, locks: true },
+    include: { faces: true },
   });
 }
 

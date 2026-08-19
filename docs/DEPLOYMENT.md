@@ -2,8 +2,10 @@
 
 Phase 8 deliverable. The app is deployed to staging and verified from
 the public internet. The Postgres track, runtime guard, backup/drill
-machinery, and scheduled ops jobs are built, configured, and tested.
-The Railway operations service is provisioned and active.
+machinery, and scheduled ops commands are built and tested. A live inventory
+on 2026-08-18 found only the three PostgreSQL services in Railway; the
+operations service must be re-provisioned before scheduled execution can be
+considered active.
 
 **Current staging URL:** https://agoranet-staging.vercel.app
 
@@ -13,8 +15,7 @@ is `www.agoranet.ai`; `agoranet.ai` redirects there.
 
 **Verified 2026-08-16:** Railway migration `0_init`, idempotent seed,
 `db:verify:postgres` (all checks), and `smoke:staging` (all public
-surfaces returned HTTP 200). The Railway operations service is also
-configured for scheduled jobs and failure notifications. Cloudflare
+surfaces returned HTTP 200). Cloudflare
 Turnstile is enabled in Vercel Production and the live `/verify` flow on
 `agoranet.ai` successfully renders and validates the anti-bot challenge.
 
@@ -152,6 +153,9 @@ existed.
 ### Remaining staging operations
 
 - Complete the throwaway-soul cohort walkthrough.
+- Re-provision the Railway operations service, schedule
+  `npm run platform:maintain`, and verify its existing backup, drill, crush,
+  prune, and anchor jobs plus failure notifications.
 
 Production later = the same steps (likely on paid tiers by then, once
 there's real usage to justify it), plus DNS and the go/no-go items on
@@ -161,8 +165,9 @@ the Phase 8 checkpoint.
 
 - **No error-tracking/observability SaaS**; LOG_DISCIPLINE_AUDIT §4
   rule 4: any such tool gets its own correlation review first.
-- **No CDN/edge cache config**; text-first launch doesn't need one;
-  adding one later must respect `force-dynamic` pages.
+- **No private CDN cache**; identity and session surfaces remain dynamic.
+  Public identical-for-everyone feed calculations use a short shared cache,
+  and versioned brand artwork uses immutable asset caching.
 - **No email provider**; nothing sends email (notifications are
   in-app by ratified design; recovery is key-based).
 - **Object storage is narrowly scoped** to sanitized public Chamber covers in

@@ -26,6 +26,7 @@
     "db:restore-drill": "tsx scripts/restore-drill.ts",
     "rate-limits:prune": "tsx scripts/prune-rate-limits.ts",
     "analytics:crush": "tsx scripts/crush-analytics.ts",
+    "platform:maintain": "tsx scripts/platform-maintenance.ts",
     "chain:anchor": "tsx scripts/chain/anchor-ledger.ts",
     "chain:reconcile": "tsx scripts/chain/reconcile-donations.ts",
     "chain:verify-treasury": "tsx scripts/chain/verify-treasury.ts",

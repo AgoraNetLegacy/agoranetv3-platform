@@ -72,10 +72,11 @@ export async function workshopAccess(
 
 /** The storefront's honest activity signal: coarse, aggregate; the
  *  spec publishes activity LEVEL, never who or what (§4.3). */
-export async function chamberActivityLevel(
+export function chamberActivityLevel(
   db: DbOrTx,
   chamber: { id: string; lastActivityAt: Date }
-): Promise<"active" | "quiet"> {
+): "active" | "quiet" {
+  void db;
   const weekAgo = Date.now() - 7 * 86_400_000;
   return chamber.lastActivityAt.getTime() > weekAgo ? "active" : "quiet";
 }

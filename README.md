@@ -35,8 +35,8 @@ deployed contract address, and both owner demo runbooks live there);
   testnet, all disclosed as such; see `/transparency`) · real-money
   mechanics stay behind Phase 9's legal gate, untouched.
 - Hosting: Vercel (the app and custom domains) + Railway (staging
-  PostgreSQL and the configured operations service, including scheduled
-  chain-anchor and maintenance jobs) + Vercel Blob (sanitized public
+  PostgreSQL; operations commands are built, while the live operations
+  service must be re-provisioned and verified) + Vercel Blob (sanitized public
   Chamber storefront covers). Cover metadata migrations are deployed and
   verified before cover-reading application code is released.
 - Operations: `docs/DEPLOYMENT.md` (staging setup),

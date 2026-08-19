@@ -1,7 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { db } from "@/lib/db";
-import { activateDueAliases } from "@/lib/identity";
-import { closeDuePolls } from "@/lib/polls";
 import { editorialFor } from "@/lib/pillarContent";
 import { activeFace } from "@/lib/webSession";
 import { ChosenSourcesFeed, LensSection, PollinatorStrip, SavedAndStirring, CommonsNow, BeaconWellbeingMount, BeaconCards, PillarPulse, SourcesRadar, StoicWisdom } from "@/app/feed/FeedSections";
@@ -9,6 +8,10 @@ import { PillarAnatomy, asSortKey } from "@/app/pillars/PillarAnatomy";
 import { PillarMark } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
+
+function LaneLoading() {
+  return <p className="lore feed-lane-loading">Loading this public lane…</p>;
+}
 
 // THE PLATFORM DASHBOARD IS THE AGORA DASHBOARD (PRESENTATION_SPEC §1.1,
 // owner-corrected 2026-07-13: one thing, not a home "flavored" like the
@@ -27,11 +30,6 @@ export default async function AgoraDashboard({
 }: {
   searchParams: Promise<{ sort?: string; m?: string; welcome?: string }>;
 }) {
-  // Opportunistic jobs ride the highest-traffic page load.
-  // These independent maintenance sweeps should not serialize the
-  // dashboard's first response.
-  await Promise.all([activateDueAliases(db), closeDuePolls(db)]);
-
   const { m, welcome, sort: sortParam } = await searchParams;
   const sort = asSortKey(sortParam);
 
@@ -128,22 +126,30 @@ export default async function AgoraDashboard({
             machine never watches your behavior to guess. Your True Self and
             Alias each have their own feed.
           </p>
-          <ChosenSourcesFeed profileId={face.id} compactDoor />
-          <SavedAndStirring profileId={face.id} />
-          <BeaconWellbeingMount profileId={face.id} />
+          <Suspense fallback={<LaneLoading />}>
+            <ChosenSourcesFeed profileId={face.id} compactDoor />
+          </Suspense>
+          <Suspense fallback={null}>
+            <SavedAndStirring profileId={face.id} />
+          </Suspense>
+          <Suspense fallback={null}>
+            <BeaconWellbeingMount profileId={face.id} />
+          </Suspense>
         </>
       ) : (
         <>
           <h2>What the commons is discussing</h2>
-          <LensSection />
+          <Suspense fallback={<LaneLoading />}>
+            <LensSection />
+          </Suspense>
         </>
       )}
-      <CommonsNow />
-      <PillarPulse />
-      <SourcesRadar />
-      <BeaconCards />
+      <Suspense fallback={<LaneLoading />}><CommonsNow /></Suspense>
+      <Suspense fallback={<LaneLoading />}><PillarPulse /></Suspense>
+      <Suspense fallback={<LaneLoading />}><SourcesRadar /></Suspense>
+      <Suspense fallback={<LaneLoading />}><BeaconCards /></Suspense>
       <StoicWisdom />
-      <PollinatorStrip />
+      <Suspense fallback={<LaneLoading />}><PollinatorStrip /></Suspense>
 
       {/* The Agora pillar's own anatomy (§1.1): domains, canon threads,
           its Governance door; this room's substance. */}
@@ -153,7 +159,9 @@ export default async function AgoraDashboard({
         questions, Circles, and a Governance room; pointed at the
         platform itself: its structure, legitimacy, and survival.
       </p>
-      <PillarAnatomy slug={agora.slug} sort={sort} sortBasePath="/" />
+      <Suspense fallback={<LaneLoading />}>
+        <PillarAnatomy slug={agora.slug} sort={sort} sortBasePath="/" />
+      </Suspense>
     </>
   );
 }

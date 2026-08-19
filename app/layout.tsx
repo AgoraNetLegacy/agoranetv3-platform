@@ -4,10 +4,8 @@ import Link from "next/link";
 import "@fontsource-variable/fraunces";
 import "@fontsource-variable/inter";
 import "./globals.css";
-import { db } from "@/lib/db";
-import { balanceOf } from "@/lib/economy";
-import { activeTermFor } from "@/lib/moderation";
-import { activeFace, sessionFaces, faceFlipPending } from "@/lib/webSession";
+import { activeFace, faceFlipPending } from "@/lib/webSession";
+import { chromeData } from "@/lib/chromeData";
 import { switchToFace, signOutSession, toggleSpiritMode } from "./actions";
 import { Icon } from "@/components/Icon";
 import { AutoCloseDetails } from "@/components/AutoCloseDetails";
@@ -24,7 +22,7 @@ export const metadata: Metadata = {
 // visually distinct per identity, switching is deliberate; never a silent
 // toggle. Readers see their reading state plainly.
 async function FaceBar() {
-  const [face, faces] = await Promise.all([activeFace(), sessionFaces()]);
+  const { face, balances, unread } = await chromeData();
   if (!face) {
     return (
       <div className="face-bar">
@@ -34,13 +32,7 @@ async function FaceBar() {
       </div>
     );
   }
-  const others = faces.filter((f) => f.id !== face.id);
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
-  const [pc, g, unread] = await Promise.all([
-    balanceOf(db, face.id, "PC"),
-    balanceOf(db, face.id, "G"),
-    db.notification.count({ where: { profileId: face.id, readAt: null } }),
-  ]);
   return (
     <div className="face-bar">
       <span className={`face-chip ${chipClass}`}>
@@ -52,13 +44,13 @@ async function FaceBar() {
           <span className="currency-symbol" tabIndex={0} aria-label="PollCoin">
             <img
               className="currency-mark pollcoin-mark"
-              src="/brand/pollcoin/pollcoin-token.png"
+              src="/brand/pollcoin/pollcoin-token-v1.webp"
               alt=""
               aria-hidden="true"
             />
             <span className="currency-tooltip" aria-hidden="true">PollCoin</span>
           </span>
-          {pc.toFixed(2)} PC
+          {balances.PC.toFixed(2)} PC
         </span>
         <span className="balance-divider" aria-hidden="true" />
         <span className="currency-amount">
@@ -71,7 +63,7 @@ async function FaceBar() {
             />
             <span className="currency-tooltip" aria-hidden="true">Gratium</span>
           </span>
-          {g.toFixed(2)} G
+          {balances.G.toFixed(2)} G
         </span>
       </span>
       <LightScoreMenu key={face.handle} />
@@ -91,26 +83,22 @@ async function FaceBar() {
 // would render off-screen. Rendered as a sibling of <header> instead so
 // `fixed` resolves against the real viewport.
 async function ProfileBubble() {
-  const [face, faces] = await Promise.all([activeFace(), sessionFaces()]);
+  const { face, faces, avatarVersions } = await chromeData();
   if (!face) return null;
   // Cache-bust the bubble's mark by the image row's timestamp; the
   // bubble must always match the profile (owner finding 2026-07-22).
-  const avatarRow = await db.profileImage.findUnique({
-    where: { profileId_kind: { profileId: face.id, kind: "avatar" } },
-    select: { updatedAt: true },
-  });
+  const avatarVersion = avatarVersions.get(face.id);
   const avatarSrc = `/img/${face.handle}/avatar${
-    avatarRow ? `?v=${avatarRow.updatedAt.getTime()}` : ""
+    avatarVersion ? `?v=${avatarVersion}` : ""
   }`;
   // The switch rows' marks bust the same way; the selector must
   // always match the profiles (owner finding 2026-07-22).
   const others = faces.filter((f) => f.id !== face.id);
-  const otherAvatars = await db.profileImage.findMany({
-    where: { profileId: { in: others.map((o) => o.id) }, kind: "avatar" },
-    select: { profileId: true, updatedAt: true },
-  });
   const bustFor = new Map(
-    otherAvatars.map((a) => [a.profileId, `?v=${a.updatedAt.getTime()}`])
+    others.map((other) => {
+      const version = avatarVersions.get(other.id);
+      return [other.id, version ? `?v=${version}` : ""];
+    })
   );
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
   return (
@@ -201,17 +189,7 @@ async function ProfileBubble() {
 // exist). Each door carries its benefit one-liner (§3.2) as a tooltip;
 // the landing pages say it in full.
 async function SideNav() {
-  const face = await activeFace();
-  let showWorkbench = false;
-  if (face) {
-    const [term, offer] = await Promise.all([
-      activeTermFor(db, face.id),
-      db.badgeOffer.findFirst({
-        where: { profileId: face.id, status: "offered", expiresAt: { gt: new Date() } },
-      }),
-    ]);
-    showWorkbench = Boolean(term || offer);
-  }
+  const { face, showWorkbench } = await chromeData();
   return (
     <nav className="sidebar" aria-label="The platform">
       <Link href="/" className="navlink navlink-button">
