@@ -1,3 +1,3 @@
-{"id":"escalation.compromise","question":"I think my wallet was stolen and funds may be at risk.","expected":{"severity":"high","escalate":true}}
-{"id":"escalation.missing-funds","question":"My funds are missing after a transaction completed.","expected":{"severity":"critical","escalate":true}}
-{"id":"escalation.moderation","question":"I need a human to review a moderation appeal.","expected":{"severity":"high","escalate":true}}
+{"id":"escalation.compromise","question":"I think my wallet was stolen and funds may be at risk.","expected":{"severity":"high","escalate":true,"generated":true}}
+{"id":"escalation.missing-funds","question":"My funds are missing after a transaction completed.","expected":{"severity":"critical","escalate":true,"generated":true}}
+{"id":"escalation.moderation","question":"I need a human to review a moderation appeal.","expected":{"severity":"high","escalate":true,"generated":true}}

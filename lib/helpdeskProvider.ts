@@ -10,6 +10,7 @@ export interface GeneratedHelpdeskAnswer {
   answer: string;
   citedArticleSlugs: string[];
   confidence: HelpdeskConfidence;
+  refused: boolean;
   escalate: boolean;
   escalationReason: string;
   followUpQuestion: string;
@@ -50,7 +51,7 @@ export function helpdeskProviderConfig(): ProviderConfig {
       model: process.env.HELPDESK_MODEL || "google/gemma-4-e4b",
       apiKey: process.env.HELPDESK_API_KEY || undefined,
       timeoutMs: boundedInteger(process.env.HELPDESK_TIMEOUT_MS, 45_000, 1_000, 120_000),
-      maxOutputTokens: boundedInteger(process.env.HELPDESK_MAX_OUTPUT_TOKENS, 700, 100, 1_000),
+      maxOutputTokens: boundedInteger(process.env.HELPDESK_MAX_OUTPUT_TOKENS, 1_000, 100, 1_000),
     };
   }
 
@@ -114,6 +115,36 @@ function headers(config: ProviderConfig): HeadersInit {
   };
 }
 
+const HELPDESK_RESPONSE_FORMAT = {
+  type: "json_schema",
+  json_schema: {
+    name: "agoranet_helpdesk_answer",
+    strict: true,
+    schema: {
+      type: "object",
+      properties: {
+        answer: { type: "string" },
+        citedArticleSlugs: { type: "array", items: { type: "string" } },
+        confidence: { type: "string", enum: ["high", "medium", "insufficient"] },
+        refused: { type: "boolean" },
+        escalate: { type: "boolean" },
+        escalationReason: { type: "string" },
+        followUpQuestion: { type: "string" },
+      },
+      required: [
+        "answer",
+        "citedArticleSlugs",
+        "confidence",
+        "refused",
+        "escalate",
+        "escalationReason",
+        "followUpQuestion",
+      ],
+      additionalProperties: false,
+    },
+  },
+} as const;
+
 async function requestText(config: ProviderConfig, prompt: string, safetyKey: string): Promise<string | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
@@ -130,8 +161,10 @@ async function requestText(config: ProviderConfig, prompt: string, safetyKey: st
             { role: "user", content: prompt },
           ],
           stream: false,
-          temperature: 0.1,
+          temperature: 0,
+          seed: 1,
           max_tokens: config.maxOutputTokens,
+          response_format: HELPDESK_RESPONSE_FORMAT,
         }),
       });
       if (!response.ok) return null;
@@ -190,6 +223,7 @@ function parseStructuredAnswer(raw: string, allowedSlugs: Set<string>): Generate
   if (typeof data.answer !== "string" || !data.answer.trim() || data.answer.length > 3_000) return null;
   if (!Array.isArray(data.citedArticleSlugs) || data.citedArticleSlugs.some((slug) => typeof slug !== "string")) return null;
   if (!(data.confidence === "high" || data.confidence === "medium" || data.confidence === "insufficient")) return null;
+  if (typeof data.refused !== "boolean") return null;
   if (typeof data.escalate !== "boolean") return null;
   if (typeof data.escalationReason !== "string" || data.escalationReason.length > 500) return null;
   if (typeof data.followUpQuestion !== "string" || data.followUpQuestion.length > 500) return null;
@@ -202,6 +236,7 @@ function parseStructuredAnswer(raw: string, allowedSlugs: Set<string>): Generate
     answer: data.answer.trim(),
     citedArticleSlugs,
     confidence: data.confidence,
+    refused: data.refused,
     escalate: data.escalate,
     escalationReason: data.escalationReason.trim(),
     followUpQuestion: data.followUpQuestion.trim(),

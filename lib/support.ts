@@ -31,6 +31,7 @@ export interface HelpdeskAnswer {
   severity: SupportSeverity;
   generated: boolean;
   confidence?: HelpdeskConfidence;
+  refused: boolean;
   secretRejected?: boolean;
 }
 
@@ -50,6 +51,47 @@ const CRITICAL = [
   /security vulnerab|private data (exposed|leak)/i,
   /missing funds|funds? (?:are |is )?missing/i,
 ];
+
+type DeterministicRefusal = {
+  answer: string;
+  articleSlugs: string[];
+};
+
+function deterministicRefusal(value: string): DeterministicRefusal | null {
+  if (
+    /ignore.{0,60}(?:rules|instructions|evidence|sources)/i.test(value) ||
+    /answer from (?:your )?(?:general|pretrained) knowledge/i.test(value) ||
+    /(?:cite|invent|fabricate).{0,70}(?:fake|not supplied|was not supplied|wasn't supplied|unapproved).{0,30}(?:article|source)?/i.test(value)
+  ) {
+    return {
+      answer: "I can’t ignore AgoraNet’s support rules, use general model knowledge, or fabricate a citation. Ask a factual question about AgoraNet and I’ll answer only from approved support material.",
+      articleSlugs: [],
+    };
+  }
+  if (/pretend.{0,50}(?:human|operator)|(?:say|claim).{0,50}(?:reversed|changed|approved).{0,40}(?:transaction|account|decision)/i.test(value)) {
+    return {
+      answer: "I’m an AI helpdesk, not a human operator, and I can’t claim that an account, decision, or transaction was changed. A consequential transaction concern must be reviewed through a support request.",
+      articleSlugs: ["transaction-pending", "contact-support"],
+    };
+  }
+  if (/(?:show|find|reveal|identify).{0,50}(?:alias|true self).{0,50}(?:belongs|linked|owner)/i.test(value)) {
+    return {
+      answer: "I can’t identify or reveal a link between a True Self and an Alias. AgoraNet deliberately does not preserve that linkage, and Support cannot create it as a convenience.",
+      articleSlugs: ["privacy-profile-boundaries", "two-identities"],
+    };
+  }
+  if (/guaranteed (?:date|deadline)|when will AgoraNet (?:add|launch|ship)|promise.{0,30}(?:date|feature|release)/i.test(value)) {
+    return {
+      answer: "I don’t have approved information establishing that feature or a guaranteed release date, so I can’t invent or promise one.",
+      articleSlugs: ["lost-keys"],
+    };
+  }
+  return null;
+}
+
+function reportsExhaustedTroubleshooting(value: string): boolean {
+  return /(?:still|remains?|again|twice|repeated|already|after).{0,100}(?:reload|retry|tried|correct network|unlocked|restart|clear|approve)/i.test(value);
+}
 
 // A question ABOUT a secret is allowed. A pasted secret is not. These
 // patterns require a value-like delimiter or a private-key marker so the
@@ -153,7 +195,22 @@ export async function answerSupportQuestion(input: {
       escalate: true,
       severity: "critical",
       generated: false,
+      refused: true,
       secretRejected: true,
+    };
+  }
+
+  const refusal = deterministicRefusal(question);
+  if (refusal) {
+    const allowed = new Set(refusal.articleSlugs);
+    return {
+      answer: refusal.answer,
+      articles: HELP_ARTICLES
+        .filter((article) => allowed.has(article.slug))
+        .map(({ slug, title, summary }) => ({ slug, title, summary })),
+      ...classification,
+      generated: false,
+      refused: true,
     };
   }
 
@@ -163,6 +220,7 @@ export async function answerSupportQuestion(input: {
       articles: articleRefs,
       ...classification,
       generated: false,
+      refused: true,
     };
   }
 
@@ -179,13 +237,17 @@ export async function answerSupportQuestion(input: {
       articles: articleRefs,
       ...classification,
       generated: false,
+      refused: false,
     };
   }
 
   const cited = new Set(generated.citedArticleSlugs);
   const citedArticles = articles.filter((article) => cited.has(article.slug));
-  const escalate = classification.escalate || generated.escalate;
-  const severity = generated.escalate && classification.severity === "normal"
+  const modelEscalation = generated.escalate && (
+    generated.confidence === "insufficient" || reportsExhaustedTroubleshooting(question)
+  );
+  const escalate = classification.escalate || modelEscalation;
+  const severity = modelEscalation && classification.severity === "normal"
     ? "high"
     : classification.severity;
   const answer = [generated.answer, generated.followUpQuestion].filter(Boolean).join("\n\n");
@@ -196,6 +258,7 @@ export async function answerSupportQuestion(input: {
     severity,
     generated: true,
     confidence: generated.confidence,
+    refused: generated.refused,
   };
 }
 

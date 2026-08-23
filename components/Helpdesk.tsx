@@ -9,6 +9,7 @@ type Answer = {
   escalate: boolean;
   severity: "informational" | "normal" | "high" | "critical";
   generated: boolean;
+  refused: boolean;
   secretRejected?: boolean;
 };
 
