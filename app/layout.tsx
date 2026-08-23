@@ -250,6 +250,14 @@ async function SideNav() {
           <span className="nav-icon"><Icon name="badge" /></span><span>Moderation workbench</span>
         </Link>
       )}
+      <div className="nav-section-label">Help</div>
+      <Link
+        className="navlink"
+        href="/support"
+        title="Guidance, troubleshooting, and human support."
+      >
+        <span className="nav-icon"><Icon name="compass" /></span><span>Help &amp; Support</span>
+      </Link>
     </nav>
   );
 }

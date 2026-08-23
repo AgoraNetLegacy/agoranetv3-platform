@@ -745,6 +745,20 @@ export const RAIL_DEFAULTS: RailDefault[] = [
       "Identity switches per burst window per session (v2 switch wall verbatim). NOT a cooldown; the owner resolved that to NONE (2026-07-11); this is an anti-automation wall two orders of magnitude above human switching.",
   },
   {
+    key: "ratelimit.supportHelp",
+    value: 20,
+    unit: "actions",
+    description:
+      "Helpdesk questions per burst window per active identity or browser session. Conversation speed remains comfortable; scripted prompt floods do not.",
+  },
+  {
+    key: "ratelimit.supportCases",
+    value: 5,
+    unit: "actions",
+    description:
+      "Support-case submissions per hour per active identity or browser session. Repeated unresolved questions belong in one case, not a queue flood.",
+  },
+  {
     key: "ratelimit.global",
     value: 240,
     unit: "actions",

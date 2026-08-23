@@ -12,6 +12,7 @@
 // input.
 
 import type { PrismaClient } from "@prisma/client";
+import { HELP_ARTICLES } from "./helpContent";
 
 export const ENTITY_TYPES = [
   "content",
@@ -439,6 +440,24 @@ export async function search(
   // 9; Help & platform docs: how things work, fees, rules; the rails
   // ARE the honest documentation of every number.
   if (want(filters, "help")) {
+    const needle = q.toLowerCase();
+    for (const article of HELP_ARTICLES) {
+      const titleMatch = article.title.toLowerCase().includes(needle);
+      const text = [
+        article.summary,
+        article.body.join(" "),
+        (article.keywords ?? []).join(" "),
+      ].join(" ");
+      if (!titleMatch && !text.toLowerCase().includes(needle)) continue;
+      hits.push({
+        type: "help",
+        title: article.title,
+        href: `/support/${article.slug}`,
+        snippet: article.summary,
+        badge: `${article.category} · approved help article`,
+        score: titleMatch ? 4 : 2,
+      });
+    }
     const rails = await db.rail.findMany({
       where: { OR: [{ key: { contains: q } }, { description: { contains: q } }] },
       take: LIMIT_PER_TYPE,

@@ -19,7 +19,10 @@ export default async function SupportArticlePage({
         <Link href="/support">← Support</Link>
       </p>
       <h1>{article.title}</h1>
-      <p className="lore">{article.category}</p>
+      <p className="lore">
+        {article.category} · Approved help article
+        {article.updatedAt ? ` · reviewed ${article.updatedAt}` : ""}
+      </p>
       {article.body.map((paragraph, i) => (
         <p key={i}>{paragraph}</p>
       ))}
@@ -33,6 +36,18 @@ export default async function SupportArticlePage({
           ))}
         </p>
       )}
+      {article.escalateWhen && (
+        <div className="notice">
+          <strong>Stop self-service and contact Support when:</strong>{" "}
+          {article.escalateWhen}
+        </div>
+      )}
+      <p className="support-article-help">
+        Still stuck?{" "}
+        <Link href={`/support?from=${encodeURIComponent(`/support/${article.slug}`)}`}>
+          Ask the helpdesk or open a request →
+        </Link>
+      </p>
     </>
   );
 }

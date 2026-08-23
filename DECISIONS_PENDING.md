@@ -725,3 +725,13 @@ at the Phase 9 real-money re-review regardless.
     regressions. Still validated on SQLite; the Postgres concurrency
     payoff itself remains a deployment-time (#14) verification against real
     Postgres, as noted in the commits.
+
+26. **Help & Support operations before a staffed response promise
+    (2026-08-22).** The product, grounded helpdesk, support-case store,
+    escalation rules, and internal queue are built. It currently promises
+    only that a request is recorded for human review. Before publishing a
+    response-time promise or presenting Support as continuously staffed, the
+    owner must set: (a) who owns critical/high/normal queues; (b) response
+    windows; (c) whether replies use manual email, an in-product support
+    inbox, or both; (d) case/transcript retention; and (e) whether a public
+    status page ships. None blocks self-service Help or case collection.

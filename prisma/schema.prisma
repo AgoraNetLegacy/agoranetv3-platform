@@ -67,46 +67,46 @@ model Human {
 }
 
 model Profile {
-  id           String        @id @default(cuid())
+  id                   String         @id @default(cuid())
   // NULL for every Alias; deliberately. One-Alias-per-human is enforced
   // by the alias-registration nullifier spend, never by a stored link;
   // no database row connects a soul's two identities (DUAL_IDENTITY §1.2).
   // The True Self keeps its Human link: recovery routes through the
   // human, and that link never bridges to the Alias.
-  humanId      String?
-  human        Human?        @relation(fields: [humanId], references: [id])
-  face         String // "TRUE_SELF" | "ALIAS"
+  humanId              String?
+  human                Human?         @relation(fields: [humanId], references: [id])
+  face                 String // "TRUE_SELF" | "ALIAS"
   // Two-layer naming (owner-ratified 2026-07-10, ONBOARDING Stage 3.4):
   // the @handle is the attribution key; unique across one flat global
   // taken-list (all profiles, both identities, PLUS HandleTombstone), never
   // recycled. Stored lowercase. The display name is free-form: duplicates
   // allowed, real names welcome, changeable behind a rate rail.
-  handle       String        @unique
-  displayName  String
+  handle               String         @unique
+  displayName          String
   displayNameChangedAt DateTime?
   // Per-identity login secret, held soul-side, hash stored. Each identity signs
   // in with its own key; login never routes through the Human.
-  accessKeyHash String       @unique
+  accessKeyHash        String         @unique
   // Aliases are born PENDING and activate at a randomized, cohort-batched
   // moment (ONBOARDING §3.3–3.4); True Selves are born active.
-  status       String        @default("active") // "active" | "pending"
+  status               String         @default("active") // "active" | "pending"
   // Strike-ladder consequences (auto-applied, MODERATION §7).
-  rateLimitedUntil DateTime?
-  readOnlyUntil    DateTime?
-  activateAt   DateTime?
+  rateLimitedUntil     DateTime?
+  readOnlyUntil        DateTime?
+  activateAt           DateTime?
   // Coarse join period only; never a precise timestamp (§3.5).
-  joinedPeriod String
+  joinedPeriod         String
   // Phase 8.5, PRESENTATION_SPEC §5.2; the profile window: about-me is
   // LIVE-surface content (editable anytime, never permanent record).
   // Place follows the ratified "place yourself on the map, never
   // someone else" rule; the Alias composer carries the ceremony's
   // stylometry warning verbatim.
-  bio          String        @default("")
-  bioPlace     String        @default("")
+  bio                  String         @default("")
+  bioPlace             String         @default("")
   // §5.1 + §2.2: the identity-switch animation is a per-identity settings
   // choice; "flip" (default) | "crossfade" | "instant". Motion needs
   // are served by choice, not detection.
-  switchAnimation String     @default("flip")
+  switchAnimation      String         @default("flip")
   // Spirit Mode (owner-ruled 2026-07-21): a per-identity visibility veil,
   // toggled at will from the bubble dot. The LEVEL is chosen in
   // Settings; all three are available, discovery-only is the default:
@@ -117,14 +117,14 @@ model Profile {
   //                 messages into existing threads are refused
   // Refusals are QUIET; the same neutral wording as a block (§5.2),
   // so spirit mode is never itself a signal.
-  spiritActive  Boolean      @default(false)
-  spiritLevel   String       @default("discovery")
+  spiritActive         Boolean        @default(false)
+  spiritLevel          String         @default("discovery")
   // Begin each fresh sign-in already veiled (per-identity choice).
-  spiritOnLogin Boolean      @default(false)
-  createdAt    DateTime      @default(now())
-  gateRequests GateRequest[]
-  valuesAnswers ValuesAnswer[]
-  consentAcks  ConsentAck[]
+  spiritOnLogin        Boolean        @default(false)
+  createdAt            DateTime       @default(now())
+  gateRequests         GateRequest[]
+  valuesAnswers        ValuesAnswer[]
+  consentAcks          ConsentAck[]
 
   @@unique([humanId, face])
   @@index([status, activateAt])
@@ -136,9 +136,9 @@ model Profile {
 // handles ∪ tombstones, and records only THAT a string is claimed;
 // zero ownership/linkage information.
 model HandleTombstone {
-  handle        String   @id // lowercase
-  reason        String // "hatched" | "deleted" | "abandoned"
-  tombstonedAt  DateTime @default(now())
+  handle       String   @id // lowercase
+  reason       String // "hatched" | "deleted" | "abandoned"
+  tombstonedAt DateTime @default(now())
 }
 
 // ------------------------------------------------------------------
@@ -170,16 +170,16 @@ model TreasuryBalance {
 // issuance (grants mint from "issuance"; the internal era's faucet,
 // accounted honestly).
 model EconomyEntry {
-  id            String   @id @default(cuid())
-  kind          String // inflows: "fee.*" | "deposit.flag" | "tip.cut" · issuance: "grant.*" · peer: "tip" · OUTFLOWS (must carry budgetCategory): "refund.flag" | "reward.moderation" | "stipend.tribunal"
-  currency      String // "PC" | "G"
-  amount        Float
-  fromProfileId String? // null = treasury or issuance
-  fromTreasury  Boolean  @default(false)
-  toProfileId   String?
-  toTreasury    Boolean  @default(false)
-  refType       String? // "post" | "poll" | "discussion" | "flag" | "case"
-  refId         String?
+  id             String          @id @default(cuid())
+  kind           String // inflows: "fee.*" | "deposit.flag" | "tip.cut" · issuance: "grant.*" · peer: "tip" · OUTFLOWS (must carry budgetCategory): "refund.flag" | "reward.moderation" | "stipend.tribunal"
+  currency       String // "PC" | "G"
+  amount         Float
+  fromProfileId  String? // null = treasury or issuance
+  fromTreasury   Boolean         @default(false)
+  toProfileId    String?
+  toTreasury     Boolean         @default(false)
+  refType        String? // "post" | "poll" | "discussion" | "flag" | "case"
+  refId          String?
   // The Constitution's must-guardrail, made structural (Appendix A:
   // "The treasury MUST NOT spend outside budgeted categories"). Every
   // entry with fromTreasury=true carries an active category; inflows
@@ -188,7 +188,7 @@ model EconomyEntry {
   // future call site can bypass the rule by forgetting it.
   budgetCategory String?
   category       BudgetCategory? @relation(fields: [budgetCategory], references: [name])
-  createdAt     DateTime @default(now())
+  createdAt      DateTime        @default(now())
 }
 
 // The budget categories the treasury may spend within (PLATFORM_
@@ -239,16 +239,16 @@ model SourceObject {
 // "vouched" (reputation-staked) or "unverified" (labeled, stake-free;
 // legitimate by design).
 model PostSource {
-  id            String       @id @default(cuid())
-  postId        String
-  post          Post         @relation(fields: [postId], references: [id])
-  sourceId      String
-  source        SourceObject @relation(fields: [sourceId], references: [id])
-  kind          String // "study" | "news" | "primary" | "book" | "experience" | "other"
-  vouch         String // "vouched" | "unverified"
+  id              String       @id @default(cuid())
+  postId          String
+  post            Post         @relation(fields: [postId], references: [id])
+  sourceId        String
+  source          SourceObject @relation(fields: [sourceId], references: [id])
+  kind            String // "study" | "news" | "primary" | "book" | "experience" | "other"
+  vouch           String // "vouched" | "unverified"
   sharerProfileId String // operator space
-  sharerHandle  String // public; vouches are by name (§10.2)
-  createdAt     DateTime     @default(now())
+  sharerHandle    String // public; vouches are by name (§10.2)
+  createdAt       DateTime     @default(now())
 
   @@unique([postId, sourceId])
   @@index([createdAt])
@@ -487,14 +487,14 @@ model Domain {
 // repair. Append-only in practice: revisions are never edited or
 // deleted (db:verify holds this).
 model PictureRevision {
-  id        String        @id @default(cuid())
+  id        String         @id @default(cuid())
   domainId  String
-  domain    Domain        @relation(fields: [domainId], references: [id])
+  domain    Domain         @relation(fields: [domainId], references: [id])
   version   Int // 1..n
   body      String
-  repairId  String?       @unique // null only for the seeded v1
+  repairId  String?        @unique // null only for the seeded v1
   repair    PictureRepair? @relation(fields: [repairId], references: [id])
-  createdAt DateTime      @default(now())
+  createdAt DateTime       @default(now())
 
   @@unique([domainId, version])
 }
@@ -508,17 +508,17 @@ model PictureRevision {
 // Light Score (LIGHT_SCORE §2), rejected ones cost nothing; honest
 // misses stay safe (§5.2).
 model PictureRepair {
-  id                String    @id @default(cuid())
+  id                String           @id @default(cuid())
   domainId          String
-  domain            Domain    @relation(fields: [domainId], references: [id])
+  domain            Domain           @relation(fields: [domainId], references: [id])
   authorProfileId   String // Phase A operator space
   authorHandle      String // public; repairs are civic contributions
   authorDisplayName String // frozen at submission (naming ruling)
   challenge         String // what the current Picture gets wrong
   proposedText      String // the full replacement Picture text
-  status            String    @default("open") // "open" | "accepted" | "declined"
-  pollId            String?   @unique // the governance poll deciding it
-  createdAt         DateTime  @default(now())
+  status            String           @default("open") // "open" | "accepted" | "declined"
+  pollId            String?          @unique // the governance poll deciding it
+  createdAt         DateTime         @default(now())
   resolvedAt        DateTime?
   revision          PictureRevision?
 }
@@ -560,16 +560,16 @@ model Rule {
 // ------------------------------------------------------------------
 
 model Discussion {
-  id         String    @id @default(cuid())
+  id         String            @id @default(cuid())
   title      String
   pillarId   String
-  pillar     Pillar    @relation(fields: [pillarId], references: [id])
+  pillar     Pillar            @relation(fields: [pillarId], references: [id])
   // Circle-scoped Discussion (Phase 6; the members' room, CIRCLES §2.2):
   // the Discussion primitive, reused. Members-only, deletable class;
   // the working conversation is NOT the permanent record (§2.3), so no
   // ledger commits and no permanence upgrades inside it.
   circleId   String?
-  circle     Circle?   @relation(fields: [circleId], references: [id])
+  circle     Circle?           @relation(fields: [circleId], references: [id])
   // Chamber-scoped Discussion (Phase 7.5; the workshop, POLLINATOR
   // §4.3 layer 2): the same reuse. Enter-to-see, deletable class
   // (POLLINATOR §7: "standard deletable-with-due-process"), no ledger
@@ -578,23 +578,23 @@ model Discussion {
   // public. Homed in the meta pillar (a Discussion needs a pillar row;
   // chamber scoping overrides pillar surfaces everywhere).
   chamberId  String?
-  chamber    Chamber?  @relation(fields: [chamberId], references: [id])
+  chamber    Chamber?          @relation(fields: [chamberId], references: [id])
   // Canonical threads map 1:1 onto canon questions (the civic spine).
-  questionId String?   @unique
-  question   Question? @relation(fields: [questionId], references: [id])
+  questionId String?           @unique
+  question   Question?         @relation(fields: [questionId], references: [id])
   // Domain threads map 1:1 onto domains (the second ring, Phase 7).
-  domainId   String?   @unique
-  domain     Domain?   @relation(fields: [domainId], references: [id])
+  domainId   String?           @unique
+  domain     Domain?           @relation(fields: [domainId], references: [id])
   // Poll-context Discussions (POLLS §4.4): attached at creation or by
   // any soul later; consensus-fail offers one (prompted, never automatic).
   pollId     String?
-  poll       Poll?     @relation(fields: [pollId], references: [id])
+  poll       Poll?             @relation(fields: [pollId], references: [id])
   // "permanent-canonical" (platform-created, ratified permanent);
   // "permanent-governance" (lives in a pillar's Governance room);
   // "permanent-creator" (paid at creation only, immutable; labeled
   // distinctly, DISCUSSIONS §8); "deletable" (soul-created spaces).
   permanence String
-  createdAt  DateTime  @default(now())
+  createdAt  DateTime          @default(now())
   posts      Post[]
   saves      SavedDiscussion[]
 
@@ -610,34 +610,34 @@ model Discussion {
 // ------------------------------------------------------------------
 
 model Poll {
-  id               String       @id @default(cuid())
-  pillarId         String
-  pillar           Pillar       @relation(fields: [pillarId], references: [id])
-  creatorProfileId String // Phase A operator space; never public
-  creatorHandle    String // the attribution key, frozen at creation
-  title            String
-  description      String?
-  type             String // "single" | "multi" | "consensus"
+  id                 String       @id @default(cuid())
+  pillarId           String
+  pillar             Pillar       @relation(fields: [pillarId], references: [id])
+  creatorProfileId   String // Phase A operator space; never public
+  creatorHandle      String // the attribution key, frozen at creation
+  title              String
+  description        String?
+  type               String // "single" | "multi" | "consensus"
   consensusThreshold Float? // consensus polls: 0.5–1.0, creator-set
   // Vote-visibility mode, stated plainly BEFORE a soul votes (§2):
   // "public" (choice visibly attached, on this poll's page only; no
   // cross-poll dossier is ever compiled) | "pseudonymous" (ballots
   // keyed by nullifier only; aggregate results, never who chose what).
-  mode             String
-  isGovernance     Boolean      @default(false)
+  mode               String
+  isGovernance       Boolean      @default(false)
   // Ordinary polls only: creator may show a live tally. Governance
   // polls are always sealed; no option (§4.7).
-  liveTally        Boolean      @default(false)
+  liveTally          Boolean      @default(false)
   // Circle-restricted visibility (consumed in Phase 6): scoped to the
   // Circle's membership; ALWAYS per-profile (the §7 sharp rule; the
   // vote scope is per-profile everywhere, so nothing changes here).
-  visibilityScope  String       @default("public") // "public" | "circle" | "chamber"
-  circleRef        String?
+  visibilityScope    String       @default("public") // "public" | "circle" | "chamber"
+  circleRef          String?
   // A binding stewardship decision (CIRCLES §7): executed at close when
   // the poll passes with "Adopt" leading. "remove-member:{handle}" |
   // "close-circle" | "appoint-founder:{handle}" |
   // "set-attestation-threshold:{n}". Null for ordinary polls.
-  circleAction     String?
+  circleAction       String?
   // Chamber-restricted polls (NEURAL_POLLINATOR §9.1): a LARGE mission
   // release is authorized by "a binding stewardship-style poll... members
   // vote, auto-executes on passage"; the Circle pattern above, pointed
@@ -645,33 +645,33 @@ model Poll {
   // built"; the machinery was built for Circles only, so Phase 8.7
   // Slice 5 extends the same shape rather than inventing a second one.
   // "release:{missionReleaseId}". Null for ordinary polls.
-  chamberRef       String?
-  chamberAction    String?
-  createdAt        DateTime     @default(now())
-  nominalCloseAt   DateTime
+  chamberRef         String?
+  chamberAction      String?
+  createdAt          DateTime     @default(now())
+  nominalCloseAt     DateTime
   // The candle (governance): the TRUE close is drawn randomly within
   // the final stretch, committed publicly as sha256(trueCloseAt|salt)
   // in poll.created, revealed with the results. Ordinary polls:
   // trueCloseAt = nominalCloseAt. Hidden fields are Phase A operator
   // space; the commitment makes the reveal verifiable by anyone.
-  trueCloseAt      DateTime
-  candleSalt       String?
-  candleCommitment String?
-  status           String       @default("open") // "open" | "closed"
-  closedAt         DateTime?
-  outcome          String? // "completed" | "passed" | "no-consensus"
-  options          PollOption[]
-  ballots          Ballot[]
-  discussions      Discussion[]
+  trueCloseAt        DateTime
+  candleSalt         String?
+  candleCommitment   String?
+  status             String       @default("open") // "open" | "closed"
+  closedAt           DateTime?
+  outcome            String? // "completed" | "passed" | "no-consensus"
+  options            PollOption[]
+  ballots            Ballot[]
+  discussions        Discussion[]
 
   @@index([status, nominalCloseAt])
   @@index([visibilityScope, status, createdAt])
 }
 
 model PollOption {
-  id       String   @id @default(cuid())
+  id       String         @id @default(cuid())
   pollId   String
-  poll     Poll     @relation(fields: [pollId], references: [id])
+  poll     Poll           @relation(fields: [pollId], references: [id])
   label    String
   position Int
   // Set once, at close, from counted ballots; never maintained live.
@@ -687,16 +687,16 @@ model PollOption {
 // PUBLIC mode the voter's handle is attached by design and published
 // post-close. `counted` is decided at close by the candle.
 model Ballot {
-  id          String         @id @default(cuid())
-  pollId      String
-  poll        Poll           @relation(fields: [pollId], references: [id])
-  nullifier   String
-  voterProfileId String? // public mode only; Phase A operator space
-  voterHandle    String? // public mode only; published post-close
+  id               String         @id @default(cuid())
+  pollId           String
+  poll             Poll           @relation(fields: [pollId], references: [id])
+  nullifier        String
+  voterProfileId   String? // public mode only; Phase A operator space
+  voterHandle      String? // public mode only; published post-close
   voterDisplayName String? // public mode only; frozen at cast
-  castAt      DateTime       @default(now())
-  counted     Boolean?
-  choices     BallotChoice[]
+  castAt           DateTime       @default(now())
+  counted          Boolean?
+  choices          BallotChoice[]
 
   @@unique([pollId, nullifier])
 }
@@ -711,39 +711,39 @@ model BallotChoice {
 }
 
 model Post {
-  id           String         @id @default(cuid())
-  discussionId String
-  discussion   Discussion     @relation(fields: [discussionId], references: [id])
-  parentId     String?
-  parent       Post?          @relation("Thread", fields: [parentId], references: [id])
-  replies      Post[]         @relation("Thread")
+  id                String         @id @default(cuid())
+  discussionId      String
+  discussion        Discussion     @relation(fields: [discussionId], references: [id])
+  parentId          String?
+  parent            Post?          @relation("Thread", fields: [parentId], references: [id])
+  replies           Post[]         @relation("Thread")
   // The author's internal profile id stays in Phase A operator space;
   // everything public (pages, ledger) speaks the @handle; the eternal
   // attribution key. Permanent-class content freezes the display name
   // as it was at composition (naming ruling 2026-07-10); live surfaces
   // show the current one.
-  authorProfileId String
-  authorHandle    String
+  authorProfileId   String
+  authorHandle      String
   authorDisplayName String
-  body         String
-  status       String         @default("visible") // hidden/blur states arrive Phase 5
+  body              String
+  status            String         @default("visible") // hidden/blur states arrive Phase 5
   // Content attestation (DISCUSSIONS §10.1): an optional, reputation-
   // staked "Human-made" mark. Three states platform-wide: machine-
   // labeled (in-house AI, later), unlabeled (no penalty, no
   // assumption), human-attested.
-  humanMade    Boolean        @default(false)
+  humanMade         Boolean        @default(false)
   // Paid own-post permanence inside a deletable space (DISCUSSIONS §8):
   // hash-committed to the ledger at purchase; the surrounding thread
   // may still be deleted around it.
-  permanentUpgraded Boolean   @default(false)
-  createdAt    DateTime       @default(now())
+  permanentUpgraded Boolean        @default(false)
+  createdAt         DateTime       @default(now())
   // Grace window (rail: discussion.graceWindowMinutes): edits allowed
   // with visible history until this moment, then the record locks.
-  editableUntil DateTime
-  revisions    PostRevision[]
-  flagsOn      Flag[]
-  tips         Tip[]
-  sources      PostSource[]
+  editableUntil     DateTime
+  revisions         PostRevision[]
+  flagsOn           Flag[]
+  tips              Tip[]
+  sources           PostSource[]
 
   @@index([discussionId, status, createdAt])
   @@index([authorProfileId, createdAt])
@@ -769,28 +769,28 @@ model PostRevision {
 // ------------------------------------------------------------------
 
 model Flag {
-  id                String   @id @default(cuid())
+  id                String          @id @default(cuid())
   // Exactly one evidence pointer: a public post, a DM excerpt the
   // recipient revealed (Phase 6.5; FELLOW_SOULS §5.1), or a mission
   // release (Phase 8.7, owner-ruled 2026-07-16; FUND_INTEGRITY §3.4's
   // freeze needed a way for a case to START, and a payment is neither a
   // post nor a message).
   postId            String?
-  post              Post?    @relation(fields: [postId], references: [id])
+  post              Post?           @relation(fields: [postId], references: [id])
   dmExcerptId       String?
-  dmExcerpt         DmExcerpt? @relation(fields: [dmExcerptId], references: [id])
+  dmExcerpt         DmExcerpt?      @relation(fields: [dmExcerptId], references: [id])
   releaseId         String?
   release           MissionRelease? @relation(fields: [releaseId], references: [id])
   ruleId            String // which rule is alleged (the case category)
-  rule              Rule     @relation(fields: [ruleId], references: [id])
+  rule              Rule            @relation(fields: [ruleId], references: [id])
   note              String?
   reporterProfileId String
   nullifier         String // gate nullifier; keys the flag for Phase 5 handling
-  status            String   @default("queued") // "queued" | "in-case" | "refunded" | "forfeited" | "settled"
-  depositHeld       Float    @default(0) // 0 when filed at zero balance
+  status            String          @default("queued") // "queued" | "in-case" | "refunded" | "forfeited" | "settled"
+  depositHeld       Float           @default(0) // 0 when filed at zero balance
   caseId            String?
-  case              ModCase? @relation(fields: [caseId], references: [id])
-  createdAt         DateTime @default(now())
+  case              ModCase?        @relation(fields: [caseId], references: [id])
+  createdAt         DateTime        @default(now())
 }
 
 // ------------------------------------------------------------------
@@ -803,39 +803,39 @@ model Flag {
 // ------------------------------------------------------------------
 
 model ModCase {
-  id          String   @id @default(cuid())
+  id              String          @id @default(cuid())
   // Evidence: a public post, a revealed DM excerpt (Phase 6.5), or a
   // mission release (Phase 8.7); exactly one. DM cases carry no content
   // actions (nothing public to blur or tombstone); consequences are
   // personal, and the triangle of blindness holds identically. Release
   // cases likewise blur nothing: the evidence IS a public payment, and
   // the consequence is the freeze (FUND_INTEGRITY §3.4).
-  postId      String?
-  dmExcerptId String?
-  dmExcerpt   DmExcerpt? @relation(fields: [dmExcerptId], references: [id])
-  releaseId   String?
-  release     MissionRelease? @relation(fields: [releaseId], references: [id])
-  ruleId      String // the alleged rule (the case category, §3.1)
-  tier        Int // 1 routine | 2 serious | 3 severe (from the rule)
+  postId          String?
+  dmExcerptId     String?
+  dmExcerpt       DmExcerpt?      @relation(fields: [dmExcerptId], references: [id])
+  releaseId       String?
+  release         MissionRelease? @relation(fields: [releaseId], references: [id])
+  ruleId          String // the alleged rule (the case category, §3.1)
+  tier            Int // 1 routine | 2 serious | 3 severe (from the rule)
   // Heavy handling: removal from a permanent space needs 3 independent
   // rulings (§4); severe goes to the Tribunal lane.
-  heavy       Boolean  @default(false)
-  expedited   Boolean  @default(false) // R3.1/R3.3 only: full-hide lane
-  tribunal    Boolean  @default(false)
-  status      String   @default("open") // "open" | "awaiting-supervision" | "ruled" | "appealed" | "resolved"
-  outcome     String? // "upheld" | "declined" | "no-rule-fits"
-  badFaithFlag Boolean @default(false) // explicit bad-faith ruling → deposits forfeit
+  heavy           Boolean         @default(false)
+  expedited       Boolean         @default(false) // R3.1/R3.3 only: full-hide lane
+  tribunal        Boolean         @default(false)
+  status          String          @default("open") // "open" | "awaiting-supervision" | "ruled" | "appealed" | "resolved"
+  outcome         String? // "upheld" | "declined" | "no-rule-fits"
+  badFaithFlag    Boolean         @default(false) // explicit bad-faith ruling → deposits forfeit
   // Sentinel v1 (§11): machine-flagged suspected coordination, bundled
   // to the Tribunal. Labeled to the Tribunal; never auto-punishes.
-  sentinelBundled Boolean @default(false)
-  createdAt   DateTime @default(now())
-  resolvedAt  DateTime?
-  flags       Flag[]
-  rulings     Ruling[]
+  sentinelBundled Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  resolvedAt      DateTime?
+  flags           Flag[]
+  rulings         Ruling[]
   // One appeal per ruling (§9); fresh eyes or Tribunal.
-  appealOfId  String?  @unique
-  appealOf    ModCase? @relation("Appeal", fields: [appealOfId], references: [id])
-  appealedBy  ModCase? @relation("Appeal")
+  appealOfId      String?         @unique
+  appealOf        ModCase?        @relation("Appeal", fields: [appealOfId], references: [id])
+  appealedBy      ModCase?        @relation("Appeal")
 }
 
 model Ruling {
@@ -858,11 +858,11 @@ model Ruling {
 }
 
 model BadgeOffer {
-  id        String    @id @default(cuid())
+  id        String     @id @default(cuid())
   profileId String // per-profile, never per-human (§2.1)
-  offeredAt DateTime  @default(now())
+  offeredAt DateTime   @default(now())
   expiresAt DateTime // 12h rail; unanswered passes automatically
-  status    String    @default("offered") // "offered" | "equipped" | "passed" | "expired"
+  status    String     @default("offered") // "offered" | "equipped" | "passed" | "expired"
   term      BadgeTerm?
 
   @@index([profileId, status, expiresAt])
@@ -884,13 +884,13 @@ model BadgeTerm {
 // Strikes: the record is permanent; the ACTIVE count decays (6-month
 // rail; one redemption clock shared with Light Score deductions).
 model Strike {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   profileId   String
   pillarId    String
   tier        Int
   caseId      String
-  restorative Boolean   @default(false) // repair accepted → reduced weight
-  createdAt   DateTime  @default(now())
+  restorative Boolean  @default(false) // repair accepted → reduced weight
+  createdAt   DateTime @default(now())
   decaysAt    DateTime
 }
 
@@ -901,14 +901,14 @@ model Strike {
 // refType/refId name the cause for the explainable score-change log
 // ("attested action in Circle X"; LIGHT_SCORE §6).
 model LightScoreAdjustment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   profileId String
   pillarId  String
   amount    Float // negative for deductions, positive for credits
   caseId    String?
   refType   String? // "circle-action" | "circle-attest"
   refId     String? // the ActionEntry id; its circle gives the named cause
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   decaysAt  DateTime?
 }
 
@@ -957,40 +957,40 @@ model Notification {
 // ------------------------------------------------------------------
 
 model Circle {
-  id       String  @id @default(cuid())
-  name     String
+  id                   String   @id @default(cuid())
+  name                 String
   // The purpose statement; public, versioned (§2.3): edits keep
   // history; a Circle can't quietly rewrite what it claimed to be.
-  purpose  String
+  purpose              String
   // Focus tags (§2.1): at least one of pillar / place / problem,
   // enforced in code. Place tags stay city/region granularity; the
   // machine-harvestable index is never finer (§OQ7, owner-amended);
   // free text inside the Circle may name venues for coordination.
-  pillarId String?
-  pillar   Pillar? @relation(fields: [pillarId], references: [id])
+  pillarId             String?
+  pillar               Pillar?  @relation(fields: [pillarId], references: [id])
   // Optional domain-level tag within the pillar (CIRCLES §2.1 "optionally
   // a specific domain within it"); the Phase 6 flag resolves here, now
   // that domains are data. Always a domain OF the tagged pillar
   // (enforced in code).
-  domainId String?
-  domain   Domain? @relation(fields: [domainId], references: [id])
-  placeTag String?
-  problem  String?
+  domainId             String?
+  domain               Domain?  @relation(fields: [domainId], references: [id])
+  placeTag             String?
+  problem              String?
   // The founder role is deliberately thin (§3.3): edits purpose and
   // tags, nothing else. Succession/replacement is an internal Poll.
-  founderProfileId String // Phase A operator space; never public
-  founderHandle    String // the attribution key, public
+  founderProfileId     String // Phase A operator space; never public
+  founderHandle        String // the attribution key, public
   // Rails, not rules (§1.6): per-Circle dials, adjustable by internal
   // Poll within platform-set bounds (the circle.* rails).
-  attestationThreshold Int   @default(2)
-  removalBarPercent    Float @default(60)
+  attestationThreshold Int      @default(2)
+  removalBarPercent    Float    @default(60)
   // "inactive" is a DERIVED label (quiet past the circle.inactivityDays
   // rail; auto-applied, auto-lifted when activity returns), never
   // stored. Closed is by internal Poll only; all states preserve the
   // public page and action log forever (§8).
-  status         String   @default("active") // "active" | "closed"
-  lastActivityAt DateTime @default(now())
-  createdAt      DateTime @default(now())
+  status               String   @default("active") // "active" | "closed"
+  lastActivityAt       DateTime @default(now())
+  createdAt            DateTime @default(now())
 
   members          CircleMember[]
   purposeRevisions CirclePurposeRevision[]
@@ -1036,9 +1036,9 @@ model CircleMember {
 // the Circle's threshold; the state that counts for Light Score and
 // pillar surfacing.
 model ActionEntry {
-  id                String        @id @default(cuid())
+  id                String              @id @default(cuid())
   circleId          String
-  circle            Circle        @relation(fields: [circleId], references: [id])
+  circle            Circle              @relation(fields: [circleId], references: [id])
   authorProfileId   String // operator space
   authorHandle      String
   authorDisplayName String // frozen at composition (naming ruling)
@@ -1046,10 +1046,10 @@ model ActionEntry {
   didAt             String? // when; coarse, the author's words
   place             String? // where; coarse; never someone else's location
   correctionOfId    String?
-  correctionOf      ActionEntry?  @relation("Correction", fields: [correctionOfId], references: [id])
-  corrections       ActionEntry[] @relation("Correction")
+  correctionOf      ActionEntry?        @relation("Correction", fields: [correctionOfId], references: [id])
+  corrections       ActionEntry[]       @relation("Correction")
   attestedAt        DateTime?
-  createdAt         DateTime      @default(now())
+  createdAt         DateTime            @default(now())
   attestations      Attestation[]
   pledges           ActionEntryPledge[]
 }
@@ -1075,16 +1075,16 @@ model Attestation {
 // record only when a logged action references it (ActionEntryPledge
 // snapshots it at that moment).
 model ResourceOffer {
-  id              String   @id @default(cuid())
+  id              String              @id @default(cuid())
   circleId        String
-  circle          Circle   @relation(fields: [circleId], references: [id])
+  circle          Circle              @relation(fields: [circleId], references: [id])
   memberProfileId String // operator space
   memberHandle    String // members-only surface
   kind            String // "skill" | "tool" | "time" | "pledge"
   body            String
-  status          String   @default("active") // "active" | "retracted"
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now())
+  status          String              @default("active") // "active" | "retracted"
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @default(now())
   pledgedTo       ActionEntryPledge[]
 }
 
@@ -1097,6 +1097,7 @@ model ActionEntryPledge {
   offer   ResourceOffer @relation(fields: [offerId], references: [id])
   kind    String // snapshot
   body    String // snapshot
+
   @@id([entryId, offerId])
 }
 
@@ -1124,17 +1125,17 @@ model ActionEntryPledge {
 // ------------------------------------------------------------------
 
 model Chamber {
-  id      String  @id @default(cuid())
-  title   String
+  id                  String    @id @default(cuid())
+  title               String
   // The chamber's subject: a topic, question, inquiry, initiative, or
   // proposal (§4.1); one idea being worked toward viability.
-  subject String
+  subject             String
   // The storefront pitch (§4.1) plus the required "why should people
   // care" field (owner-ratified 2026-07-08): what problem, for whom,
   // why now; a chamber that cannot answer it isn't ready to ask for
   // attention.
-  pitch   String
-  whyCare String
+  pitch               String
+  whyCare             String
   // Optional public storefront cover metadata. Image bytes live in
   // Vercel Blob; additions/replacements are recorded on the civic ledger.
   coverImageUrl       String?
@@ -1145,21 +1146,21 @@ model Chamber {
   // lifecycle open item; not built). Private chambers never qualify
   // for the tournament (owner-ratified); no conversion path is needed
   // for competition because competition is not what they're for.
-  isPublic Boolean
+  isPublic            Boolean
   // The pre-convo scaffold (owner-ratified 2026-07-08): first-class
   // fields, not free text buried in a post. Creator-editable as
   // understanding sharpens, with edit history visible inside the
   // workshop (ChamberScaffoldRevision).
-  scaffoldSolving    String // 1. What are we solving?
-  scaffoldNeedToKnow String // 2. What do we need to know?
-  scaffoldSuccess    String // 3. What does success look like?
-  creatorProfileId String // Phase A operator space; never public
+  scaffoldSolving     String // 1. What are we solving?
+  scaffoldNeedToKnow  String // 2. What do we need to know?
+  scaffoldSuccess     String // 3. What does success look like?
+  creatorProfileId    String // Phase A operator space; never public
   // Public attribution; and the creator's Light Score is public
   // record on public-chamber storefronts (owner addition, 2026-07-09):
   // a bad-standing creator can still build, but never behind a curtain.
-  creatorHandle String
-  createdAt      DateTime @default(now())
-  lastActivityAt DateTime @default(now())
+  creatorHandle       String
+  createdAt           DateTime  @default(now())
+  lastActivityAt      DateTime  @default(now())
 
   // Mission funding (NEURAL_POLLINATOR §9.1, owner-designed 2026-07-13).
   // A Chamber may declare it's raising toward its stated mission; it
@@ -1171,7 +1172,7 @@ model Chamber {
   // is a hard scope guard ("the action layer does not quietly become a
   // treasury"). This is why funding routes here (owner ruling,
   // 2026-07-16). Never add a balance to a Circle.
-  raisingForMission Boolean @default(false)
+  raisingForMission Boolean   @default(false)
   // THE FUNDING PLAN (FUND_INTEGRITY §3.1, Tier 0; "procurement due
   // diligence"). A chamber cannot ask for money without answering these
   // three, and they are first-class fields for the same reason the
@@ -1201,7 +1202,7 @@ model Chamber {
   // unreachable threshold just means nothing gets attested, but on
   // escrow it STRANDS FUNDS (a chamber that set 50 could never release
   // its own money).
-  releaseThreshold Int @default(2)
+  releaseThreshold  Int       @default(2)
 
   members           ChamberMember[]
   invites           ChamberInvite[]
@@ -1237,20 +1238,20 @@ model Chamber {
 // is the same discipline Sentinel already follows; "anomalies never
 // punish."
 model FundAudit {
-  id            String   @id @default(cuid())
-  releaseId     String
-  release       MissionRelease @relation(fields: [releaseId], references: [id])
+  id               String         @id @default(cuid())
+  releaseId        String
+  release          MissionRelease @relation(fields: [releaseId], references: [id])
   auditorProfileId String // per-profile, never per-human (§2.1)
-  offeredAt     DateTime @default(now())
-  expiresAt     DateTime // unanswered passes automatically, like a badge offer
+  offeredAt        DateTime       @default(now())
+  expiresAt        DateTime // unanswered passes automatically, like a badge offer
   // "offered" | "accepted" | "passed" | "expired" | "completed"
-  status        String   @default("offered")
+  status           String         @default("offered")
   // "clean" | "concern"; recorded only on completion. Both pay the
   // same, deliberately.
-  finding       String?
-  note          String?
-  completedAt   DateTime?
-  gratiumEarned Float    @default(0)
+  finding          String?
+  note             String?
+  completedAt      DateTime?
+  gratiumEarned    Float          @default(0)
   // On-chain migration Slice 7: the per-case settlement mirrored onto
   // the testnet rail; recorded only after the chain shows the auditor
   // paid. Internal points remain the system of record.
@@ -1262,13 +1263,13 @@ model FundAudit {
 }
 
 model ChamberFundingRevision {
-  id         String   @id @default(cuid())
-  chamberId  String
-  chamber    Chamber  @relation(fields: [chamberId], references: [id])
-  recipient  String
-  evidence   String
-  breakdown  String
-  editedAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  chamberId String
+  chamber   Chamber  @relation(fields: [chamberId], references: [id])
+  recipient String
+  evidence  String
+  breakdown String
+  editedAt  DateTime @default(now())
 }
 
 // The per-chamber mission balance (§9.1: "Raised funds accumulate in a
@@ -1299,32 +1300,32 @@ model ChamberBalance {
 // paid. The guarantee is the ABSENCE of that code path; the same shape
 // as ADMIN_OPS §1's allowlist.
 model MissionRelease {
-  id        String  @id @default(cuid())
-  chamberId String
-  chamber   Chamber @relation(fields: [chamberId], references: [id])
-  currency  String // "PC" | "G"
-  amount    Float
+  id                String    @id @default(cuid())
+  chamberId         String
+  chamber           Chamber   @relation(fields: [chamberId], references: [id])
+  currency          String // "PC" | "G"
+  amount            Float
   // "for Z"; what this money is for, stated at proposal. Above the
   // Tier-0 threshold this is a milestone from the funding Chamber's
   // spend breakdown (FUND_INTEGRITY §3.1/§3.3); below it, a plain
   // purpose. Frozen at proposal either way; the claim being attested
   // must not move after signatures land on it.
-  purpose   String
+  purpose           String
   // Who receives. Individual profiles, never a Circle (Principle 4).
-  toProfileId String
-  toHandle    String // public attribution, like Attestation's
+  toProfileId       String
+  toHandle          String // public attribution, like Attestation's
   proposerProfileId String // operator space
   proposerHandle    String
   // "proposed" → "released" (threshold met, paid, automatic)
   //            → "frozen"   (upheld Tribunal ruling, automatic)
-  state       String   @default("proposed")
-  releasedAt  DateTime?
-  frozenAt    DateTime?
+  state             String    @default("proposed")
+  releasedAt        DateTime?
+  frozenAt          DateTime?
   // The ruling that froze it; the freeze's public justification, so a
   // frozen release always cites its due process rather than a decision
   // someone made quietly.
-  frozenByRulingId String?
-  createdAt   DateTime @default(now())
+  frozenByRulingId  String?
+  createdAt         DateTime  @default(now())
 
   attestations ReleaseAttestation[]
   audits       FundAudit[]
@@ -1542,10 +1543,10 @@ model FeedSource {
 // turn both off). caughtUpAt is the read position behind "you're caught
 // up"; a designed moment, not a failure state.
 model FeedSettings {
-  profileId    String    @id
-  openLens     Boolean   @default(true)
-  balancedDiet Boolean   @default(true)
-  caughtUpAt   DateTime?
+  profileId     String    @id
+  openLens      Boolean   @default(true)
+  balancedDiet  Boolean   @default(true)
+  caughtUpAt    DateTime?
   // Beacon wellbeing (BEACON_FEED_SPEC §7/§10, v2 decision 3): pacing
   // is the soul's own to tune, per identity. null = OFF (explicitly
   // disabled); an ABSENT row falls back to the nudge rail default.
@@ -1560,6 +1561,33 @@ model SearchQuery {
   profileId String
   query     String
   createdAt DateTime @default(now())
+}
+
+// ------------------------------------------------------------------
+// Help & Support (owner-directed 2026-08-22; HELP_SUPPORT_SPEC.md).
+// Cases are scoped to the ACTIVE PROFILE only. There is deliberately no
+// Human relation and no mechanism for joining a True Self case to an Alias
+// case. Guest cases carry a reply address supplied with explicit consent.
+// Diagnostic context is a small JSON object from an allowlist; never secrets,
+// message contents, wallet contents, or hidden moderation data.
+// ------------------------------------------------------------------
+
+model SupportCase {
+  id            String   @id @default(cuid())
+  profileId     String?
+  contactEmail  String?
+  category      String
+  severity      String   @default("normal")
+  subject       String
+  description   String
+  safeContext   String?
+  sourceArticle String?
+  status        String   @default("open")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status, severity, createdAt])
+  @@index([profileId, createdAt])
 }
 
 // ------------------------------------------------------------------

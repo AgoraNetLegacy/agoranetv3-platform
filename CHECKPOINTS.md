@@ -1808,3 +1808,34 @@ index-only `20260818_performance_indexes` migration then deployed
 successfully. Production invariants passed except ciphertext authentication
 when run from Railway without Vercel's `DM_MASTER_SECRET`; the migration did
 not read or alter message rows.
+
+## 2026-08-22; Help & Support foundation
+
+Owner-authorized from the new corpus specification
+`Help and Support/HELP_SUPPORT_SPEC.md`. The existing eight-article Support
+shelf is now a complete first support surface: twenty-four approved articles
+across six categories, public Help & Support navigation, help-only search,
+and context-carrying Help links at every onboarding stage.
+
+The internal helpdesk retrieves only approved article content. With
+`OPENAI_API_KEY` configured it sends that narrow context to the OpenAI
+Responses API with response storage disabled; without a key it returns a
+deterministic approved-article answer, so Help and human escalation remain
+available. Pasted secrets are blocked before model transmission or case
+persistence. Identity/key, funds, security, safety, privacy, verification,
+and moderation language triggers deterministic human escalation regardless
+of model output.
+
+Support cases are stored per active profile or as explicit guest cases; no
+Human relation and no cross-persona join exists. Diagnostic context is an
+allowlist of stage, route, error code, and client version. Two configurable
+rate-limit rails guard questions and case creation. Operators can list,
+inspect, and close cases through `npm run support:cases -- <command>`; no
+browser admin surface was added.
+
+Checkpoint evidence: browser walkthrough of public discovery, grounded
+wallet troubleshooting, and escalation form; **332/332 tests**, PostgreSQL
+schema parity, TypeScript, and optimized Next.js build all green. The local
+SQLite schema and two new rails were applied/seeded. The corpus Markdown and
+PDF were updated with the implementation record. Operational promises remain
+intentionally absent pending DECISIONS_PENDING #26.

@@ -61,6 +61,8 @@ export const RATE_LIMIT_POLICIES = {
   dmMessages: { name: "dmMessages", windowMs: BURST, surface: "direct messages" },
   settings: { name: "settings", windowMs: BURST, surface: "preference changes" },
   faceSwitch: { name: "faceSwitch", windowMs: BURST, surface: "identity switches" },
+  supportHelp: { name: "supportHelp", windowMs: BURST, surface: "helpdesk questions" },
+  supportCases: { name: "supportCases", windowMs: HOUR, surface: "support requests" },
   // --- the backstop over every write action
   global: { name: "global", windowMs: BURST, surface: "actions" },
 } as const satisfies Record<string, RateLimitPolicy>;

@@ -2,8 +2,11 @@
 // ceremony screen shows where you are, what's done, and what's next;
 // hand-holding for the new soul that costs the experienced soul
 // nothing, since the bar reads at a glance and the flow itself never
-// slows down. The journey ends by carrying the soul to the Agora
+// slows down. A context-carrying Help door is present at every stage.
+// The journey ends by carrying the soul to the Agora
 // Dashboard.
+
+import Link from "next/link";
 
 const STEPS = [
   { key: "gate", label: "The gate" },
@@ -37,6 +40,12 @@ export function JourneySteps({ current }: { current: JourneyStep }) {
         {next
           ? `Next: ${next.label.toLowerCase()}; then the Agora, your dashboard.`
           : "Last step; the Agora, your dashboard, is right through here."}
+      </p>
+      <p className="journey-help">
+        Stuck here?{" "}
+        <Link href={`/support?stage=${current}&from=onboarding`}>
+          Get help with this step →
+        </Link>
       </p>
     </nav>
   );
