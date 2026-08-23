@@ -60,6 +60,29 @@ export const HELP_ARTICLES: readonly HelpArticle[] = GENERATED_HELP_ARTICLES;
 export const HELP_RETRIEVAL_DOCUMENTS: readonly HelpRetrievalDocument[] =
   GENERATED_HELP_RETRIEVAL_DOCUMENTS;
 
+// Signed-out readers receive only what they need to create an account or
+// complete onboarding. This is one policy shared by the Help Center, direct
+// article routes, search, AI retrieval, and guest escalation; adding a public
+// corpus document does not silently expose it before sign-in.
+export const PRE_ACCOUNT_HELP_SLUGS = [
+  "verify-once",
+  "what-to-save",
+  "onboarding-interrupted",
+  "values-seed",
+  "two-identities",
+  "verification-troubleshooting",
+] as const;
+
+const PRE_ACCOUNT_HELP_SET = new Set<string>(PRE_ACCOUNT_HELP_SLUGS);
+
+export function isPreAccountHelpArticle(article: Pick<HelpArticle, "slug">): boolean {
+  return PRE_ACCOUNT_HELP_SET.has(article.slug);
+}
+
+export function helpArticlesForViewer(signedIn: boolean): readonly HelpArticle[] {
+  return signedIn ? HELP_ARTICLES : HELP_ARTICLES.filter(isPreAccountHelpArticle);
+}
+
 export function helpArticle(slug: string): HelpArticle | undefined {
   return HELP_ARTICLES.find((article) => article.slug === slug);
 }

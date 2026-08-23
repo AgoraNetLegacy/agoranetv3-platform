@@ -12,7 +12,7 @@
 // input.
 
 import type { PrismaClient } from "@prisma/client";
-import { HELP_ARTICLES } from "./helpContent";
+import { helpArticlesForViewer } from "./helpContent";
 
 export const ENTITY_TYPES = [
   "content",
@@ -441,7 +441,7 @@ export async function search(
   // ARE the honest documentation of every number.
   if (want(filters, "help")) {
     const needle = q.toLowerCase();
-    for (const article of HELP_ARTICLES) {
+    for (const article of helpArticlesForViewer(Boolean(viewerProfileId))) {
       const titleMatch = article.title.toLowerCase().includes(needle);
       const text = [
         article.summary,
@@ -458,10 +458,10 @@ export async function search(
         score: titleMatch ? 4 : 2,
       });
     }
-    const rails = await db.rail.findMany({
+    const rails = viewerProfileId ? await db.rail.findMany({
       where: { OR: [{ key: { contains: q } }, { description: { contains: q } }] },
       take: LIMIT_PER_TYPE,
-    });
+    }) : [];
     for (const r of rails) {
       hits.push({
         type: "help",

@@ -38,6 +38,23 @@ describe("Help & Support", () => {
     expect(onboarding.some((article) => article.slug === "onboarding-interrupted")).toBe(true);
   });
 
+  it("refuses broader platform guidance in pre-account mode", async () => {
+    const answer = await answerSupportQuestion({
+      question: "How do I create a Circle and invite members?",
+      safetyKey: "pre-account-test",
+      access: "pre-account",
+    });
+    expect(answer.refused).toBe(true);
+    expect(answer.articles).toHaveLength(0);
+
+    const onboarding = await answerSupportQuestion({
+      question: "I closed the browser halfway through onboarding",
+      safetyKey: "pre-account-test",
+      access: "pre-account",
+    });
+    expect(onboarding.articles.some((article) => article.slug === "onboarding-interrupted")).toBe(true);
+  });
+
   it("blocks pasted secrets before model or case handling", async () => {
     expect(containsPastedSecret("access key: very-secret-value")).toBe(true);
     expect(containsPastedSecret("I lost my access key")).toBe(false);

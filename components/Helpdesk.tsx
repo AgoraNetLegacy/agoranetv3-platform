@@ -92,13 +92,16 @@ export function Helpdesk({
     <section className="helpdesk" aria-labelledby="helpdesk-heading">
       <div className="helpdesk-heading">
         <div>
-          <p className="eyebrow">Internal AI helpdesk</p>
+          <p className="eyebrow">{signedIn ? "Internal AI helpdesk" : "Pre-account helpdesk"}</p>
           <h2 id="helpdesk-heading">What are you trying to do?</h2>
         </div>
         <span className="helpdesk-boundary">Approved AgoraNet sources only</span>
       </div>
       <p className="lore">
-        Describe the problem in your own words. Never paste a Humanity
+        {signedIn
+          ? "Ask about any AgoraNet feature or describe the problem in your own words. "
+          : "Signed-out help covers account creation and onboarding only. Sign in for broader platform support. "}
+        Never paste a Humanity
         Credential, access key, wallet seed phrase, private key, or password.
       </p>
       {(stage || from) && (
@@ -178,15 +181,15 @@ export function Helpdesk({
           <div className="support-form-row">
             <label>
               Category
-              <select name="category" defaultValue={stage ? "onboarding" : "technical"}>
+              <select name="category" defaultValue={signedIn ? (stage ? "onboarding" : "technical") : "onboarding"}>
                 <option value="onboarding">Onboarding</option>
                 <option value="verification">Verification</option>
-                <option value="identity-and-keys">Identity and keys</option>
-                <option value="wallet-and-transactions">Wallet and transactions</option>
-                <option value="technical">Technical problem</option>
-                <option value="privacy-and-safety">Privacy or safety</option>
-                <option value="moderation">Moderation</option>
-                <option value="other">Other</option>
+                {signedIn && <option value="identity-and-keys">Identity and keys</option>}
+                {signedIn && <option value="wallet-and-transactions">Wallet and transactions</option>}
+                {signedIn && <option value="technical">Technical problem</option>}
+                {signedIn && <option value="privacy-and-safety">Privacy or safety</option>}
+                {signedIn && <option value="moderation">Moderation</option>}
+                {signedIn && <option value="other">Other</option>}
               </select>
             </label>
             {!answer && (

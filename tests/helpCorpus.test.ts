@@ -6,6 +6,8 @@ import {
   HELP_ARTICLES,
   HELP_CORPUS_VERSION,
   HELP_RETRIEVAL_DOCUMENTS,
+  PRE_ACCOUNT_HELP_SLUGS,
+  helpArticlesForViewer,
 } from "../lib/helpContent";
 import { HELP_AGENT_PROMPT, HELP_SOUL_PROMPT } from "../lib/helpPrompts.generated";
 import { REPO_ROOT } from "./helpers/testDb";
@@ -72,5 +74,12 @@ describe("governed Help & Support corpus", () => {
     expect(HELP_RETRIEVAL_DOCUMENTS.some((document) => document.id.includes("SOUL") || document.id.includes("eval"))).toBe(false);
     expect(HELP_SOUL_PROMPT).toContain("AgoraNet's AI helpdesk");
     expect(HELP_AGENT_PROMPT).toContain("Use only facts stated");
+  });
+
+  it("exposes only account-creation and onboarding help before sign-in", () => {
+    expect(helpArticlesForViewer(false).map((article) => article.slug).sort())
+      .toEqual([...PRE_ACCOUNT_HELP_SLUGS].sort());
+    expect(helpArticlesForViewer(false).some((article) => article.categoryId === "platform-features")).toBe(false);
+    expect(helpArticlesForViewer(true)).toHaveLength(HELP_ARTICLES.length);
   });
 });

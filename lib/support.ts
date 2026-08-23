@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import { HELP_ARTICLES, type HelpArticle } from "./helpContent";
+import { HELP_ARTICLES, helpArticlesForViewer, type HelpArticle } from "./helpContent";
 import { generateHelpdeskAnswer, type HelpdeskConfidence } from "./helpdeskProvider";
 
 export const SUPPORT_CATEGORIES = [
@@ -93,6 +93,21 @@ function reportsExhaustedTroubleshooting(value: string): boolean {
   return /(?:still|remains?|again|twice|repeated|already|after).{0,100}(?:reload|retry|tried|correct network|unlocked|restart|clear|approve)/i.test(value);
 }
 
+const PRE_ACCOUNT_INTENT = [
+  /\bonboard(?:ing)?\b/i,
+  /\bsign[ -]?up\b|\bregister(?:ing|ed|ation)?\b/i,
+  /\bcreat(?:e|ing).{0,30}\b(?:account|true self|alias|identity|profile)\b/i,
+  /\bverif(?:y|ied|ication).{0,40}\b(?:human|humanity|account|identity|failed|pending|stuck|reject|interrupt)/i,
+  /\b(?:humanity credential|access key).{0,45}\b(?:save|shown|receive|copy|lost during|onboard)/i,
+  /\b(?:captcha|turnstile|human check|the gate)\b/i,
+  /\bvalues seed\b|\bseven (?:small )?(?:answers|questions)\b/i,
+  /\btrue self\b.{0,50}\balias\b|\balias\b.{0,50}\btrue self\b/i,
+];
+
+export function isPreAccountSupportQuestion(question: string): boolean {
+  return PRE_ACCOUNT_INTENT.some((pattern) => pattern.test(question));
+}
+
 // A question ABOUT a secret is allowed. A pasted secret is not. These
 // patterns require a value-like delimiter or a private-key marker so the
 // phrase "I lost my access key" remains answerable.
@@ -134,9 +149,13 @@ export function classifySupportQuestion(value: string): {
   return { escalate: false, severity: "normal" };
 }
 
-export function findRelevantHelp(query: string, limit = 4): HelpArticle[] {
+export function findRelevantHelp(
+  query: string,
+  limit = 4,
+  eligibleArticles: readonly HelpArticle[] = HELP_ARTICLES
+): HelpArticle[] {
   const terms = new Set(words(query));
-  return HELP_ARTICLES.map((article) => {
+  return eligibleArticles.map((article) => {
     const title = new Set(words(article.title));
     const summary = new Set(words(article.summary));
     const keywords = new Set(words((article.keywords ?? []).join(" ")));
@@ -181,10 +200,11 @@ export async function answerSupportQuestion(input: {
   question: string;
   context?: SafeSupportContext;
   safetyKey: string;
+  access?: "member" | "pre-account";
 }): Promise<HelpdeskAnswer> {
   const question = input.question.trim().slice(0, 2_000);
-  const classification = classifySupportQuestion(question);
-  const articles = findRelevantHelp(question);
+  const eligibleArticles = helpArticlesForViewer(input.access !== "pre-account");
+  const articles = findRelevantHelp(question, 4, eligibleArticles);
   const articleRefs = articles.map(({ slug, title, summary }) => ({ slug, title, summary }));
 
   if (containsPastedSecret(question)) {
@@ -200,12 +220,25 @@ export async function answerSupportQuestion(input: {
     };
   }
 
+  if (input.access === "pre-account" && (!isPreAccountSupportQuestion(question) || articles.length === 0)) {
+    return {
+      answer: "Signed-out help is limited to creating an AgoraNet account and completing onboarding. Sign in for help with platform features, settings, transactions, moderation, or participation.",
+      articles: [],
+      escalate: false,
+      severity: "informational",
+      generated: false,
+      refused: true,
+    };
+  }
+
+  const classification = classifySupportQuestion(question);
+
   const refusal = deterministicRefusal(question);
   if (refusal) {
     const allowed = new Set(refusal.articleSlugs);
     return {
       answer: refusal.answer,
-      articles: HELP_ARTICLES
+      articles: eligibleArticles
         .filter((article) => allowed.has(article.slug))
         .map(({ slug, title, summary }) => ({ slug, title, summary })),
       ...classification,

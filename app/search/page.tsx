@@ -98,8 +98,7 @@ export default async function SearchPage({
               it.
             </li>
             <li>
-              <strong>Help</strong>; how the platform works, fees,
-              rules.
+              <strong>Help</strong>; {viewer ? "how the platform works, fees, and rules" : "account creation and onboarding guidance"}.
             </li>
           </ul>
           <p>
@@ -110,8 +109,8 @@ export default async function SearchPage({
         </LearnMore>
       </h1>
       <p className="lore">
-        Nine kinds of thing, one box. Free for everyone; search is
-        reading. <Link href="/search/about">How results are ranked →</Link>
+        Nine kinds of thing, one box. Public search is free to read; signed-out
+        Help results are limited to account creation and onboarding. <Link href="/search/about">How results are ranked →</Link>
         {viewer && (
           <>
             {" "}

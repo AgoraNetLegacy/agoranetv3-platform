@@ -55,7 +55,7 @@ beforeEach(() => {
 });
 
 describe("support API user flow", () => {
-  it("returns grounded help with safe onboarding context", async () => {
+  it("keeps signed-out AI help inside the pre-account corpus", async () => {
     const response = await POST(request({
       action: "ask",
       question: "Why will my Lace wallet not connect on preprod?",
@@ -70,9 +70,22 @@ describe("support API user flow", () => {
     const payload = await response.json();
     expect(response.status).toBe(200);
     expect(payload.generated).toBe(false);
+    expect(payload.refused).toBe(true);
+    expect(payload.articles).toHaveLength(0);
+    expect(payload.answer).toMatch(/creating an AgoraNet account and completing onboarding/i);
+    expect(mocks.enforceRateLimit).toHaveBeenCalledTimes(2);
+  });
+
+  it("gives signed-in profiles the complete approved help corpus", async () => {
+    mocks.activeFace.mockResolvedValue({ id: "member-profile" });
+    const response = await POST(request({
+      action: "ask",
+      question: "Why will my Lace wallet not connect on preprod?",
+    }));
+    const payload = await response.json();
+    expect(response.status).toBe(200);
     expect(payload.refused).toBe(false);
     expect(payload.articles.some((article: { slug: string }) => article.slug === "wallet-connection")).toBe(true);
-    expect(mocks.enforceRateLimit).toHaveBeenCalledTimes(2);
   });
 
   it("blocks a pasted secret before model generation or case creation", async () => {
@@ -91,11 +104,11 @@ describe("support API user flow", () => {
     const response = await POST(request({
       action: "case",
       contactEmail: "SOUL@EXAMPLE.COM",
-      category: "technical",
+      category: "onboarding",
       severity: "normal",
-      subject: "Wallet connection keeps failing",
-      description: "Lace is unlocked on preprod, but the connection still fails after reloading.",
-      sourceArticle: "wallet-connection",
+      subject: "Onboarding cannot continue",
+      description: "The onboarding journey remains on the verification step after a safe reload.",
+      sourceArticle: "verification-troubleshooting",
       context: {
         stage: "wallet",
         route: "/verify",
@@ -118,5 +131,33 @@ describe("support API user flow", () => {
       clientVersion: "web-test",
     });
     expect(data).not.toHaveProperty("hiddenProfile");
+  });
+
+  it("blocks broader platform cases from signed-out visitors", async () => {
+    const response = await POST(request({
+      action: "case",
+      contactEmail: "soul@example.com",
+      category: "wallet-and-transactions",
+      severity: "normal",
+      subject: "A transaction question",
+      description: "I want detailed help with a platform transaction and wallet behavior.",
+      sourceArticle: "transaction-pending",
+    }));
+    expect(response.status).toBe(403);
+    expect(mocks.supportCaseCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a broader request disguised with an onboarding category", async () => {
+    const response = await POST(request({
+      action: "case",
+      contactEmail: "soul@example.com",
+      category: "onboarding",
+      severity: "normal",
+      subject: "Creating a Circle",
+      description: "Please explain all Circle permissions and member-management features.",
+    }));
+    expect(response.status).toBe(403);
+    expect(mocks.enforceRateLimit).toHaveBeenCalledTimes(2);
+    expect(mocks.supportCaseCreate).not.toHaveBeenCalled();
   });
 });

@@ -5,8 +5,10 @@ import { enforceRateLimit, RateLimitError } from "@/lib/rateLimit";
 import {
   answerSupportQuestion,
   createSupportCase,
+  isPreAccountSupportQuestion,
   type SafeSupportContext,
 } from "@/lib/support";
+import { helpArticle, isPreAccountHelpArticle } from "@/lib/helpContent";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +42,7 @@ export async function POST(request: Request) {
         question,
         context: body.context,
         safetyKey: limiterKey,
+        access: face ? "member" : "pre-account",
       });
       return NextResponse.json(answer);
     }
@@ -47,15 +50,40 @@ export async function POST(request: Request) {
     if (body.action === "case") {
       await enforceRateLimit(db, "supportCases", limiterKey);
       await enforceRateLimit(db, "global", limiterKey);
+      const category = String(body.category ?? "other");
+      const sourceArticle = String(body.sourceArticle ?? "").trim();
+      const subject = String(body.subject ?? "");
+      const description = String(body.description ?? "");
+      if (!face && !["onboarding", "verification"].includes(category)) {
+        return NextResponse.json(
+          { error: "Signed-out support requests are limited to account creation and onboarding." },
+          { status: 403 }
+        );
+      }
+      if (!face && !isPreAccountSupportQuestion(`${subject}\n${description}`)) {
+        return NextResponse.json(
+          { error: "Signed-out support requests must concern account creation or onboarding." },
+          { status: 403 }
+        );
+      }
+      if (!face && sourceArticle) {
+        const article = helpArticle(sourceArticle);
+        if (!article || !isPreAccountHelpArticle(article)) {
+          return NextResponse.json(
+            { error: "That support topic requires signing in." },
+            { status: 403 }
+          );
+        }
+      }
       const result = await createSupportCase(db, {
         profileId: face?.id,
         contactEmail: body.contactEmail,
-        category: String(body.category ?? "other"),
+        category,
         severity: String(body.severity ?? "normal"),
-        subject: String(body.subject ?? ""),
-        description: String(body.description ?? ""),
+        subject,
+        description,
         context: body.context,
-        sourceArticle: body.sourceArticle,
+        sourceArticle,
       });
       return NextResponse.json(result, { status: 201 });
     }

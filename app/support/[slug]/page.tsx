@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { helpArticle } from "@/lib/helpContent";
+import { isPreAccountHelpArticle } from "@/lib/helpContent";
+import { activeFace } from "@/lib/webSession";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,8 @@ export default async function SupportArticlePage({
   const { slug } = await params;
   const article = helpArticle(slug);
   if (!article) notFound();
+  const face = await activeFace();
+  if (!face && !isPreAccountHelpArticle(article)) notFound();
 
   return (
     <>

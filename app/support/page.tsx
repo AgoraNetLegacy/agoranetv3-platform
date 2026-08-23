@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HELP_ARTICLES, HELP_CATEGORIES } from "@/lib/helpContent";
+import { HELP_CATEGORIES, helpArticlesForViewer } from "@/lib/helpContent";
 import { activeFace } from "@/lib/webSession";
 import { Helpdesk } from "@/components/Helpdesk";
 import { findRelevantHelp } from "@/lib/support";
@@ -17,15 +17,17 @@ export default async function SupportPage({
   const params = await searchParams;
   const q = params.q?.trim().toLowerCase() ?? "";
   const face = await activeFace();
-  const matching = q ? findRelevantHelp(q, HELP_ARTICLES.length) : HELP_ARTICLES;
+  const availableArticles = helpArticlesForViewer(Boolean(face));
+  const matching = q ? findRelevantHelp(q, availableArticles.length, availableArticles) : availableArticles;
   return (
     <>
       <div className="support-hero">
         <p className="eyebrow">Help &amp; Support</p>
         <h1>A clear next step when something goes wrong.</h1>
         <p className="lore">
-          Search approved guidance, ask the internal helpdesk, or open a
-          request for a human. Free for everyone; no account needed to read.
+          {face
+            ? "Search complete platform guidance, ask the internal helpdesk, or open a request for human review."
+            : "Account-creation and onboarding guidance is available before you join. Sign in for help with platform features and participation."}
         </p>
         <form method="get" className="support-search">
           <div className="search-hero">

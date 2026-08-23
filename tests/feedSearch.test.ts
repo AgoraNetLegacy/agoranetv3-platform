@@ -198,8 +198,12 @@ describe("search", () => {
     expect(canon.some((h) => h.href.includes("/domains/1"))).toBe(true);
     const rules = await search(db, "R1", { types: ["civic-records"] });
     expect(rules.length).toBeGreaterThan(0);
-    const help = await search(db, "reply micro-fee", { types: ["help"] });
+    const help = await search(db, "reply micro-fee", { types: ["help"] }, humanTrueSelfId);
     expect(help.length).toBeGreaterThan(0);
+    const anonymousHelp = await search(db, "reply micro-fee", { types: ["help"] });
+    expect(anonymousHelp).toHaveLength(0);
+    const anonymousOnboarding = await search(db, "Verify once", { types: ["help"] });
+    expect(anonymousOnboarding.some((hit) => hit.href === "/support/verify-once")).toBe(true);
   });
 
   it("keeps history per-face, visible, deletable; and never a ranking input", async () => {
