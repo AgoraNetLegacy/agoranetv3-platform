@@ -1,0 +1,67 @@
+{
+  "corpus": "help_support",
+  "version": "1.0.0",
+  "categories": {
+    "getting-started": "Getting started",
+    "identities": "Your two identities",
+    "platform-features": "Using AgoraNet",
+    "economy": "Money, fees & treasury",
+    "privacy-safety": "Privacy, safety & rules",
+    "troubleshooting": "Troubleshooting"
+  },
+  "allowed_routes": [
+    "/alias",
+    "/circles",
+    "/constitution",
+    "/discussions",
+    "/feed",
+    "/governance",
+    "/login",
+    "/record",
+    "/rules",
+    "/search",
+    "/souls",
+    "/support",
+    "/transparency",
+    "/treasury",
+    "/verify"
+  ],
+  "source_registry": {
+    "help-support-spec": {
+      "label": "Help & Support specification",
+      "locator": "AgoraNet corpus/Help and Support/HELP_SUPPORT_SPEC.md"
+    },
+    "owner-directive-2026-07-21": {
+      "label": "Owner directive establishing the support library",
+      "locator": "implementation-history:2026-07-21"
+    },
+    "onboarding-spec": {
+      "label": "Onboarding specification",
+      "locator": "AgoraNet corpus/Onboarding/ONBOARDING_SPEC.md"
+    },
+    "dual-identity-spec": {
+      "label": "Dual identity module",
+      "locator": "AgoraNet corpus/Dual identity/DUAL_IDENTITY_MODULE.md"
+    },
+    "feed-search-spec": {
+      "label": "Feed and Search specification",
+      "locator": "AgoraNet corpus/Feed and Search/FEED_AND_SEARCH_SPEC.md"
+    },
+    "platform-constitution": {
+      "label": "Platform Constitution",
+      "locator": "AgoraNet corpus/Platform Constitution/PLATFORM_CONSTITUTION.md"
+    },
+    "moderation-spec": {
+      "label": "Moderation specification and rulebook",
+      "locator": "AgoraNet corpus/Moderation/"
+    },
+    "economy-specs": {
+      "label": "Economy, tokenomics, and treasury specifications",
+      "locator": "AgoraNet corpus/economy"
+    },
+    "owners-guide": {
+      "label": "Implementation Owners Guide",
+      "locator": "docs/OWNERS_GUIDE.md"
+    }
+  }
+}

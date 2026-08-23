@@ -1,6 +1,6 @@
-import { createHash } from "crypto";
 import type { PrismaClient } from "@prisma/client";
 import { HELP_ARTICLES, type HelpArticle } from "./helpContent";
+import { generateHelpdeskAnswer, type HelpdeskConfidence } from "./helpdeskProvider";
 
 export const SUPPORT_CATEGORIES = [
   "onboarding",
@@ -30,22 +30,25 @@ export interface HelpdeskAnswer {
   escalate: boolean;
   severity: SupportSeverity;
   generated: boolean;
+  confidence?: HelpdeskConfidence;
   secretRejected?: boolean;
 }
 
 const HIGH_RISK = [
   /compromis|hack|stolen|phish/i,
-  /missing (fund|money|balance)|unexpected balance|duplicate transaction/i,
+  /missing (fund|money|balance)|funds? (?:are |is )?missing|unexpected balance|duplicate transaction/i,
   /lost (key|credential|seed|wallet)/i,
   /harass|threat|unsafe|privacy (leak|exposure)/i,
   /verification (reject|denied)/i,
   /moderation appeal/i,
+  /(?:show|find|reveal|identify).{0,50}(?:alias|true self).{0,50}(?:belongs|linked|owner)/i,
+  /revers(?:e|ed|al).{0,30}transaction/i,
 ];
 
 const CRITICAL = [
   /active compromise|currently being hacked|stolen wallet/i,
   /security vulnerab|private data (exposed|leak)/i,
-  /missing funds/i,
+  /missing funds|funds? (?:are |is )?missing/i,
 ];
 
 // A question ABOUT a secret is allowed. A pasted secret is not. These
@@ -95,15 +98,21 @@ export function findRelevantHelp(query: string, limit = 4): HelpArticle[] {
     const title = new Set(words(article.title));
     const summary = new Set(words(article.summary));
     const keywords = new Set(words((article.keywords ?? []).join(" ")));
+    const errorCodes = new Set(article.errorCodes.map((code) => code.toLowerCase()));
+    const stages = new Set(words(article.onboardingStages.join(" ")));
     const body = new Set(words(article.body.join(" ")));
     let score = 0;
     for (const term of terms) {
       if (title.has(term)) score += 6;
       if (keywords.has(term)) score += 5;
       if (summary.has(term)) score += 3;
+      if (stages.has(term)) score += 4;
       if (body.has(term)) score += 1;
     }
     const phrase = query.trim().toLowerCase();
+    for (const code of errorCodes) {
+      if (phrase.includes(code)) score += 20;
+    }
     if (phrase && (article.title.toLowerCase().includes(phrase) || article.keywords?.some((k) => k.includes(phrase)))) {
       score += 12;
     }
@@ -117,29 +126,13 @@ export function findRelevantHelp(query: string, limit = 4): HelpArticle[] {
 
 function fallbackAnswer(articles: HelpArticle[], escalate: boolean): string {
   if (articles.length === 0) {
-    return "I couldn’t find an approved help article that answers this safely. Please open a support request so a human can review it.";
+    return "I can only answer questions about AgoraNet, and I couldn’t find an approved help article for this request. Rephrase it as an AgoraNet question, or open a support request if this is a platform problem.";
   }
   const lead = articles[0];
   const boundary = lead.escalateWhen ? ` Escalate when: ${lead.escalateWhen}` : "";
   return `${lead.summary} ${lead.body[0]}${boundary}${
     escalate ? " Because this may be consequential, please open a support request rather than relying on self-service alone." : ""
   }`;
-}
-
-function approvedContext(articles: HelpArticle[]): string {
-  return articles
-    .map((article) =>
-      [
-        `ARTICLE: ${article.title}`,
-        `URL: /support/${article.slug}`,
-        `SUMMARY: ${article.summary}`,
-        ...article.body.map((paragraph) => `- ${paragraph}`),
-        article.escalateWhen ? `ESCALATE WHEN: ${article.escalateWhen}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n")
-    )
-    .join("\n\n");
 }
 
 export async function answerSupportQuestion(input: {
@@ -164,8 +157,7 @@ export async function answerSupportQuestion(input: {
     };
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || articles.length === 0) {
+  if (articles.length === 0) {
     return {
       answer: fallbackAnswer(articles, classification.escalate),
       articles: articleRefs,
@@ -174,29 +166,14 @@ export async function answerSupportQuestion(input: {
     };
   }
 
-  const safeContext = Object.entries(input.context ?? {})
-    .filter(([, value]) => Boolean(value))
-    .map(([key, value]) => `${key}: ${String(value).slice(0, 120)}`)
-    .join("; ");
-
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: process.env.OPENAI_HELPDESK_MODEL || "gpt-5.4-mini",
-      store: false,
-      max_output_tokens: 450,
-      safety_identifier: createHash("sha256").update(input.safetyKey).digest("hex"),
-      instructions:
-        "You are AgoraNet's internal helpdesk. Answer only from the approved articles supplied below. Be concise, plain, and honest. Never invent a policy, fee, deadline, transaction status, recovery path, or platform capability. Never request a password, seed phrase, private key, access key, or Humanity Credential. Do not infer or mention another persona. If the articles are insufficient, say so and recommend a human support request. Consequential actions involving identity, verification, funds, moderation, recovery, privacy, or security require human escalation. Refer to articles by title; links are attached by the application.",
-      input: `SAFE CONTEXT (may be empty): ${safeContext || "none"}\n\nQUESTION:\n${question}\n\nAPPROVED ARTICLES:\n${approvedContext(articles)}`,
-    }),
+  const generated = await generateHelpdeskAnswer({
+    question,
+    context: cleanContext(input.context),
+    articles,
+    deterministicEscalation: classification.escalate,
+    safetyKey: input.safetyKey,
   });
-
-  if (!response.ok) {
+  if (!generated) {
     return {
       answer: fallbackAnswer(articles, classification.escalate),
       articles: articleRefs,
@@ -205,13 +182,20 @@ export async function answerSupportQuestion(input: {
     };
   }
 
-  const payload = (await response.json()) as { output_text?: string };
-  const answer = payload.output_text?.trim();
+  const cited = new Set(generated.citedArticleSlugs);
+  const citedArticles = articles.filter((article) => cited.has(article.slug));
+  const escalate = classification.escalate || generated.escalate;
+  const severity = generated.escalate && classification.severity === "normal"
+    ? "high"
+    : classification.severity;
+  const answer = [generated.answer, generated.followUpQuestion].filter(Boolean).join("\n\n");
   return {
-    answer: answer || fallbackAnswer(articles, classification.escalate),
-    articles: articleRefs,
-    ...classification,
-    generated: Boolean(answer),
+    answer,
+    articles: citedArticles.map(({ slug, title, summary }) => ({ slug, title, summary })),
+    escalate,
+    severity,
+    generated: true,
+    confidence: generated.confidence,
   };
 }
 

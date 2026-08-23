@@ -5,8 +5,8 @@
   "description": "AgoraNet v3; a purpose-built civic commons. Phase 8: deployment hardening.",
   "scripts": {
     "dev": "next dev",
-    "build": "npm run db:generate && next build",
-    "build:postgres": "npm run db:generate:postgres && npm run check:runtime && next build",
+    "build": "npm run corpus:check && npm run db:generate && next build",
+    "build:postgres": "npm run corpus:check && npm run db:generate:postgres && npm run check:runtime && next build",
     "check:runtime": "tsx scripts/check-runtime-config.ts",
     "prestart": "tsx scripts/check-runtime-config.ts",
     "start": "next start",
@@ -27,6 +27,8 @@
     "rate-limits:prune": "tsx scripts/prune-rate-limits.ts",
     "analytics:crush": "tsx scripts/crush-analytics.ts",
     "support:cases": "tsx scripts/support-cases.ts",
+    "corpus:build": "tsx scripts/compile-help-corpus.ts",
+    "corpus:check": "tsx scripts/compile-help-corpus.ts --check",
     "platform:maintain": "tsx scripts/platform-maintenance.ts",
     "chain:anchor": "tsx scripts/chain/anchor-ledger.ts",
     "chain:reconcile": "tsx scripts/chain/reconcile-donations.ts",
@@ -46,7 +48,7 @@
     "demo:phase8": "tsx scripts/demo-phase8.ts",
     "demo:tamper": "tsx scripts/demo-tamper.ts",
     "test": "vitest run",
-    "check": "npm run db:generate && npm test && npm run db:validate:postgres && tsc --noEmit && npm run build",
+    "check": "npm run corpus:check && npm run db:generate && npm test && npm run db:validate:postgres && tsc --noEmit && npm run build",
     "demo:phase8.7": "tsx scripts/demo-phase8.7.ts"
   },
   "dependencies": {
@@ -58,7 +60,8 @@
     "next": "15.5.19",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@types/node": "22.15.30",
