@@ -27,6 +27,7 @@
     "rate-limits:prune": "tsx scripts/prune-rate-limits.ts",
     "analytics:crush": "tsx scripts/crush-analytics.ts",
     "support:cases": "tsx scripts/support-cases.ts",
+    "support:operators": "tsx scripts/support-operators.ts",
     "helpdesk:eval": "tsx scripts/evaluate-helpdesk.ts",
     "corpus:build": "tsx scripts/compile-help-corpus.ts",
     "corpus:check": "tsx scripts/compile-help-corpus.ts --check",

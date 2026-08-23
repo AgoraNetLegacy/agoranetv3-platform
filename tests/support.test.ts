@@ -87,6 +87,10 @@ describe("Help & Support", () => {
       errorCode: "VERIFY-17",
       clientVersion: "web-test",
     });
+    const audit = await db.supportAuditEvent.findFirstOrThrow({
+      where: { caseId: result.id, action: "case.created" },
+    });
+    expect(audit.details).not.toContain("Verification screen will not continue");
   });
 
   it("requires a reply address for a guest case", async () => {

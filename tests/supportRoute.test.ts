@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   ensureSessionId: vi.fn<() => Promise<string>>(),
   enforceRateLimit: vi.fn<() => Promise<void>>(),
   supportCaseCreate: vi.fn(),
+  supportAuditCreate: vi.fn(),
 }));
 
 vi.mock("@/lib/webSession", () => ({
@@ -15,6 +16,11 @@ vi.mock("@/lib/webSession", () => ({
 vi.mock("@/lib/db", () => ({
   db: {
     supportCase: { create: mocks.supportCaseCreate },
+    supportAuditEvent: { create: mocks.supportAuditCreate },
+    $transaction: vi.fn(async (work) => work({
+      supportCase: { create: mocks.supportCaseCreate },
+      supportAuditEvent: { create: mocks.supportAuditCreate },
+    })),
   },
 }));
 
@@ -45,6 +51,7 @@ beforeEach(() => {
   mocks.ensureSessionId.mockReset().mockResolvedValue("support-route-session");
   mocks.enforceRateLimit.mockReset().mockResolvedValue(undefined);
   mocks.supportCaseCreate.mockReset().mockResolvedValue({ id: "support-case-12345678" });
+  mocks.supportAuditCreate.mockReset().mockResolvedValue({ id: "support-audit-created" });
 });
 
 describe("support API user flow", () => {
@@ -101,6 +108,7 @@ describe("support API user flow", () => {
     expect(response.status).toBe(201);
     expect(payload.reference).toBe("AN-12345678");
     expect(mocks.supportCaseCreate).toHaveBeenCalledOnce();
+    expect(mocks.supportAuditCreate).toHaveBeenCalledOnce();
     const data = mocks.supportCaseCreate.mock.calls[0][0].data;
     expect(data.contactEmail).toBe("soul@example.com");
     expect(JSON.parse(data.safeContext)).toEqual({

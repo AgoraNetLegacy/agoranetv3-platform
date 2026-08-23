@@ -1,6 +1,7 @@
 // Minimal internal support queue for the Help & Support slice. The product
-// creates cases; this CLI lets an authorized operator inspect and close them
-// without exposing an admin surface. Run only in an operator-controlled
+// creates cases; this CLI provides read-only emergency inspection. Case
+// mutations belong in the role-gated web console so authorization and audit
+// rules cannot be bypassed. Run only in an operator-controlled
 // terminal whose DATABASE_URL points at the intended environment.
 
 import { db } from "../lib/db";
@@ -55,12 +56,8 @@ async function main() {
     console.log(`\n${item.subject}\n${item.description}`);
     return;
   }
-  if (command === "close") {
-    await db.supportCase.update({ where: { id: item.id }, data: { status: "closed" } });
-    console.log(`${reference(item.id)} closed.`);
-    return;
-  }
-  throw new Error("Commands: list, show, close");
+  if (command === "close") throw new Error("Closing from the CLI is disabled. Use /support/operations so the action is authorized and audited.");
+  throw new Error("Commands: list, show");
 }
 
 main()

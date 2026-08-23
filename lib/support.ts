@@ -305,17 +305,29 @@ export async function createSupportCase(
   const severity = SUPPORT_SEVERITIES.includes(input.severity as SupportSeverity)
     ? (input.severity as SupportSeverity)
     : "normal";
-  const supportCase = await db.supportCase.create({
-    data: {
-      profileId: input.profileId || null,
-      contactEmail: contactEmail || null,
-      category,
-      severity,
-      subject,
-      description,
-      safeContext: JSON.stringify(cleanContext(input.context)),
-      sourceArticle: safeText(input.sourceArticle, 100) || null,
-    },
+  const supportCase = await db.$transaction(async (tx) => {
+    const created = await tx.supportCase.create({
+      data: {
+        profileId: input.profileId || null,
+        contactEmail: contactEmail || null,
+        category,
+        severity,
+        subject,
+        description,
+        safeContext: JSON.stringify(cleanContext(input.context)),
+        sourceArticle: safeText(input.sourceArticle, 100) || null,
+      },
+    });
+    // Record only routing metadata. The request body and reply address stay
+    // on the case and are never duplicated into the audit stream.
+    await tx.supportAuditEvent.create({
+      data: {
+        caseId: created.id,
+        action: "case.created",
+        details: JSON.stringify({ category, severity, profileScoped: Boolean(input.profileId) }),
+      },
+    });
+    return created;
   });
   return { id: supportCase.id, reference: `AN-${supportCase.id.slice(-8).toUpperCase()}` };
 }

@@ -69,29 +69,29 @@ model Human {
 }
 
 model Profile {
-  id                   String         @id @default(cuid())
+  id                   String              @id @default(cuid())
   // NULL for every Alias; deliberately. One-Alias-per-human is enforced
   // by the alias-registration nullifier spend, never by a stored link;
   // no database row connects a soul's two identities (DUAL_IDENTITY §1.2).
   // The True Self keeps its Human link: recovery routes through the
   // human, and that link never bridges to the Alias.
   humanId              String?
-  human                Human?         @relation(fields: [humanId], references: [id])
+  human                Human?              @relation(fields: [humanId], references: [id])
   face                 String // "TRUE_SELF" | "ALIAS"
   // Two-layer naming (owner-ratified 2026-07-10, ONBOARDING Stage 3.4):
   // the @handle is the attribution key; unique across one flat global
   // taken-list (all profiles, both identities, PLUS HandleTombstone), never
   // recycled. Stored lowercase. The display name is free-form: duplicates
   // allowed, real names welcome, changeable behind a rate rail.
-  handle               String         @unique
+  handle               String              @unique
   displayName          String
   displayNameChangedAt DateTime?
   // Per-identity login secret, held soul-side, hash stored. Each identity signs
   // in with its own key; login never routes through the Human.
-  accessKeyHash        String         @unique
+  accessKeyHash        String              @unique
   // Aliases are born PENDING and activate at a randomized, cohort-batched
   // moment (ONBOARDING §3.3–3.4); True Selves are born active.
-  status               String         @default("active") // "active" | "pending"
+  status               String              @default("active") // "active" | "pending"
   // Strike-ladder consequences (auto-applied, MODERATION §7).
   rateLimitedUntil     DateTime?
   readOnlyUntil        DateTime?
@@ -103,12 +103,12 @@ model Profile {
   // Place follows the ratified "place yourself on the map, never
   // someone else" rule; the Alias composer carries the ceremony's
   // stylometry warning verbatim.
-  bio                  String         @default("")
-  bioPlace             String         @default("")
+  bio                  String              @default("")
+  bioPlace             String              @default("")
   // §5.1 + §2.2: the identity-switch animation is a per-identity settings
   // choice; "flip" (default) | "crossfade" | "instant". Motion needs
   // are served by choice, not detection.
-  switchAnimation      String         @default("flip")
+  switchAnimation      String              @default("flip")
   // Spirit Mode (owner-ruled 2026-07-21): a per-identity visibility veil,
   // toggled at will from the bubble dot. The LEVEL is chosen in
   // Settings; all three are available, discovery-only is the default:
@@ -119,14 +119,16 @@ model Profile {
   //                 messages into existing threads are refused
   // Refusals are QUIET; the same neutral wording as a block (§5.2),
   // so spirit mode is never itself a signal.
-  spiritActive         Boolean        @default(false)
-  spiritLevel          String         @default("discovery")
+  spiritActive         Boolean             @default(false)
+  spiritLevel          String              @default("discovery")
   // Begin each fresh sign-in already veiled (per-identity choice).
-  spiritOnLogin        Boolean        @default(false)
-  createdAt            DateTime       @default(now())
+  spiritOnLogin        Boolean             @default(false)
+  createdAt            DateTime            @default(now())
   gateRequests         GateRequest[]
   valuesAnswers        ValuesAnswer[]
   consentAcks          ConsentAck[]
+  supportOperator      SupportOperator?
+  supportAuditEvents   SupportAuditEvent[] @relation("SupportAuditActor")
 
   @@unique([humanId, face])
   @@index([status, activateAt])
@@ -1575,21 +1577,68 @@ model SearchQuery {
 // ------------------------------------------------------------------
 
 model SupportCase {
-  id            String   @id @default(cuid())
-  profileId     String?
-  contactEmail  String?
-  category      String
-  severity      String   @default("normal")
-  subject       String
-  description   String
-  safeContext   String?
-  sourceArticle String?
-  status        String   @default("open")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                 String                @id @default(cuid())
+  profileId          String?
+  contactEmail       String?
+  category           String
+  severity           String                @default("normal")
+  subject            String
+  description        String
+  safeContext        String?
+  sourceArticle      String?
+  status             String                @default("new")
+  assignedOperatorId String?
+  assignedOperator   SupportOperator?      @relation(fields: [assignedOperatorId], references: [profileId])
+  knownIssueId       String?
+  resolvedAt         DateTime?
+  closedAt           DateTime?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  internalNotes      SupportInternalNote[]
+  auditEvents        SupportAuditEvent[]
 
   @@index([status, severity, createdAt])
+  @@index([assignedOperatorId, status, updatedAt])
   @@index([profileId, createdAt])
+}
+
+model SupportOperator {
+  profileId     String                @id
+  profile       Profile               @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  role          String                @default("agent") // "agent" | "lead" | "security"
+  active        Boolean               @default(true)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  assignedCases SupportCase[]
+  internalNotes SupportInternalNote[]
+
+  @@index([active, role])
+}
+
+model SupportInternalNote {
+  id               String          @id @default(cuid())
+  caseId           String
+  supportCase      SupportCase     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  authorOperatorId String
+  authorOperator   SupportOperator @relation(fields: [authorOperatorId], references: [profileId])
+  body             String
+  createdAt        DateTime        @default(now())
+
+  @@index([caseId, createdAt])
+}
+
+model SupportAuditEvent {
+  id             String       @id @default(cuid())
+  caseId         String?
+  supportCase    SupportCase? @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  actorProfileId String?
+  actorProfile   Profile?     @relation("SupportAuditActor", fields: [actorProfileId], references: [id])
+  action         String
+  details        String       @default("{}")
+  createdAt      DateTime     @default(now())
+
+  @@index([caseId, createdAt])
+  @@index([actorProfileId, createdAt])
 }
 
 // ------------------------------------------------------------------
