@@ -47,7 +47,7 @@ describe("governed Help & Support corpus", () => {
       encoding: "utf8",
     });
     expect(result.status, result.stderr || result.stdout).toBe(0);
-    expect(HELP_CORPUS_VERSION).toMatch(/^1\.0\.0\+[a-f0-9]{16}$/);
+    expect(HELP_CORPUS_VERSION).toMatch(/^1\.1\.0\+[a-f0-9]{16}$/);
   });
 
   it("preserves all 25 public routes and canonical source files", () => {
@@ -60,6 +60,11 @@ describe("governed Help & Support corpus", () => {
       expect(article.reviewBy >= "2026-08-23").toBe(true);
     }
     expect(HELP_ARTICLES.find((article) => article.slug === "wallet-connection")?.links).toBeUndefined();
+    const interrupted = HELP_ARTICLES.find((article) => article.slug === "onboarding-interrupted");
+    const interruptedBody = interrupted?.body.join("\n") ?? "";
+    expect(interruptedBody).toContain("[AgoraNet onboarding](/verify)");
+    expect(interruptedBody).toContain("[Sign in](/login)");
+    expect(interruptedBody).not.toContain("Return to the gate");
     expect(HELP_ARTICLES.find((article) => article.slug === "search")?.links?.map((link) => link.href)).toEqual([
       "/search",
       "/search/about",

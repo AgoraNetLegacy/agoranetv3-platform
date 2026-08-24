@@ -7,7 +7,7 @@ category: getting-started
 document_type: troubleshooting
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -42,6 +42,6 @@ links:
     label: Sign in
 ---
 
-Return to the gate in the same browser. AgoraNet will carry forward any completed server-side stage and will never ask support to reconstruct a secret that was shown once.
+Open [AgoraNet onboarding](/verify) in the same browser you used before. AgoraNet will carry forward any completed server-side stage. You do not need to know the internal name of the onboarding screen, and Support will never ask you to reconstruct or share a secret that was shown once.
 
-If you already created an identity and saved its access key, use Sign in instead of beginning again. If a one-time secret was shown but not saved, read the recovery-boundary article before taking another action.
+If you already created an identity and saved its access key, open [Sign in](/login) instead of beginning again. If a one-time access key was shown but not saved, do not create another identity or send any secret to Support. Read [Your two codes; what to save, and what loss means](/support/what-to-save) before taking another action.

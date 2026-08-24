@@ -8,7 +8,7 @@ category: troubleshooting
 document_type: troubleshooting
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -36,11 +36,11 @@ escalate_when: The same verification step fails twice, the issuer reports a
 supersedes: null
 links:
   - href: /verify
-    label: Return to the gate
+    label: Open onboarding
 ---
 
-Start from the gate again in the same browser. A page refresh or closed tab does not create a second identity; incomplete ceremonies simply return to the last safe boundary.
+Open [AgoraNet onboarding](/verify) again in the same browser. A page refresh or closed tab does not create a second identity; incomplete ceremonies simply return to the last safe boundary.
 
-If the gate reports an error, copy the non-secret error code and the stage where it happened. Never send your Humanity Credential, access key, wallet seed phrase, or private key to support.
+If the onboarding page reports an error, copy the non-secret error code and the stage where it happened. Never send your Humanity Credential, access key, wallet seed phrase, or private key to Support.
 
 A verification decision that requires review cannot be changed by the helpdesk. Open a support case so a human can inspect the safe diagnostic record.
