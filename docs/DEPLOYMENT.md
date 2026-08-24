@@ -27,6 +27,14 @@ enabled. Public covers use the `agoranet-chamber-covers` Vercel Blob store;
 original uploads are never retained by the application and sanitized WebP
 bytes are stored only after type, size, decode, and metadata-removal checks.
 
+**Verified 2026-08-23:** The testnet helpdesk model endpoint is available at
+`https://helpdesk-model.agoranet.ai` through the healthy Cloudflare Tunnel
+`agoranet-helpdesk`. Cloudflare Access service authentication protects the
+route, and the tunnel overrides the origin HTTP Host header to
+`localhost:11434` as required by Ollama. An authenticated `/api/version`
+request returned HTTP 200 from Ollama 0.24.0. The model host remains bound to
+loopback; no Ollama port is exposed directly.
+
 **Owner directive (2026-07-13): reuse his existing stack; Vercel for
 the app, Railway for the backend infra** (his convention across his
 other projects; he already holds both accounts). This lands cheaper
@@ -156,6 +164,29 @@ existed.
 - Re-provision the Railway operations service, schedule
   `npm run platform:maintain`, and verify its existing backup, drill, crush,
   prune, and anchor jobs plus failure notifications.
+
+### Grounded helpdesk model runtime
+
+The Next.js application makes model requests from its Vercel server runtime,
+so the helpdesk provider configuration belongs in the Vercel project—not in
+Railway's database or operations services. Configure these production values:
+
+```text
+HELPDESK_PROVIDER=llama_cpp
+HELPDESK_BASE_URL=https://helpdesk-model.agoranet.ai/v1
+HELPDESK_MODEL=gemma4:e4b
+HELPDESK_API_KEY=
+HELPDESK_CF_ACCESS_CLIENT_ID=<Cloudflare service-token client ID>
+HELPDESK_CF_ACCESS_CLIENT_SECRET=<Cloudflare service-token client secret>
+HELPDESK_TIMEOUT_MS=45000
+HELPDESK_MAX_OUTPUT_TOKENS=1000
+```
+
+The two Cloudflare values are a matched pair and must be stored only as
+server-side deployment secrets. Never commit them, prefix them with
+`NEXT_PUBLIC_`, or paste them into a support case. Keep model generation
+disabled until the deployed provider health check confirms that the protected
+`/v1/models` endpoint exposes `gemma4:e4b`.
 
 Production later = the same steps (likely on paid tiers by then, once
 there's real usage to justify it), plus DNS and the go/no-go items on

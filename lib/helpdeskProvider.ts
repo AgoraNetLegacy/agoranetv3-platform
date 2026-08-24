@@ -21,6 +21,8 @@ type ProviderConfig = {
   baseUrl: string;
   model: string;
   apiKey?: string;
+  cloudflareAccessClientId?: string;
+  cloudflareAccessClientSecret?: string;
   timeoutMs: number;
   maxOutputTokens: number;
 };
@@ -28,6 +30,23 @@ type ProviderConfig = {
 function boundedInteger(value: string | undefined, fallback: number, min: number, max: number): number {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed >= min && parsed <= max ? parsed : fallback;
+}
+
+function cloudflareAccessConfig(): Pick<
+  ProviderConfig,
+  "cloudflareAccessClientId" | "cloudflareAccessClientSecret"
+> {
+  const cloudflareAccessClientId = process.env.HELPDESK_CF_ACCESS_CLIENT_ID?.trim();
+  const cloudflareAccessClientSecret = process.env.HELPDESK_CF_ACCESS_CLIENT_SECRET?.trim();
+  if (Boolean(cloudflareAccessClientId) !== Boolean(cloudflareAccessClientSecret)) {
+    throw new Error(
+      "HELPDESK_CF_ACCESS_CLIENT_ID and HELPDESK_CF_ACCESS_CLIENT_SECRET must be configured together."
+    );
+  }
+  return {
+    cloudflareAccessClientId: cloudflareAccessClientId || undefined,
+    cloudflareAccessClientSecret: cloudflareAccessClientSecret || undefined,
+  };
 }
 
 export function helpdeskProviderConfig(): ProviderConfig {
@@ -50,6 +69,7 @@ export function helpdeskProviderConfig(): ProviderConfig {
       baseUrl,
       model: process.env.HELPDESK_MODEL || "google/gemma-4-e4b",
       apiKey: process.env.HELPDESK_API_KEY || undefined,
+      ...cloudflareAccessConfig(),
       timeoutMs: boundedInteger(process.env.HELPDESK_TIMEOUT_MS, 45_000, 1_000, 120_000),
       maxOutputTokens: boundedInteger(process.env.HELPDESK_MAX_OUTPUT_TOKENS, 1_000, 100, 1_000),
     };
@@ -108,10 +128,22 @@ function requestPrompt(input: {
   ].join("\n\n");
 }
 
+function authenticationHeaders(config: ProviderConfig): HeadersInit {
+  return {
+    ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}),
+    ...(config.cloudflareAccessClientId && config.cloudflareAccessClientSecret
+      ? {
+          "CF-Access-Client-Id": config.cloudflareAccessClientId,
+          "CF-Access-Client-Secret": config.cloudflareAccessClientSecret,
+        }
+      : {}),
+  };
+}
+
 function headers(config: ProviderConfig): HeadersInit {
   return {
     "Content-Type": "application/json",
-    ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}),
+    ...authenticationHeaders(config),
   };
 }
 
@@ -280,7 +312,7 @@ export async function checkHelpdeskProviderHealth(): Promise<{
   const timeout = setTimeout(() => controller.abort(), Math.min(config.timeoutMs, 5_000));
   try {
     const response = await fetch(`${config.baseUrl}/models`, {
-      headers: config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : undefined,
+      headers: authenticationHeaders(config),
       signal: controller.signal,
     });
     if (!response.ok) return { provider: "llama_cpp", configured: true, available: false, model: config.model };

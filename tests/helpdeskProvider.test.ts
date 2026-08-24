@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HELP_ARTICLES } from "../lib/helpContent";
 import {
+  checkHelpdeskProviderHealth,
   generateHelpdeskAnswer,
   helpdeskProviderConfig,
 } from "../lib/helpdeskProvider";
@@ -17,6 +18,8 @@ function useLocalGemma() {
   process.env.HELPDESK_PROVIDER = "llama_cpp";
   process.env.HELPDESK_BASE_URL = "http://127.0.0.1:8080/v1";
   process.env.HELPDESK_MODEL = "google/gemma-4-e4b";
+  delete process.env.HELPDESK_CF_ACCESS_CLIENT_ID;
+  delete process.env.HELPDESK_CF_ACCESS_CLIENT_SECRET;
 }
 
 function completion(value: Record<string, unknown>) {
@@ -36,6 +39,56 @@ describe("grounded helpdesk providers", () => {
     });
     process.env.HELPDESK_BASE_URL = "http://inference.example.test/v1";
     expect(() => helpdeskProviderConfig()).toThrow(/HTTPS/);
+  });
+
+  it("requires both Cloudflare Access service-token values", () => {
+    useLocalGemma();
+    process.env.HELPDESK_CF_ACCESS_CLIENT_ID = "client-id.access";
+    expect(() => helpdeskProviderConfig()).toThrow(/must be configured together/);
+
+    delete process.env.HELPDESK_CF_ACCESS_CLIENT_ID;
+    process.env.HELPDESK_CF_ACCESS_CLIENT_SECRET = "client-secret";
+    expect(() => helpdeskProviderConfig()).toThrow(/must be configured together/);
+  });
+
+  it("sends Cloudflare Access headers on generation and health requests", async () => {
+    useLocalGemma();
+    process.env.HELPDESK_MODEL = "gemma4:e4b";
+    process.env.HELPDESK_CF_ACCESS_CLIENT_ID = "client-id.access";
+    process.env.HELPDESK_CF_ACCESS_CLIENT_SECRET = "client-secret";
+    const article = HELP_ARTICLES.find((item) => item.slug === "wallet-connection")!;
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      const requestHeaders = new Headers(init?.headers);
+      expect(requestHeaders.get("CF-Access-Client-Id")).toBe("client-id.access");
+      expect(requestHeaders.get("CF-Access-Client-Secret")).toBe("client-secret");
+      if (url.endsWith("/models")) {
+        return new Response(JSON.stringify({ data: [{ id: "gemma4:e4b" }] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      return completion({
+        answer: "Confirm Lace is unlocked and using the network shown by AgoraNet.",
+        citedArticleSlugs: ["wallet-connection"],
+        confidence: "high",
+        escalate: false,
+        escalationReason: "",
+        followUpQuestion: "",
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const health = await checkHelpdeskProviderHealth();
+    const answer = await generateHelpdeskAnswer({
+      question: "Why will Lace not connect?",
+      articles: [article],
+      deterministicEscalation: false,
+      safetyKey: "provider-test",
+    });
+
+    expect(health).toMatchObject({ provider: "llama_cpp", configured: true, available: true });
+    expect(answer?.citedArticleSlugs).toEqual(["wallet-connection"]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("accepts Gemma JSON only when every citation was supplied", async () => {
