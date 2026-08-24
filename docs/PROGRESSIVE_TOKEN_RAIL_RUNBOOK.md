@@ -1,6 +1,6 @@
 # AgoraNet Progressive Token Rail — Testnet Operations Runbook
 
-**Status:** Prepared; activation not authorized
+**Status:** Additive migrations applied to staging; activation not authorized
 **Scope:** Cardano `preprod` or `preview`, fake `dPOLL`/`dGRA` only
 **Companion documents:** `WALLET_CANONICAL_TOKEN_RAIL_SPEC.md` and `WALLET_CANONICAL_TOKEN_RAIL_IMPLEMENTATION_PLAN.md`
 

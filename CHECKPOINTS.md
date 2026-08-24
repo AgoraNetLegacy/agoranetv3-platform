@@ -1959,3 +1959,19 @@ asset, mint, wallet signature, chain submission, secret, Cloudflare setting,
 or external system was changed. Live Lace signing, fee-vault governance and
 recovery, PostgreSQL migration, deployment, and activation remain queued for
 an awake-owner checkpoint.
+
+## 2026-08-24; Migration-first wallet rail checkpoint
+
+The required Railway PostgreSQL backup was created and verified before any
+schema change. The first migration attempt correctly stopped because it
+referenced a non-existent `BudgetCategory.updatedAt` column. The migration was
+patched to match the existing schema, the failed attempt was explicitly marked
+rolled back, and both additive migrations were then applied in order:
+`20260824_progressive_token_rail`, followed by `20260824_wallet_mode_actions`.
+
+The unchanged staging application passed all eight public smoke surfaces after
+the migration. The local corpus, TypeScript, build, schema, and **386/386 test**
+gates pass. The live PostgreSQL verifier still reports four pre-existing DM
+ciphertext-authentication failures in legacy social-message rows; no message
+data was altered, and wallet deployment/activation does not silently waive
+that separate integrity issue. All wallet and claim flags remain false.

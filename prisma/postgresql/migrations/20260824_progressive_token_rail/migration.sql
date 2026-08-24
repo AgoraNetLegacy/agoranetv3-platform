@@ -5,18 +5,16 @@ ALTER TABLE "Profile" ADD COLUMN IF NOT EXISTS "economyMode" TEXT NOT NULL DEFAU
 -- The only new treasury outflow is a mechanically constrained return of a
 -- failed, unsubmitted claim reservation. Preserve any operator decision to
 -- deactivate the category by never updating the `active` column here.
-INSERT INTO "BudgetCategory" ("name", "description", "cap", "active", "createdAt", "updatedAt")
+INSERT INTO "BudgetCategory" ("name", "description", "cap", "active", "createdAt")
 VALUES (
     'credit-claim-refunds',
     'Mechanical return of Credits reserved for a testnet asset claim that reached a terminal failure. This cannot fund discretionary spending; it only unwinds the identity''s own claim reservation.',
     NULL,
     true,
-    CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 )
 ON CONFLICT ("name") DO UPDATE SET
-    "description" = EXCLUDED."description",
-    "updatedAt" = CURRENT_TIMESTAMP;
+    "description" = EXCLUDED."description";
 
 CREATE TABLE IF NOT EXISTS "AssetDefinition" (
     "id" TEXT NOT NULL,
