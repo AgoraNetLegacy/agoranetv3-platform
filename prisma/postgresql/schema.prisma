@@ -257,6 +257,27 @@ model CreditClaim {
   @@index([profileId, status, createdAt])
 }
 
+// A short-lived, server-validated product action waiting for its wallet fee.
+// The payload is ordinary action content (never wallet secrets), kept private
+// until the matching transaction is confirmed and the action commits.
+model WalletActionDraft {
+  id                  String    @id @default(cuid())
+  profileId           String
+  kind                String
+  payloadJson         String
+  payloadHash         String
+  status              String    @default("prepared")
+  transactionIntentId String    @unique
+  resultRefId         String?
+  expiresAt           DateTime
+  createdAt           DateTime  @default(now())
+  completedAt         DateTime?
+  updatedAt           DateTime  @updatedAt
+
+  @@index([profileId, status, createdAt])
+  @@index([status, expiresAt])
+}
+
 // The money ledger; internal double-entry record of every flow
 // (Phase A operator space; the public sees the treasury through the
 // raw inspection page now and daily snapshots at Phase 7). Every entry

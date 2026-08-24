@@ -1479,3 +1479,24 @@ CREATE UNIQUE INDEX "CreditClaim_transactionIntentId_key" ON "CreditClaim"("tran
 CREATE UNIQUE INDEX "CreditClaim_reservationEntryId_key" ON "CreditClaim"("reservationEntryId");
 CREATE UNIQUE INDEX "CreditClaim_finalizationEntryId_key" ON "CreditClaim"("finalizationEntryId");
 CREATE INDEX "CreditClaim_profileId_status_createdAt_idx" ON "CreditClaim"("profileId", "status", "createdAt");
+
+CREATE TABLE "WalletActionDraft" (
+    "id" TEXT NOT NULL,
+    "profileId" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "payloadJson" TEXT NOT NULL,
+    "payloadHash" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'prepared',
+    "transactionIntentId" TEXT NOT NULL,
+    "resultRefId" TEXT,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "completedAt" TIMESTAMP(3),
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "WalletActionDraft_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX "WalletActionDraft_transactionIntentId_key" ON "WalletActionDraft"("transactionIntentId");
+CREATE INDEX "WalletActionDraft_profileId_status_createdAt_idx" ON "WalletActionDraft"("profileId", "status", "createdAt");
+CREATE INDEX "WalletActionDraft_status_expiresAt_idx" ON "WalletActionDraft"("status", "expiresAt");
