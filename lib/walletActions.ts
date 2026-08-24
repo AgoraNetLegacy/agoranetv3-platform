@@ -341,10 +341,31 @@ export async function finalizeWalletPost(
     walletFee: { intentId: intent.id, draftId: draft.id, txHash: intent.txHash },
   });
   if (!created.ok) {
-    await db.walletActionDraft.updateMany({
-      where: { id: draft.id, status: "submitted" },
-      data: { status: "requires_review" },
+    const movedToReview = await db.$transaction(async (tx) => {
+      const changed = await tx.walletActionDraft.updateMany({
+        where: { id: draft.id, status: "submitted" },
+        data: { status: "requires_review" },
+      });
+      if (changed.count !== 1) return false;
+      const recorded = await transitionTokenIntent(tx, {
+        id: intent.id,
+        to: "confirmed",
+        txHash: intent.txHash!,
+      });
+      if (!recorded.ok) throw new Error(recorded.reason);
+      return true;
     });
+    if (!movedToReview) {
+      const current = await db.walletActionDraft.findUnique({ where: { id: draft.id } });
+      if (current?.status === "completed" && current.resultRefId) {
+        return { ok: true as const, postId: current.resultRefId };
+      }
+      return {
+        ok: false as const,
+        reason: "This wallet action changed while it was being reconciled. Reload its status.",
+        retryable: true,
+      };
+    }
     return {
       ok: false as const,
       reason: `${created.reason} Your confirmed testnet payment is preserved for support review.`,

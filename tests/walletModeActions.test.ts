@@ -177,6 +177,45 @@ describe("wallet-paid discussion posts", () => {
     expect((await db.tokenTransactionIntent.findUniqueOrThrow({ where: { id: prepared.intentId } })).status).toBe("awaiting_wallet_approval");
   });
 
+  it("records confirmed payment truth when changed product state requires review", async () => {
+    const prepared = await prepareWalletPost(
+      db,
+      {
+        profileId,
+        idempotencyKey: "wallet-post-review",
+        payload: { discussionId, body: "A paid post interrupted by changed moderation state." },
+      },
+      env
+    );
+    expect(prepared.ok).toBe(true);
+    if (!prepared.ok) return;
+    expect(
+      (
+        await recordWalletPostSubmission(db, {
+          profileId,
+          intentId: prepared.intentId,
+          txHash: "d".repeat(64),
+        })
+      ).ok
+    ).toBe(true);
+    await db.profile.update({
+      where: { id: profileId },
+      data: { readOnlyUntil: new Date(Date.now() + 60_000) },
+    });
+    try {
+      const reviewed = await finalizeWalletPost(
+        db,
+        { profileId, intentId: prepared.intentId },
+        async () => true
+      );
+      expect(reviewed).toMatchObject({ ok: false, retryable: false });
+      expect((await db.tokenTransactionIntent.findUniqueOrThrow({ where: { id: prepared.intentId } })).status).toBe("confirmed");
+      expect((await db.walletActionDraft.findUniqueOrThrow({ where: { id: prepared.draftId } })).status).toBe("requires_review");
+    } finally {
+      await db.profile.update({ where: { id: profileId }, data: { readOnlyUntil: null } });
+    }
+  });
+
   it("keeps ordinary Credits-mode posting unchanged", async () => {
     const { createPost } = await import("../lib/discussions");
     const before = await balanceOf(db, creditsProfileId, "PC");

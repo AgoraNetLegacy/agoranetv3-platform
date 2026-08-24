@@ -189,7 +189,7 @@ Implemented without deployment, flag activation, or network value movement:
 - explicit no-fallback guards for unsupported wallet actions;
 - novice-facing pending, wrong-account, do-not-pay-twice, and recovery guidance.
 
-Automated evidence: 385 tests, including fee replay, pending confirmation, exact chain evidence, reward leasing, Credits preservation, hosted activation guards, profile-scoped activity privacy, and Credits-mode regression coverage. The live Lace checkpoint, fee-vault governance initialization/recoverability check, distributor restart exercise, PostgreSQL migration, deployment, and flag activation remain deliberately pending.
+Automated evidence: 386 tests, including fee replay, pending confirmation, exact chain evidence, confirmed-payment review state, reward leasing, Credits preservation, hosted activation guards, profile-scoped activity privacy, and Credits-mode regression coverage. The live Lace checkpoint, fee-vault governance initialization/recoverability check, distributor restart exercise, PostgreSQL migration, deployment, and flag activation remain deliberately pending.
 
 ## 8. Decisions deferred beyond the direct-action build
 

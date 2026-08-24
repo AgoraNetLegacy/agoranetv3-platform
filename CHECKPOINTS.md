@@ -1952,7 +1952,7 @@ pending confirmation, browser closure, and the rule never to pay twice. The
 operator runbook now covers both one-shot recovery scripts and the supervised
 activation matrix.
 
-Checkpoint evidence: **385/385 tests** pass, including exact chain-evidence,
+Checkpoint evidence: **386/386 tests** pass, including exact chain-evidence,
 replay, idempotency, reward lease, no-Credit-fallback, and Credits-mode
 regression tests. Feature flags remain false. No deployment, mainnet, real
 asset, mint, wallet signature, chain submission, secret, Cloudflare setting,
