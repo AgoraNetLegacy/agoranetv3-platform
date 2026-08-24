@@ -384,9 +384,10 @@ describe("db:verify conservation", () => {
 // These tests are what make those two sentences true rather than
 // aspirational.
 describe("the budgeted-categories must-guardrail (Constitution, Appendix A)", () => {
-  it("seeds exactly the three outflows TOKENOMICS §3's treasury loop names", async () => {
+  it("seeds the three ratified outflows plus the mechanically constrained claim refund", async () => {
     const categories = await db.budgetCategory.findMany({ orderBy: { name: "asc" } });
     expect(categories.map((c) => c.name)).toEqual([
+      "credit-claim-refunds",
       "moderation-rewards",
       "platform-operations",
       "tribunal-stipends",

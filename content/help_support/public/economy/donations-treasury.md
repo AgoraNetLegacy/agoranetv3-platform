@@ -2,13 +2,13 @@
 id: help.economy.donations-treasury
 slug: donations-treasury
 title: Donations and the treasury
-summary: Check published treasury activity and distinguish AgoraNet balances from test-network wallet transactions.
+summary: Check published treasury activity and distinguish AgoraNet Credits from test-network wallet assets and transactions.
 category: economy
 document_type: concept
 audience: public
 status: approved
-version: 1.1.0
-effective_at: 2026-08-22
+version: 1.2.0
+effective_at: 2026-08-23
 review_by: 2027-02-23
 owner: support-content
 reviewers:
@@ -29,6 +29,7 @@ source_refs:
   - owner-directive-2026-07-21
   - economy-specs
   - owners-guide
+  - progressive-token-rail
 escalate_when: A confirmed transaction is absent from the platform, a balance
   changed unexpectedly, or compromise is suspected.
 supersedes: null
@@ -39,7 +40,7 @@ links:
     label: Treasury
 ---
 
-Open Transparency for published fees and system activity. Open Treasury for public treasury balances and transactions. AgoraNet labels an internal platform balance separately from a Cardano test-network wallet transaction so you can tell which system you are looking at.
+Open Transparency for published fees and system activity. Open Treasury for public treasury balances and transactions. AgoraNet labels Credits separately from fake dPOLL and dGRA held in a Cardano testnet wallet. A pending Credit claim is also shown separately until the chain confirms delivery.
 
 If a donation or treasury transaction looks missing, first check whether your wallet shows it as pending, failed, or confirmed. Save the transaction hash, which is the public reference shown by the wallet, and note the approximate time.
 

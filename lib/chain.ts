@@ -12,14 +12,33 @@ import { deserializeAddress, stringToHex } from "@meshsdk/core";
 const TESTNETS = new Set(["preprod", "preview"]);
 // Verified policy for the current throwaway preprod PollCoin/Gratium demo
 // assets. This is public chain data, not a secret.
-const DEMO_ASSET_POLICY_ID =
+export const DEMO_ASSET_POLICY_ID =
   "70e8fedff8a8cd445705a0884c8b41db20e5005f7cdeef6a7322ad35";
+
+export function demoAssetPolicyId(
+  env: Record<string, string | undefined> = process.env
+) {
+  const policyId = env.TEST_POLLCOIN_POLICY_ID || DEMO_ASSET_POLICY_ID;
+  if (!/^[0-9a-f]{56}$/i.test(policyId)) {
+    throw new Error("TEST_POLLCOIN_POLICY_ID must be a 56-character testnet policy id.");
+  }
+  return policyId.toLowerCase();
+}
+
+export function demoAssetUnit(
+  currency: "PC" | "G",
+  env: Record<string, string | undefined> = process.env
+) {
+  return demoAssetPolicyId(env) + stringToHex(currency === "PC" ? "dPOLL" : "dGRA");
+}
 
 /** The configured Cardano testnet (§6.1). Throws on mainnet; this
  *  phase has no production posture at all, and a misconfigured env
  *  should fail loudly, not quietly reach a real network. */
-export function cardanoNetwork(): "preprod" | "preview" {
-  const net = process.env.CARDANO_NETWORK ?? "preprod";
+export function cardanoNetwork(
+  env: Record<string, string | undefined> = process.env
+): "preprod" | "preview" {
+  const net = env.CARDANO_NETWORK ?? "preprod";
   if (!TESTNETS.has(net)) {
     throw new Error(
       `CARDANO_NETWORK must be a Cardano TESTNET ("preprod" or "preview"); got "${net}". ` +
@@ -93,7 +112,7 @@ export async function demoAssetBalances(
   }
   const net = cardanoNetwork();
   const projectId = process.env.BLOCKFROST_PROJECT_ID;
-  const policyId = DEMO_ASSET_POLICY_ID;
+  const policyId = demoAssetPolicyId();
   if (!projectId) throw new Error("Testnet asset configuration is incomplete.");
   const headers = { project_id: projectId };
   const primary = await fetch(
@@ -143,6 +162,38 @@ export async function demoAssetBalances(
     pollCoin: (amount.get(policyId + stringToHex("dPOLL")) ?? 0n).toString(),
     gratium: (amount.get(policyId + stringToHex("dGRA")) ?? 0n).toString(),
   };
+}
+
+/** Verify one claim distribution from the transaction's actual outputs.
+ * Browser callbacks and aggregate wallet balances are insufficient because
+ * either can be stale or spoofed. A 404 is pending, not failure. */
+export async function verifyDemoAssetDelivery(
+  txHash: string,
+  address: string,
+  currency: "PC" | "G",
+  expectedQuantity: string
+): Promise<boolean> {
+  if (!/^[0-9a-f]{64}$/i.test(txHash) || !address.startsWith("addr_test1")) return false;
+  if (!/^(?:0*[1-9][0-9]*)$/.test(expectedQuantity)) return false;
+  const net = cardanoNetwork();
+  const projectId = process.env.BLOCKFROST_PROJECT_ID;
+  if (!projectId) throw new Error("BLOCKFROST_PROJECT_ID is not set.");
+  const response = await fetch(
+    `https://cardano-${net}.blockfrost.io/api/v0/txs/${txHash}/utxos`,
+    { headers: { project_id: projectId }, cache: "no-store" }
+  );
+  if (response.status === 404) return false;
+  if (!response.ok) throw new Error(`Claim transaction lookup failed (${response.status}).`);
+  const data = (await response.json()) as {
+    outputs: { address: string; amount: { unit: string; quantity: string }[] }[];
+  };
+  const unit = demoAssetUnit(currency);
+  const delivered = data.outputs
+    .filter((output) => output.address === address)
+    .flatMap((output) => output.amount)
+    .filter((amount) => amount.unit === unit)
+    .reduce((sum, amount) => sum + BigInt(amount.quantity), 0n);
+  return delivered >= BigInt(expectedQuantity);
 }
 
 // ------------------------------------------------------------------

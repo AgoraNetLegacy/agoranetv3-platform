@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { randomUUID } from "crypto";
 import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
 import { getRail } from "@/lib/rails";
@@ -7,6 +8,8 @@ import {
   updateDisplayName,
   setSwitchAnimation,
   updateFeedWellbeing,
+  updateEconomyMode,
+  submitCreditClaim,
   submitWalletLink,
   submitSelfCustodyProof,
   submitScriptDonation,
@@ -16,8 +19,13 @@ import {
   cardanoNetwork,
   walletLinkFor,
   donationsFor,
-  demoAssetBalances,
 } from "@/lib/chain";
+import {
+  refreshWalletBalanceSnapshots,
+  walletBalanceView,
+  walletModeTestnetEnabled,
+  creditClaimsTestnetEnabled,
+} from "@/lib/progressiveEconomy";
 import { donationScript, demoBeneficiaryHash } from "@/lib/chainDonation";
 import { LaceConnect } from "@/components/LaceConnect";
 import { SelfCustodySign } from "@/components/SelfCustodySign";
@@ -41,20 +49,32 @@ export default async function SettingsPage({
     db.feedSettings.findUnique({ where: { profileId: face.id } }),
     getRailDirect(db, "feed.nudge.defaultAfterMin"),
   ]);
-  const [cooldownDays, walletLink, donations, demoLovelace, demoLockMinutes] =
+  const [cooldownDays, walletLink, donations, demoLovelace, demoLockMinutes, creditBalances, creditClaims, claimMaximum] =
     await Promise.all([
       getRail(db, "identity.displayNameCooldownDays"),
       walletLinkFor(db, face.id),
       donationsFor(db, face.id),
       getRail(db, "onchain.demoDonationLovelace"),
       getRail(db, "onchain.demoLockMinutes"),
+      db.balance.findMany({
+        where: { profileId: face.id, currency: { in: ["PC", "G"] } },
+      }),
+      db.creditClaim.findMany({
+        where: { profileId: face.id },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      }),
+      getRail(db, "onchain.claimMaxCredits"),
     ]);
+  const creditAmount = new Map(creditBalances.map((balance) => [balance.currency, balance.amount]));
   const network = cardanoNetwork();
-  let demoAssets: Awaited<ReturnType<typeof demoAssetBalances>> | null = null;
+  let demoAssets: Awaited<ReturnType<typeof walletBalanceView>> | null = null;
   let demoAssetError: string | null = null;
   if (walletLink) {
     try {
-      demoAssets = await demoAssetBalances(walletLink.cardanoAddress);
+      const refreshed = await refreshWalletBalanceSnapshots(db, face.id);
+      demoAssets = await walletBalanceView(db, face.id);
+      if (!refreshed.ok) demoAssetError = refreshed.reason;
     } catch {
       // A missing chain configuration or temporary explorer outage must not
       // undo or hide a successful wallet link.
@@ -206,21 +226,97 @@ export default async function SettingsPage({
         onLink={submitWalletLink}
       />
 
+      <h4>Choose how this profile participates</h4>
+      <p className="lore">
+        Credits mode is the beginner path and needs no wallet. Wallet mode is
+        the advanced testnet path for people ready to approve fake-asset
+        transactions in Lace. It stays unavailable until the platform actions
+        that use it have passed their activation checkpoint. This choice
+        belongs only to {face.displayName} @{face.handle}; your other profile
+        keeps its own choice.
+      </p>
+      <form action={updateEconomyMode}>
+        <label style={{ display: "block", margin: "0.3rem 0" }}>
+          <input
+            type="radio"
+            name="economyMode"
+            value="credits"
+            defaultChecked={face.economyMode === "credits"}
+          />{" "}
+          Credits mode; participate without learning wallet tools
+        </label>
+        <label style={{ display: "block", margin: "0.3rem 0" }}>
+          <input
+            type="radio"
+            name="economyMode"
+            value="wallet"
+            defaultChecked={face.economyMode === "wallet"}
+            disabled={!walletLink || !walletModeTestnetEnabled()}
+          />{" "}
+          Wallet mode; approve fake dPOLL and dGRA actions in Lace on Cardano {network}
+        </label>
+        {!walletModeTestnetEnabled() && (
+          <p className="lore">
+            Wallet mode is installed but remains safely off until a normal
+            AgoraNet fee and reward work end to end with fake wallet assets.
+          </p>
+        )}
+        {!walletLink && <p className="lore">Connect a testnet wallet before selecting Wallet mode.</p>}
+        <button type="submit">Save participation mode</button>
+      </form>
+
       {walletLink && demoAssets && (
         <div className="notice">
           <strong>On-chain demo balances</strong>
           <br />
-          PollCoin Demo: {demoAssets.pollCoin}
+          PollCoin Demo: {demoAssets.PC}
           <br />
-          Gratium Demo: {demoAssets.gratium}
+          Gratium Demo: {demoAssets.G}
           <br />
           <span className="lore">
-            Read from Cardano {network}; this does not change your AgoraNet
-            balance.
+            Read from Cardano {network}; observed {demoAssets.observedAt?.toLocaleString() ?? "not yet"}.
+            Credits remain separate unless you explicitly claim them later.
           </span>
         </div>
       )}
       {walletLink && demoAssetError && <p className="notice">{demoAssetError}</p>}
+
+      {walletLink && creditClaimsTestnetEnabled() && (
+        <>
+          <h4>Claim fake wallet assets from Credits</h4>
+          <p className="lore">
+            This optional test converts eligible AgoraNet Credits into fake
+            dPOLL or dGRA at your linked {network} wallet. The Credits are
+            reserved now and consumed only when delivery is confirmed. These
+            test assets have no real value.
+          </p>
+          <form action={submitCreditClaim}>
+            <input type="hidden" name="idempotencyKey" value={`settings:${face.id}:${randomUUID()}`} />
+            <label>
+              Credit type{" "}
+              <select name="currency" defaultValue="PC">
+                <option value="PC">PollCoin Credits ({(creditAmount.get("PC") ?? 0).toFixed(2)} available)</option>
+                <option value="G">Gratium Credits ({(creditAmount.get("G") ?? 0).toFixed(2)} available)</option>
+              </select>
+            </label>{" "}
+            <label>
+              Amount{" "}
+              <input type="number" name="creditAmount" min={1} max={claimMaximum} step={1} defaultValue={1} required />
+            </label>{" "}
+            <button type="submit">Claim fake wallet assets</button>
+          </form>
+          {creditClaims.length > 0 && (
+            <ul className="lore">
+              {creditClaims.map((claim) => (
+                <li key={claim.id}>
+                  {claim.creditAmount} {claim.currency} Credits → {claim.assetAmount}{" "}
+                  {claim.currency === "PC" ? "dPOLL" : "dGRA"}: {claim.status}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
 
       {walletLink && (
         <>

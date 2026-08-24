@@ -34,7 +34,9 @@ export async function balanceOf(
   return row?.amount ?? 0;
 }
 
-export type EconomyResult = { ok: true } | { ok: false; reason: string };
+export type EconomyResult =
+  | { ok: true; entryId?: string }
+  | { ok: false; reason: string };
 
 /** Debit a profile into the treasury (fees, deposits). */
 /**
@@ -85,7 +87,7 @@ export async function chargeToTreasury(
     create: { currency: input.currency, amount: input.amount },
     update: { amount: { increment: input.amount } },
   });
-  await tx.economyEntry.create({
+  const entry = await tx.economyEntry.create({
     data: {
       kind: input.kind,
       currency: input.currency,
@@ -96,7 +98,7 @@ export async function chargeToTreasury(
       refId: input.refId,
     },
   });
-  return { ok: true };
+  return { ok: true, entryId: entry.id };
 }
 
 /**
@@ -163,7 +165,7 @@ export async function payFromTreasury(
     where: { profileId_currency: { profileId: input.profileId, currency: input.currency } },
     data: { amount: { increment: input.amount } },
   });
-  await tx.economyEntry.create({
+  const entry = await tx.economyEntry.create({
     data: {
       kind: input.kind,
       currency: input.currency,
@@ -175,7 +177,7 @@ export async function payFromTreasury(
       refId: input.refId,
     },
   });
-  return { ok: true };
+  return { ok: true, entryId: entry.id };
 }
 
 /** Mint a grant from issuance to a profile (Welcome Grant milestones). */

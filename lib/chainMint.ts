@@ -16,6 +16,7 @@ import {
   resolveScriptHash,
   stringToHex,
 } from "@meshsdk/core";
+import { demoAssetPolicyId } from "./chain";
 
 // Env is read INSIDE the functions, never at module top level; script
 // callers load env (Next's loadEnvConfig) after the hoisted import, so
@@ -134,6 +135,53 @@ export async function mintDemoCurrenciesToAddress(
   const signed = await wallet.signTx(unsigned);
   const txHash = await wallet.submitTx(signed);
   return { txHash, policyId, pollCoinUnit, gratiumUnit, recipient };
+}
+
+/** Mint and deliver exactly one fake AgoraNet currency for an explicit
+ * Credit claim. Kept in this Node-only module so the web process never
+ * imports the testnet distribution mnemonic. */
+export async function mintDemoAssetToAddress(
+  recipient: string,
+  currency: "PC" | "G",
+  quantity: string
+) {
+  if (!recipient.startsWith("addr_test1")) {
+    throw new Error("Refusing to send demo currencies anywhere except a testnet address.");
+  }
+  if (!/^(?:0*[1-9][0-9]*)$/.test(quantity)) {
+    throw new Error("Demo asset quantity must be a positive integer.");
+  }
+  const wallet = await mintWallet();
+  const operatorAddress =
+    (await wallet.getUsedAddresses())[0] ?? (await wallet.getChangeAddress());
+  const forge = ForgeScript.withOneSignature(operatorAddress);
+  const policyId = resolveScriptHash(forge);
+  const configuredPolicyId = demoAssetPolicyId();
+  if (policyId !== configuredPolicyId) {
+    throw new Error(
+      "The testnet mint wallet does not match TEST_POLLCOIN_POLICY_ID; refusing to create an unrecognized asset."
+    );
+  }
+  const assetName = currency === "PC" ? "dPOLL" : "dGRA";
+  const tx = new Transaction({ initiator: wallet });
+  tx.mintAsset(forge, {
+    assetName,
+    assetQuantity: quantity,
+    metadata: {
+      name: currency === "PC" ? "PollCoin Demo" : "Gratium Demo",
+      ticker: assetName,
+      desc: "AgoraNet progressive-rail test asset; no real value.",
+    },
+    label: "721",
+    recipient,
+  });
+  tx.setMetadata(674, {
+    msg: ["AgoraNet Credit claim (testnet; no real value)"],
+  });
+  const unsigned = await tx.build();
+  const signed = await wallet.signTx(unsigned);
+  const txHash = await wallet.submitTx(signed);
+  return { txHash, recipient, currency, quantity };
 }
 
 /** Anchor one civic-ledger hash into a preprod transaction's metadata

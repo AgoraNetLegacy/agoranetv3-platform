@@ -250,11 +250,10 @@ async function main() {
   await seedRulebook();
   await seedDomains();
   // The budget categories the treasury may spend within; TOKENOMICS §3's
-  // three outflows, seeded as data so the Constitution's must-guardrail
-  // has something to bind to (PHASE_8_7_SPEC §3, Slice 1).
-  const { seedBudgetCategories } = await import("../lib/budget");
+  // three outflows plus the mechanically constrained Credit-claim refund.
+  const { seedBudgetCategories, SHIPPED_BUDGET_CATEGORIES } = await import("../lib/budget");
   await seedBudgetCategories(db);
-  console.log(`✓ Budget categories seeded (3)`);
+  console.log(`✓ Budget categories seeded (${SHIPPED_BUDGET_CATEGORIES.length})`);
 }
 
 main()

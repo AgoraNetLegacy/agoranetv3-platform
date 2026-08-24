@@ -735,3 +735,29 @@ at the Phase 9 real-money re-review regardless.
     windows; (c) whether replies use manual email, an in-product support
     inbox, or both; (d) case/transcript retention; and (e) whether a public
     status page ships. None blocks self-service Help or case collection.
+
+27. **Choose the first load-bearing Wallet-mode fee and reward
+    (progressive token rail, 2026-08-23).** The additive foundation is built:
+    Credits default, wallet balance indexing, per-profile mode, transaction
+    intents, and explicit fake-asset claims. Wallet mode remains disabled
+    because enabling a balance selector before an ordinary action uses it
+    would create a silent Credit fallback.
+
+    Two product choices must be named before Slice 5 can honestly activate:
+
+    - **First fee:** which ordinary PollCoin action should become the first
+      wallet-signed `dPOLL` payment, and where should that fake fee land? A
+      script-controlled testnet treasury is consistent with the non-custodial
+      destination; an operator wallet would prove transfer mechanics but
+      would not prove the final trust model.
+    - **First reward:** which ordinary Gratium event should deliver the first
+      fake `dGRA` reward, and which testnet authority may issue or release it?
+      The existing first-action grant is the smallest candidate, but direct
+      minting and script release demonstrate different final architectures.
+
+    **Recommendation:** use one low-value discussion creation fee paid to a
+    testnet treasury script and the existing first-action milestone as the
+    first `dGRA` reward, both behind separate flags. Do not use peer tipping
+    first: it would reveal the recipient profile's wallet address and requires
+    a separate Alias privacy decision. This item gates Wallet-mode activation,
+    not Credits, claims, indexed balances, or continued headless preparation.

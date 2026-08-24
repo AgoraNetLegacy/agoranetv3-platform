@@ -13,6 +13,9 @@ import {
   recordSelfCustodyProof,
   recordScriptDonation,
   donationsFor,
+  demoAssetPolicyId,
+  demoAssetUnit,
+  verifyDemoAssetDelivery,
 } from "../lib/chain";
 import { anchorStatus, recordAnchor } from "../lib/chainAnchor";
 import { appendEvent } from "../lib/ledger";
@@ -32,6 +35,17 @@ describe("the testnet wallet rail", () => {
     expect(() => cardanoNetwork()).toThrow(/TESTNET/);
     process.env.CARDANO_NETWORK = prior;
     expect(cardanoNetwork()).toBe("preprod");
+  });
+
+  it("uses one validated policy identity for registry, balance, and delivery units", () => {
+    const policyId = "a".repeat(56);
+    expect(demoAssetPolicyId({ TEST_POLLCOIN_POLICY_ID: policyId })).toBe(policyId);
+    expect(demoAssetUnit("PC", { TEST_POLLCOIN_POLICY_ID: policyId })).toMatch(
+      new RegExp(`^${policyId}`)
+    );
+    expect(() => demoAssetPolicyId({ TEST_POLLCOIN_POLICY_ID: "not-a-policy" })).toThrow(
+      /56-character/
+    );
   });
 
   it("refuses mainnet addresses at the door; addr1… never enters the table", async () => {
@@ -138,6 +152,30 @@ describe("the testnet wallet rail", () => {
     expect(link?.cardanoAddress).toContain("addr_test1qz1111");
     const rows = await db.testnetWalletLink.count();
     expect(rows).toBe(1);
+  });
+
+  it("verifies a claim from the transaction output, not a browser callback", async () => {
+    const priorFetch = global.fetch;
+    const address = "addr_test1qzdelivery000000000000000000000000000000000000000000000";
+    global.fetch = async () =>
+      new Response(
+        JSON.stringify({
+          outputs: [
+            {
+              address,
+              amount: [{ unit: demoAssetUnit("PC"), quantity: "5" }],
+            },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      );
+    try {
+      expect(await verifyDemoAssetDelivery("c".repeat(64), address, "PC", "5")).toBe(true);
+      expect(await verifyDemoAssetDelivery("c".repeat(64), address, "PC", "6")).toBe(false);
+      expect(await verifyDemoAssetDelivery("c".repeat(64), address, "G", "1")).toBe(false);
+    } finally {
+      global.fetch = priorFetch;
+    }
   });
 });
 

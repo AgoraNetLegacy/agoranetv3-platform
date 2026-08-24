@@ -1277,6 +1277,54 @@ export async function submitWalletLink(formData: FormData) {
   );
 }
 
+/** Progressive token rail: choose the active identity's economy path.
+ * Credits remain the default; Wallet mode is testnet-only, feature-gated,
+ * and requires this exact identity to have linked a wallet first. */
+export async function updateEconomyMode(formData: FormData) {
+  const face = await requireFace("settings");
+  const { setEconomyMode } = await import("@/lib/progressiveEconomy");
+  const result = await setEconomyMode(db, {
+    profileId: face.id,
+    mode: String(formData.get("economyMode") ?? "credits"),
+  });
+  revalidatePath("/", "layout");
+  revalidatePath("/settings");
+  backTo(
+    "/settings",
+    result.ok
+      ? result.mode === "credits"
+        ? "Credits mode selected. No wallet is required for ordinary participation."
+        : "Testnet Wallet mode selected for this profile. Wallet actions use fake assets only."
+      : result.reason
+  );
+}
+
+/** Reserve beginner Credits for an explicit fake-asset claim. The web app
+ * records only the request; the isolated testnet distributor submits and
+ * verifies the chain transaction. */
+export async function submitCreditClaim(formData: FormData) {
+  const face = await requireFace("settings");
+  const { requestCreditClaim } = await import("@/lib/creditClaims");
+  const currency = String(formData.get("currency") ?? "PC");
+  if (currency !== "PC" && currency !== "G") {
+    backTo("/settings", "Choose PollCoin Credits or Gratium Credits.");
+  }
+  const result = await requestCreditClaim(db, {
+    profileId: face.id,
+    currency,
+    creditAmount: Number(formData.get("creditAmount")),
+    idempotencyKey: String(formData.get("idempotencyKey") ?? ""),
+  });
+  revalidatePath("/", "layout");
+  revalidatePath("/settings");
+  backTo(
+    "/settings",
+    result.ok
+      ? "Credit claim reserved. The testnet distributor will publish its transaction; do not submit it again."
+      : result.reason
+  );
+}
+
 /** On-chain migration Slice 2: record the self-custody proof tx the
  *  soul's own wallet signed and submitted. Returns a result instead of
  *  redirecting; the client POLLS while the tx propagates (the server

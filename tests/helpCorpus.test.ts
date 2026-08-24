@@ -47,7 +47,7 @@ describe("governed Help & Support corpus", () => {
       encoding: "utf8",
     });
     expect(result.status, result.stderr || result.stdout).toBe(0);
-    expect(HELP_CORPUS_VERSION).toMatch(/^1\.2\.0\+[a-f0-9]{16}$/);
+    expect(HELP_CORPUS_VERSION).toMatch(/^1\.3\.0\+[a-f0-9]{16}$/);
   });
 
   it("preserves all 25 public routes and canonical source files", () => {

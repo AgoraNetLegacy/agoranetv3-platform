@@ -1915,7 +1915,12 @@ async function main() {
   // deploy loses them, payFromTreasury starts refusing moderation
   // rewards, and the moderators simply stop being paid. Fail here, loudly
   // and early, rather than in a badge holder's silent missing stipend.
-  for (const required of ["moderation-rewards", "tribunal-stipends", "platform-operations"]) {
+  for (const required of [
+    "moderation-rewards",
+    "tribunal-stipends",
+    "platform-operations",
+    "credit-claim-refunds",
+  ]) {
     if (!activeNames.has(required)) {
       console.error(
         `✗ Ratified budget category missing or inactive: "${required}" (TOKENOMICS §3's treasury loop names it).`

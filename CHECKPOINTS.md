@@ -1880,3 +1880,47 @@ Operational lesson: keep the 2.4 GHz and 5 GHz networks separately named so
 the Mac can choose 5 GHz directly. Keep ExpressVPN disconnected while
 diagnosing network failures, and use the helpdesk model runbook for model
 runtime recovery rather than changing Cloudflare or application credentials.
+
+## 2026-08-23; Progressive testnet token rail foundation
+
+Owner-ratified direction: AgoraNet keeps a beginner-friendly internal Credit
+path while advanced users may eventually use their own wallet directly. A
+Credit user can voluntarily cross that boundary by claiming eligible Credits
+into the current identity's linked testnet wallet. Credits and wallet assets
+remain separate sources of truth; Cardano owns wallet truth, and the database
+owns Credits, workflow, reconciliation, and indexed chain state. True Self and
+Alias remain independent.
+
+The additive foundation is implemented: `Profile.economyMode`; a testnet asset
+registry; stale-safe wallet balance snapshots; durable, idempotent transaction
+intents; and an explicit Credit-claim model. Claim reservation is atomic and
+linked to its ledger entry. An isolated operator runner mints fake assets,
+verifies exact destination/policy/asset/quantity before confirmation, resumes
+already-submitted hashes after restart, refunds expired unstarted reservations,
+and atomically leases new work so concurrent runners cannot mint the same
+claim. A crash with uncertain broadcast state remains visibly `distributing`
+and stops for reconciliation; it is never automatically retried or refunded.
+
+The settings and global balance surfaces label `Credits` separately from
+wallet-held `dPOLL`/`dGRA`. Help corpus `1.3.0` explains both paths in
+first-time-user language. The source corpus received a dated owner amendment,
+and the specification, implementation plan, and operations/recovery runbook
+are in `docs/`.
+
+Activation is deliberately withheld. `WALLET_MODE_TESTNET_ENABLED`,
+`CREDIT_CLAIMS_TESTNET_ENABLED`, and mixed mode default to false. Wallet mode
+cannot be enabled until one ordinary fee and one reward prove there is no
+silent Credit fallback; the product choice is queued as `DECISIONS_PENDING`
+#27. Claims cannot be enabled until a supervised fake-asset
+delivery and recovery exercise passes. No deployment, production environment,
+mainnet, real-value asset, mnemonic, secret-bearing network call, or chain
+transaction was touched in this build.
+
+Checkpoint evidence: governed corpus validates 30 documents; both Prisma
+schemas are model-identical and PostgreSQL-valid; the additive migration and
+fresh-init schema both contain the new models; **377/377 tests** pass;
+TypeScript and the optimized Next.js build pass; `db:verify` passes all
+invariants with four budget categories; `git diff --check` is clean; and the
+signed-out Help page rendered in the local browser with no console errors.
+The remaining live checkpoints require the owner's Lace wallet and stay
+explicitly queued rather than simulated.

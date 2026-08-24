@@ -38,7 +38,8 @@ us to act. The community inherits.*
 
 ## 2. What's real and what's simulated (say this honestly, always)
 
-**This table changed shape on 2026-07-15.** It used to be two
+**This table changed shape on 2026-07-15 and gained a progressive economy
+path on 2026-08-23.** It used to be two
 columns; today's honest stand-in, and Phase 9's someday-real thing.
 Phase 8.6 added a real middle state: three of the "someday" rows are
 no longer someday. They are live, on public test networks, with
@@ -53,6 +54,16 @@ LIVE gate every soul actually uses.
 | The civic ledger's integrity | Hash-chained, `db:verify` re-checks it locally | Anchored daily to a public Cardano preprod transaction; rewriting history now means contradicting a public blockchain's own timestamps, not just our say-so | Same mechanism; real network |
 | Wallet | A credential string you save like a password | A Lace preprod connection exists (`/settings`, per identity, mainnet refused by construction) | Lace wallet connection, real network |
 | DM encryption | Real encryption; keys held by the operator in escrow | Unchanged; DM custody holds at disclosed escrow through 8.6 by owner ruling, re-evaluated after the issuer loop proved out | Keys move to your wallet; we structurally *can't* read |
+
+The PollCoin/Gratium row now has two deliberate user paths during testnet.
+Beginners stay in **Credits mode** and need no wallet. Advanced users may
+connect Lace and, after each wallet action passes its activation checkpoint,
+choose **Wallet mode** for fake `dPOLL`/`dGRA`. A beginner may later make an
+explicit Credit claim into their own linked testnet wallet. Credits and wallet
+assets are always labeled separately; selecting or linking a wallet never
+silently merges them. The foundational code exists, but Wallet mode and Credit
+claims remain feature-gated off until their live, owner-signed testnet
+checkpoints pass.
 
 **The critical point for teaching and selling:** none of this is
 hidden. Every layer, at every stage, is disclosed *in the product, at

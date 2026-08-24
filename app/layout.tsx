@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 // visually distinct per identity, switching is deliberate; never a silent
 // toggle. Readers see their reading state plainly.
 async function FaceBar() {
-  const { face, balances, unread } = await chromeData();
+  const { face, balances, walletBalances, economyMode, unread } = await chromeData();
   if (!face) {
     return (
       <div className="face-bar">
@@ -33,6 +33,7 @@ async function FaceBar() {
     );
   }
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
+  const walletMode = economyMode === "wallet" || economyMode === "mixed";
   return (
     <div className="face-bar">
       <span className={`face-chip ${chipClass}`}>
@@ -40,8 +41,11 @@ async function FaceBar() {
         {face.displayName} @{face.handle}
       </span>
       <span className="balance-chip">
+        <span className="currency-tooltip" aria-hidden="true">
+          {walletMode ? "Wallet balance · Cardano testnet" : "AgoraNet Credits"}
+        </span>
         <span className="currency-amount">
-          <span className="currency-symbol" tabIndex={0} aria-label="PollCoin">
+          <span className="currency-symbol" tabIndex={0} aria-label={walletMode ? "PollCoin Demo wallet balance" : "PollCoin Credits"}>
             <img
               className="currency-mark pollcoin-mark"
               src="/brand/pollcoin/pollcoin-token-v1.webp"
@@ -50,11 +54,11 @@ async function FaceBar() {
             />
             <span className="currency-tooltip" aria-hidden="true">PollCoin</span>
           </span>
-          {balances.PC.toFixed(2)} PC
+          {walletMode ? walletBalances.PC : balances.PC.toFixed(2)} {walletMode ? "dPOLL" : "PC Credits"}
         </span>
         <span className="balance-divider" aria-hidden="true" />
         <span className="currency-amount">
-          <span className="currency-symbol" tabIndex={0} aria-label="Gratium">
+          <span className="currency-symbol" tabIndex={0} aria-label={walletMode ? "Gratium Demo wallet balance" : "Gratium Credits"}>
             <img
               className="currency-mark"
               src="/brand/gratium/concepts/gratium-single-rail.svg"
@@ -63,7 +67,7 @@ async function FaceBar() {
             />
             <span className="currency-tooltip" aria-hidden="true">Gratium</span>
           </span>
-          {balances.G.toFixed(2)} G
+          {walletMode ? walletBalances.G : balances.G.toFixed(2)} {walletMode ? "dGRA" : "G Credits"}
         </span>
       </span>
       <LightScoreMenu key={face.handle} />

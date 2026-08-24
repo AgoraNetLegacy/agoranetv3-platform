@@ -8,8 +8,8 @@
 // code until this module; outflows were hand-rolled at each call site,
 // so there was nowhere for the rule to bind.
 //
-// The shipped set is exactly the three outflows TOKENOMICS_SPEC §3's
-// treasury loop already names:
+// The original shipped set is the three outflows TOKENOMICS_SPEC §3's
+// treasury loop names:
 //
 //     moderation rewards · tribunal stipends · platform operations
 //
@@ -19,17 +19,20 @@
 // Endowment; a pool BESIDE the treasury (COMMUNITY_ENDOWMENT_SPEC),
 // not a category inside it, and deliberately unratified pending counsel.
 //
-// Adding a category is a governance act, not a migration: the community
-// decides, and this seed only describes what the platform already does.
+// The progressive token rail adds one mechanically constrained refund
+// category. It can only unwind a failed Credit claim; it is not a new
+// discretionary treasury purpose.
 
 import type { DbOrTx, Tx } from "./db";
 
 export const BUDGET_MODERATION_REWARDS = "moderation-rewards";
 export const BUDGET_TRIBUNAL_STIPENDS = "tribunal-stipends";
 export const BUDGET_PLATFORM_OPERATIONS = "platform-operations";
+export const BUDGET_CREDIT_CLAIM_REFUNDS = "credit-claim-refunds";
 
 /**
- * The shipped categories (TOKENOMICS §3's treasury loop, verbatim).
+ * The shipped categories (TOKENOMICS §3's treasury loop plus the
+ * mechanically constrained progressive-rail refund path).
  *
  * `cap: null` = uncapped. That is deliberate and not an oversight: these
  * three are service categories whose amounts are already rail-governed
@@ -57,6 +60,12 @@ export const SHIPPED_BUDGET_CATEGORIES = [
     name: BUDGET_PLATFORM_OPERATIONS,
     description:
       "Running the commons: infrastructure, archival, and the costs of keeping the record permanent. No outflow exists under this category yet; it is seeded because TOKENOMICS §3 names it, so the table describes the ratified loop rather than only what code currently spends.",
+    cap: null,
+  },
+  {
+    name: BUDGET_CREDIT_CLAIM_REFUNDS,
+    description:
+      "Mechanical return of Credits reserved for a testnet asset claim that reached a terminal failure. This cannot fund discretionary spending; it only unwinds the identity's own claim reservation.",
     cap: null,
   },
 ] as const;

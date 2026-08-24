@@ -36,8 +36,15 @@ under it.**
    when bypassing would be easy.
 4. **SQLite alone until deployment is imminent** (DATABASE_SETUP.md);
    Postgres + parity checking arrive at Phase 8.
-5. **Internal balances before chains.** The economy is database rows
-   until Phase 9's legal gate.
+5. **Beginner Credits plus an optional testnet wallet path.** Internal,
+   valueless Credits remain the default so a new user can participate
+   without learning crypto. A linked-wallet user may opt into fake
+   testnet assets directly, and a Credit user may explicitly claim
+   eligible Credits into their own testnet wallet. Wallet balance truth
+   comes from the chain; the database keeps Credits, workflow,
+   reconciliation, and indexed chain state. Mainnet and real value still
+   wait behind Phase 9's legal gate. (Owner amendment 2026-08-23;
+   `docs/WALLET_CANONICAL_TOKEN_RAIL_SPEC.md`.)
 6. **Honest disclosures ship with their features** (Phase A
    operator-trust language, permanence badges, correlation warnings).
 7. **When a phase checkpoint passes owner review, update the phase

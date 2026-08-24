@@ -302,6 +302,42 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     description:
       "On-chain migration Slice 3: how long the demo donation stays time-locked at the script before the beneficiary may collect. Short by design; the demo proves the lock is real without stranding testnet funds for days.",
   },
+  {
+    key: "onchain.claimMinCredits",
+    value: 1,
+    unit: "uPC",
+    boundMin: 1,
+    boundMax: 10,
+    description:
+      "Progressive token rail: minimum Credits in one explicit fake-asset claim. Testnet only; no real-value meaning.",
+  },
+  {
+    key: "onchain.claimMaxCredits",
+    value: 25,
+    unit: "uPC",
+    boundMin: 1,
+    boundMax: 100,
+    description:
+      "Progressive token rail: maximum Credits reserved by one fake-asset claim. Limits mistakes and testnet spam.",
+  },
+  {
+    key: "onchain.claimAssetPerCredit",
+    value: 1,
+    unit: "x",
+    boundMin: 1,
+    boundMax: 10,
+    description:
+      "Progressive token rail test conversion: fake wallet asset units delivered per eligible Credit. Testnet only and not a promise of production value.",
+  },
+  {
+    key: "onchain.claimExpiryHours",
+    value: 24,
+    unit: "hours",
+    boundMin: 1,
+    boundMax: 168,
+    description:
+      "Progressive token rail: time a reserved Credit claim may wait for testnet distribution before reconciliation review.",
+  },
   // --- Circle rails (Phase 6; CIRCLES_SPEC.md; "rails, not rules" is
   // the spec's own Principle 6). Per-Circle dials (attestation
   // threshold, removal bar) take their default AND bounds from here;

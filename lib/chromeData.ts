@@ -2,6 +2,7 @@ import { cache } from "react";
 import { db } from "./db";
 import { activeTermFor } from "./moderation";
 import { sessionContext } from "./webSession";
+import { walletBalanceView } from "./progressiveEconomy";
 
 // The persistent shell is present on every signed-in page. Resolve its data
 // in one request-scoped loader so FaceBar, ProfileBubble, SideNav, and the
@@ -16,6 +17,8 @@ export const chromeData = cache(async function chromeData() {
       face: null,
       faces,
       balances: { PC: 0, G: 0 },
+      walletBalances: { PC: "0", G: "0", observedAt: null, syncStatus: "missing" },
+      economyMode: "credits",
       unread: 0,
       avatarVersions: new Map<string, number>(),
       showWorkbench: false,
@@ -39,10 +42,16 @@ export const chromeData = cache(async function chromeData() {
     }),
   ]);
   const amount = new Map(balances.map((balance) => [balance.currency, balance.amount]));
+  const walletBalances =
+    face.economyMode === "wallet" || face.economyMode === "mixed"
+      ? await walletBalanceView(db, face.id)
+      : { PC: "0", G: "0", observedAt: null, syncStatus: "missing" };
   return {
     face,
     faces,
     balances: { PC: amount.get("PC") ?? 0, G: amount.get("G") ?? 0 },
+    walletBalances,
+    economyMode: face.economyMode,
     unread,
     avatarVersions: new Map(
       avatars.map((avatar) => [avatar.profileId, avatar.updatedAt.getTime()])
