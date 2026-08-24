@@ -102,6 +102,7 @@ const PRE_ACCOUNT_INTENT = [
   /\b(?:captcha|turnstile|human check|the gate)\b/i,
   /\bvalues seed\b|\bseven (?:small )?(?:answers|questions)\b/i,
   /\btrue self\b.{0,50}\balias\b|\balias\b.{0,50}\btrue self\b/i,
+  /\b(?:two|2)\s+(?:codes?|keys?)\b.{0,100}\b(?:sign(?:ing|ed)?[ -]?(?:up|in)|log(?:ging|ged)?[ -]?in|account|profile)\b/i,
 ];
 
 export function isPreAccountSupportQuestion(question: string): boolean {

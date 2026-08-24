@@ -53,6 +53,14 @@ describe("Help & Support", () => {
       access: "pre-account",
     });
     expect(onboarding.articles.some((article) => article.slug === "onboarding-interrupted")).toBe(true);
+
+    const twoCodes = await answerSupportQuestion({
+      question: "It showed me two codes while I was signing up. Which one do I use to log in?",
+      safetyKey: "pre-account-two-codes",
+      access: "pre-account",
+    });
+    expect(twoCodes.refused).toBe(false);
+    expect(twoCodes.articles[0]?.slug).toBe("what-to-save");
   });
 
   it("blocks pasted secrets before model or case handling", async () => {

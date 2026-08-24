@@ -119,6 +119,7 @@ function requestPrompt(input: {
           version: article.version,
           summary: article.summary,
           body: article.body,
+          destinations: article.links ?? [],
           escalationBoundary: article.escalateWhen ?? "",
         })),
       },

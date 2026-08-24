@@ -103,6 +103,8 @@ describe("grounded helpdesk providers", () => {
       expect(body.response_format.json_schema.schema.required).toContain("refused");
       expect(body.messages[0].content).toContain("AgoraNet Helpdesk — SOUL");
       expect(body.messages[1].content).toContain("wallet-connection");
+      expect(body.messages[1].content).toContain('"destinations"');
+      expect(body.messages[1].content).toContain('"href": "/support"');
       return completion({
         answer: "Confirm Lace is unlocked and using the network shown by AgoraNet, then reload and approve the wallet connection.",
         citedArticleSlugs: ["wallet-connection"],
