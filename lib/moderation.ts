@@ -923,40 +923,48 @@ async function applyStrikeLadder(
   const lsBase = strikeNumber === 1 ? ls1 : ls2;
 
   // Gratium penalty; clamped at the balance; penalties never create debt.
+  // Wallet-mode penalties are not chain-ready yet, so they never fall back
+  // to an internal balance. The non-monetary strike ladder still applies.
   // Lock the balance row first (the no-op upsert acquires its write lock,
   // held to commit) so concurrent strike resolutions against one profile
   // serialise and each clamp reads a consistent balance; otherwise two
   // strikes read the same balance and drive it negative.
-  await tx.balance.upsert({
-    where: { profileId_currency: { profileId: input.profileId, currency: "G" } },
-    create: { profileId: input.profileId, currency: "G", amount: 0 },
-    update: { amount: { increment: 0 } },
+  const penalizedProfile = await tx.profile.findUnique({
+    where: { id: input.profileId },
+    select: { economyMode: true },
   });
-  const balance = await tx.balance.findUnique({
-    where: { profileId_currency: { profileId: input.profileId, currency: "G" } },
-  });
-  const charge = Math.min(penaltyG, balance?.amount ?? 0);
-  if (charge > 0) {
-    await tx.balance.update({
+  if (penalizedProfile?.economyMode !== "wallet") {
+    await tx.balance.upsert({
       where: { profileId_currency: { profileId: input.profileId, currency: "G" } },
-      data: { amount: { decrement: charge } },
+      create: { profileId: input.profileId, currency: "G", amount: 0 },
+      update: { amount: { increment: 0 } },
     });
-    await tx.treasuryBalance.upsert({
-      where: { currency: "G" },
-      create: { currency: "G", amount: charge },
-      update: { amount: { increment: charge } },
+    const balance = await tx.balance.findUnique({
+      where: { profileId_currency: { profileId: input.profileId, currency: "G" } },
     });
-    await tx.economyEntry.create({
-      data: {
-        kind: "penalty.strike",
-        currency: "G",
-        amount: charge,
-        fromProfileId: input.profileId,
-        toTreasury: true,
-        refType: "case",
-        refId: input.caseId,
-      },
-    });
+    const charge = Math.min(penaltyG, balance?.amount ?? 0);
+    if (charge > 0) {
+      await tx.balance.update({
+        where: { profileId_currency: { profileId: input.profileId, currency: "G" } },
+        data: { amount: { decrement: charge } },
+      });
+      await tx.treasuryBalance.upsert({
+        where: { currency: "G" },
+        create: { currency: "G", amount: charge },
+        update: { amount: { increment: charge } },
+      });
+      await tx.economyEntry.create({
+        data: {
+          kind: "penalty.strike",
+          currency: "G",
+          amount: charge,
+          fromProfileId: input.profileId,
+          toTreasury: true,
+          refType: "case",
+          refId: input.caseId,
+        },
+      });
+    }
   }
 
   // Light Score deduction; pillar-scoped, tier-scaled, decaying on the

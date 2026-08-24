@@ -201,7 +201,12 @@ describe("progressive economy modes", () => {
     const noWallet = await setEconomyMode(
       db,
       { profileId, mode: "wallet" },
-      { WALLET_MODE_TESTNET_ENABLED: "true", CARDANO_NETWORK: "preprod" }
+      {
+        WALLET_MODE_TESTNET_ENABLED: "true",
+        WALLET_DISCUSSION_FEE_ENABLED: "true",
+        WALLET_REWARDS_TESTNET_ENABLED: "true",
+        CARDANO_NETWORK: "preprod",
+      }
     );
     expect(noWallet.ok).toBe(false);
   });
@@ -215,7 +220,12 @@ describe("progressive economy modes", () => {
     const result = await setEconomyMode(
       db,
       { profileId, mode: "wallet" },
-      { WALLET_MODE_TESTNET_ENABLED: "true", CARDANO_NETWORK: "preprod" }
+      {
+        WALLET_MODE_TESTNET_ENABLED: "true",
+        WALLET_DISCUSSION_FEE_ENABLED: "true",
+        WALLET_REWARDS_TESTNET_ENABLED: "true",
+        CARDANO_NETWORK: "preprod",
+      }
     );
     expect(result).toEqual({ ok: true, mode: "wallet" });
     expect((await db.profile.findUniqueOrThrow({ where: { id: profileId } })).economyMode).toBe(
@@ -280,6 +290,7 @@ describe("wallet transaction intents", () => {
       currency: "PC",
       amount: "5",
       idempotencyKey: "claim:test:one",
+      destinationWalletScope: "addr_test1qzprogressive",
     });
     expect(duplicate.id).toBe(first.id);
     expect(

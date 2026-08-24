@@ -104,6 +104,24 @@ export function validateRuntimeConfig(
       errors.push("TURNSTILE_SITE_KEY must be configured when Turnstile is enabled.");
     }
   }
+  const walletFlags = [
+    env.WALLET_MODE_TESTNET_ENABLED === "true",
+    env.WALLET_DISCUSSION_FEE_ENABLED === "true",
+    env.WALLET_REWARDS_TESTNET_ENABLED === "true",
+  ];
+  if (walletFlags.some(Boolean) && !walletFlags.every(Boolean)) {
+    errors.push(
+      "Wallet mode requires WALLET_MODE_TESTNET_ENABLED, WALLET_DISCUSSION_FEE_ENABLED, and WALLET_REWARDS_TESTNET_ENABLED to be enabled together."
+    );
+  }
+  if (walletFlags.every(Boolean)) {
+    if (!["preprod", "preview"].includes(env.CARDANO_NETWORK ?? "")) {
+      errors.push("Wallet mode requires CARDANO_NETWORK=preprod or preview.");
+    }
+    if (!env.BLOCKFROST_PROJECT_ID || isPlaceholder(env.BLOCKFROST_PROJECT_ID)) {
+      errors.push("Wallet mode requires a configured testnet BLOCKFROST_PROJECT_ID.");
+    }
+  }
   return errors;
 }
 

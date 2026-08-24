@@ -37,6 +37,8 @@
     "chain:verify-treasury": "tsx scripts/chain/verify-treasury.ts",
     "chain:settle-auditors": "tsx scripts/chain/settle-auditors.ts",
     "chain:process-credit-claims": "tsx scripts/chain/process-credit-claims.ts",
+    "chain:process-wallet-rewards": "tsx scripts/chain/process-wallet-rewards.ts",
+    "chain:process-wallet-actions": "tsx scripts/chain/process-wallet-actions.ts",
     "smoke:staging": "tsx scripts/smoke-staging.ts",
     "demo:phase0": "tsx scripts/demo-phase0.ts",
     "demo:phase1": "tsx scripts/demo-phase1.ts",

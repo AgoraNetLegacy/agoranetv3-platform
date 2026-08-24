@@ -9,6 +9,7 @@ export const TOKEN_INTENT_STATUSES = [
   "prepared",
   "awaiting_wallet_approval",
   "signed",
+  "distributing",
   "submitted",
   "confirmed",
   "rejected",
@@ -19,9 +20,10 @@ export type TokenIntentStatus = (typeof TOKEN_INTENT_STATUSES)[number];
 
 const NEXT: Record<TokenIntentStatus, readonly TokenIntentStatus[]> = {
   requested: ["prepared", "rejected", "expired", "failed"],
-  prepared: ["awaiting_wallet_approval", "submitted", "expired", "failed"],
+  prepared: ["awaiting_wallet_approval", "distributing", "submitted", "expired", "failed"],
   awaiting_wallet_approval: ["signed", "rejected", "expired", "failed"],
   signed: ["submitted", "failed"],
+  distributing: ["submitted", "failed"],
   submitted: ["confirmed", "expired", "failed"],
   confirmed: [],
   rejected: [],
@@ -76,7 +78,11 @@ export async function createTokenIntent(
     intent.profileId !== input.profileId ||
     intent.kind !== input.kind ||
     intent.currency !== input.currency ||
-    intent.amount !== input.amount
+    intent.amount !== input.amount ||
+    (intent.sourceWalletScope ?? undefined) !== input.sourceWalletScope ||
+    (intent.destinationWalletScope ?? undefined) !== input.destinationWalletScope ||
+    (intent.refType ?? undefined) !== input.refType ||
+    (intent.refId ?? undefined) !== input.refId
   ) {
     throw new Error("That idempotency key already belongs to a different transaction request.");
   }
@@ -133,4 +139,22 @@ export async function transitionTokenIntent(
     where: { id: current.id },
   });
   return { ok: true as const, intent: updated };
+}
+
+/** Lease an operator-delivered reward before any chain call. A second runner
+ * cannot acquire the same prepared intent, and an interrupted lease remains
+ * visible for reconciliation rather than being minted twice. */
+export async function acquireTokenIntentForDistribution(
+  db: DbOrTx,
+  input: { id: string; kindPrefix: string }
+) {
+  const changed = await db.tokenTransactionIntent.updateMany({
+    where: {
+      id: input.id,
+      status: "prepared",
+      kind: { startsWith: input.kindPrefix },
+    },
+    data: { status: "distributing" },
+  });
+  return changed.count === 1;
 }

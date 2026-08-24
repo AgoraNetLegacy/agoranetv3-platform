@@ -470,6 +470,15 @@ async function payRelease(
   },
   authorization: { via: "attestation"; attestorCount: number } | { via: "binding-vote"; pollRef: string }
 ): Promise<void> {
+  const recipientMode = await tx.profile.findUnique({
+    where: { id: release.toProfileId },
+    select: { economyMode: true },
+  });
+  if (recipientMode?.economyMode === "wallet") {
+    throw new Error(
+      "Mission releases are not wallet-ready yet. Switch the recipient identity to Credits mode before authorizing this release."
+    );
+  }
   // Atomically CLAIM the release: only the first transaction to flip it
   // proposed→released pays out. A concurrent second attestation that also
   // reached the threshold finds zero rows here and pays nothing; no

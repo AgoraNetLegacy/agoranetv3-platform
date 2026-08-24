@@ -19,6 +19,7 @@ import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
 import { chargeToTreasury, maybeFirstActionGrant } from "./economy";
 import { accrueForAction } from "./accrual";
+import { transitionTokenIntent } from "./tokenIntents";
 
 export function contentHash(body: string): string {
   return createHash("sha256").update(body).digest("hex");
@@ -238,93 +239,109 @@ export function safeSourceUrl(raw: string): string | null {
   }
 }
 
-/** Create a reply (or a top-level post) in a Discussion. */
-export async function createPost(
-  db: PrismaClient,
-  input: {
-    discussionId: string;
-    profileId: string;
-    body: string;
-    parentId?: string | null;
-    /** Content attestation (§10.1): "Human-made; my reputation on it." */
-    humanMade?: boolean;
-    /** A typed source tag with the sharer's vouch choice (§4, §10.2). */
-    source?: { url: string; kind: string; vouch: "vouched" | "unverified" };
-  }
-): Promise<PostResult> {
+export type CreatePostInput = {
+  discussionId: string;
+  profileId: string;
+  body: string;
+  parentId?: string | null;
+  /** Content attestation (§10.1): "Human-made; my reputation on it." */
+  humanMade?: boolean;
+  /** A typed source tag with the sharer's vouch choice (§4, §10.2). */
+  source?: { url: string; kind: string; vouch: "vouched" | "unverified" };
+  /** Set only by the server-side Wallet-mode finalizer after it verifies the
+   * submitted testnet transaction. Ordinary callers never provide this. */
+  walletFee?: { intentId: string; draftId: string; txHash: string };
+};
+
+/** Validate everything knowable before asking a wallet to pay. Finalization
+ * validates again because membership or moderation state may change while the
+ * wallet popup is open. */
+export async function validatePostRequest(db: PrismaClient, input: CreatePostInput) {
   const body = input.body.trim();
-  if (!body) return { ok: false, reason: "Empty post." };
-  const sourceUrl = input.source?.url.trim()
-    ? safeSourceUrl(input.source.url)
-    : null;
+  if (!body) return { ok: false as const, reason: "Empty post." };
+  const sourceUrl = input.source?.url.trim() ? safeSourceUrl(input.source.url) : null;
   if (input.source?.url.trim() && !sourceUrl) {
     return {
-      ok: false,
+      ok: false as const,
       reason: "A source must be a valid http:// or https:// web address.",
     };
   }
-
-  const discussion = await db.discussion.findUnique({
-    where: { id: input.discussionId },
-  });
-  if (!discussion) return { ok: false, reason: "No such Discussion." };
-
+  const discussion = await db.discussion.findUnique({ where: { id: input.discussionId } });
+  if (!discussion) return { ok: false as const, reason: "No such Discussion." };
   if (input.parentId) {
     const parent = await db.post.findUnique({ where: { id: input.parentId } });
     if (!parent || parent.discussionId !== discussion.id) {
-      return { ok: false, reason: "Parent post not in this Discussion." };
+      return { ok: false as const, reason: "Parent post not in this Discussion." };
     }
   }
-
-  const profile = await db.profile.findUnique({
-    where: { id: input.profileId },
-  });
-  if (!profile) return { ok: false, reason: "No such profile." };
+  const profile = await db.profile.findUnique({ where: { id: input.profileId } });
+  if (!profile) return { ok: false as const, reason: "No such profile." };
   if (profile.status !== "active") {
-    return { ok: false, reason: "This identity has not activated yet." };
+    return { ok: false as const, reason: "This identity has not activated yet." };
   }
-  // The members' room (Phase 6, CIRCLES §2.2): a Circle-scoped
-  // Discussion writes only for active members of a living Circle.
   if (discussion.circleId) {
     const { activeMembership } = await import("./circles");
     const circle = await db.circle.findUniqueOrThrow({ where: { id: discussion.circleId } });
     if (circle.status === "closed") {
-      return { ok: false, reason: "This Circle is closed; its room is read-only for former members." };
+      return {
+        ok: false as const,
+        reason: "This Circle is closed; its room is read-only for former members.",
+      };
     }
     if (!(await activeMembership(db, circle.id, profile.id))) {
-      return { ok: false, reason: "Members only; the working conversation belongs to the Circle." };
+      return {
+        ok: false as const,
+        reason: "Members only; the working conversation belongs to the Circle.",
+      };
     }
   }
-  // The workshop (Phase 7.5, POLLINATOR §4.3): a chamber-scoped
-  // Discussion writes only for souls who entered the chamber.
   if (discussion.chamberId) {
     const { chamberMembership } = await import("./chambers");
     if (!(await chamberMembership(db, discussion.chamberId, profile.id))) {
-      return { ok: false, reason: "Enter the chamber to work its idea; the workshop is enter-to-see." };
+      return {
+        ok: false as const,
+        reason: "Enter the chamber to work its idea; the workshop is enter-to-see.",
+      };
     }
   }
-  // Consent before the first post, always (ONBOARDING Stage 4; the
-  // blocking acks are not legal wallpaper; they gate the pen).
   if (!(await hasPostingConsents(db, profile.id))) {
     return {
-      ok: false,
+      ok: false as const,
       reason: "The permanence and Constitution acknowledgments come first.",
     };
   }
-  // Strike-ladder consequences (MODERATION §7), auto-applied and
-  // auto-enforced: read-only silences writing; rate-limit slows it.
   const now = new Date();
   if (profile.readOnlyUntil && profile.readOnlyUntil > now) {
-    return { ok: false, reason: `Read-only until ${profile.readOnlyUntil.toLocaleString()} (strike 3; Tribunal review pending).` };
+    return {
+      ok: false as const,
+      reason: `Read-only until ${profile.readOnlyUntil.toLocaleString()} (strike 3; Tribunal review pending).`,
+    };
   }
   if (profile.rateLimitedUntil && profile.rateLimitedUntil > now) {
     const recent = await db.post.findFirst({
-      where: { authorProfileId: profile.id, createdAt: { gte: new Date(Date.now() - 600_000) } },
+      where: {
+        authorProfileId: profile.id,
+        createdAt: { gte: new Date(Date.now() - 600_000) },
+      },
     });
     if (recent) {
-      return { ok: false, reason: "Rate-limited (strike 2): one post per 10 minutes for now." };
+      return {
+        ok: false as const,
+        reason: "Rate-limited (strike 2): one post per 10 minutes for now.",
+      };
     }
   }
+  return { ok: true as const, body, sourceUrl, discussion, profile };
+}
+
+/** Create a reply (or a top-level post) in a Discussion. */
+export async function createPost(
+  db: PrismaClient,
+  input: CreatePostInput
+): Promise<PostResult> {
+  const validation = await validatePostRequest(db, input);
+  if (!validation.ok) return validation;
+  const { body, sourceUrl, discussion, profile } = validation;
 
   // Every post is its own action instance: the scope is unique per post,
   // so the nullifier proves humanity for THIS act (DUAL_IDENTITY §3.2;
@@ -356,6 +373,11 @@ export async function createPost(
     // signature (POLLINATOR §3; both currencies, rails chamber.postFee*);
     // everywhere else, the standard reply micro-fee.
     if (discussion.chamberId) {
+      if (input.walletFee) {
+        throw new InsufficientFunds(
+          "Wallet-mode workshop posting is not available yet. Switch this identity to Credits mode for this action."
+        );
+      }
       const { chargeWorkshopPostFee, touchChamberActivity } = await import("./chambers");
       const fee = await chargeWorkshopPostFee(tx, {
         profileId: profile.id,
@@ -363,6 +385,40 @@ export async function createPost(
       });
       if (!fee.ok) throw new InsufficientFunds(fee.reason);
       await touchChamberActivity(tx, discussion.chamberId);
+    } else if (input.walletFee) {
+      const expectedAmount = await getRail(tx, "discussion.replyFee");
+      if (!Number.isSafeInteger(expectedAmount) || expectedAmount <= 0) {
+        throw new Error("The discussion wallet fee must be a positive whole dPOLL amount.");
+      }
+      const [intent, draft] = await Promise.all([
+        tx.tokenTransactionIntent.findUnique({ where: { id: input.walletFee.intentId } }),
+        tx.walletActionDraft.findUnique({ where: { id: input.walletFee.draftId } }),
+      ]);
+      const validIntent =
+        intent?.profileId === profile.id &&
+        intent.kind === "fee.reply" &&
+        intent.currency === "PC" &&
+        intent.amount === String(expectedAmount) &&
+        intent.status === "submitted" &&
+        intent.txHash === input.walletFee.txHash &&
+        intent.refType === "wallet-action-draft" &&
+        intent.refId === input.walletFee.draftId;
+      const validDraft =
+        draft?.profileId === profile.id &&
+        draft.kind === "discussion.post" &&
+        draft.status === "submitted" &&
+        draft.transactionIntentId === input.walletFee.intentId;
+      if (!validIntent || !validDraft) {
+        throw new InsufficientFunds(
+          "That wallet payment is not attached to this pending post. Reload and check its status."
+        );
+      }
+      const confirmed = await transitionTokenIntent(tx, {
+        id: intent.id,
+        to: "confirmed",
+        txHash: input.walletFee.txHash,
+      });
+      if (!confirmed.ok) throw new InsufficientFunds(confirmed.reason);
     } else {
       // The reply micro-fee (participation-cost rule): acting costs.
       const fee = await chargeToTreasury(tx, {
@@ -428,6 +484,24 @@ export async function createPost(
           nullifier: gate.nullifier,
         },
       });
+    }
+    if (input.walletFee) {
+      const completed = await tx.walletActionDraft.updateMany({
+        where: {
+          id: input.walletFee.draftId,
+          profileId: profile.id,
+          transactionIntentId: input.walletFee.intentId,
+          status: "submitted",
+        },
+        data: {
+          status: "completed",
+          resultRefId: created.id,
+          completedAt: new Date(),
+        },
+      });
+      if (completed.count !== 1) {
+        throw new Error("The pending wallet post changed while it was being completed.");
+      }
     }
     return { ok: true as const, postId: created.id };
     });

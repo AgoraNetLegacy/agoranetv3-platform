@@ -116,6 +116,25 @@ describe("runtime config guard (DATABASE_SETUP.md; refuse to boot unsafe)", () =
     ).toBe(true);
   });
 
+  it("refuses partial or non-testnet Wallet-mode activation", () => {
+    expect(
+      validateRuntimeConfig(
+        hostedEnv({ WALLET_MODE_TESTNET_ENABLED: "true" })
+      ).some((error) => error.includes("enabled together"))
+    ).toBe(true);
+    expect(
+      validateRuntimeConfig(
+        hostedEnv({
+          WALLET_MODE_TESTNET_ENABLED: "true",
+          WALLET_DISCUSSION_FEE_ENABLED: "true",
+          WALLET_REWARDS_TESTNET_ENABLED: "true",
+          CARDANO_NETWORK: "mainnet",
+          BLOCKFROST_PROJECT_ID: "configured-test-project",
+        })
+      ).some((error) => error.includes("CARDANO_NETWORK"))
+    ).toBe(true);
+  });
+
   it("throws with every error listed, not just the first", () => {
     const env = hostedEnv({
       DATABASE_URL: "file:./dev.db",

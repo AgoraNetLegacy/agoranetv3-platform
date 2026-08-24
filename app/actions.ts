@@ -95,6 +95,13 @@ import {
   recordChamberCover,
   type PreparedChamberCover,
 } from "@/lib/chamberCovers";
+import {
+  finalizeWalletPost,
+  prepareWalletPost,
+  recordWalletPostSubmission,
+  rejectWalletPost,
+  type WalletPostPayload,
+} from "@/lib/walletActions";
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
@@ -167,6 +174,48 @@ export async function submitPost(formData: FormData) {
   });
   revalidatePath(`/d/${discussionId}`);
   backTo(`/d/${discussionId}`, result.ok ? undefined : result.reason);
+}
+
+export async function prepareWalletPostAction(input: {
+  idempotencyKey: string;
+  payload: WalletPostPayload;
+}) {
+  const face = await requireFace("posting");
+  return prepareWalletPost(db, {
+    profileId: face.id,
+    idempotencyKey: input.idempotencyKey,
+    payload: input.payload,
+  });
+}
+
+export async function recordWalletPostSubmissionAction(input: {
+  intentId: string;
+  txHash: string;
+}) {
+  const face = await requireFace();
+  return recordWalletPostSubmission(db, {
+    profileId: face.id,
+    intentId: input.intentId,
+    txHash: input.txHash,
+  });
+}
+
+export async function finalizeWalletPostAction(input: {
+  intentId: string;
+  discussionId: string;
+}) {
+  const face = await requireFace();
+  const result = await finalizeWalletPost(db, {
+    profileId: face.id,
+    intentId: input.intentId,
+  });
+  if (result.ok) revalidatePath(`/d/${input.discussionId}`);
+  return result;
+}
+
+export async function rejectWalletPostAction(input: { intentId: string }) {
+  const face = await requireFace();
+  return rejectWalletPost(db, { profileId: face.id, intentId: input.intentId });
 }
 
 export async function submitTip(formData: FormData) {

@@ -338,6 +338,15 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     description:
       "Progressive token rail: time a reserved Credit claim may wait for testnet distribution before reconciliation review.",
   },
+  {
+    key: "onchain.walletActionExpiryMinutes",
+    value: 15,
+    unit: "minutes",
+    boundMin: 5,
+    boundMax: 60,
+    description:
+      "Progressive token rail: time a validated action draft may wait for its user-signed fake-asset fee before it expires.",
+  },
   // --- Circle rails (Phase 6; CIRCLES_SPEC.md; "rails, not rules" is
   // the spec's own Principle 6). Per-Circle dials (attestation
   // threshold, removal bar) take their default AND bounds from here;

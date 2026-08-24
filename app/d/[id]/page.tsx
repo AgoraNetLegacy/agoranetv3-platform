@@ -4,9 +4,25 @@ import { db } from "@/lib/db";
 import { getRail } from "@/lib/rails";
 import { activeFace } from "@/lib/webSession";
 import { checkParking, BlockedPanel } from "@/app/parkingGate";
-import { submitPost, submitEdit, submitFlag, submitTip, submitPermanenceUpgrade, submitAppeal, submitRestorative, submitSaveDiscussion, submitUnsaveDiscussion } from "@/app/actions";
+import {
+  submitPost,
+  submitEdit,
+  submitFlag,
+  submitTip,
+  submitPermanenceUpgrade,
+  submitAppeal,
+  submitRestorative,
+  submitSaveDiscussion,
+  submitUnsaveDiscussion,
+  prepareWalletPostAction,
+  recordWalletPostSubmissionAction,
+  finalizeWalletPostAction,
+  rejectWalletPostAction,
+} from "@/app/actions";
 import { isSaved, touchSavedWatermark } from "@/lib/saved";
 import { Icon, PillarMark } from "@/components/Icon";
+import { WalletPostComposer } from "@/components/WalletPostComposer";
+import { walletModeActivationReady } from "@/lib/progressiveEconomy";
 
 export const dynamic = "force-dynamic";
 
@@ -172,6 +188,8 @@ function PostNode({
   now,
   permanent,
   feeLabel,
+  walletMode,
+  walletPostReady,
 }: {
   post: PostWithRevisions;
   childrenByParent: Map<string | null, PostWithRevisions[]>;
@@ -182,6 +200,8 @@ function PostNode({
   now: Date;
   permanent: boolean;
   feeLabel?: string;
+  walletMode: boolean;
+  walletPostReady: boolean;
 }) {
   const locked = post.editableUntil <= now;
   const own = viewerProfileId === post.authorProfileId;
@@ -272,14 +292,34 @@ function PostNode({
         <>
           <details>
             <summary>Reply</summary>
-            <Composer
-              discussionId={discussionId}
-              parentId={post.id}
-              graceMinutes={graceMinutes}
-              label="Post reply"
-              permanent={permanent}
-              feeLabel={feeLabel}
-            />
+            {walletMode && walletPostReady ? (
+              <WalletPostComposer
+                discussionId={discussionId}
+                parentId={post.id}
+                graceMinutes={graceMinutes}
+                label="Post reply"
+                permanent={permanent}
+                feeLabel={feeLabel ?? "dPOLL"}
+                prepare={prepareWalletPostAction}
+                recordSubmission={recordWalletPostSubmissionAction}
+                finalize={finalizeWalletPostAction}
+                reject={rejectWalletPostAction}
+              />
+            ) : walletMode ? (
+              <p className="notice">
+                This action is not available in Wallet mode yet. Switch this identity to
+                Credits mode to use it; AgoraNet will not silently charge internal Credits.
+              </p>
+            ) : (
+              <Composer
+                discussionId={discussionId}
+                parentId={post.id}
+                graceMinutes={graceMinutes}
+                label="Post reply"
+                permanent={permanent}
+                feeLabel={feeLabel}
+              />
+            )}
           </details>
           {own && !locked && (
             <details>
@@ -292,7 +332,7 @@ function PostNode({
               </form>
             </details>
           )}
-          {!own && (
+          {!walletMode && !own && (
             <details>
               <summary>Tip</summary>
               <form action={submitTip} className="inline">
@@ -303,7 +343,7 @@ function PostNode({
               </form>
             </details>
           )}
-          {own && !permanent && !post.permanentUpgraded && (
+          {!walletMode && own && !permanent && !post.permanentUpgraded && (
             <details>
               <summary>Make this post permanent</summary>
               <form action={submitPermanenceUpgrade} className="inline">
@@ -333,6 +373,8 @@ function PostNode({
           now={now}
           permanent={permanent}
           feeLabel={feeLabel}
+          walletMode={walletMode}
+          walletPostReady={walletPostReady}
         />
       ))}
     </div>
@@ -447,9 +489,15 @@ export default async function DiscussionPage({
   const now = new Date();
   const permanent = discussion.permanence.startsWith("permanent");
   const interactive = viewer && (!discussion.circle || roomWrite);
+  const walletMode = Boolean(viewer && viewer.economyMode === "wallet");
+  const walletPostReady = walletMode && walletModeActivationReady() && !discussion.chamber;
   // The dual-token signature at micro scale (POLLINATOR §3): workshop
   // posts price in both currencies; the composer says so up front.
-  const feeLabel = discussion.chamber ? "1 PC + 1 G" : `${replyFee} PC`;
+  const feeLabel = discussion.chamber
+    ? "1 PC + 1 G"
+    : walletMode
+      ? `${replyFee} dPOLL`
+      : `${replyFee} PC`;
 
   return (
     <>
@@ -536,6 +584,8 @@ export default async function DiscussionPage({
           now={now}
           permanent={permanent}
           feeLabel={feeLabel}
+          walletMode={walletMode}
+          walletPostReady={walletPostReady}
         />
       ))}
       {posts.length === 0 && <p>No souls have spoken here yet.</p>}
@@ -543,13 +593,32 @@ export default async function DiscussionPage({
       {interactive ? (
         <>
           <h3>Add your voice</h3>
-          <Composer
-            discussionId={discussion.id}
-            graceMinutes={graceMinutes}
-            label={`Post as ${viewer.displayName} @${viewer.handle}`}
-            permanent={permanent}
-            feeLabel={feeLabel}
-          />
+          {walletMode && walletPostReady ? (
+            <WalletPostComposer
+              discussionId={discussion.id}
+              graceMinutes={graceMinutes}
+              label={`Post as ${viewer.displayName} @${viewer.handle}`}
+              permanent={permanent}
+              feeLabel={feeLabel}
+              prepare={prepareWalletPostAction}
+              recordSubmission={recordWalletPostSubmissionAction}
+              finalize={finalizeWalletPostAction}
+              reject={rejectWalletPostAction}
+            />
+          ) : walletMode ? (
+            <div className="notice">
+              This action is not available in Wallet mode yet. Switch this identity to
+              Credits mode to post here; AgoraNet will not silently use an internal balance.
+            </div>
+          ) : (
+            <Composer
+              discussionId={discussion.id}
+              graceMinutes={graceMinutes}
+              label={`Post as ${viewer.displayName} @${viewer.handle}`}
+              permanent={permanent}
+              feeLabel={feeLabel}
+            />
+          )}
         </>
       ) : discussion.circle || discussion.chamber ? null : (
         <>

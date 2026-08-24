@@ -59,9 +59,10 @@ export async function fileFlag(
     // empty balance (DISCUSSIONS §7): a zero-balance soul flags without
     // a deposit; pattern penalties fall back to rate-limiting, not debt.
     const depositAmount = await getRail(tx, "moderation.flagDeposit");
-    const { balanceOf } = await import("./economy");
+    const { balanceOf, creditsModeAvailable } = await import("./economy");
     let depositTaken = 0;
-    if ((await balanceOf(tx, input.profileId, "PC")) >= depositAmount) {
+    const credits = await creditsModeAvailable(tx, input.profileId);
+    if (credits.ok && (await balanceOf(tx, input.profileId, "PC")) >= depositAmount) {
       const deposit = await chargeToTreasury(tx, {
         profileId: input.profileId,
         currency: "PC",
@@ -149,9 +150,10 @@ export async function fileReleaseFlag(
     }
 
     const depositAmount = await getRail(tx, "moderation.flagDeposit");
-    const { balanceOf } = await import("./economy");
+    const { balanceOf, creditsModeAvailable } = await import("./economy");
     let depositTaken = 0;
-    if ((await balanceOf(tx, input.profileId, "PC")) >= depositAmount) {
+    const credits = await creditsModeAvailable(tx, input.profileId);
+    if (credits.ok && (await balanceOf(tx, input.profileId, "PC")) >= depositAmount) {
       const deposit = await chargeToTreasury(tx, {
         profileId: input.profileId,
         currency: "PC",

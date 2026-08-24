@@ -38,6 +38,24 @@ export type EconomyResult =
   | { ok: true; entryId?: string }
   | { ok: false; reason: string };
 
+export async function creditsModeAvailable(
+  db: DbOrTx,
+  profileId: string
+): Promise<EconomyResult> {
+  const profile = await db.profile.findUnique({
+    where: { id: profileId },
+    select: { economyMode: true },
+  });
+  if (profile?.economyMode === "wallet") {
+    return {
+      ok: false,
+      reason:
+        "This action is not wallet-ready yet. Wallet mode will never charge or reward Credits silently; use a wallet-ready action or switch this profile to Credits mode in Settings.",
+    };
+  }
+  return { ok: true };
+}
+
 /** Debit a profile into the treasury (fees, deposits). */
 /**
  * Atomically debit a profile's balance. The conditional UPDATE (WHERE
@@ -75,6 +93,10 @@ export async function chargeToTreasury(
   }
 ): Promise<EconomyResult> {
   if (input.amount <= 0) return { ok: true };
+  if (input.kind !== "claim.reserve") {
+    const mode = await creditsModeAvailable(tx, input.profileId);
+    if (!mode.ok) return mode;
+  }
   if (!(await debitBalance(tx, input.profileId, input.currency, input.amount))) {
     const balance = await balanceOf(tx, input.profileId, input.currency);
     return {
@@ -138,6 +160,10 @@ export async function payFromTreasury(
   }
 ): Promise<EconomyResult> {
   if (input.amount <= 0) return { ok: true };
+  if (input.kind !== "claim.refund") {
+    const mode = await creditsModeAvailable(tx, input.profileId);
+    if (!mode.ok) return mode;
+  }
 
   const category = await tx.budgetCategory.findUnique({
     where: { name: input.budgetCategory },
@@ -253,6 +279,8 @@ export async function tip(
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
     return { ok: false, reason: "A tip must be a positive amount." };
   }
+  const mode = await creditsModeAvailable(db, input.tipperProfileId);
+  if (!mode.ok) return mode;
   const post = await db.post.findUnique({ where: { id: input.postId } });
   if (!post) return { ok: false, reason: "No such post." };
   if (post.authorProfileId === input.tipperProfileId) {
@@ -356,6 +384,28 @@ export async function maybeFirstActionGrant(
     where: { profileId_kind: { profileId, kind: "grant.first-action" } },
   });
   if (already) return;
+  if (profile.economyMode === "wallet") {
+    const amount = await getRail(tx, "grant.firstAction.g");
+    if (!Number.isSafeInteger(amount) || amount <= 0) {
+      throw new Error("Wallet-mode first-action rewards require a positive whole dGRA rail.");
+    }
+    // GrantClaim remains the one-time milestone mutex. The value itself is
+    // queued to the linked wallet; no internal Gratium balance is touched.
+    await tx.grantClaim.create({
+      data: { profileId, kind: "grant.first-action" },
+    });
+    const { queueWalletReward } = await import("./walletRewards");
+    await queueWalletReward(tx, {
+      profileId,
+      currency: "G",
+      amount,
+      kind: "reward.first-action",
+      idempotencyKey: `reward:first-action:${profileId}`,
+      refType: "profile-milestone",
+      refId: profileId,
+    });
+    return;
+  }
   await grantOnce(tx, {
     profileId,
     currency: "G",

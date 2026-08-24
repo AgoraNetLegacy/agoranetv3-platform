@@ -15,9 +15,11 @@
 // engagement treadmill. Sentinel anti-farming joins when Sentinel
 // exists; until then the ceilings do exactly what the spec says they do.
 
+import { randomUUID } from "crypto";
 import type { Tx } from "./db";
 import { getRail } from "./rails";
 import { grant } from "./economy";
+import { queueWalletReward } from "./walletRewards";
 
 // v0 private weights (never published, never rendered).
 const BASE_PER_QUALIFYING_ACTION = 1; // uPC
@@ -39,6 +41,24 @@ async function accruedSince(
     select: { amount: true },
   });
   return entries.reduce((sum, e) => sum + e.amount, 0);
+}
+
+async function walletAccruedSince(
+  tx: Tx,
+  profileId: string,
+  since: Date,
+  kinds: string[]
+): Promise<number> {
+  const intents = await tx.tokenTransactionIntent.findMany({
+    where: {
+      profileId,
+      kind: { in: kinds },
+      createdAt: { gte: since },
+      status: { notIn: ["rejected", "expired", "failed"] },
+    },
+    select: { amount: true },
+  });
+  return intents.reduce((sum, intent) => sum + Number(intent.amount), 0);
 }
 
 /**
@@ -73,24 +93,41 @@ export async function accrueForAction(tx: Tx, profileId: string): Promise<void> 
       getRail(tx, "accrual.streakWeeklyCapPc"),
     ]);
 
-  const accrualKinds = ["accrual", "accrual.streak"];
-  const todayTotal = await accruedSince(tx, profileId, dayStart, accrualKinds);
-  const weekTotal = await accruedSince(tx, profileId, weekStart, accrualKinds);
+  const profile = await tx.profile.findUnique({ where: { id: profileId } });
+  const walletMode = profile?.economyMode === "wallet";
+
+  const accrualKinds = walletMode
+    ? ["reward.accrual", "reward.accrual.streak"]
+    : ["accrual", "accrual.streak"];
+  const totalsSince = walletMode ? walletAccruedSince : accruedSince;
+  const todayTotal = await totalsSince(tx, profileId, dayStart, accrualKinds);
+  const weekTotal = await totalsSince(tx, profileId, weekStart, accrualKinds);
   let granted = 0;
 
   // Streak: paid once, on the first qualifying action of a day whose
   // previous UTC day also accrued (consecutive presence).
   if (todayTotal === 0) {
     const yesterdayStart = new Date(dayStart.getTime() - DAY_MS);
-    const yesterday = await tx.economyEntry.findFirst({
-      where: {
-        toProfileId: profileId,
-        kind: { in: accrualKinds },
-        createdAt: { gte: yesterdayStart, lt: dayStart },
-      },
-    });
+    const yesterday = walletMode
+      ? await tx.tokenTransactionIntent.findFirst({
+          where: {
+            profileId,
+            kind: { in: accrualKinds },
+            status: { notIn: ["rejected", "expired", "failed"] },
+            createdAt: { gte: yesterdayStart, lt: dayStart },
+          },
+        })
+      : await tx.economyEntry.findFirst({
+          where: {
+            toProfileId: profileId,
+            kind: { in: accrualKinds },
+            createdAt: { gte: yesterdayStart, lt: dayStart },
+          },
+        });
     if (yesterday) {
-      const streakThisWeek = await accruedSince(tx, profileId, weekStart, ["accrual.streak"]);
+      const streakThisWeek = walletMode
+        ? await walletAccruedSince(tx, profileId, weekStart, ["reward.accrual.streak"])
+        : await accruedSince(tx, profileId, weekStart, ["accrual.streak"]);
       const bonus = Math.min(
         streakBonus,
         streakWeeklyCap - streakThisWeek,
@@ -98,21 +135,41 @@ export async function accrueForAction(tx: Tx, profileId: string): Promise<void> 
         weeklyCeiling - weekTotal
       );
       if (bonus > 0) {
-        await grant(tx, { profileId, currency: "PC", amount: bonus, kind: "accrual.streak" });
+        if (walletMode) {
+          await queueWalletReward(tx, {
+            profileId,
+            currency: "PC",
+            amount: bonus,
+            kind: "reward.accrual.streak",
+            idempotencyKey: `reward:accrual-streak:${profileId}:${randomUUID()}`,
+          });
+        } else {
+          await grant(tx, { profileId, currency: "PC", amount: bonus, kind: "accrual.streak" });
+        }
         granted += bonus;
       }
     }
   }
 
-  const afterStreakToday = await accruedSince(tx, profileId, dayStart, accrualKinds);
-  const afterStreakWeek = await accruedSince(tx, profileId, weekStart, accrualKinds);
+  const afterStreakToday = await totalsSince(tx, profileId, dayStart, accrualKinds);
+  const afterStreakWeek = await totalsSince(tx, profileId, weekStart, accrualKinds);
   const base = Math.min(
     BASE_PER_QUALIFYING_ACTION,
     dailyCeiling - afterStreakToday,
     weeklyCeiling - afterStreakWeek
   );
   if (base > 0) {
-    await grant(tx, { profileId, currency: "PC", amount: base, kind: "accrual" });
+    if (walletMode) {
+      await queueWalletReward(tx, {
+        profileId,
+        currency: "PC",
+        amount: base,
+        kind: "reward.accrual",
+        idempotencyKey: `reward:accrual:${profileId}:${randomUUID()}`,
+      });
+    } else {
+      await grant(tx, { profileId, currency: "PC", amount: base, kind: "accrual" });
+    }
     granted += base;
   }
 

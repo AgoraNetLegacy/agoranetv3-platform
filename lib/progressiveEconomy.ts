@@ -27,6 +27,24 @@ export function creditClaimsTestnetEnabled(env: Environment = process.env) {
   return env.CREDIT_CLAIMS_TESTNET_ENABLED === "true";
 }
 
+export function walletDiscussionFeeEnabled(env: Environment = process.env) {
+  return env.WALLET_DISCUSSION_FEE_ENABLED === "true";
+}
+
+export function walletRewardsTestnetEnabled(env: Environment = process.env) {
+  return env.WALLET_REWARDS_TESTNET_ENABLED === "true";
+}
+
+/** Wallet mode is load-bearing only when its first ordinary fee and reward
+ * are both available. A balance display alone must never activate the mode. */
+export function walletModeActivationReady(env: Environment = process.env) {
+  return (
+    walletModeTestnetEnabled(env) &&
+    walletDiscussionFeeEnabled(env) &&
+    walletRewardsTestnetEnabled(env)
+  );
+}
+
 export function testnetAssetRegistry(env: Environment = process.env) {
   const network = env.CARDANO_NETWORK ?? "preprod";
   if (network !== "preprod" && network !== "preview") {
@@ -70,8 +88,11 @@ export async function setEconomyMode(
     return { ok: false, reason: "Mixed mode is reserved for controlled testing." };
   }
   if (mode !== "credits") {
-    if (!walletModeTestnetEnabled(env)) {
-      return { ok: false, reason: "Testnet Wallet mode is not enabled yet." };
+    if (!walletModeActivationReady(env)) {
+      return {
+        ok: false,
+        reason: "Testnet Wallet mode is not ready until its first fee and reward are both enabled.",
+      };
     }
     const link = await walletLinkFor(db, input.profileId);
     if (!link) {
@@ -81,6 +102,23 @@ export async function setEconomyMode(
       return {
         ok: false,
         reason: `The linked wallet is on ${link.network}; AgoraNet is using ${cardanoNetwork(env)}.`,
+      };
+    }
+  } else {
+    const pendingWalletAction = await db.walletActionDraft.findFirst({
+      where: {
+        profileId: input.profileId,
+        status: { in: ["awaiting_wallet_approval", "submitted", "requires_review"] },
+      },
+      select: { status: true },
+    });
+    if (pendingWalletAction) {
+      return {
+        ok: false,
+        reason:
+          pendingWalletAction.status === "awaiting_wallet_approval"
+            ? "Finish or let the open Lace request expire before switching to Credits mode."
+            : "A wallet-paid action is still being confirmed or reviewed. Do not switch modes or pay again; check its status first.",
       };
     }
   }

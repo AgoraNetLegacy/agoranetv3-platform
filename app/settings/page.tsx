@@ -23,7 +23,7 @@ import {
 import {
   refreshWalletBalanceSnapshots,
   walletBalanceView,
-  walletModeTestnetEnabled,
+  walletModeActivationReady,
   creditClaimsTestnetEnabled,
 } from "@/lib/progressiveEconomy";
 import { donationScript, demoBeneficiaryHash } from "@/lib/chainDonation";
@@ -251,11 +251,11 @@ export default async function SettingsPage({
             name="economyMode"
             value="wallet"
             defaultChecked={face.economyMode === "wallet"}
-            disabled={!walletLink || !walletModeTestnetEnabled()}
+            disabled={!walletLink || !walletModeActivationReady()}
           />{" "}
           Wallet mode; approve fake dPOLL and dGRA actions in Lace on Cardano {network}
         </label>
-        {!walletModeTestnetEnabled() && (
+        {!walletModeActivationReady() && (
           <p className="lore">
             Wallet mode is installed but remains safely off until a normal
             AgoraNet fee and reward work end to end with fake wallet assets.
