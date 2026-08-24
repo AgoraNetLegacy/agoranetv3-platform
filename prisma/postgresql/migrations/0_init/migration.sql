@@ -54,6 +54,7 @@ CREATE TABLE "Profile" (
     "spiritActive" BOOLEAN NOT NULL DEFAULT false,
     "spiritLevel" TEXT NOT NULL DEFAULT 'discovery',
     "spiritOnLogin" BOOLEAN NOT NULL DEFAULT false,
+    "economyMode" TEXT NOT NULL DEFAULT 'credits',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Profile_pkey" PRIMARY KEY ("id")
@@ -1395,3 +1396,86 @@ ALTER TABLE "SupportInternalNote" ADD CONSTRAINT "SupportInternalNote_caseId_fke
 ALTER TABLE "SupportInternalNote" ADD CONSTRAINT "SupportInternalNote_authorOperatorId_fkey" FOREIGN KEY ("authorOperatorId") REFERENCES "SupportOperator"("profileId") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "SupportAuditEvent" ADD CONSTRAINT "SupportAuditEvent_caseId_fkey" FOREIGN KEY ("caseId") REFERENCES "SupportCase"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "SupportAuditEvent" ADD CONSTRAINT "SupportAuditEvent_actorProfileId_fkey" FOREIGN KEY ("actorProfileId") REFERENCES "Profile"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- Progressive token rail; also mirrored by the additive migration for
+-- databases created before this foundation was folded into the fresh init.
+CREATE TABLE "AssetDefinition" (
+    "id" TEXT NOT NULL,
+    "chain" TEXT NOT NULL,
+    "network" TEXT NOT NULL,
+    "policyId" TEXT NOT NULL,
+    "assetName" TEXT NOT NULL,
+    "symbol" TEXT NOT NULL,
+    "decimals" INTEGER NOT NULL DEFAULT 0,
+    "displayName" TEXT NOT NULL,
+    "isTestAsset" BOOLEAN NOT NULL DEFAULT true,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "AssetDefinition_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE "WalletBalanceSnapshot" (
+    "profileId" TEXT NOT NULL,
+    "assetDefinitionId" TEXT NOT NULL,
+    "quantity" TEXT NOT NULL,
+    "observedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "sourceBlock" TEXT,
+    "syncStatus" TEXT NOT NULL DEFAULT 'current',
+    "errorCode" TEXT,
+    CONSTRAINT "WalletBalanceSnapshot_pkey" PRIMARY KEY ("profileId", "assetDefinitionId")
+);
+
+CREATE TABLE "TokenTransactionIntent" (
+    "id" TEXT NOT NULL,
+    "profileId" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "currency" TEXT NOT NULL,
+    "amount" TEXT NOT NULL,
+    "sourceWalletScope" TEXT,
+    "destinationWalletScope" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'requested',
+    "txHash" TEXT,
+    "idempotencyKey" TEXT NOT NULL,
+    "refType" TEXT,
+    "refId" TEXT,
+    "failureCode" TEXT,
+    "failureMessage" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "preparedAt" TIMESTAMP(3),
+    "submittedAt" TIMESTAMP(3),
+    "confirmedAt" TIMESTAMP(3),
+    "failedAt" TIMESTAMP(3),
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "TokenTransactionIntent_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE "CreditClaim" (
+    "id" TEXT NOT NULL,
+    "profileId" TEXT NOT NULL,
+    "currency" TEXT NOT NULL,
+    "creditAmount" DOUBLE PRECISION NOT NULL,
+    "assetAmount" TEXT NOT NULL,
+    "destinationAddress" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'requested',
+    "transactionIntentId" TEXT NOT NULL,
+    "reservationEntryId" TEXT,
+    "finalizationEntryId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "confirmedAt" TIMESTAMP(3),
+    "failedAt" TIMESTAMP(3),
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "CreditClaim_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX "AssetDefinition_chain_network_policyId_assetName_key" ON "AssetDefinition"("chain", "network", "policyId", "assetName");
+CREATE INDEX "AssetDefinition_network_active_idx" ON "AssetDefinition"("network", "active");
+CREATE INDEX "WalletBalanceSnapshot_profileId_observedAt_idx" ON "WalletBalanceSnapshot"("profileId", "observedAt");
+CREATE UNIQUE INDEX "TokenTransactionIntent_txHash_key" ON "TokenTransactionIntent"("txHash");
+CREATE UNIQUE INDEX "TokenTransactionIntent_idempotencyKey_key" ON "TokenTransactionIntent"("idempotencyKey");
+CREATE INDEX "TokenTransactionIntent_profileId_status_createdAt_idx" ON "TokenTransactionIntent"("profileId", "status", "createdAt");
+CREATE UNIQUE INDEX "CreditClaim_transactionIntentId_key" ON "CreditClaim"("transactionIntentId");
+CREATE UNIQUE INDEX "CreditClaim_reservationEntryId_key" ON "CreditClaim"("reservationEntryId");
+CREATE UNIQUE INDEX "CreditClaim_finalizationEntryId_key" ON "CreditClaim"("finalizationEntryId");
+CREATE INDEX "CreditClaim_profileId_status_createdAt_idx" ON "CreditClaim"("profileId", "status", "createdAt");

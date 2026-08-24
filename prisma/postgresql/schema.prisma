@@ -123,6 +123,10 @@ model Profile {
   spiritLevel          String              @default("discovery")
   // Begin each fresh sign-in already veiled (per-identity choice).
   spiritOnLogin        Boolean             @default(false)
+  // Progressive token rail: "credits" (default; no wallet required),
+  // "wallet" (testnet wallet assets for supported actions), or "mixed"
+  // (controlled migration/testing only). Per identity by construction.
+  economyMode          String              @default("credits")
   createdAt            DateTime            @default(now())
   gateRequests         GateRequest[]
   valuesAnswers        ValuesAnswer[]
@@ -148,10 +152,11 @@ model HandleTombstone {
 // ------------------------------------------------------------------
 // The internal economy (TOKENOMICS_SPEC.md; amounts from
 // ECONOMIC_STARTING_DEFAULTS.md as rails). Both currencies live as
-// per-profile internal balances; fast, free, and no funding trail
-// between a soul's two identities (each identity's balances are its own). The
-// chain appears only at Phase 9's explicit boundaries. Money never
-// buys outcome weight; fees gate the doing, never the result.
+// per-profile Credit balances; fast, free, beginner-friendly, and with no
+// funding trail between a soul's two identities (each identity's balances are
+// its own). The optional progressive rail adds separately labeled testnet
+// wallet assets and explicit claims; mainnet remains behind Phase 9. Money
+// never buys outcome weight; fees gate the doing, never the result.
 // ------------------------------------------------------------------
 
 model Balance {
@@ -165,6 +170,91 @@ model Balance {
 model TreasuryBalance {
   currency String @id // "PC" | "G"
   amount   Float  @default(0)
+}
+
+// Progressive token rail asset registry. Testnet and eventual production
+// use the same shape; runtime guards decide which network may be active.
+model AssetDefinition {
+  id          String   @id @default(cuid())
+  chain       String
+  network     String
+  policyId    String
+  assetName   String
+  symbol      String
+  decimals    Int      @default(0)
+  displayName String
+  isTestAsset Boolean  @default(true)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([chain, network, policyId, assetName])
+  @@index([network, active])
+}
+
+// Cached chain observation for a linked identity. This is a read model,
+// never an ownership grant; every row must be reproducible from the chain.
+model WalletBalanceSnapshot {
+  profileId        String
+  assetDefinitionId String
+  quantity         String
+  observedAt       DateTime @default(now())
+  sourceBlock      String?
+  syncStatus       String   @default("current")
+  errorCode        String?
+
+  @@id([profileId, assetDefinitionId])
+  @@index([profileId, observedAt])
+}
+
+// One state machine for every wallet-side value movement. No private key,
+// signing material, or full secret-bearing wallet payload belongs here.
+model TokenTransactionIntent {
+  id                     String    @id @default(cuid())
+  profileId              String
+  kind                   String
+  currency               String
+  amount                 String
+  sourceWalletScope      String?
+  destinationWalletScope String?
+  status                 String    @default("requested")
+  txHash                 String?   @unique
+  idempotencyKey         String    @unique
+  refType                String?
+  refId                  String?
+  failureCode            String?
+  failureMessage         String?
+  createdAt              DateTime  @default(now())
+  preparedAt             DateTime?
+  submittedAt            DateTime?
+  confirmedAt            DateTime?
+  failedAt               DateTime?
+  updatedAt              DateTime  @updatedAt
+
+  @@index([profileId, status, createdAt])
+}
+
+// Explicit bridge from beginner Credits to fake testnet wallet assets.
+// Credits are reserved before distribution and finalized only after the
+// configured chain confirms the expected destination and quantity.
+model CreditClaim {
+  id                  String    @id @default(cuid())
+  profileId           String
+  currency            String
+  creditAmount        Float
+  assetAmount         String
+  destinationAddress  String
+  status              String    @default("requested")
+  transactionIntentId String    @unique
+  reservationEntryId  String?   @unique
+  finalizationEntryId String?   @unique
+  createdAt           DateTime  @default(now())
+  confirmedAt         DateTime?
+  failedAt            DateTime?
+  expiresAt           DateTime
+  updatedAt           DateTime  @updatedAt
+
+  @@index([profileId, status, createdAt])
 }
 
 // The money ledger; internal double-entry record of every flow
