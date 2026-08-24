@@ -1839,3 +1839,44 @@ schema parity, TypeScript, and optimized Next.js build all green. The local
 SQLite schema and two new rails were applied/seeded. The corpus Markdown and
 PDF were updated with the implementation record. Operational promises remain
 intentionally absent pending DECISIONS_PENDING #26.
+
+## 2026-08-23; Novice-first Helpdesk and local workflow recovery
+
+The Help & Support corpus was completed as a first-time-user support system,
+not only an experienced-user reference. All twenty-five public articles were
+rewritten to lead with a plain-language explanation, a concrete next action,
+and a named destination where available. Internal support guidance and the
+Gemma SOUL/AGENT prompts now require novice-first language, define unavoidable
+AgoraNet terms, avoid unexplained internal labels, and give one manageable step
+when a user is stuck. Four beginner-language evaluation cases were added,
+including “where do I go for onboarding?” and “which of the two codes logs me
+in?”
+
+The governed corpus is version `1.2.0`. A Linux model reboot and recovery
+runbook was added at `docs/HELPDESK_MODEL_RUNBOOK.md`, covering Ollama,
+Cloudflare Tunnel, Gemma preload, service checks, protected end-to-end
+verification, and symptom-based recovery without rotating credentials as a
+first response.
+
+Evidence: 363/363 tests, corpus validation, optimized production build, clean
+working tree, commits `dd8d827` and `01d1869` pushed to `main`, and the
+production Vercel deployment marked Ready. Live signed-out beginner questions
+returned `generated: true`; the model correctly directed users to account
+setup and explained that an access key—not the Humanity Credential—is used to
+sign in.
+
+The local workflow network issue was isolated and corrected. With the Mac on
+the shared 2.4 GHz SSID, router latency reached 824 ms and network quality
+fell to 34 Kbps down with multi-second idle latency, even with Ollama and LM
+Studio closed. ExpressVPN was also found to have an active background state
+during earlier testing. The router’s 5 GHz network was separated as
+`SHAW-BCAC-5G`; the Mac now connects on 5 GHz at approximately 1134 Mbps link
+rate. From the far desk, the verified result was 0% packet loss, 6.1 ms router
+latency, 21.2 ms internet latency, roughly 391 Mbps down / 108 Mbps up, and
+HTTPS requests completing in about 0.13 seconds. No credentials or Wi-Fi
+passphrase are recorded here.
+
+Operational lesson: keep the 2.4 GHz and 5 GHz networks separately named so
+the Mac can choose 5 GHz directly. Keep ExpressVPN disconnected while
+diagnosing network failures, and use the helpdesk model runbook for model
+runtime recovery rather than changing Cloudflare or application credentials.
