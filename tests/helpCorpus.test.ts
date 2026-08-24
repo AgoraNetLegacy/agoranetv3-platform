@@ -36,6 +36,7 @@ const EXPECTED_SLUGS = [
   "verification-troubleshooting",
   "verify-once",
   "wallet-connection",
+  "wallet-posting",
   "what-to-save",
   "your-feed",
 ].sort();
@@ -47,10 +48,10 @@ describe("governed Help & Support corpus", () => {
       encoding: "utf8",
     });
     expect(result.status, result.stderr || result.stdout).toBe(0);
-    expect(HELP_CORPUS_VERSION).toMatch(/^1\.3\.0\+[a-f0-9]{16}$/);
+    expect(HELP_CORPUS_VERSION).toMatch(/^1\.4\.0\+[a-f0-9]{16}$/);
   });
 
-  it("preserves all 25 public routes and canonical source files", () => {
+  it("preserves all 26 public routes and canonical source files", () => {
     const slugs = HELP_ARTICLES.map((article) => article.slug).sort();
     expect(slugs).toEqual(EXPECTED_SLUGS);
     for (const article of HELP_ARTICLES) {
@@ -89,7 +90,7 @@ describe("governed Help & Support corpus", () => {
   });
 
   it("keeps internal knowledge, prompts, and evaluations out of public articles", () => {
-    expect(HELP_RETRIEVAL_DOCUMENTS.length).toBe(30);
+    expect(HELP_RETRIEVAL_DOCUMENTS.length).toBe(31);
     expect(HELP_RETRIEVAL_DOCUMENTS.some((document) => document.audience === "operator")).toBe(true);
     expect(HELP_ARTICLES.some((article) => article.id.startsWith("internal.") || article.id.startsWith("policy."))).toBe(false);
     expect(HELP_RETRIEVAL_DOCUMENTS.some((document) => document.id.includes("SOUL") || document.id.includes("eval"))).toBe(false);

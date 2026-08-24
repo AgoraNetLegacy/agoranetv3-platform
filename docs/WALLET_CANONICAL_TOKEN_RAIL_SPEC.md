@@ -2,7 +2,7 @@
 
 ## Testnet-first implementation plan for accessible, non-custodial Web3
 
-**Status:** Proposed architecture
+**Status:** Approved direction; additive testnet implementation in progress
 **Date:** 2026-08-23
 **Applies to:** PollCoin (PC) and Gratium (G)
 **Test network:** Cardano Preprod, using fake/demo assets
@@ -444,15 +444,15 @@ No business logic should branch on “testnet means internal balance” versus �
 
 The following are known gaps between the repository and this target:
 
-1. `lib/economy.ts` still treats database balances as spendable PC/G.
-2. `TestnetWalletLink` and `demoAssetBalances` are testnet-specific rather than behind a network-neutral asset interface.
-3. The header displays internal balances rather than indexed wallet balances.
-4. Most rewards, fees, tips, and transfers do not create wallet transaction intents or mode-specific actions.
-5. There is no universal transaction lifecycle or idempotency model for all value-moving actions.
-6. Balance snapshots, freshness, and reconciliation are not yet the canonical read path.
-7. Existing chain settlement is valuable precedent but is narrower than a general wallet-canonical economy.
-8. The current help article describing internal balances must be rewritten as Credits-versus-wallet guidance.
-9. Mainnet enablement requires a separate legal, economic, security, custody-boundary, and operational approval record.
+1. Existing `Balance` rows correctly remain spendable Credits in Credits mode; most product actions still need their Wallet-mode equivalent.
+2. `TestnetWalletLink` remains testnet-specific rather than a final network-neutral wallet-link model.
+3. Indexed snapshots are implemented, but a production-grade indexer and reorganization policy remain pending.
+4. Ordinary Discussion posting now has a wallet-signed `dPOLL` fee; tips, polls, workshop dual-token fees, permanence, mission funding/releases, and peer transfers remain unsupported in Wallet mode.
+5. First-action `dGRA` and participation `dPOLL` rewards now use durable intents and an isolated distributor; other reward and settlement authorities remain pending.
+6. The testnet fee vault uses the compiled mission-treasury script and a dedicated datum tag; its state initialization, governance signers, release, and recovery drill must pass before activation.
+7. The transaction lifecycle, idempotency, restart recovery, and exact confirmation primitives exist but are not yet generalized to every value-moving action.
+8. Help content now distinguishes Credits from wallet assets and explains the first wallet-ready action; additional articles must ship with each converted action.
+9. Mainnet enablement still requires separate legal, economic, security, contract-audit, custody-boundary, and operational approval.
 
 ## 18. Recommended build order
 

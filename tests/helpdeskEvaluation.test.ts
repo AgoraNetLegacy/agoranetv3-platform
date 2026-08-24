@@ -15,7 +15,7 @@ describe("helpdesk evaluation gate", () => {
     const cases = readdirSync(directory)
       .filter((name) => name.endsWith(".jsonl"))
       .flatMap((name) => parseHelpdeskEvaluationJsonl(readFileSync(path.join(directory, name), "utf8"), name));
-    expect(cases).toHaveLength(16);
+    expect(cases).toHaveLength(18);
     expect(new Set(cases.map((evaluation) => evaluation.id)).size).toBe(cases.length);
   });
 

@@ -736,28 +736,26 @@ at the Phase 9 real-money re-review regardless.
     inbox, or both; (d) case/transcript retention; and (e) whether a public
     status page ships. None blocks self-service Help or case collection.
 
-27. **Choose the first load-bearing Wallet-mode fee and reward
-    (progressive token rail, 2026-08-23).** The additive foundation is built:
+27. **First load-bearing Wallet-mode fee and reward — implementation chosen;
+    activation review remains (2026-08-23/24).** The additive foundation is built:
     Credits default, wallet balance indexing, per-profile mode, transaction
     intents, and explicit fake-asset claims. Wallet mode remains disabled
     because enabling a balance selector before an ordinary action uses it
     would create a silent Credit fallback.
 
-    Two product choices must be named before Slice 5 can honestly activate:
+    The autonomous testnet build selected reversible, separately flagged candidates:
 
-    - **First fee:** which ordinary PollCoin action should become the first
-      wallet-signed `dPOLL` payment, and where should that fake fee land? A
-      script-controlled testnet treasury is consistent with the non-custodial
-      destination; an operator wallet would prove transfer mechanics but
-      would not prove the final trust model.
-    - **First reward:** which ordinary Gratium event should deliver the first
-      fake `dGRA` reward, and which testnet authority may issue or release it?
-      The existing first-action grant is the smallest candidate, but direct
-      minting and script release demonstrate different final architectures.
+    - **First fee:** the standard Discussion post/reply fee is signed in Lace
+      as fake `dPOLL` to the compiled mission-treasury script, tagged
+      `agoranet-platform-fees-v1`.
+    - **First reward:** the existing first-action grant queues fake `dGRA`,
+      and ordinary participation accrual queues fake `dPOLL`, through the
+      isolated testnet mint runner.
 
-    **Recommendation:** use one low-value discussion creation fee paid to a
-    testnet treasury script and the existing first-action milestone as the
-    first `dGRA` reward, both behind separate flags. Do not use peer tipping
-    first: it would reveal the recipient profile's wallet address and requires
-    a separate Alias privacy decision. This item gates Wallet-mode activation,
-    not Credits, claims, indexed balances, or continued headless preparation.
+    Automated implementation is complete behind three disabled flags. The
+    remaining owner/live decision is whether the fee-vault state,
+    signer/threshold policy, release path, and recovery evidence are acceptable
+    for testnet activation. Peer tipping remains deferred because it exposes a
+    recipient wallet scope and needs its own Alias privacy ruling. This item
+    gates activation, not Credits, claims, indexed balances, or further
+    headless preparation.

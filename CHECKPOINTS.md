@@ -1924,3 +1924,33 @@ invariants with four budget categories; `git diff --check` is clean; and the
 signed-out Help page rendered in the local browser with no console errors.
 The remaining live checkpoints require the owner's Lace wallet and stay
 explicitly queued rather than simulated.
+
+## 2026-08-23; First load-bearing Wallet-mode action
+
+The first direct Wallet-mode product path is implemented behind disabled
+testnet flags. An ordinary Discussion post or reply now uses a content-hashed,
+short-lived draft; Lace builds, signs, and submits the fake `dPOLL` fee in the
+browser; and AgoraNet publishes only after the configured chain proves the
+linked wallet funded the transaction and the exact asset/quantity reached the
+compiled treasury script. Payment confirmation, post creation, permanent-ledger
+recording, draft completion, and reward enqueue commit atomically.
+
+First-action `dGRA` and participation-accrual `dPOLL` are queued as durable
+wallet reward intents and delivered only by the isolated testnet runner. Both
+post and reward workflows survive restarts, prevent duplicate leasing and
+transaction-hash replay, and quarantine uncertain broadcasts. Unsupported
+Wallet-mode value actions refuse explicitly rather than falling back to
+Credits; safety flags remain available without a Credit deposit.
+
+Help corpus `1.4.0` adds novice instructions for Lace approval, wrong accounts,
+pending confirmation, browser closure, and the rule never to pay twice. The
+operator runbook now covers both one-shot recovery scripts and the supervised
+activation matrix.
+
+Checkpoint evidence: **384/384 tests** pass, including exact chain-evidence,
+replay, idempotency, reward lease, no-Credit-fallback, and Credits-mode
+regression tests. Feature flags remain false. No deployment, mainnet, real
+asset, mint, wallet signature, chain submission, secret, Cloudflare setting,
+or external system was changed. Live Lace signing, fee-vault governance and
+recovery, PostgreSQL migration, deployment, and activation remain queued for
+an awake-owner checkpoint.

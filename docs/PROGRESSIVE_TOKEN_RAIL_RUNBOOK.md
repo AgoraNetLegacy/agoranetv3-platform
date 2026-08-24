@@ -10,6 +10,8 @@ This runbook does not authorize mainnet, real-value assets, deployment, or a leg
 
 ```env
 WALLET_MODE_TESTNET_ENABLED="false"
+WALLET_DISCUSSION_FEE_ENABLED="false"
+WALLET_REWARDS_TESTNET_ENABLED="false"
 CREDIT_CLAIMS_TESTNET_ENABLED="false"
 WALLET_MIXED_MODE_ENABLED="false"
 ```
@@ -20,7 +22,7 @@ Never paste a wallet seed phrase, signing key, private key, Cloudflare secret, V
 
 The database, not a running process, holds the workflow state:
 
-| Claim status | Meaning after a restart | Safe action |
+| Credit claim status | Meaning after a restart | Safe action |
 |---|---|---|
 | `reserved` | Credits are held; no distributor owns the claim | Run the distributor; one process will lease it |
 | `distributing` | A process leased it, but the database has no transaction hash | Stop automatic work and reconcile on-chain; do not mint or refund again |
@@ -30,16 +32,28 @@ The database, not a running process, holds the workflow state:
 
 An expired `reserved` claim is safe to refund because it was never leased. An expired or old `distributing` claim is not automatically refundable: a provider can fail after broadcasting, and refunding or retrying without reconciliation could duplicate value.
 
+Wallet-paid posts are also durable:
+
+| Wallet post status | Meaning after a restart | Safe action |
+|---|---|---|
+| `awaiting_wallet_approval` | No transaction hash exists | Let it expire or reject it; nothing was paid |
+| `submitted` | The public hash is saved; the post awaits exact chain proof | Run `npm run chain:process-wallet-actions`; never ask the user to pay again |
+| `completed` | Payment, post, ledger record, and reward queue committed together | No action |
+| `requires_review` | Payment is confirmed but product state prevented publication | Preserve it for support reconciliation; do not create another fee |
+
+Wallet rewards use `prepared → distributing → submitted → confirmed`. A `distributing` reward has uncertain broadcast state and must never be automatically minted again.
+
 ## 3. Migration-first activation order
 
 1. Create and verify a PostgreSQL backup.
-2. Apply `prisma/postgresql/migrations/20260824_progressive_token_rail/migration.sql` while all three feature flags remain `false`.
+2. Apply `prisma/postgresql/migrations/20260824_progressive_token_rail/migration.sql`, then `20260824_wallet_mode_actions/migration.sql`, while all Wallet/claim flags remain `false`.
 3. Run the unchanged application and smoke-test sign-in, Credits balances, fees, rewards, and `/settings`.
 4. Deploy the dependent application code with all three flags still `false`.
 5. Run `npm run db:verify` against the target database.
 6. Enable `CREDIT_CLAIMS_TESTNET_ENABLED` only in a controlled test environment with the isolated distributor configured.
 7. Complete one supervised claim for each currency, plus decline, duplicate-submit, expiry/refund, restart-after-submit, and provider-outage tests.
-8. Keep `WALLET_MODE_TESTNET_ENABLED=false` until one ordinary fee and one reward have both passed their Wallet-mode checkpoints.
+8. Run the idempotent seed so `onchain.walletActionExpiryMinutes` exists.
+9. Keep all three Wallet-mode flags false until the fee, reward, fee-vault, and restart checkpoints pass.
 
 Never reverse this order. Application code that reads the new tables must not reach an environment before the additive migration.
 
@@ -95,6 +109,40 @@ Wallet mode is not ready merely because balances can be read. Before enabling it
 - Help & Support explains the action to someone unfamiliar with crypto.
 
 Only after that checkpoint may `WALLET_MODE_TESTNET_ENABLED` become `true` in the controlled test environment. Mixed mode remains off unless a separate test explicitly requires it.
+
+Activation requires all three flags together:
+
+```env
+WALLET_MODE_TESTNET_ENABLED="true"
+WALLET_DISCUSSION_FEE_ENABLED="true"
+WALLET_REWARDS_TESTNET_ENABLED="true"
+```
+
+Before setting them, verify the compiled fee destination and decide how the `agoranet-platform-fees-v1` mission-treasury state is initialized and governed on the selected testnet. The current code intentionally derives the address from committed Aiken bytecode; it does not permit an environment variable to redirect fees. Do not activate a fee vault whose release/recovery policy has not been tested.
+
+### Supervised Wallet-mode post exercise
+
+1. Link a dedicated Lace account on the configured testnet and fund it with tADA plus fake `dPOLL`.
+2. Select Wallet mode for that identity.
+3. Create an ordinary Discussion post. Confirm Lace shows the expected fake `dPOLL` quantity and script destination.
+4. Approve once. Confirm the UI says pending and never publishes before chain verification.
+5. Close the tab after submission. Run `npm run chain:process-wallet-actions`; confirm exactly one post appears.
+6. Run `npm run chain:process-wallet-actions` again; it must create nothing else.
+7. Run `npm run chain:process-wallet-rewards`; confirm the exact `dGRA` first-action reward and `dPOLL` accrual reach the linked address.
+8. Run the reward process again; it must not mint a duplicate.
+9. Repeat rejection, wrong Lace account, insufficient fake asset, provider outage, and process restart.
+
+### Bringing the workers back after a reboot
+
+The database preserves work; the scripts are one-shot reconcilers, not hidden long-running daemons.
+
+```bash
+cd "/path/to/Agoranetv3/platform"
+npm run chain:process-wallet-actions
+npm run chain:process-wallet-rewards
+```
+
+Run the action reconciler first. It needs only the application database and chain provider. Run the reward distributor only in the isolated operator environment that holds the testnet mint configuration. Never copy the mint mnemonic into Vercel or the web application. At initial test traffic, run both after Wallet-mode activity and after a reboot. Add a supervised scheduler only after the live checkpoint; overlapping reward runs are lease-safe, but an uncertain `distributing` record still requires manual reconciliation.
 
 ## 7. Rollback
 

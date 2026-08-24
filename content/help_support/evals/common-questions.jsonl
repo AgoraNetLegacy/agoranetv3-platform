@@ -5,3 +5,5 @@
 {"id":"common.noob-two-codes","question":"It showed me two codes while I was signing up. Which one do I use to log in?","expected":{"articleSlugs":["what-to-save"],"escalate":false,"generated":true}}
 {"id":"common.noob-connections","question":"Where do I find my friends and private messages?","expected":{"articleSlugs":["fellow-souls-dms"],"escalate":false,"generated":true}}
 {"id":"common.noob-feed","question":"How do I choose what shows up on my home feed?","expected":{"articleSlugs":["your-feed"],"escalate":false,"generated":true}}
+{"id":"common.wallet-post-pending","question":"I paid the fake coin fee in Lace but my post still says pending. Should I pay again?","expected":{"articleSlugs":["wallet-posting"],"escalate":false,"generated":true}}
+{"id":"common.wallet-post-noob","question":"I chose wallet mode. What happens when I press Post reply?","expected":{"articleSlugs":["wallet-posting"],"escalate":false,"generated":true}}

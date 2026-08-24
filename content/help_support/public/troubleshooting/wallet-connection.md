@@ -7,7 +7,7 @@ category: troubleshooting
 document_type: troubleshooting
 audience: public
 status: approved
-version: 1.2.0
+version: 1.3.0
 effective_at: 2026-08-23
 review_by: 2027-02-23
 owner: support-content
@@ -44,5 +44,9 @@ You can keep using Credits mode without a wallet. Connect one only if you want t
 AgoraNet's current wallet features use a Cardano test network, not Cardano mainnet. Confirm that the Lace browser wallet is installed and unlocked. In Lace, select the same test network named on the AgoraNet Settings page.
 
 Return to Settings, reload the page once, select Connect Lace, and approve the request in the Lace window. After it connects, choose Wallet mode if you want to use the wallet directly, or keep Credits mode. If no wallet window appears, check whether the browser blocked a pop-up or whether the Lace window opened behind another window.
+
+If AgoraNet says Lace opened the wrong account, open Lace and select the same account you linked to the current AgoraNet identity. Your True Self and Alias should use separate Cardano accounts. Then return to the page and try again.
+
+If a post says its payment was submitted or pending, **do not click again and do not make a second payment**. Leave the page open if convenient, but it is safe to close it: AgoraNet stores the public transaction hash and its recovery process can finish the post after the test network confirms. A message that says the payment needs support review means the fake payment was preserved even though the post could not be published automatically.
 
 If it still does not connect, open Help and Support and include the browser name, selected network, and non-secret error message. A public wallet address or transaction hash may be included when needed. Never include a seed phrase, spending password, signing key, private key, or access key.

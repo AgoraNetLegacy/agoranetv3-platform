@@ -1,6 +1,6 @@
 # AgoraNet Progressive Token Rail — Implementation Plan
 
-**Status:** Foundation implemented and verified; wallet-action activation pending
+**Status:** First direct fee and reward implemented; live activation checkpoint pending
 **Started:** 2026-08-23
 **Source specification:** `docs/WALLET_CANONICAL_TOKEN_RAIL_SPEC.md`
 **Scope:** Cardano testnet and fake `dPOLL`/`dGRA` only
@@ -9,7 +9,7 @@
 
 Every change is additive until its checkpoint passes. Credits mode remains the default and every existing platform action keeps working. Wallet mode is opt-in, per identity, and testnet-only. Mainnet addresses and real-value configuration remain rejected.
 
-The foundational code does not by itself authorize activation. `WALLET_MODE_TESTNET_ENABLED` and `CREDIT_CLAIMS_TESTNET_ENABLED` remain off by default. Wallet mode may be enabled only after Slice 5 proves at least one ordinary fee and one reward without a silent Credit fallback. Credit claims may be enabled only after an operator completes the live fake-asset delivery and recovery runbook.
+The code does not by itself authorize activation. `WALLET_MODE_TESTNET_ENABLED`, `WALLET_DISCUSSION_FEE_ENABLED`, `WALLET_REWARDS_TESTNET_ENABLED`, and `CREDIT_CLAIMS_TESTNET_ENABLED` remain off by default. Wallet mode may be enabled only after the Slice 5 automated checkpoint and supervised Lace/chain checkpoint both pass. Credit claims may be enabled only after an operator completes the live fake-asset delivery and recovery runbook.
 
 ## 2. Architecture decisions for this build
 
@@ -101,9 +101,9 @@ Checkpoint:
 
 ### Slice 5 — Direct Wallet mode action
 
-**Build status:** Pending. Existing self-custody and donation demonstrations prove the browser-wallet pattern, but they do not yet make Wallet mode load-bearing for an ordinary PollCoin/Gratium fee or reward.
+**Build status:** Implemented behind disabled flags; automated checkpoint passed 2026-08-23. Supervised live wallet and recovery checkpoint remains pending.
 
-The choice of first fee, destination contract, first reward, and issuance/release authority is recorded as `DECISIONS_PENDING.md` #27 rather than invented while the owner is unavailable.
+The first fee is the standard Discussion post/reply micro-fee: the linked Lace account signs a fake `dPOLL` output to the compiled mission-treasury script with the `agoranet-platform-fees-v1` datum tag. The first rewards are the existing first-action `dGRA` grant and ordinary `dPOLL` participation accrual, queued to the linked wallet through the isolated testnet reward runner. The fee vault's testnet governance/recoverability posture must be explicitly verified before activation; flags remain off until then.
 
 Deliverables:
 
@@ -114,6 +114,10 @@ Deliverables:
 Checkpoint:
 
 - One product action works in both modes, with the correct source of value in each.
+- A transaction hash cannot satisfy two actions.
+- Closing the browser after submission does not lose or duplicate the post.
+- Rewards are leased once and verified at the exact linked destination.
+- Unsupported Wallet-mode actions refuse instead of touching Credits.
 
 ### Slice 6 — Economy conversion
 
@@ -168,7 +172,22 @@ Verification passed: corpus compilation, Prisma generation, PostgreSQL schema pa
 
 The remaining live checkpoint requires an awake owner because Lace must display and sign a testnet transaction. No secret, mnemonic, Cloudflare setting, deployment environment, or real-value rail was touched during the foundational build.
 
-## 7. Decisions deferred beyond the foundational build
+## 7. Direct action checkpoint; 2026-08-23
+
+Implemented without deployment, flag activation, or network value movement:
+
+- short-lived, content-hashed `WalletActionDraft` records;
+- browser-only Lace construction/signing/submission for Discussion fees;
+- exact linked-input, compiled-destination, policy, asset, and quantity verification;
+- atomic fee confirmation, post creation, civic ledger write, and reward enqueue;
+- idempotent transaction hashes and automatic closed-tab reconciliation;
+- isolated reward leasing, submission, exact delivery confirmation, and uncertain-broadcast quarantine;
+- explicit no-fallback guards for unsupported wallet actions;
+- novice-facing pending, wrong-account, do-not-pay-twice, and recovery guidance.
+
+Automated evidence: 384 tests, including fee replay, pending confirmation, exact chain evidence, reward leasing, Credits preservation, hosted activation guards, and Credits-mode regression coverage. The live Lace checkpoint, fee-vault governance initialization/recoverability check, distributor restart exercise, PostgreSQL migration, deployment, and flag activation remain deliberately pending.
+
+## 8. Decisions deferred beyond the direct-action build
 
 - Production conversion rate and economic treatment of Credits.
 - Whether production claims are one-way, reversible, capped, or time-bound.
