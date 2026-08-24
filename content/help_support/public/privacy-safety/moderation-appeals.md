@@ -2,13 +2,12 @@
 id: help.privacy-safety.moderation-appeals
 slug: moderation-appeals
 title: Moderation review and appeals
-summary: Support can explain the process, but only the authorized moderation
-  path can change an outcome.
+summary: Use the Appeal control on the moderation case; Support can help if that control is missing or broken.
 category: privacy-safety
 document_type: procedure
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -38,6 +37,8 @@ links:
     label: The rulebook
 ---
 
-Moderation outcomes are made through the platform's rule-bound adjudication process. The helpdesk can explain a rule or help with a broken appeal form; it cannot change a ruling.
+If AgoraNet moderated your content or profile, open the moderation notice or case and look for its Appeal control. The notice shows the reason, applicable rule, and any appeal deadline.
 
-Use the appeal control attached to the case when available. A support case may preserve a technical problem, but it does not replace the appeal itself.
+Submit the appeal through that control so it stays attached to the correct decision. The AI helpdesk and support operators can explain the process, but they cannot approve an appeal or change a moderation decision.
+
+If the Appeal control is missing, fails before the deadline, or does not accept your submission, open a support request immediately. Include the non-secret case reference and error message, but do not copy private messages or credentials into the request.

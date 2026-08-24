@@ -2,12 +2,12 @@
 id: help.platform-features.polls-voting
 slug: polls-voting
 title: Polls and voting
-summary: How ordinary and governance polls work, including fees and sealed closes.
+summary: Open a poll to read its choices, cost, closing method, and result visibility before you vote.
 category: platform-features
 document_type: concept
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -35,6 +35,8 @@ links:
     label: Polls & Governance
 ---
 
-Polls use one-person rules enforced at the gate. A vote fee is a participation cost, never vote weight; paying more never creates more influence.
+Open Polls & Governance and select a poll to read its question, choices, closing rule, and any participation fee. You must be signed in with a verified profile to vote.
 
-Some polls conceal the live tally or use a candle close to reduce bandwagoning and last-second manipulation. The poll page states the applicable rules before a ballot is cast.
+Each verified person receives the voting influence allowed by that poll. A fee is only a cost to participate; paying more does not buy a stronger vote.
+
+Some polls hide the running total until voting ends. A “candle close” means the exact closing moment is selected from a stated time window, which discourages last-second manipulation. The poll page shows these rules before you submit your vote.

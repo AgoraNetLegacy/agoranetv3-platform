@@ -47,7 +47,7 @@ describe("governed Help & Support corpus", () => {
       encoding: "utf8",
     });
     expect(result.status, result.stderr || result.stdout).toBe(0);
-    expect(HELP_CORPUS_VERSION).toMatch(/^1\.1\.0\+[a-f0-9]{16}$/);
+    expect(HELP_CORPUS_VERSION).toMatch(/^1\.2\.0\+[a-f0-9]{16}$/);
   });
 
   it("preserves all 25 public routes and canonical source files", () => {
@@ -59,17 +59,33 @@ describe("governed Help & Support corpus", () => {
       expect(article.sourceRefs.length).toBeGreaterThan(0);
       expect(article.reviewBy >= "2026-08-23").toBe(true);
     }
-    expect(HELP_ARTICLES.find((article) => article.slug === "wallet-connection")?.links).toBeUndefined();
+    expect(HELP_ARTICLES.find((article) => article.slug === "wallet-connection")?.links?.[0]?.href).toBe("/support");
     const interrupted = HELP_ARTICLES.find((article) => article.slug === "onboarding-interrupted");
     const interruptedBody = interrupted?.body.join("\n") ?? "";
-    expect(interruptedBody).toContain("[AgoraNet onboarding](/verify)");
-    expect(interruptedBody).toContain("[Sign in](/login)");
+    expect(interrupted?.links?.map((link) => link.href)).toEqual(["/verify", "/login", "/support/what-to-save"]);
+    expect(interruptedBody).toContain("Open the account setup page in the same browser");
+    expect(interruptedBody).toContain("open Sign in instead");
     expect(interruptedBody).not.toContain("Return to the gate");
     expect(HELP_ARTICLES.find((article) => article.slug === "search")?.links?.map((link) => link.href)).toEqual([
       "/search",
       "/search/about",
       "/search/history",
     ]);
+  });
+
+  it("uses novice-first language and defines unavoidable product terms", () => {
+    const publicText = HELP_ARTICLES.map((article) => article.body.join(" ")).join("\n");
+    for (const phrase of ["return to the gate", "passes through the same gate", "incomplete ceremonies", "test-rail", "active identity"]) {
+      expect(publicText.toLowerCase()).not.toContain(phrase);
+    }
+    expect(HELP_ARTICLES.find((article) => article.slug === "two-identities")?.body.join(" ")).toContain(
+      "Your True Self is the public profile"
+    );
+    expect(HELP_ARTICLES.find((article) => article.slug === "fellow-souls-dms")?.body.join(" ")).toContain(
+      "profile connections"
+    );
+    expect(HELP_SOUL_PROMPT).toContain("using AgoraNet for the first time");
+    expect(HELP_AGENT_PROMPT).toContain("Assume no prior product knowledge");
   });
 
   it("keeps internal knowledge, prompts, and evaluations out of public articles", () => {

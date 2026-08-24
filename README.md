@@ -41,6 +41,8 @@ deployed contract address, and both owner demo runbooks live there);
   verified before cover-reading application code is released.
 - Operations: `docs/DEPLOYMENT.md` (staging setup),
   `docs/RUNBOOK.md` (backups, drills, the worst day),
+  `docs/HELPDESK_MODEL_RUNBOOK.md` (rebooting and recovering the Linux Gemma
+  helpdesk runtime),
   `docs/LOG_DISCIPLINE_AUDIT.md` (what is never logged, and why),
   `docs/PROOF_OF_HUMANITY_SPEC.md` and
   `docs/PROOF_OF_HUMANITY_IMPLEMENTATION_PLAN.md` (the independent

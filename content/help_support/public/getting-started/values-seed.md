@@ -2,12 +2,12 @@
 id: help.getting-started.values-seed
 slug: values-seed
 title: The values seed and your first action
-summary: Seven small answers orient your experience; they are not a universal score.
+summary: Answer seven short questions to choose a starting point; there are no right or wrong answers.
 category: getting-started
 document_type: concept
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -29,9 +29,13 @@ source_refs:
   - owners-guide
 escalate_when: null
 supersedes: null
-links: []
+links:
+  - href: /verify
+    label: Continue account setup
 ---
 
-The values seed asks one question from each pillar. It gives your new identity a starting orientation and helps relevant parts of the commons become visible.
+The values seed is the last part of account setup. It asks seven short questions about what matters to you. There are no right or wrong answers, and it is not a test.
 
-It is not a test, personality label, or cross-profile score. Each identity has its own answers. Completing onboarding carries you back to the action that brought you to the gate.
+Your answers give your new profile a starting point for the topics shown on AgoraNet. They do not create a public personality label, affect another profile, or become a score shared across the platform.
+
+Answer each question in your own words, then select the control to finish account setup. When setup is complete, AgoraNet returns you to the page you originally tried to use or opens your dashboard.

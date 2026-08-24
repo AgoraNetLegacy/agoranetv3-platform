@@ -2,13 +2,12 @@
 id: help.economy.donations-treasury
 slug: donations-treasury
 title: Donations and the treasury
-summary: Follow public flows and understand the difference between internal
-  balances and test-rail transactions.
+summary: Check published treasury activity and distinguish AgoraNet balances from test-network wallet transactions.
 category: economy
 document_type: concept
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -40,6 +39,8 @@ links:
     label: Treasury
 ---
 
-The transparency surface shows published rails and treasury records. Current internal balances and test-rail assets are labeled honestly; one must not be mistaken for the other.
+Open Transparency for published fees and system activity. Open Treasury for public treasury balances and transactions. AgoraNet labels an internal platform balance separately from a Cardano test-network wallet transaction so you can tell which system you are looking at.
 
-For a transaction problem, preserve the public transaction hash and the exact time. Never send a seed phrase or signing key. Missing-value reports require human review.
+If a donation or treasury transaction looks missing, first check whether your wallet shows it as pending, failed, or confirmed. Save the transaction hash, which is the public reference shown by the wallet, and note the approximate time.
+
+Do not retry a value-moving action repeatedly, and never send Support a wallet seed phrase, spending password, private key, or signing key. A confirmed transaction that is missing from AgoraNet, an unexpected balance change, or suspected theft requires a human support request.

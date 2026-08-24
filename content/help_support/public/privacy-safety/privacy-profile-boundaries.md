@@ -2,13 +2,12 @@
 id: help.privacy-safety.privacy-profile-boundaries
 slug: privacy-profile-boundaries
 title: Privacy and profile boundaries
-summary: Support remains scoped to the active identity and never uses
-  help-seeking as a reputation signal.
+summary: Support sees only the profile used for the request and never uses your help questions to rank or judge you.
 category: privacy-safety
 document_type: concept
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -33,9 +32,13 @@ source_refs:
   - owners-guide
 escalate_when: null
 supersedes: null
-links: []
+links:
+  - href: /support
+    label: Open Help and Support
 ---
 
-A helpdesk conversation or case is scoped to the identity active when it is created. Support does not search for, infer, or reveal another persona.
+When you ask for help while signed in, the question or support request belongs to the profile currently selected in your browser. Support does not search for, guess, or reveal whether that profile has another identity.
 
-Help-seeking is never an input to Light Score, feed ranking, search ranking, moderation selection, or civic standing. Diagnostic context is limited to the current feature, stage, non-secret error code, and client version.
+Your help questions are not used to change your Light Score, feed, search results, moderation treatment, or standing on the platform. Light Score is AgoraNet's public contribution indicator; contacting Support does not affect it.
+
+The helpdesk receives only limited technical context, such as the current page or account-setup step, a non-secret error code, and the web-app version. Never add an access key, Humanity Credential, wallet secret, password, or unrelated private information.

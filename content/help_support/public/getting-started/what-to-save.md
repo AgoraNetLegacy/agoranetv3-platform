@@ -1,14 +1,13 @@
 ---
 id: help.getting-started.what-to-save
 slug: what-to-save
-title: Your two codes; what to save, and what loss means
-summary: The Humanity Credential and each identity's access key are shown once
-  and never recoverable.
+title: Save your Humanity Credential and access key
+summary: Account setup shows two different private codes once; learn what each one does and what to do if one is missing.
 category: getting-started
 document_type: concept
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -16,7 +15,12 @@ reviewers:
   - product
   - support
 risk: normal
-keywords: []
+keywords:
+  - save access key
+  - save code
+  - humanity credential
+  - login code
+  - where is my key
 error_codes: []
 onboarding_stages: []
 source_refs:
@@ -26,11 +30,15 @@ source_refs:
   - owners-guide
 escalate_when: null
 supersedes: null
-links: []
+links:
+  - href: /login
+    label: Sign in with an access key
+  - href: /verify
+    label: Return to account setup
 ---
 
-The platform never stores your secrets in a readable form; only hashes. That is a feature: nobody can take from the platform what the platform does not hold. The cost is honest and permanent: a lost secret is gone.
+Account setup gives you two different private codes. AgoraNet stores only protected fingerprints of them, not readable copies. Support therefore cannot display, resend, or reset either code.
 
-You hold two kinds of secret. Your Humanity Credential is the passport; it proves one-real-human at ceremonies like hatching an Alias. Each identity's access key is a house key; it signs that identity into a browser.
+The Humanity Credential proves that you completed the one-person verification check. You may need it later to create your private Alias profile. An access key belongs to one specific profile and is what you paste on the Sign in page to use that profile in a new browser.
 
-Losing an access key means that identity can never be signed in anywhere new. Losing the credential means no new ceremonies; though identities already signed in keep working. Write them down somewhere real the moment they are shown.
+Save each code as soon as it appears, label it clearly, and keep it out of screenshots, messages, and support requests. If you lose an access key, you cannot sign that profile into another browser. If you lose the Humanity Credential, profiles that are already signed in can still work, but actions requiring that credential may not be available.

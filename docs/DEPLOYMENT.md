@@ -188,6 +188,10 @@ server-side deployment secrets. Never commit them, prefix them with
 disabled until the deployed provider health check confirms that the protected
 `/v1/models` endpoint exposes `gemma4:e4b`.
 
+For ordinary Linux reboots, model preload, end-to-end verification, and
+symptom-based recovery, follow `docs/HELPDESK_MODEL_RUNBOOK.md`. Do not rotate
+credentials or alter the tunnel route as a first response to an outage.
+
 Production later = the same steps (likely on paid tiers by then, once
 there's real usage to justify it), plus DNS and the go/no-go items on
 the Phase 8 checkpoint.

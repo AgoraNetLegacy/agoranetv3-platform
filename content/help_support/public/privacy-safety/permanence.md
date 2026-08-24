@@ -1,13 +1,13 @@
 ---
 id: help.privacy-safety.permanence
 slug: permanence
-title: Permanent record vs author-deletable
-summary: Some rooms are written in ink; the room always tells you before you speak.
+title: Know whether a post can be deleted
+summary: AgoraNet tells you before publishing whether your post is permanent or can later be removed by you.
 category: privacy-safety
 document_type: concept
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -30,8 +30,8 @@ links:
     label: The Public Record
 ---
 
-Some spaces on AgoraNet are permanent: what you post there enters the public record by content hash, anchored on-chain, and nobody; including the platform; holds a pen that can rewrite it. Other spaces are author-deletable: you can remove your own words later.
+AgoraNet has two kinds of public posting spaces. In an author-deletable space, you can remove your own post later. In a permanent space, the post enters the Public Record and cannot be edited or deleted by you, Support, or the platform.
 
-The permanence badge is a cross-theme constant; the same amber in every room, on every identity; because some truths outrank identity. You will always see it before you post, never after.
+Before you publish, look for the amber permanence notice near the posting control. It appears with the same color on every profile so it is easier to recognize. Read it before selecting Publish.
 
-Display names can change; the permanent record keeps the name a thing was written under. That, too, is the point: the record nobody can rewrite includes us.
+Changing a display name later does not rewrite the name recorded with an earlier permanent post. If you are unsure or do not want the words kept permanently, do not publish in that space.

@@ -1,14 +1,13 @@
 ---
 id: help.platform-features.search
 slug: search
-title: Search; nine kinds of thing, one box
-summary: Content, souls, places, canon, records, polls, sources, help; same
-  results for everyone.
+title: Search AgoraNet
+summary: Use one search box for public posts, people, groups, polls, sources, records, and Help Center articles.
 category: platform-features
 document_type: concept
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -16,7 +15,12 @@ reviewers:
   - product
   - support
 risk: normal
-keywords: []
+keywords:
+  - find something
+  - search people
+  - search help
+  - search history
+  - private search
 error_codes: []
 onboarding_stages: []
 source_refs:
@@ -35,8 +39,8 @@ links:
     label: Your search history
 ---
 
-The one box at /search finds nine kinds of thing: content (Discussions, replies, Circle pages, Chamber storefronts), souls by @handle or display name, your own fellow souls, places, the pillars and canon, civic records, polls, cited sources, and help.
+Open Search, type ordinary words, a name, or an @handle, and submit the search. Results may include public Discussions and replies, Circle and Chamber pages, people, your own connections, places, AgoraNet topic pages, public records, polls, cited websites, and Help Center articles.
 
-Ranking is published and identical for everyone: match quality plus substance signals like participants and citations. Never views, never dwell time, never personalization; same query, same results, for every soul. Your search history is stored per identity, visible to you alone, deletable one-by-one or all at once, and never used to rank anything.
+Results are ordered by a published formula using how closely they match and public information such as participation and citations. AgoraNet does not reorder results from what you read, how long you look, or what you previously selected. The same words produce the same ordering for everyone.
 
-Never in the index: direct messages, workshop and members'-room interiors, moderator identities, and anything that could bridge a soul's two identities.
+If you are signed in, your search history belongs only to the profile currently in use. You can delete one search or all history, and history is never used to rank results. Private messages, private member workspaces, hidden moderator information, and anything connecting a True Self to an Alias are never searchable.

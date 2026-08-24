@@ -2,13 +2,12 @@
 id: help.privacy-safety.report-content
 slug: report-content
 title: Report content or behavior
-summary: Use the in-product report path for moderation; use Support for
-  technical or safety help.
+summary: Use the Report control beside the content so reviewers receive the correct item; contact Support if reporting is unavailable or safety is urgent.
 category: privacy-safety
 document_type: procedure
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -40,6 +39,8 @@ links:
     label: Read the moderation rules
 ---
 
-Use the report control beside the content or message whenever possible. It preserves the exact item and sends only the evidence needed for review.
+To report a post, reply, profile, or private message, open the item and select its Report control. Reporting from the item gives reviewers the correct reference and only the evidence needed for review.
 
-For immediate safety, privacy exposure, or a report control that does not work, open a high-priority support case. Do not copy sensitive material into a public Discussion.
+Choose the closest reason, add only the context the form asks for, and submit it. Do not repost harmful or private material in a public Discussion to explain the problem.
+
+If someone may be in immediate danger, private information is exposed, an account may be compromised, or the Report control does not work, open a high-priority support request. AgoraNet Support is not an emergency service; contact local emergency services when immediate real-world help is needed.

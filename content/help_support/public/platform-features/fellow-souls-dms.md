@@ -1,14 +1,13 @@
 ---
 id: help.platform-features.fellow-souls-dms
 slug: fellow-souls-dms
-title: Fellow souls and direct messages
-summary: Connections and messages are private to the active identity and absent
-  from public search.
+title: Connections and private messages
+summary: “Fellow souls” are profile connections; requests and direct messages stay with the profile that sent or received them.
 category: platform-features
 document_type: concept
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -36,6 +35,8 @@ links:
     label: Fellow Souls & Messages
 ---
 
-Fellow-soul relationships and direct-message threads belong to one identity. They never bridge to the other identity and never appear in public search.
+AgoraNet calls profile connections “fellow souls.” Open Fellow souls & messages to view requests, accepted connections, blocked profiles, and private message threads.
 
-A stranger message begins as a request and carries the published opening cost. A recipient can report the relevant excerpt as evidence; the rest of the thread does not become public.
+Connections and messages belong only to the profile currently in use. A connection or message on your True Self does not appear on your Alias, and private messages do not appear in public search.
+
+A first message to someone who is not connected to you begins as a request and may show a small published platform fee before you send it. A recipient can report the relevant part of an unsafe message for review; reporting does not make the rest of the conversation public.

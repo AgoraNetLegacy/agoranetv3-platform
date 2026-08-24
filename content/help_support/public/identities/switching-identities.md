@@ -1,13 +1,13 @@
 ---
 id: help.identities.switching-identities
 slug: switching-identities
-title: Switching identities; the profile menu
-summary: Sign each identity in once per browser; after that, switching is one click.
+title: Switch between your public and private profiles
+summary: Add each profile to the browser once, then choose which profile is active from the profile button.
 category: identities
 document_type: procedure
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -15,7 +15,11 @@ reviewers:
   - product
   - support
 risk: normal
-keywords: []
+keywords:
+  - switch profile
+  - change account
+  - use alias
+  - profile button
 error_codes: []
 onboarding_stages: []
 source_refs:
@@ -30,6 +34,8 @@ links:
     label: Sign in an identity
 ---
 
-Your True Self and Alias each use their own access key at /login. Sign in to each one once per browser; after that, both identities appear in the profile bubble at the bottom-right.
+Your True Self is your public profile. Your Alias is a separate private profile. Each has its own access key. Open Sign in and add each profile to this browser once.
 
-To switch identities, open the profile bubble and select True Self or Alias. Switching ends the current identity's pillar sessions, so it is always clear which identity is acting.
+After both profiles are added, select the round profile button at the bottom-right of AgoraNet. Choose the profile you want to use. The selected name and page colors show which profile is currently active.
+
+Check the active profile before posting, voting, joining a Circle, or sending a message. Changing profiles also closes any feature session that belonged to the previous profile.

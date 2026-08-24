@@ -6,7 +6,7 @@ category: troubleshooting
 document_type: error-catalog
 audience: operator
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-23
 review_by: 2026-11-23
 owner: engineering-support
@@ -23,6 +23,6 @@ links: []
 
 Only codes explicitly registered in this corpus may be interpreted. An unfamiliar code is recorded as safe diagnostic context; the helpdesk must not infer its meaning from its name.
 
-For an unregistered code, capture only the route, onboarding stage, client version, timestamp, and code. Do not request screenshots or copied text that may contain credentials or private information unless an approved procedure defines the evidence boundary.
+For an unregistered code, capture only the page address, visible page heading or account-setup step, client version, timestamp, and code. Ask for those items in ordinary words; do not require the user to know an internal stage name. Do not request screenshots or copied text that may contain credentials or private information unless an approved procedure defines the evidence boundary.
 
 If the same safe step fails twice, offer a human support request and preserve the non-secret code. Consequential categories use the deterministic severity floor.

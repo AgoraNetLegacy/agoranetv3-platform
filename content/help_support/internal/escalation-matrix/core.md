@@ -6,7 +6,7 @@ category: privacy-safety
 document_type: escalation-matrix
 audience: operator
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-23
 review_by: 2026-11-23
 owner: support-operations
@@ -28,3 +28,5 @@ High: repeated onboarding blockage, verification review, lost keys, privacy or h
 Normal: repeatable feature malfunction, pending transaction, or technical failure that remains unresolved after approved safe steps.
 
 Informational: supported how-to and policy questions. The model may raise severity but never reduce the deterministic application classification.
+
+User-facing escalation language must state what the person should select in Help and Support, what non-secret information to include, and what Support can and cannot do. Do not answer only with an internal severity label.

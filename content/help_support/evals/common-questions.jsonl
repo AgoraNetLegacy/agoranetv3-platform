@@ -1,3 +1,7 @@
 {"id":"common.wallet-connect","question":"Why will my Lace wallet not connect on preprod?","expected":{"articleSlugs":["wallet-connection"],"escalate":false,"generated":true}}
 {"id":"common.resume-onboarding","question":"I closed the browser halfway through onboarding. How do I continue?","expected":{"articleSlugs":["onboarding-interrupted"],"escalate":false,"generated":true}}
 {"id":"common.search-ranking","question":"Does AgoraNet personalize search results from what I read?","expected":{"articleSlugs":["search"],"escalate":false,"generated":true}}
+{"id":"common.noob-onboarding-location","question":"I don't know what the onboarding gate is or where to find it. Where do I go?","expected":{"articleSlugs":["onboarding-interrupted"],"escalate":false,"generated":true}}
+{"id":"common.noob-two-codes","question":"It showed me two codes while I was signing up. Which one do I use to log in?","expected":{"articleSlugs":["what-to-save"],"escalate":false,"generated":true}}
+{"id":"common.noob-connections","question":"Where do I find my friends and private messages?","expected":{"articleSlugs":["fellow-souls-dms"],"escalate":false,"generated":true}}
+{"id":"common.noob-feed","question":"How do I choose what shows up on my home feed?","expected":{"articleSlugs":["your-feed"],"escalate":false,"generated":true}}

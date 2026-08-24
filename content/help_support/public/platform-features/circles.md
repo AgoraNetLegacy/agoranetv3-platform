@@ -1,13 +1,13 @@
 ---
 id: help.platform-features.circles
 slug: circles
-title: Circles and membership
-summary: Public storefronts help discovery; members' rooms stay inside the Circle.
+title: Find and join a Circle
+summary: A Circle is a group for working on a shared goal; its main page is public while its member workspace is private to members.
 category: platform-features
 document_type: concept
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -34,6 +34,8 @@ links:
     label: Browse Circles
 ---
 
-A Circle is a place for coordinated work. Its public page can appear in search, while its members' room never enters the public index.
+A Circle is an AgoraNet group organized around a shared goal, project, or local problem. Open Browse Circles to search by place or topic, then select a Circle to read its public page.
 
-Joining, leaving, offers, actions, and attestations are performed by the active identity. Check the identity theme before acting.
+If the Circle is accepting members, use the Join control on its page. The Circle's member workspace is visible only to members and does not appear in public search.
+
+Your currently selected profile is the profile that joins, leaves, offers help, or completes an action. Check the profile name before selecting a control. An attestation is simply another member's recorded confirmation that an action happened.

@@ -2,13 +2,12 @@
 id: help.identities.lost-keys
 slug: lost-keys
 title: Lost keys and recovery boundaries
-summary: Understand what can be recovered, what cannot, and how to report a
-  suspected compromise.
+summary: AgoraNet cannot resend private sign-in codes; protect any browser that is still signed in and get help if a code may be exposed.
 category: identities
 document_type: recovery-boundary
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -34,9 +33,15 @@ source_refs:
 escalate_when: A key may be compromised, funds may be at risk, or you are unsure
   whether an existing signed-in session can be preserved.
 supersedes: null
-links: []
+links:
+  - href: /login
+    label: Sign in if you still have the access key
+  - href: /support
+    label: Open Help and Support
 ---
 
-AgoraNet cannot read or resend a Humanity Credential or identity access key because it stores only their hashes. An Alias deliberately has no True-Self-routed recovery path; creating one would become a correlation path.
+AgoraNet cannot read, resend, or reset a Humanity Credential or profile access key because it does not store a readable copy. Support cannot recover one for you.
 
-If you still have a signed-in browser, do not sign out until you understand the consequences. If you suspect compromise, stop using the affected key and open a critical support case. Support can explain and preserve evidence, but cannot promise to reverse an irreversible action.
+If one browser is still signed in, leave that session open. Do not clear its cookies, remove its site data, or sign out while you decide what to do. An Alias, which is a separate private profile, cannot be recovered through the public True Self profile because that would reveal a connection AgoraNet is designed not to store.
+
+If someone else may have seen or copied a code, stop pasting or using that code and open an urgent support request. Describe what happened without including the code itself. Support can help document and assess the problem, but cannot promise to undo actions that are already final.

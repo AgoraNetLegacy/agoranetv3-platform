@@ -2,12 +2,12 @@
 id: help.platform-features.discussions
 slug: discussions
 title: Discussions, replies, and sources
-summary: Join a conversation, understand permanence, and attach sources honestly.
+summary: Read public conversations, start a topic, reply, and check whether a post can be deleted before publishing.
 category: platform-features
 document_type: concept
 audience: public
 status: approved
-version: 1.0.0
+version: 1.1.0
 effective_at: 2026-08-22
 review_by: 2027-02-23
 owner: support-content
@@ -35,6 +35,8 @@ links:
     label: Browse Discussions
 ---
 
-Public Discussions and replies can be read by everyone. Acting requires an active verified identity and passes through the same gate as every other write.
+Discussions are AgoraNet's public conversation threads. Open Browse Discussions to read them. To start a topic or reply, you must be signed in with a verified profile.
 
-Before posting, read the permanence badge. Source objects preserve the cited URL and let search find every public conversation using that source.
+Before selecting Publish, look for the permanence notice. It tells you whether you can delete your own post later or whether it will remain in the Public Record.
+
+When you refer to an outside source, add its web address in the source field. AgoraNet keeps that address with the post so readers can inspect it and search can find other public conversations citing the same source.
