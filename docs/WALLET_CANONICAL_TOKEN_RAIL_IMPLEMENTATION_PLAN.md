@@ -121,13 +121,17 @@ Checkpoint:
 
 ### Slice 6 — Economy conversion
 
-**Build status:** Pending by design.
+**Build status:** In progress. The profile-scoped wallet activity timeline is complete; further product-action conversions remain gated by their privacy and treasury decisions.
 
 Deliverables:
 
 - Convert remaining approved fees, rewards, tips, transfers, donations, and settlements incrementally.
 - Add reconciliation and operator reports.
 - Update Transparency and Help & Support.
+
+Completed first:
+
+- Settings now translates wallet intent states into novice-readable status, links public hashes/results, and omits wallet addresses and internal failure details.
 
 Checkpoint:
 
@@ -185,7 +189,7 @@ Implemented without deployment, flag activation, or network value movement:
 - explicit no-fallback guards for unsupported wallet actions;
 - novice-facing pending, wrong-account, do-not-pay-twice, and recovery guidance.
 
-Automated evidence: 384 tests, including fee replay, pending confirmation, exact chain evidence, reward leasing, Credits preservation, hosted activation guards, and Credits-mode regression coverage. The live Lace checkpoint, fee-vault governance initialization/recoverability check, distributor restart exercise, PostgreSQL migration, deployment, and flag activation remain deliberately pending.
+Automated evidence: 385 tests, including fee replay, pending confirmation, exact chain evidence, reward leasing, Credits preservation, hosted activation guards, profile-scoped activity privacy, and Credits-mode regression coverage. The live Lace checkpoint, fee-vault governance initialization/recoverability check, distributor restart exercise, PostgreSQL migration, deployment, and flag activation remain deliberately pending.
 
 ## 8. Decisions deferred beyond the direct-action build
 

@@ -50,6 +50,8 @@ Wallet mode is not just a different balance display. For an action marked wallet
 
 The first wallet-ready action is an ordinary Discussion post or reply. Lace asks for the displayed dPOLL fee. After you approve it, the page may say **pending** while Cardano Preprod confirms the payment. Do not pay a second time. If the browser closes, AgoraNet keeps the public transaction hash and can finish the pending post automatically.
 
+Settings shows **Your recent testnet wallet activity** for the current AgoraNet identity. It translates the technical steps into plain statuses such as waiting for Lace, being sent, waiting for testnet confirmation, confirmed, or support review needed. Confirmed and submitted items link to the public testnet transaction when a hash exists. Wallet addresses are not repeated in this timeline.
+
 When testnet Credit claims are enabled, a Credits user may explicitly claim eligible Credits as fake wallet assets. This is never automatic: AgoraNet shows the amount, destination, pending state, and confirmation separately. Credits and wallet balances are never silently combined.
 
 Small fees and refundable deposits discourage automated spam and repeated disruptive actions. A fee is not vote weight, reputation, or permission to break a rule. Current amounts and limits are published on Transparency and may change through the platform's approved voting process.

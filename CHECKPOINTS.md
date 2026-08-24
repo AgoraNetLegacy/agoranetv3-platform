@@ -1942,12 +1942,17 @@ transaction-hash replay, and quarantine uncertain broadcasts. Unsupported
 Wallet-mode value actions refuse explicitly rather than falling back to
 Credits; safety flags remain available without a Credit deposit.
 
+Settings now includes a current-identity-only wallet activity timeline. It
+translates lifecycle states into plain language, links public transactions or
+published results where available, and omits source/destination wallet scopes
+and internal failure details.
+
 Help corpus `1.4.0` adds novice instructions for Lace approval, wrong accounts,
 pending confirmation, browser closure, and the rule never to pay twice. The
 operator runbook now covers both one-shot recovery scripts and the supervised
 activation matrix.
 
-Checkpoint evidence: **384/384 tests** pass, including exact chain-evidence,
+Checkpoint evidence: **385/385 tests** pass, including exact chain-evidence,
 replay, idempotency, reward lease, no-Credit-fallback, and Credits-mode
 regression tests. Feature flags remain false. No deployment, mainnet, real
 asset, mint, wallet signature, chain submission, secret, Cloudflare setting,

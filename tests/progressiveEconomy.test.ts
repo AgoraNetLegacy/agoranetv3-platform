@@ -12,6 +12,8 @@ import {
   testnetAssetRegistry,
   refreshWalletBalanceSnapshots,
   walletBalanceView,
+  walletActivityStatusLabel,
+  walletActivityView,
 } from "../lib/progressiveEconomy";
 import {
   canTransitionTokenIntent,
@@ -354,5 +356,17 @@ describe("wallet transaction intents", () => {
     });
     expect(failed.ok).toBe(true);
     if (failed.ok) expect(failed.intent.failureMessage).toMatch(/removed/);
+  });
+
+  it("renders a profile-scoped, novice-readable activity timeline", async () => {
+    expect(walletActivityStatusLabel("submitted")).toContain("waiting for testnet");
+    expect(walletActivityStatusLabel("submitted", "requires_review")).toContain(
+      "support review"
+    );
+    const activity = await walletActivityView(db, profileId);
+    expect(activity.length).toBeGreaterThan(0);
+    expect(activity.every((item) => item.kindLabel.length > 0)).toBe(true);
+    expect(Object.keys(activity[0])).not.toContain("sourceWalletScope");
+    expect(Object.keys(activity[0])).not.toContain("destinationWalletScope");
   });
 });

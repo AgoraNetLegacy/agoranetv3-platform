@@ -240,3 +240,84 @@ export async function walletBalanceView(db: PrismaClient, profileId: string) {
   }
   return result;
 }
+
+const WALLET_ACTIVITY_LABELS: Record<string, string> = {
+  requested: "Requested",
+  prepared: "Waiting for AgoraNet",
+  awaiting_wallet_approval: "Waiting for approval in Lace",
+  signed: "Signed in Lace",
+  distributing: "Being sent; operator review is required after an interruption",
+  submitted: "Submitted; waiting for testnet confirmation",
+  confirmed: "Confirmed on the test network",
+  rejected: "Declined or cancelled",
+  expired: "Expired before submission",
+  failed: "Failed; no confirmed wallet value",
+};
+
+export function walletActivityStatusLabel(status: string, draftStatus?: string | null) {
+  if (draftStatus === "requires_review") {
+    return "Payment confirmed; support review is needed before publishing";
+  }
+  return WALLET_ACTIVITY_LABELS[status] ?? "Status unavailable";
+}
+
+function walletActivityKindLabel(kind: string) {
+  if (kind === "fee.reply") return "Discussion post fee";
+  if (kind === "reward.first-action") return "First-action reward";
+  if (kind === "reward.accrual") return "Participation reward";
+  if (kind === "reward.accrual.streak") return "Participation streak reward";
+  if (kind === "claim.credit") return "Credits-to-wallet claim";
+  return "Testnet wallet action";
+}
+
+/** A profile-scoped, support-safe transaction timeline. It deliberately
+ * omits wallet addresses and internal failure details from the UI. */
+export async function walletActivityView(
+  db: PrismaClient,
+  profileId: string,
+  limit = 20
+) {
+  const intents = await db.tokenTransactionIntent.findMany({
+    where: { profileId },
+    orderBy: { createdAt: "desc" },
+    take: Math.min(Math.max(limit, 1), 50),
+  });
+  const drafts = intents.length
+    ? await db.walletActionDraft.findMany({
+        where: { transactionIntentId: { in: intents.map((intent) => intent.id) } },
+        select: {
+          transactionIntentId: true,
+          status: true,
+          resultRefId: true,
+        },
+      })
+    : [];
+  const draftByIntent = new Map(drafts.map((draft) => [draft.transactionIntentId, draft]));
+  const resultIds = drafts.flatMap((draft) => (draft.resultRefId ? [draft.resultRefId] : []));
+  const resultPosts = resultIds.length
+    ? await db.post.findMany({
+        where: { id: { in: resultIds } },
+        select: { id: true, discussionId: true },
+      })
+    : [];
+  const resultHref = new Map(
+    resultPosts.map((post) => [post.id, `/d/${post.discussionId}#${post.id}`])
+  );
+  return intents.map((intent) => {
+    const draft = draftByIntent.get(intent.id);
+    return {
+      id: intent.id,
+      kind: intent.kind,
+      kindLabel: walletActivityKindLabel(intent.kind),
+      currency: intent.currency === "PC" ? "dPOLL" : "dGRA",
+      amount: intent.amount,
+      status: intent.status,
+      statusLabel: walletActivityStatusLabel(intent.status, draft?.status),
+      txHash: intent.txHash,
+      resultRefId: draft?.resultRefId ?? null,
+      resultHref: draft?.resultRefId ? resultHref.get(draft.resultRefId) ?? null : null,
+      createdAt: intent.createdAt,
+      updatedAt: intent.updatedAt,
+    };
+  });
+}

@@ -23,6 +23,7 @@ import {
 import {
   refreshWalletBalanceSnapshots,
   walletBalanceView,
+  walletActivityView,
   walletModeActivationReady,
   creditClaimsTestnetEnabled,
 } from "@/lib/progressiveEconomy";
@@ -49,7 +50,7 @@ export default async function SettingsPage({
     db.feedSettings.findUnique({ where: { profileId: face.id } }),
     getRailDirect(db, "feed.nudge.defaultAfterMin"),
   ]);
-  const [cooldownDays, walletLink, donations, demoLovelace, demoLockMinutes, creditBalances, creditClaims, claimMaximum] =
+  const [cooldownDays, walletLink, donations, demoLovelace, demoLockMinutes, creditBalances, creditClaims, claimMaximum, walletActivity] =
     await Promise.all([
       getRail(db, "identity.displayNameCooldownDays"),
       walletLinkFor(db, face.id),
@@ -65,6 +66,7 @@ export default async function SettingsPage({
         take: 10,
       }),
       getRail(db, "onchain.claimMaxCredits"),
+      walletActivityView(db, face.id),
     ]);
   const creditAmount = new Map(creditBalances.map((balance) => [balance.currency, balance.amount]));
   const network = cardanoNetwork();
@@ -280,6 +282,37 @@ export default async function SettingsPage({
         </div>
       )}
       {walletLink && demoAssetError && <p className="notice">{demoAssetError}</p>}
+
+      {walletActivity.length > 0 && (
+        <>
+          <h4>Your recent testnet wallet activity</h4>
+          <p className="lore">
+            This list belongs only to the current AgoraNet identity. Pending does not mean
+            failed, and it is never a reason to pay twice.
+          </p>
+          <ul className="lore">
+            {walletActivity.map((activity) => (
+              <li key={activity.id}>
+                <strong>{activity.kindLabel}</strong>: {activity.amount} {activity.currency}
+                {" — "}{activity.statusLabel}.{" "}
+                {activity.resultHref ? (
+                  <Link href={activity.resultHref}>
+                    View published result
+                  </Link>
+                ) : activity.txHash ? (
+                  <a
+                    href={`https://${network}.cardanoscan.io/transaction/${activity.txHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View public transaction
+                  </a>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       {walletLink && creditClaimsTestnetEnabled() && (
         <>
