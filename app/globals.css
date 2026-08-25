@@ -1328,6 +1328,16 @@ input, textarea, select {
   padding: 0 1rem;
   font-size: 1.02rem;
 }
+.search-hero input[type="search"],
+.search-hero button,
+.search-filter select,
+.search-filter input,
+.search-check {
+  font-family: var(--font-text);
+  line-height: 1.2;
+}
+.search-hero input[type="search"] { font-weight: 500; }
+.search-hero button { font-weight: 650; }
 .search-filters {
   display: grid;
   grid-template-columns: minmax(12rem, 1.35fr) repeat(3, minmax(9rem, 1fr));
@@ -1357,6 +1367,7 @@ input, textarea, select {
   min-width: 0;
   min-height: 44px;
   font-size: 0.86rem;
+  font-weight: 550;
 }
 /* the checkbox reads as one inline chip, not a stacked column */
 .search-check {
