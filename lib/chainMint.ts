@@ -13,6 +13,7 @@ import {
   BlockfrostProvider,
   ForgeScript,
   Transaction,
+  deserializeAddress,
   resolveScriptHash,
   stringToHex,
 } from "@meshsdk/core";
@@ -92,16 +93,30 @@ export async function mintDemoPollCoin(quantity = "1000000") {
 export async function mintDemoCurrenciesToAddress(
   recipient: string,
   pollCoinQuantity = "1000",
-  gratiumQuantity = "1000"
+  gratiumQuantity = "1000",
+  testAdaLovelace = "20000000"
 ) {
   if (!recipient.startsWith("addr_test1")) {
     throw new Error("Refusing to send demo currencies anywhere except a preprod address.");
+  }
+  try {
+    deserializeAddress(recipient);
+  } catch {
+    throw new Error("The recipient is not a complete valid Cardano testnet address.");
+  }
+  if (!/^(?:0*[1-9][0-9]*)$/.test(testAdaLovelace)) {
+    throw new Error("Test ADA funding must be a positive lovelace quantity.");
   }
   const wallet = await mintWallet();
   const operatorAddress =
     (await wallet.getUsedAddresses())[0] ?? (await wallet.getChangeAddress());
   const forge = ForgeScript.withOneSignature(operatorAddress);
   const policyId = resolveScriptHash(forge);
+  if (policyId !== demoAssetPolicyId()) {
+    throw new Error(
+      "The testnet mint wallet does not match TEST_POLLCOIN_POLICY_ID; refusing to create unrecognized assets."
+    );
+  }
   const pollCoinName = "dPOLL";
   const gratiumName = "dGRA";
   const pollCoinUnit = policyId + stringToHex(pollCoinName);
@@ -130,6 +145,10 @@ export async function mintDemoCurrenciesToAddress(
     label: "721",
     recipient,
   });
+  // Give a fresh test wallet enough preprod ADA to hold the native assets
+  // and approve several AgoraNet test transactions. This has no mainnet
+  // path and no real value.
+  tx.sendLovelace(recipient, testAdaLovelace);
 
   const unsigned = await tx.build();
   const signed = await wallet.signTx(unsigned);

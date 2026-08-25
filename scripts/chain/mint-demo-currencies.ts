@@ -2,9 +2,14 @@ import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 import { mintDemoCurrenciesToAddress } from "../../lib/chainMint";
 
-const recipient = process.env.DEMO_RECIPIENT_ADDRESS;
-if (!recipient) throw new Error("DEMO_RECIPIENT_ADDRESS is required.");
-const recipientAddress: string = recipient;
+const recipientInput = process.env.DEMO_RECIPIENT_ADDRESS?.trim();
+const matchedRecipient = recipientInput?.match(/addr_test1[0-9a-z]+/i)?.[0]?.toLowerCase();
+if (!matchedRecipient) {
+  throw new Error(
+    "DEMO_RECIPIENT_ADDRESS must contain a Cardano testnet address beginning with addr_test1."
+  );
+}
+const recipientAddress: string = matchedRecipient;
 
 async function main() {
   console.log("Minting demo PollCoin and Gratium on Cardano preprod…");
