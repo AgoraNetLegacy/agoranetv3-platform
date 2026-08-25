@@ -21,12 +21,11 @@ import {
   donationsFor,
 } from "@/lib/chain";
 import {
-  refreshWalletBalanceSnapshots,
-  walletBalanceView,
   walletActivityView,
   walletModeActivationReady,
   creditClaimsTestnetEnabled,
 } from "@/lib/progressiveEconomy";
+import { synchronizedWalletBalanceView } from "@/lib/synchronizedWalletBalance";
 import { donationScript, demoBeneficiaryHash } from "@/lib/chainDonation";
 import { LaceConnect } from "@/components/LaceConnect";
 import { SelfCustodySign } from "@/components/SelfCustodySign";
@@ -70,13 +69,13 @@ export default async function SettingsPage({
     ]);
   const creditAmount = new Map(creditBalances.map((balance) => [balance.currency, balance.amount]));
   const network = cardanoNetwork();
-  let demoAssets: Awaited<ReturnType<typeof walletBalanceView>> | null = null;
+  let demoAssets: Awaited<ReturnType<typeof synchronizedWalletBalanceView>>["balances"] | null = null;
   let demoAssetError: string | null = null;
   if (walletLink) {
     try {
-      const refreshed = await refreshWalletBalanceSnapshots(db, face.id);
-      demoAssets = await walletBalanceView(db, face.id);
-      if (!refreshed.ok) demoAssetError = refreshed.reason;
+      const synchronized = await synchronizedWalletBalanceView(face.id);
+      demoAssets = synchronized.balances;
+      demoAssetError = synchronized.error;
     } catch {
       // A missing chain configuration or temporary explorer outage must not
       // undo or hide a successful wallet link.

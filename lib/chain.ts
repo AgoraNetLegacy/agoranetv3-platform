@@ -91,6 +91,12 @@ export async function recordWalletLink(
     },
     update: { cardanoAddress: addr, network: input.network, connectedAt: new Date() },
   });
+  // Never show the previous wallet's last-known balance after a re-link. The
+  // synchronized shell/settings loader will refresh this stale read model.
+  await db.walletBalanceSnapshot.updateMany({
+    where: { profileId: input.profileId },
+    data: { syncStatus: "stale", errorCode: "wallet_relinked" },
+  });
   return { ok: true };
 }
 
