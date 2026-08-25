@@ -9,6 +9,7 @@ coverage/
 .DS_Store
 test-results/
 *.tsbuildinfo
+backups/
 
 # Midnight (8.6 slice 3) — compiled ZK artifacts + local private-state db
 infra/midnight/contract/build/

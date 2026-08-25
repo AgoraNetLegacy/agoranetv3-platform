@@ -28,6 +28,8 @@
     "analytics:crush": "tsx scripts/crush-analytics.ts",
     "support:cases": "tsx scripts/support-cases.ts",
     "support:operators": "tsx scripts/support-operators.ts",
+    "identity:reissue-local-human": "tsx scripts/reissue-local-human-credential.ts",
+    "wallet:unlink-local-fixture": "tsx scripts/unlink-local-wallet-fixture.ts",
     "helpdesk:eval": "tsx scripts/evaluate-helpdesk.ts",
     "corpus:build": "tsx scripts/compile-help-corpus.ts",
     "corpus:check": "tsx scripts/compile-help-corpus.ts --check",
