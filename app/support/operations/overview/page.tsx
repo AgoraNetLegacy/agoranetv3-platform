@@ -23,7 +23,7 @@ export default async function OwnerOperationsOverview() {
   if (!face) redirect("/login");
   const operator = await getOwnerDashboardOperator(db, face.id);
   if (!operator) notFound();
-  const metrics = await ownerDashboardMetrics(db);
+  const metrics = await ownerDashboardMetrics(db, operator.profile.id);
 
   return (
     <main className="support-ops owner-dashboard">
@@ -94,6 +94,37 @@ export default async function OwnerOperationsOverview() {
         These are aggregate event counts. They are not guaranteed unique-user
         counts and may include repeated attempts.
       </p>
+
+      <h2>Moderation capacity</h2>
+      <div className="notice">
+        Stage {metrics.moderation.stage}: {metrics.moderation.soloFallbackActive
+          ? "@" + operator.profile.handle + " is the active bootstrap moderator for routine cases."
+          : "Community moderation is the active path; solo bootstrap handling is not active."}
+      </div>
+      <div className="stat-row">
+        <div className="stat"><div className="stat-number">{metrics.moderation.soloQueueCases}</div><div className="stat-label">routine cases in your queue</div></div>
+        <div className="stat"><div className="stat-number">{metrics.moderation.openCases}</div><div className="stat-label">open cases overall</div></div>
+        <div className="stat"><div className="stat-number">{metrics.moderation.awaitingReviewCases}</div><div className="stat-label">awaiting review</div></div>
+        <div className="stat"><div className="stat-number">{metrics.moderation.heavyOrSevereQueued}</div><div className="stat-label">heavy/severe cases queued</div></div>
+      </div>
+      <table className="support-ops-table">
+        <thead><tr><th>Community pool</th><th>Eligible profiles</th><th>Minimum</th><th>Willing profiles</th><th>Active terms</th><th>Pending offers</th></tr></thead>
+        <tbody><tr>
+          <td>{metrics.moderation.communityOffersEnabled ? "community offers enabled" : "bootstrap fallback"}</td>
+          <td>{metrics.moderation.eligibleProfiles}</td>
+          <td>{metrics.moderation.minimumProfiles}</td>
+          <td>{metrics.moderation.willingProfiles}</td>
+          <td>{metrics.moderation.activeTerms}</td>
+          <td>{metrics.moderation.pendingOffers}</td>
+        </tr></tbody>
+      </table>
+      <p className="lore">
+        You receive a private, time-sensitive inbox notification when a new
+        routine case enters your S0 queue. Heavy, severe, and Tribunal cases
+        remain outside solo handling and are not silently treated as yours.
+        Resolved cases: {metrics.moderation.resolvedCases}. Tribunal queue: {metrics.moderation.tribunalCases}.
+      </p>
+      <Link href="/moderation">Open moderation workbench →</Link>
     </main>
   );
 }

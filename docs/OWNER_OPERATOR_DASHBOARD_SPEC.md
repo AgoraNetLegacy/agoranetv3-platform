@@ -190,12 +190,23 @@ Include read-only indicators that help explain apparent growth problems:
 - last successful maintenance sweep;
 - helpdesk provider/model availability;
 - current moderation stage and whether the S0 solo fallback is active;
+- routine cases currently in the designated bootstrap operator's queue;
+- open, awaiting-review, heavy/severe, Tribunal, and resolved case counts;
+- eligible and willing moderator-pool counts against the handover threshold;
+- a link to the moderation workbench, without exposing case evidence or identities;
 - pending support-case count by severity, aggregate only;
 - wallet/testnet provider status, when configured;
 - last successful chain reconciliation, when wallet features are enabled.
 
 Operational failures must be visually distinct from zero activity. “No data”
 and “zero users” are not interchangeable.
+
+When the S0 solo fallback is active, the designated operator receives a
+time-sensitive, per-profile inbox notification when a routine case enters the
+queue. The notification contains no post text, reporter, accused identity, or
+private evidence; it links only to the moderation workbench. Heavy, severe,
+Tribunal, and other cases outside the solo fallback are not presented as the
+operator's work.
 
 ### 4.8 Privacy and safety summary
 

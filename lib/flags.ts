@@ -85,12 +85,13 @@ export async function fileFlag(
     });
     // Phase 5: the flag meets its adjudicators; open or join the
     // post's case; content blurs (or full-hides in the expedited lane).
-    const { openOrJoinCase } = await import("./moderation");
-    await openOrJoinCase(tx, {
+    const { notifySoloOperatorForCase, openOrJoinCase } = await import("./moderation");
+    const caseId = await openOrJoinCase(tx, {
       flagId: created.id,
       postId: post.id,
       ruleId: rule.id,
     });
+    await notifySoloOperatorForCase(tx, caseId);
     return { ok: true as const, flagId: created.id };
     });
   } catch (err) {
@@ -174,12 +175,13 @@ export async function fileReleaseFlag(
         depositHeld: depositTaken,
       },
     });
-    const { openOrJoinCase } = await import("./moderation");
-    await openOrJoinCase(tx, {
+    const { notifySoloOperatorForCase, openOrJoinCase } = await import("./moderation");
+    const caseId = await openOrJoinCase(tx, {
       flagId: created.id,
       releaseId: release.id,
       ruleId: rule.id,
     });
+    await notifySoloOperatorForCase(tx, caseId);
     return { ok: true as const, flagId: created.id };
     });
   } catch (err) {

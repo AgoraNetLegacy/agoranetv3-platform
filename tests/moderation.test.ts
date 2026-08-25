@@ -32,6 +32,7 @@ const db = new PrismaClient({ datasources: { db: { url } } });
 let author: Awaited<ReturnType<typeof makeOnboardedSoul>>;
 let flagger: Awaited<ReturnType<typeof makeOnboardedSoul>>;
 let judge: Awaited<ReturnType<typeof makeOnboardedSoul>>;
+let owner: Awaited<ReturnType<typeof makeOnboardedSoul>>;
 let discussionId: string;
 
 function runVerify() {
@@ -68,11 +69,15 @@ beforeAll(async () => {
   author = await makeOnboardedSoul(db, { trueSelf: "accused-1", alias: "accused-1a" });
   flagger = await makeOnboardedSoul(db, { trueSelf: "flagger-1", alias: "flagger-1a" });
   judge = await makeOnboardedSoul(db, { trueSelf: "judge-1", alias: "judge-1a" });
+  owner = await makeOnboardedSoul(db, { trueSelf: "shawnb", alias: "shawnb-alias" });
   discussionId = (
     await db.discussion.findFirstOrThrow({ where: { permanence: "permanent-canonical" } })
   ).id;
   await topUpForTests(db, author.trueSelfId, { pc: 50, g: 20 });
   await topUpForTests(db, flagger.trueSelfId, { pc: 50 });
+  await db.supportOperator.create({
+    data: { profileId: owner.trueSelfId, role: "lead", active: true },
+  });
 });
 
 afterAll(async () => {
@@ -451,6 +456,17 @@ describe("moderation bootstrap handover", () => {
     expect(flagged.ok).toBe(true);
     const modCase = await db.modCase.findFirstOrThrow({ where: { postId: post.postId } });
     expect(modCase.heavy).toBe(false);
+
+    const ownerInbox = await inboxFor(db, owner.trueSelfId);
+    expect(ownerInbox.timeSensitive).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          category: "moderation-review",
+          refType: "moderation-case",
+          refId: modCase.id,
+        }),
+      ])
+    );
 
     expect((await caseQueueFor(db, judge.trueSelfId)).some((item) => item.id === modCase.id)).toBe(true);
     const ruled = await submitRuling(db, {

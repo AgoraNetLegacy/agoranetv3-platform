@@ -192,7 +192,7 @@ function moderationBootstrapConfig() {
  * grant rather than to a hidden founder switch. It is routine-only: heavy,
  * Tribunal, and severe cases remain queued for the appropriate later lane.
  */
-export async function isSoloBootstrapOperator(db: PrismaClient, profileId: string) {
+export async function isSoloBootstrapOperator(db: PrismaClient | Tx, profileId: string) {
   const config = moderationBootstrapConfig();
   if (!config.soloOperatorEnabled) return false;
   const handover = await moderationHandoverStatus(db);
@@ -205,7 +205,7 @@ export async function isSoloBootstrapOperator(db: PrismaClient, profileId: strin
 }
 
 export async function canUseSoloBootstrapFallback(
-  db: PrismaClient,
+  db: PrismaClient | Tx,
   profileId: string,
   modCase: Pick<ModCase, "heavy" | "tier" | "tribunal">
 ) {
@@ -213,7 +213,43 @@ export async function canUseSoloBootstrapFallback(
   return isSoloBootstrapOperator(db, profileId);
 }
 
-export async function moderationHandoverStatus(db: PrismaClient) {
+/** Notify the designated bootstrap operator without exposing case evidence.
+ * Only routine S0 cases enter this path; heavy, severe, and Tribunal cases
+ * remain in their separate escalation lanes. */
+export async function notifySoloOperatorForCase(
+  db: PrismaClient | Tx,
+  caseId: string
+): Promise<void> {
+  const operator = await db.profile.findUnique({
+    where: { handle: "shawnb" },
+    select: { id: true, status: true, readOnlyUntil: true },
+  });
+  const modCase = await db.modCase.findUnique({
+    where: { id: caseId },
+    select: { status: true, heavy: true, tier: true, tribunal: true },
+  });
+  if (
+    !operator ||
+    operator.status !== "active" ||
+    operator.readOnlyUntil ||
+    !modCase ||
+    modCase.status !== "open" ||
+    !(await canUseSoloBootstrapFallback(db, operator.id, modCase))
+  ) return;
+
+  await notify(db, {
+    profileId: operator.id,
+    tier: "time-sensitive",
+    category: "moderation-review",
+    title: "A moderation case needs your review",
+    body: "A routine case is open in your bootstrap moderation queue. Open Moderation to review it under the published rules.",
+    refType: "moderation-case",
+    refId: caseId,
+    aggregationKey: `moderation-review:${caseId}`,
+  });
+}
+
+export async function moderationHandoverStatus(db: PrismaClient | Tx) {
   const config = moderationBootstrapConfig();
   const willingnessCutoff = new Date(
     Date.now() - config.willingnessWindowDays * 86_400_000

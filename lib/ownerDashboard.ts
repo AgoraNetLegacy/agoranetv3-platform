@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { caseQueueFor, isSoloBootstrapOperator, moderationHandoverStatus } from "./moderation";
 
 export const OWNER_DASHBOARD_WINDOWS = [1, 7, 30, 90] as const;
 export type OwnerDashboardWindow = (typeof OWNER_DASHBOARD_WINDOWS)[number];
@@ -66,7 +67,7 @@ export function deploymentLabel(): "LOCAL" | "TESTNET / STAGING" | "PRODUCTION" 
   return "LOCAL";
 }
 
-export async function ownerDashboardMetrics(db: PrismaClient) {
+export async function ownerDashboardMetrics(db: PrismaClient, operatorProfileId?: string) {
   const [
     verifiedHumans,
     activeTrueSelves,
@@ -107,6 +108,25 @@ export async function ownerDashboardMetrics(db: PrismaClient) {
     }),
   ]);
 
+  const dashboardOperatorId = operatorProfileId ??
+    (await db.profile.findUnique({ where: { handle: "shawnb" }, select: { id: true } }))?.id;
+  const [handover, openCases, awaitingReviewCases, tribunalCases, resolvedCases, heavyOrSevereQueued, soloQueue, soloFallbackActive] =
+    await Promise.all([
+      moderationHandoverStatus(db),
+      db.modCase.count({ where: { status: "open" } }),
+      db.modCase.count({ where: { status: "awaiting-supervision" } }),
+      db.modCase.count({ where: { tribunal: true, status: { in: ["open", "awaiting-supervision"] } } }),
+      db.modCase.count({ where: { status: "resolved" } }),
+      db.modCase.count({
+        where: {
+          status: "open",
+          OR: [{ heavy: true }, { tier: { gt: 1 } }, { tribunal: true }],
+        },
+      }),
+      dashboardOperatorId ? caseQueueFor(db, dashboardOperatorId) : Promise.resolve([]),
+      dashboardOperatorId ? isSoloBootstrapOperator(db, dashboardOperatorId) : Promise.resolve(false),
+    ]);
+
   return {
     generatedAt: new Date(),
     environment: deploymentLabel(),
@@ -122,5 +142,21 @@ export async function ownerDashboardMetrics(db: PrismaClient) {
     signupWindows: [signup1, signup7, signup30, signup90],
     funnel,
     latestRegistration: latestRegistration?.createdAt ?? null,
+    moderation: {
+      stage: handover.stage,
+      communityOffersEnabled: handover.communityOffersEnabled,
+      eligibleProfiles: handover.eligibleProfiles,
+      minimumProfiles: handover.minimumProfiles,
+      willingProfiles: handover.willingProfiles,
+      activeTerms: handover.activeTerms,
+      pendingOffers: handover.pendingOffers,
+      openCases,
+      awaitingReviewCases,
+      tribunalCases,
+      resolvedCases,
+      heavyOrSevereQueued,
+      soloFallbackActive,
+      soloQueueCases: soloQueue.length,
+    },
   };
 }

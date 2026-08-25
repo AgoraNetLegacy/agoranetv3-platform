@@ -41,7 +41,9 @@ export default async function InboxPage() {
           <Link href={`/dm/${n.refId}`}>open conversation →</Link>
         )}
         {n.refType === "post" && n.refId && <span className="lore">see the thread</span>}
-        {n.category === "badge-offer" && <Link href="/moderation">to the workbench →</Link>}{" "}
+        {(n.category === "badge-offer" || n.category === "moderation-review") && (
+          <Link href="/moderation">to the moderation workbench →</Link>
+        )}{" "}
         {!n.readAt && (
           <form action={markNotificationRead} className="inline">
             <input type="hidden" name="notificationId" value={n.id} />
