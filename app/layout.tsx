@@ -10,6 +10,8 @@ import { switchToFace, signOutSession, toggleSpiritMode } from "./actions";
 import { Icon } from "@/components/Icon";
 import { AutoCloseDetails } from "@/components/AutoCloseDetails";
 import { LightScoreMenu } from "@/components/LightScoreMenu";
+import { db } from "@/lib/db";
+import { getOwnerDashboardOperator } from "@/lib/supportOperations";
 
 export const dynamic = "force-dynamic";
 
@@ -194,6 +196,7 @@ async function ProfileBubble() {
 // the landing pages say it in full.
 async function SideNav() {
   const { face, showWorkbench } = await chromeData();
+  const ownerDashboard = face ? await getOwnerDashboardOperator(db, face.id) : null;
   return (
     <nav className="sidebar" aria-label="The platform">
       <Link href="/" className="navlink navlink-button">
@@ -262,6 +265,11 @@ async function SideNav() {
       >
         <span className="nav-icon"><Icon name="compass" /></span><span>Help &amp; Support</span>
       </Link>
+      {ownerDashboard && (
+        <Link className="navlink" href="/support/operations/overview">
+          <span className="nav-icon"><Icon name="record" /></span><span>Owner operations</span>
+        </Link>
+      )}
     </nav>
   );
 }
