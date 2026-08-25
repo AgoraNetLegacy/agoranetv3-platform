@@ -7,6 +7,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { mConStr1, serializeData, stringToHex } from "@meshsdk/core";
 import { demoAssetUnit, cardanoNetwork } from "./chain";
+import { sameWalletAccount } from "./cardanoAccounts";
 
 const BLUEPRINT_PATH = join(process.cwd(), "infra", "onchain", "plutus.json");
 const VALIDATOR_TITLE = "mission_treasury.mission_treasury.spend";
@@ -70,7 +71,7 @@ export async function verifyWalletFeePayment(
       inline_datum?: string | null;
     }[];
   };
-  if (!data.inputs.some((item) => item.address === input.sourceAddress)) return false;
+  if (!data.inputs.some((item) => sameWalletAccount(item.address, input.sourceAddress))) return false;
   const expectedDatum = serializeData(
     mConStr1([stringToHex(WALLET_FEE_TREASURY_TAG)])
   ).toLowerCase();

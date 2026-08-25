@@ -14,6 +14,7 @@ import {
   lockedAtScriptOnConfiguredTestnet,
   txInputAddressesOnConfiguredTestnet,
 } from "./chain";
+import { sameWalletAccount } from "./cardanoAccounts";
 
 export type AddressTxLister = (address: string) => Promise<string[]>;
 
@@ -60,7 +61,7 @@ export async function reconcileDonations(
       // F3: the address listing includes txs that merely PAID this
       // wallet; record only what the linked wallet itself SENT.
       const senders = await inputAddresses(txHash);
-      if (!senders?.includes(link.cardanoAddress)) continue;
+      if (!senders?.some((sender) => sameWalletAccount(sender, link.cardanoAddress))) continue;
       await db.testnetDonation.upsert({
         where: { txHash },
         create: {

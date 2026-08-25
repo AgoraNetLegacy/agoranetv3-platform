@@ -15,6 +15,8 @@ import {
   donationsFor,
   demoAssetPolicyId,
   demoAssetUnit,
+  demoAssetBalances,
+  sameWalletAccount,
   verifyDemoAssetDelivery,
 } from "../lib/chain";
 import { anchorStatus, recordAnchor } from "../lib/chainAnchor";
@@ -46,6 +48,52 @@ describe("the testnet wallet rail", () => {
     expect(() => demoAssetPolicyId({ TEST_POLLCOIN_POLICY_ID: "not-a-policy" })).toThrow(
       /56-character/
     );
+  });
+
+  it("reads the whole stake account when the linked change address is unused", async () => {
+    const priorFetch = global.fetch;
+    const priorProjectId = process.env.BLOCKFROST_PROJECT_ID;
+    process.env.BLOCKFROST_PROJECT_ID = "test-project";
+    const linkedUnusedAddress =
+      "addr_test1qq6kx44vqaa883kna9r3v3g6m42k57d36ppgz0perhzu86m0vxk5grzvq3e08znluzwhfd20ztevn9fjz3vke3le7cpsm6z4r2";
+    const calls: string[] = [];
+    global.fetch = async (input) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.includes(`/addresses/${linkedUnusedAddress}`)) {
+        return new Response(JSON.stringify({ message: "not found" }), { status: 404 });
+      }
+      if (url.includes("/accounts/stake_test1") && url.includes("/addresses/assets")) {
+        return new Response(
+          JSON.stringify([
+            { unit: demoAssetUnit("PC"), quantity: "1000" },
+            { unit: demoAssetUnit("G"), quantity: "1005" },
+          ]),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+      return new Response(JSON.stringify({ message: "unexpected" }), { status: 500 });
+    };
+    try {
+      expect(await demoAssetBalances(linkedUnusedAddress)).toEqual({
+        pollCoin: "1000",
+        gratium: "1005",
+      });
+      expect(calls).toHaveLength(2);
+    } finally {
+      global.fetch = priorFetch;
+      if (priorProjectId === undefined) delete process.env.BLOCKFROST_PROJECT_ID;
+      else process.env.BLOCKFROST_PROJECT_ID = priorProjectId;
+    }
+  });
+
+  it("compares wallet ownership by stake account, not one rotating address", () => {
+    const linked =
+      "addr_test1qr69pgcjz83k5ka74qvemskh3gn28upv66ar3caa7gpvpw0kvd0jgy72l2pkgdp7ym08am5rsq6mcyrsc0tf2sqxg3eqqh7x03";
+    const otherAccount =
+      "addr_test1qq6kx44vqaa883kna9r3v3g6m42k57d36ppgz0perhzu86m0vxk5grzvq3e08znluzwhfd20ztevn9fjz3vke3le7cpsm6z4r2";
+    expect(sameWalletAccount(linked, linked)).toBe(true);
+    expect(sameWalletAccount(linked, otherAccount)).toBe(false);
   });
 
   it("refuses mainnet addresses at the door; addr1… never enters the table", async () => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { WalletPostPayload } from "@/lib/walletActions";
+import { sameWalletAccount } from "@/lib/cardanoAccounts";
 
 type Prepare = (input: {
   idempotencyKey: string;
@@ -202,7 +203,7 @@ export function WalletPostComposer({
         wallet.getUsedAddresses(),
         wallet.getUnusedAddresses(),
       ]);
-      const availableAddresses = new Set([changeAddress, ...usedAddresses, ...unusedAddresses]);
+      const availableAddresses = [changeAddress, ...usedAddresses, ...unusedAddresses];
       if (!changeAddress.startsWith("addr_test1")) {
         await reject({ intentId: prepared.intentId });
         setStatus(
@@ -210,7 +211,7 @@ export function WalletPostComposer({
         );
         return;
       }
-      if (!availableAddresses.has(prepared.linkedAddress)) {
+      if (!availableAddresses.some((address) => sameWalletAccount(address, prepared.linkedAddress))) {
         await reject({ intentId: prepared.intentId });
         setStatus(
           "Lace opened a different account from the one linked to this AgoraNet identity. Switch accounts in Lace and try again."

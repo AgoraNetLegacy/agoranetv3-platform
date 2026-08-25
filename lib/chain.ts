@@ -8,6 +8,8 @@
 
 import type { PrismaClient } from "@prisma/client";
 import { deserializeAddress, stringToHex } from "@meshsdk/core";
+import { sameWalletAccount, testnetRewardAddressFor } from "./cardanoAccounts";
+export { sameWalletAccount, walletAccountFingerprint } from "./cardanoAccounts";
 
 const TESTNETS = new Set(["preprod", "preview"]);
 // Verified policy for the current throwaway preprod PollCoin/Gratium demo
@@ -70,14 +72,14 @@ export async function recordWalletLink(
   if (!TESTNETS.has(input.network)) {
     return { ok: false, reason: "Only testnet networks (preprod, preview) can be linked." };
   }
-  const existing = await db.testnetWalletLink.findFirst({
-    where: { cardanoAddress: addr, profileId: { not: input.profileId } },
-    select: { id: true },
+  const otherLinks = await db.testnetWalletLink.findMany({
+    where: { profileId: { not: input.profileId } },
+    select: { cardanoAddress: true },
   });
-  if (existing) {
+  if (otherLinks.some((link) => sameWalletAccount(link.cardanoAddress, addr))) {
     return {
       ok: false,
-      reason: "This wallet address is already linked to another identity.",
+      reason: "This Cardano account is already linked to another identity.",
     };
   }
   await db.testnetWalletLink.upsert({
@@ -119,42 +121,40 @@ export async function demoAssetBalances(
     `https://cardano-${net}.blockfrost.io/api/v0/addresses/${address}`,
     { headers, cache: "no-store" }
   );
-  // A newly created account has no on-chain history yet. Blockfrost reports
-  // that as 404, which means a valid zero balance, not an explorer outage.
-  if (primary.status === 404) {
-    return { pollCoin: "0", gratium: "0" };
+  if (primary.status !== 404 && !primary.ok) {
+    throw new Error(`Wallet asset lookup failed (${primary.status}).`);
   }
-  if (!primary.ok) throw new Error(`Wallet asset lookup failed (${primary.status}).`);
-  const primaryData = (await primary.json()) as {
+  const primaryData = primary.ok ? (await primary.json()) as {
     amount: { unit: string; quantity: string }[];
     stake_address?: string;
-  };
-  const addresses = new Set([address]);
-  if (primaryData.stake_address) {
-    const account = await fetch(
-      `https://cardano-${net}.blockfrost.io/api/v0/accounts/${primaryData.stake_address}/addresses`,
-      { headers, cache: "no-store" }
-    );
-    if (account.ok) {
-      const accountAddresses = (await account.json()) as { address: string }[];
-      for (const item of accountAddresses) addresses.add(item.address);
-    }
-  } else {
-    // Keep the validation explicit for linked addresses even if a provider
-    // returns an unexpected address shape.
-    deserializeAddress(address);
-  }
+  } : null;
+  // The linked address may be an unused change address while the assets sit
+  // at another receive address in the same Lace account. Derive the stable
+  // reward address locally so a 404 for that one payment address does not
+  // incorrectly become a zero account balance.
+  const rewardAddress = primaryData?.stake_address ?? testnetRewardAddressFor(address);
   const amount = new Map<string, bigint>();
-  for (const walletAddress of addresses) {
-    const response = walletAddress === address ? primary : await fetch(
-      `https://cardano-${net}.blockfrost.io/api/v0/addresses/${walletAddress}`,
-      { headers, cache: "no-store" }
-    );
-    if (!response.ok) continue;
-    const data = (walletAddress === address ? primaryData : await response.json()) as {
-      amount: { unit: string; quantity: string }[];
-    };
-    for (const item of data.amount) {
+
+  if (rewardAddress) {
+    // This Blockfrost endpoint already aggregates all payment addresses for
+    // the stake account. Page through assets so large wallets are not cut off.
+    for (let page = 1; page <= 100; page += 1) {
+      const accountAssets = await fetch(
+        `https://cardano-${net}.blockfrost.io/api/v0/accounts/${rewardAddress}/addresses/assets?count=100&page=${page}&order=asc`,
+        { headers, cache: "no-store" }
+      );
+      if (accountAssets.status === 404) break;
+      if (!accountAssets.ok) {
+        throw new Error(`Wallet account asset lookup failed (${accountAssets.status}).`);
+      }
+      const rows = (await accountAssets.json()) as { unit: string; quantity: string }[];
+      for (const item of rows) {
+        amount.set(item.unit, (amount.get(item.unit) ?? 0n) + BigInt(item.quantity));
+      }
+      if (rows.length < 100) break;
+    }
+  } else if (primaryData) {
+    for (const item of primaryData.amount) {
       amount.set(item.unit, (amount.get(item.unit) ?? 0n) + BigInt(item.quantity));
     }
   }
@@ -292,7 +292,7 @@ export async function recordSelfCustodyProof(
   if (senders === null) {
     return { ok: false, retryable: true, reason: `Not visible on ${cardanoNetwork()} yet.` };
   }
-  if (!senders.includes(link.cardanoAddress)) {
+  if (!senders.some((sender) => sameWalletAccount(sender, link.cardanoAddress))) {
     return { ok: false, retryable: false, reason: NOT_SENT_BY_LINKED };
   }
   await db.testnetWalletLink.update({
@@ -392,7 +392,7 @@ export async function recordScriptDonation(
   if (senders === null) {
     return { ok: false, retryable: true, reason: `Not visible on ${cardanoNetwork()} yet.` };
   }
-  if (!senders.includes(link.cardanoAddress)) {
+  if (!senders.some((sender) => sameWalletAccount(sender, link.cardanoAddress))) {
     return { ok: false, retryable: false, reason: NOT_SENT_BY_LINKED };
   }
   await db.testnetDonation.upsert({

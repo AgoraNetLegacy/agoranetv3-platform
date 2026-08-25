@@ -37,35 +37,20 @@ export function LaceConnect({
         return;
       }
       const wallet = await BrowserWallet.enable("lace");
-      // Lace's used-address list can include the first account even after the
-      // user selects another account in the authorization dialog. For Alias,
-      // use the current account's change address so the selected account is
-      // not accidentally linked to True Self. True Self keeps the used-address
-      // preference because its demo assets already live at that address.
+      // The change address belongs to the account currently authorized in
+      // Lace. Used/unused lists can retain addresses from another account,
+      // which previously linked an Alias to a different account than the one
+      // visible in Lace. Server-side balance reads aggregate the whole stake
+      // account, so an unused change address is safe and stable as the link.
       const changeAddress = await wallet.getChangeAddress();
-      if (identity === "Alias") {
-        const unusedAddresses = await wallet.getUnusedAddresses();
-        const address = unusedAddresses[0] ?? changeAddress;
-        if (!address.startsWith("addr_test1")) {
-          setStatus(
-            "Lace is connected to MAINNET. This rail is testnet-only by " +
-              "design; open Lace → Settings → Network → Preprod, then try again."
-          );
-          return;
-        }
-        setCandidateAddress(address);
-        return;
-      }
-      const usedAddresses = await wallet.getUsedAddresses();
-      const address = usedAddresses[0] ?? changeAddress;
-      if (!address.startsWith("addr_test1")) {
+      if (!changeAddress.startsWith("addr_test1")) {
         setStatus(
           "Lace is connected to MAINNET. This rail is testnet-only by " +
             "design; open Lace → Settings → Network → Preprod, then try again."
         );
         return;
       }
-      setCandidateAddress(address);
+      setCandidateAddress(changeAddress);
     } catch (e) {
       // The soul declining the wallet prompt lands here too; say so
       // plainly, blame nobody.
