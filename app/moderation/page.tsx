@@ -10,6 +10,7 @@ import {
   myModerationRating,
   isTribunalMember,
   tribunalDocket,
+  moderationHandoverStatus,
 } from "@/lib/moderation";
 import {
   equipOffer,
@@ -36,13 +37,14 @@ export default async function ModerationPage({
 
   await runModerationSweeps(db);
 
-  const [offer, term, rules, tribunal] = await Promise.all([
+  const [offer, term, rules, tribunal, handover] = await Promise.all([
     db.badgeOffer.findFirst({
       where: { profileId: face.id, status: "offered", expiresAt: { gt: new Date() } },
     }),
     activeTermFor(db, face.id),
     db.rule.findMany({ orderBy: { id: "asc" } }),
     isTribunalMember(db, face.id),
+    moderationHandoverStatus(db),
   ]);
 
   const queue = term ? await caseQueueFor(db, face.id) : [];
@@ -56,6 +58,15 @@ export default async function ModerationPage({
     <>
       <h1>The moderation workbench</h1>
       {m && <div className="notice">{m}</div>}
+      {!handover.communityOffersEnabled && (
+        <div className="notice">
+          Community moderation is still in bootstrap. Badge offers are paused until
+          the eligible pool reaches {handover.minimumProfiles} active profiles;
+          {" "}{handover.willingProfiles} profile(s) have demonstrated willingness
+          in the last {handover.willingnessWindowDays} days. Severe or urgent cases
+          use the designated operations path.
+        </div>
+      )}
 
       {offer && (
         <div className="door-banner">

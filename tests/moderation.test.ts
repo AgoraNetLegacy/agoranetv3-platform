@@ -386,6 +386,41 @@ describe("the whole road: flag → blur → ruling → tombstone → ladder", ()
   });
 });
 
+describe("moderation bootstrap handover", () => {
+  it("does not issue community badge offers before the eligible pool is viable", async () => {
+    const previous = process.env.MODERATION_COMMUNITY_OFFERS_ENABLED;
+    delete process.env.MODERATION_COMMUNITY_OFFERS_ENABLED;
+    const offer = await db.badgeOffer.create({
+      data: {
+        profileId: judge.trueSelfId,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+    await db.notification.create({
+      data: {
+        profileId: judge.trueSelfId,
+        tier: "time-sensitive",
+        category: "badge-offer",
+        title: "You've been offered a moderation badge",
+        body: "Bootstrap test offer",
+        refType: "badge-offer",
+        refId: offer.id,
+      },
+    });
+
+    await runModerationSweeps(db);
+
+    expect(
+      await db.badgeOffer.count({ where: { id: offer.id, status: "offered" } })
+    ).toBe(0);
+    expect(
+      await db.notification.count({ where: { refType: "badge-offer", refId: offer.id } })
+    ).toBe(0);
+    if (previous === undefined) delete process.env.MODERATION_COMMUNITY_OFFERS_ENABLED;
+    else process.env.MODERATION_COMMUNITY_OFFERS_ENABLED = previous;
+  });
+});
+
 describe("db:verify over the whole Phase 5 state", () => {
   it("passes on the honest state", () => {
     const result = runVerify();

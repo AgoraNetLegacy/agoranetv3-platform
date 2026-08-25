@@ -166,6 +166,51 @@ async function accusedOf(
 
 // ----------------------------------------------------------------- badges
 
+const DEFAULT_BOOTSTRAP_MIN_PROFILES = 15;
+
+function moderationBootstrapConfig() {
+  const configuredMinimum = Number(process.env.MODERATION_BOOTSTRAP_MIN_PROFILES);
+  const configuredWillingnessWindow = Number(process.env.MODERATION_WILLING_WINDOW_DAYS);
+  return {
+    communityOffersEnabled: process.env.MODERATION_COMMUNITY_OFFERS_ENABLED === "true",
+    minimumProfiles:
+      Number.isSafeInteger(configuredMinimum) && configuredMinimum > 0
+        ? configuredMinimum
+        : DEFAULT_BOOTSTRAP_MIN_PROFILES,
+    willingnessWindowDays:
+      Number.isSafeInteger(configuredWillingnessWindow) && configuredWillingnessWindow > 0
+        ? configuredWillingnessWindow
+        : 30,
+  };
+}
+
+export async function moderationHandoverStatus(db: PrismaClient) {
+  const config = moderationBootstrapConfig();
+  const willingnessCutoff = new Date(
+    Date.now() - config.willingnessWindowDays * 86_400_000
+  );
+  const [eligibleProfiles, activeTerms, pendingOffers] = await Promise.all([
+    db.profile.count({ where: { status: "active", readOnlyUntil: null } }),
+    db.badgeTerm.count({ where: { endsAt: { gt: new Date() } } }),
+    db.badgeOffer.count({ where: { status: "offered", expiresAt: { gt: new Date() } } }),
+  ]);
+  const willingRows = await db.badgeTerm.findMany({
+    where: { startedAt: { gte: willingnessCutoff } },
+    select: { profileId: true },
+    distinct: ["profileId"],
+  });
+  return {
+    stage: config.communityOffersEnabled && eligibleProfiles >= config.minimumProfiles ? "S1" : "S0",
+    communityOffersEnabled: config.communityOffersEnabled && eligibleProfiles >= config.minimumProfiles,
+    eligibleProfiles,
+    willingProfiles: willingRows.length,
+    willingnessWindowDays: config.willingnessWindowDays,
+    minimumProfiles: config.minimumProfiles,
+    activeTerms,
+    pendingOffers,
+  } as const;
+}
+
 /** All sweeps, run opportunistically (no scheduler infrastructure). */
 export async function runModerationSweeps(db: PrismaClient): Promise<void> {
   const now = new Date();
@@ -182,6 +227,48 @@ export async function runModerationSweeps(db: PrismaClient): Promise<void> {
  *  within poll-set bounds (§2.6). */
 async function scaleOffers(db: PrismaClient): Promise<void> {
   const now = new Date();
+  const config = moderationBootstrapConfig();
+  const candidates = await db.profile.findMany({
+    where: { status: "active", readOnlyUntil: null },
+    select: { id: true },
+  });
+
+  // S0 is deliberate. Until the platform has a viable draw pool, community
+  // badge offers create noise without providing safe anonymous moderation.
+  // Withdraw only still-pending offers and their unread alerts; accepted or
+  // completed terms remain part of the audit history.
+  if (!config.communityOffersEnabled || candidates.length < config.minimumProfiles) {
+    const pending = await db.badgeOffer.findMany({
+      where: { status: "offered", expiresAt: { gt: now } },
+      select: { id: true },
+    });
+    if (pending.length > 0) {
+      const ids = pending.map((offer) => offer.id);
+      await db.badgeOffer.updateMany({
+        where: { id: { in: ids }, status: "offered" },
+        data: { status: "expired" },
+      });
+    }
+    // Offers that expired before bootstrap was enabled can also leave stale
+    // unread alerts behind. Preserve read history, but remove unread alerts
+    // that no longer point to an actionable offer.
+    const inactive = await db.badgeOffer.findMany({
+      where: { status: { in: ["expired", "passed"] } },
+      select: { id: true },
+    });
+    if (inactive.length > 0) {
+      await db.notification.deleteMany({
+        where: {
+          category: "badge-offer",
+          refType: "badge-offer",
+          refId: { in: inactive.map((offer) => offer.id) },
+          readAt: null,
+        },
+      });
+    }
+    return;
+  }
+
   const [poolMin, poolMax, offerWindowHours, cooldownDays] = await Promise.all([
     getRail(db, "moderation.poolMin"),
     getRail(db, "moderation.poolMax"),
@@ -202,10 +289,6 @@ async function scaleOffers(db: PrismaClient): Promise<void> {
   if (deficit <= 0) return;
 
   // Eligible: active profiles, no live term/offer, past cooldown.
-  const candidates = await db.profile.findMany({
-    where: { status: "active", readOnlyUntil: null },
-    select: { id: true },
-  });
   const cooldownCutoff = new Date(now.getTime() - cooldownDays * 86_400_000);
   const shuffled = candidates.sort(() => Math.random() - 0.5);
   for (const candidate of shuffled) {
