@@ -1,4 +1,5 @@
 import { loginFace } from "@/app/actions";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +25,18 @@ export default async function LoginPage({
         </label>
         <button type="submit">Sign in</button>
       </form>
-      <p className="interim-note">
-        New here? <a href="/verify">Create your True Self.</a> Already have
-        a True Self? <a href="/alias">Create an Alias</a> for private
-        participation.
+      <section className="login-next-step" aria-labelledby="alias-next-step">
+        <h3 id="alias-next-step">Finished creating your True Self?</h3>
+        <p>
+          Create your Alias next for private participation. Your Alias is a
+          separate identity and will receive its own access key.
+        </p>
+        <Link className="login-next-step-action" href="/alias">
+          Create your Alias
+        </Link>
+      </section>
+      <p className="login-first-step">
+        Completely new to AgoraNet? <Link href="/verify">Create your True Self first.</Link>
       </p>
     </div>
   );
