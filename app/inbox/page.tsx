@@ -40,6 +40,9 @@ export default async function InboxPage() {
         {n.refType === "dm-thread" && n.refId && (
           <Link href={`/dm/${n.refId}`}>open conversation →</Link>
         )}
+        {n.refType === "chamber" && n.refId && (
+          <Link href={`/pollinator/${n.refId}/workshop`}>open chamber workshop →</Link>
+        )}
         {n.refType === "post" && n.refId && <span className="lore">see the thread</span>}
         {(n.category === "badge-offer" || n.category === "moderation-review") && (
           <Link href="/moderation">to the moderation workbench →</Link>
