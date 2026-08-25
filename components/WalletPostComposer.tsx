@@ -341,7 +341,24 @@ export function WalletPostComposer({
       <button type="submit" disabled={busy}>
         {busy ? "Working with Lace…" : `${label} · ${feeLabel} from Lace`}
       </button>
-      {status && <p className="notice">{status}</p>}
+      {status && (
+        <p className="notice">
+          {status}
+          {status.includes("permanence and Constitution acknowledgments") && (
+            <>
+              {" "}
+              <a
+                href={`/verify/consents?returnTo=${encodeURIComponent(
+                  typeof window === "undefined" ? "/" : window.location.pathname
+                )}`}
+              >
+                Complete onboarding acknowledgments
+              </a>
+              {" "}to continue.
+            </>
+          )}
+        </p>
+      )}
     </form>
   );
 }
