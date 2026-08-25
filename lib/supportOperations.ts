@@ -4,6 +4,7 @@ import { HELP_RETRIEVAL_DOCUMENTS } from "./helpContent";
 import { containsPastedSecret, SUPPORT_CATEGORIES, SUPPORT_SEVERITIES } from "./support";
 
 export const SUPPORT_OPERATOR_ROLES = ["agent", "lead", "security"] as const;
+export const OWNER_DASHBOARD_HANDLE = "shawnb";
 export const SUPPORT_CASE_STATUSES = ["new", "assigned", "waiting", "resolved", "closed"] as const;
 export type SupportOperatorRole = (typeof SUPPORT_OPERATOR_ROLES)[number];
 export type SupportCaseStatus = (typeof SUPPORT_CASE_STATUSES)[number];
@@ -34,6 +35,24 @@ export async function getActiveSupportOperator(
 ): Promise<ActiveSupportOperator | null> {
   return db.supportOperator.findFirst({
     where: { profileId, active: true },
+    include: { profile: { select: { id: true, handle: true, displayName: true } } },
+  });
+}
+
+/** The initial owner dashboard is intentionally narrower than the support
+ * console: only the designated @shawnb profile with an active lead grant. */
+export async function getOwnerDashboardOperator(
+  db: DbOrTx,
+  profileId: string
+): Promise<ActiveSupportOperator | null> {
+  if (process.env.OWNER_DASHBOARD_ENABLED === "false") return null;
+  return db.supportOperator.findFirst({
+    where: {
+      profileId,
+      active: true,
+      role: "lead",
+      profile: { handle: OWNER_DASHBOARD_HANDLE, status: "active" },
+    },
     include: { profile: { select: { id: true, handle: true, displayName: true } } },
   });
 }

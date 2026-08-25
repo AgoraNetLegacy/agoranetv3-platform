@@ -32,7 +32,10 @@ export default async function SupportOperationsPage({
           <h1>Support queue</h1>
           <p className="lore">Signed in as @{operator.profile.handle} · {operator.role}. Access is scoped to this profile.</p>
         </div>
-        <Link href="/support">Public help →</Link>
+        <div className="support-ops-links">
+          <Link href="/support/operations/overview">Growth & onboarding →</Link>
+          <Link href="/support">Public help →</Link>
+        </div>
       </div>
 
       <div className="notice">
