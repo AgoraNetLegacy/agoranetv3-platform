@@ -22,6 +22,7 @@ import {
   acceptRestorative,
   activeStrikeCount,
   seatTribunal,
+  isSoloBootstrapOperator,
 } from "../lib/moderation";
 import { inboxFor } from "../lib/notifications";
 import { makeOnboardedSoul, topUpForTests } from "./helpers/souls";
@@ -418,6 +419,47 @@ describe("moderation bootstrap handover", () => {
     ).toBe(0);
     if (previous === undefined) delete process.env.MODERATION_COMMUNITY_OFFERS_ENABLED;
     else process.env.MODERATION_COMMUNITY_OFFERS_ENABLED = previous;
+  });
+
+  it("lets one audited lead handle a routine S0 case without a badge", async () => {
+    await db.supportOperator.upsert({
+      where: { profileId: judge.trueSelfId },
+      create: { profileId: judge.trueSelfId, role: "lead", active: true },
+      update: { role: "lead", active: true },
+    });
+    expect(await isSoloBootstrapOperator(db, judge.trueSelfId)).toBe(true);
+
+    const pillar = await db.pillar.findFirstOrThrow({ where: { isMeta: false } });
+    const room = await db.discussion.create({
+      data: {
+        title: "S0 moderation fixture",
+        pillarId: pillar.id,
+        permanence: "deletable",
+      },
+    });
+    const post = await createPost(db, {
+      discussionId: room.id,
+      profileId: author.trueSelfId,
+      body: "Routine S0 moderation fixture.",
+    });
+    if (!post.ok) throw new Error(post.reason);
+    const flagged = await fileFlag(db, {
+      postId: post.postId,
+      profileId: flagger.trueSelfId,
+      ruleId: "R1.1",
+    });
+    expect(flagged.ok).toBe(true);
+    const modCase = await db.modCase.findFirstOrThrow({ where: { postId: post.postId } });
+    expect(modCase.heavy).toBe(false);
+
+    expect((await caseQueueFor(db, judge.trueSelfId)).some((item) => item.id === modCase.id)).toBe(true);
+    const ruled = await submitRuling(db, {
+      caseId: modCase.id,
+      profileId: judge.trueSelfId,
+      verdict: "decline",
+    });
+    expect(ruled).toEqual({ ok: true });
+    expect((await db.modCase.findUniqueOrThrow({ where: { id: modCase.id } })).status).toBe("resolved");
   });
 });
 

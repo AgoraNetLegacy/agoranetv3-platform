@@ -11,6 +11,7 @@ import {
   isTribunalMember,
   tribunalDocket,
   moderationHandoverStatus,
+  isSoloBootstrapOperator,
 } from "@/lib/moderation";
 import {
   equipOffer,
@@ -37,7 +38,7 @@ export default async function ModerationPage({
 
   await runModerationSweeps(db);
 
-  const [offer, term, rules, tribunal, handover] = await Promise.all([
+  const [offer, term, rules, tribunal, handover, soloOperator] = await Promise.all([
     db.badgeOffer.findFirst({
       where: { profileId: face.id, status: "offered", expiresAt: { gt: new Date() } },
     }),
@@ -45,9 +46,10 @@ export default async function ModerationPage({
     db.rule.findMany({ orderBy: { id: "asc" } }),
     isTribunalMember(db, face.id),
     moderationHandoverStatus(db),
+    isSoloBootstrapOperator(db, face.id),
   ]);
 
-  const queue = term ? await caseQueueFor(db, face.id) : [];
+  const queue = term || soloOperator ? await caseQueueFor(db, face.id) : [];
   const files = await Promise.all(queue.slice(0, 10).map((c) => caseFileFor(db, c.id)));
   const supervision = term ? await supervisionQueueFor(db, face.id) : [];
   const rating = await myModerationRating(db, face.id);
@@ -65,6 +67,14 @@ export default async function ModerationPage({
           {" "}{handover.willingProfiles} profile(s) have demonstrated willingness
           in the last {handover.willingnessWindowDays} days. Severe or urgent cases
           use the designated operations path.
+        </div>
+      )}
+      {soloOperator && (
+        <div className="notice">
+          S0 solo operations fallback is active for this profile. You may handle
+          routine, non-heavy cases under the published rules. Heavy, severe, and
+          appealed cases remain outside this queue until an independent reviewer
+          or the appropriate Tribunal path is available.
         </div>
       )}
 
@@ -88,7 +98,7 @@ export default async function ModerationPage({
         </div>
       )}
 
-      {term ? (
+      {term || soloOperator ? (
         <>
           {/* §5.3 design pass: the bench at a glance; this term, this
               identity, nothing global. */}
@@ -98,17 +108,18 @@ export default async function ModerationPage({
               <div className="stat-label">cases waiting for you</div>
             </div>
             <div className="stat">
-              <div className="stat-number">{term.casesCompleted}</div>
-              <div className="stat-label">completed this term</div>
+              <div className="stat-number">{term ? term.casesCompleted : "S0"}</div>
+              <div className="stat-label">{term ? "completed this term" : "solo fallback"}</div>
             </div>
             <div className="stat">
-              <div className="stat-number">{term.gratiumEarned.toFixed(1)} G</div>
-              <div className="stat-label">earned; service is paid, never charged</div>
+              <div className="stat-number">{term ? `${term.gratiumEarned.toFixed(1)} G` : "—"}</div>
+              <div className="stat-label">{term ? "earned; service is paid, never charged" : "no badge reward in S0"}</div>
             </div>
           </div>
           <p className="lore">
-            Badge active until {term.endsAt.toLocaleString()}; hard cutoff,
-            no carryover.
+            {term
+              ? `Badge active until ${term.endsAt.toLocaleString()}; hard cutoff, no carryover.`
+              : "This is a named, auditable bootstrap role; it does not expand your authority or bypass the rulebook."}
           </p>
 
           <h3>Case queue ({files.length})</h3>
@@ -157,7 +168,7 @@ export default async function ModerationPage({
           ))}
           {files.length === 0 && <p className="lore">The queue is clear.</p>}
 
-          {supervision.length > 0 && (
+          {term && supervision.length > 0 && (
             <>
               <h3>Supervision queue</h3>
               {supervision.map((r) => (
@@ -183,14 +194,23 @@ export default async function ModerationPage({
             </>
           )}
 
-          <h3>My term & rating (visible to you alone)</h3>
-          <p className="lore">
-            Cases ruled: {rating.casesRuled} · resolved with outcome:{" "}
-            {rating.resolvedWithOutcome} · supervision overrides:{" "}
-            {rating.supervisionOverrides} · current reward multiplier:{" "}
-            {rating.rewardMultiplier}× (inputs are public; the weights are
-            not; the only way to raise it is to moderate well).
-          </p>
+          {term ? (
+            <>
+              <h3>My term & rating (visible to you alone)</h3>
+              <p className="lore">
+                Cases ruled: {rating.casesRuled} · resolved with outcome:{" "}
+                {rating.resolvedWithOutcome} · supervision overrides:{" "}
+                {rating.supervisionOverrides} · current reward multiplier:{" "}
+                {rating.rewardMultiplier}× (inputs are public; the weights are
+                not; the only way to raise it is to moderate well).
+              </p>
+            </>
+          ) : (
+            <p className="lore">
+              Appeals cannot return to the original operator. They remain queued
+              for an independent reviewer or the next authorized review body.
+            </p>
+          )}
         </>
       ) : (
         !offer && (

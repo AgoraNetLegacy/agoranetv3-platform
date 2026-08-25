@@ -173,6 +173,9 @@ function moderationBootstrapConfig() {
   const configuredWillingnessWindow = Number(process.env.MODERATION_WILLING_WINDOW_DAYS);
   return {
     communityOffersEnabled: process.env.MODERATION_COMMUNITY_OFFERS_ENABLED === "true",
+    // S0 is intentionally usable with one named operations lead. Set this
+    // false to pause even that testnet/bootstrap fallback.
+    soloOperatorEnabled: process.env.MODERATION_SOLO_OPERATOR_ENABLED !== "false",
     minimumProfiles:
       Number.isSafeInteger(configuredMinimum) && configuredMinimum > 0
         ? configuredMinimum
@@ -182,6 +185,32 @@ function moderationBootstrapConfig() {
         ? configuredWillingnessWindow
         : 30,
   };
+}
+
+/**
+ * The S0 fallback is deliberately tied to an existing, audited support-lead
+ * grant rather than to a hidden founder switch. It is routine-only: heavy,
+ * Tribunal, and severe cases remain queued for the appropriate later lane.
+ */
+export async function isSoloBootstrapOperator(db: PrismaClient, profileId: string) {
+  const config = moderationBootstrapConfig();
+  if (!config.soloOperatorEnabled) return false;
+  const handover = await moderationHandoverStatus(db);
+  if (handover.stage !== "S0") return false;
+  const operator = await db.supportOperator.findFirst({
+    where: { profileId, active: true, role: { in: ["lead", "security"] } },
+    select: { profileId: true },
+  });
+  return Boolean(operator);
+}
+
+export async function canUseSoloBootstrapFallback(
+  db: PrismaClient,
+  profileId: string,
+  modCase: Pick<ModCase, "heavy" | "tier" | "tribunal">
+) {
+  if (modCase.heavy || modCase.tribunal || modCase.tier !== 1) return false;
+  return isSoloBootstrapOperator(db, profileId);
 }
 
 export async function moderationHandoverStatus(db: PrismaClient) {
@@ -456,9 +485,14 @@ export async function caseFileFor(db: PrismaClient, caseId: string) {
 /** Open cases this moderator may rule: conflicts excluded (§10.5). */
 export async function caseQueueFor(db: PrismaClient, profileId: string) {
   const term = await activeTermFor(db, profileId);
-  if (!term) return [];
+  const soloFallback = !term && (await isSoloBootstrapOperator(db, profileId));
+  if (!term && !soloFallback) return [];
   const cases = await db.modCase.findMany({
-    where: { status: "open", tribunal: false },
+    where: {
+      status: "open",
+      tribunal: false,
+      ...(soloFallback ? { heavy: false, tier: 1 } : {}),
+    },
     orderBy: [{ expedited: "desc" }, { createdAt: "asc" }],
     include: { flags: { select: { reporterProfileId: true } }, rulings: true },
   });
@@ -523,7 +557,6 @@ export async function submitRuling(
   input: RulingInput
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
   const term = await activeTermFor(db, input.profileId);
-  if (!term) return { ok: false, reason: "No active badge; the workbench is closed to you." };
 
   const modCase = await db.modCase.findUnique({
     where: { id: input.caseId },
@@ -542,6 +575,13 @@ export async function submitRuling(
     !["open", "awaiting-supervision"].includes(modCase.status)
   ) {
     return { ok: false, reason: "This case is not open." };
+  }
+  const soloFallback = !term && (await canUseSoloBootstrapFallback(db, input.profileId, modCase));
+  if (!term && !soloFallback) {
+    return { ok: false, reason: "This case requires an active community moderation term." };
+  }
+  if (soloFallback && modCase.status !== "open") {
+    return { ok: false, reason: "This case is waiting for an independent review." };
   }
   const accused = await accusedOf(db, modCase);
   if (accused.profileId === input.profileId) {
@@ -572,7 +612,7 @@ export async function submitRuling(
   const initial = await getRail(db, "moderation.supervisionInitialCases");
   const myConfirmed = await confirmedRulingCount(db, input.profileId);
   const needsSupervision =
-    myConfirmed < initial && (await qualifiedSupervisorExists(db, input.profileId));
+    !soloFallback && myConfirmed < initial && (await qualifiedSupervisorExists(db, input.profileId));
 
   // The nullifier keys the ruling (v2 sealed-vote pattern) and enforces
   // one-ruling-per-moderator-per-case; private recording; the public

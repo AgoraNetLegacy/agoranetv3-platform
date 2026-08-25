@@ -85,7 +85,7 @@ The following stages replace the overly simple “founder authority disappears a
 
 | Stage | Routine cases | Heavy cases | Severe / imminent harm | Fallback role |
 |---|---|---|---|---|
-| S0; Founding Bench | Constitutional fallback / interim bench | Two-reviewer interim bench | Operations and counsel | Primary moderation path |
+| S0; Founding Bench | One named, audited operations lead; second review when available | Two-reviewer interim bench | Operations and counsel | Primary moderation path |
 | S1; Supervised Community | Community holder with fallback second review | Bench or authorized fallback with community observer where safe | Operations and counsel | Supervisor and continuity path |
 | S2; Community Routine | Community sortition | Three-holder community majority when pool permits | Tribunal or operations/counsel | Residual, disclosed fallback only |
 | S3; Full Sortition | Community sortition | Community majority | Community Tribunal plus permanent operations/counsel lane | Dormant unless constitutionally reactivated |
@@ -154,6 +154,27 @@ While S0–S2 fallback authority exists:
 - the fallback cannot appoint itself, alter its own rails, or suppress the public record.
 
 At S0, independent appeal may be structurally limited. That limitation must be displayed plainly rather than described as independent review.
+
+### 8.1 S0 solo-operator rule
+
+AgoraNet's initial testnet may have only one available operations lead. S0
+therefore does not require two people before routine moderation can function.
+An active support `lead` or `security` grant is the authorization for the
+named solo fallback; an ordinary signed-in profile or a support `agent` is not.
+
+The solo fallback is limited to routine, non-heavy, non-Tribunal cases. The
+moderator is recused from their own content, their own flags, related interests,
+and any appeal of a case they ruled. Heavy, severe, Tribunal, and appealed
+cases remain queued for the appropriate independent or Tribunal path. A solo
+S0 ruling takes effect directly because there is no second reviewer yet, but
+the ruling still records the operator profile, private gate nullifier, cited
+rule, verdict, and timestamp. Appeals cannot return to that operator.
+
+The fallback is enabled by default while the system is S0 and can be paused
+with `MODERATION_SOLO_OPERATOR_ENABLED=false`. When the community capability
+becomes active, the solo queue closes automatically; the existing sortition
+path remains authoritative. The UI identifies the active state as an S0 solo
+operations fallback and does not describe it as community moderation.
 
 ## 9. Tribunal seat conversion
 
@@ -339,6 +360,13 @@ The first bootstrap slice is now implemented in the application:
 - stale unread badge-offer notifications are removed while read history remains;
 - the moderation workbench reports that community moderation is still in bootstrap;
 - the workbench distinguishes active profiles from profiles that have recently accepted a badge term;
+- an active support lead or security operator can handle routine, non-heavy S0
+  cases without fabricating a moderation badge;
+- the S0 UI discloses the solo fallback, keeps heavy/severe/appealed cases out
+  of its queue, and explains that appeals require a later independent reviewer;
 - a regression test verifies that a small pool cannot generate community offers.
 
-This is intentionally not a claim that the full handover is complete. The staged pool-health calculator, constitutional fallback routing, Tribunal conversion, anchored event model, and contract-backed ratchet remain the next implementation phases described above.
+This is intentionally not a claim that the full handover is complete. The
+staged pool-health calculator, richer constitutional fallback routing, Tribunal
+conversion, anchored event model, and contract-backed ratchet remain the next
+implementation phases described above.
