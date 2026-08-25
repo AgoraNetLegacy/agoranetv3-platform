@@ -62,6 +62,29 @@ export interface SearchFilters {
 
 const LIMIT_PER_TYPE = 12;
 
+/** Search should accept the way people actually ask questions, not require
+ * one exact phrase to appear verbatim in a title. Keep the original query
+ * first for exact matches, then add normalized words for broad recall. */
+function queryTerms(value: string): string[] {
+  const trimmed = value.trim();
+  const words = trimmed
+    .toLocaleLowerCase()
+    .split(/[^\p{L}\p{N}@_-]+/u)
+    .filter((word) =>
+      word.length >= 2 &&
+      !new Set(["a", "an", "and", "are", "at", "for", "how", "i", "in", "is", "it", "my", "of", "on", "or", "the", "to", "what", "where", "who", "with", "your"]).has(word)
+    );
+  // A phrase with only one meaningful word is kept as a phrase. This avoids
+  // turning a private-space probe such as "who moves it" into a broad search
+  // for the generic word "moves" across canon and public documentation.
+  if (words.length < 2) return [trimmed].filter(Boolean);
+  return [...new Set([trimmed, ...words])].filter(Boolean).slice(0, 10);
+}
+
+function containsAny(field: string, terms: string[]) {
+  return terms.map((term) => ({ [field]: { contains: term } }));
+}
+
 function want(filters: SearchFilters, type: EntityType): boolean {
   return !filters.types || filters.types.length === 0 || filters.types.includes(type);
 }
@@ -85,6 +108,8 @@ export async function search(
   const q = query.trim();
   if (!q) return [];
   const soulQuery = q.replace(/^@/, "");
+  const terms = queryTerms(q);
+  const soulTerms = queryTerms(soulQuery);
   const hits: SearchHit[] = [];
   const created = dateWhere(filters);
 
@@ -102,7 +127,10 @@ export async function search(
         where: {
           circleId: null,
           chamberId: null,
-          title: { contains: q },
+          OR: [
+            ...containsAny("title", terms),
+            { posts: { some: { status: "visible", body: { contains: q } } } },
+          ],
           ...(filters.pillarSlug ? { pillar: { slug: filters.pillarSlug } } : {}),
           ...(filters.permanence === "permanent"
             ? { permanence: { startsWith: "permanent" } }
@@ -117,7 +145,7 @@ export async function search(
       db.post.findMany({
         where: {
           status: "visible",
-          body: { contains: q },
+          OR: containsAny("body", terms),
           discussion: {
             circleId: null,
             chamberId: null,
@@ -131,7 +159,11 @@ export async function search(
       }),
       db.circle.findMany({
         where: {
-          OR: [{ name: { contains: q } }, { purpose: { contains: q } }, { problem: { contains: q } }],
+          OR: [
+            ...containsAny("name", terms),
+            ...containsAny("purpose", terms),
+            ...containsAny("problem", terms),
+          ],
           ...(filters.pillarSlug ? { pillar: { slug: filters.pillarSlug } } : {}),
           ...(filters.place ? { placeTag: { contains: filters.place } } : {}),
         },
@@ -141,10 +173,12 @@ export async function search(
       db.chamber.findMany({
         where: {
           OR: [
-            { title: { contains: q } },
-            { isPublic: true, subject: { contains: q } },
-            { isPublic: true, pitch: { contains: q } },
-            { isPublic: true, whyCare: { contains: q } },
+            ...containsAny("title", terms),
+            ...terms.flatMap((term) => [
+              { isPublic: true, subject: { contains: term } },
+              { isPublic: true, pitch: { contains: term } },
+              { isPublic: true, whyCare: { contains: term } },
+            ]),
           ],
         },
         include: { members: { select: { id: true } } },
@@ -202,7 +236,10 @@ export async function search(
     const profiles = await db.profile.findMany({
       where: {
         status: "active",
-        OR: [{ handle: { contains: soulQuery.toLowerCase() } }, { displayName: { contains: soulQuery } }],
+        OR: [
+          ...containsAny("handle", soulTerms),
+          ...containsAny("displayName", soulTerms),
+        ],
       },
       take: LIMIT_PER_TYPE,
     });
@@ -237,7 +274,10 @@ export async function search(
     const matches = await db.profile.findMany({
       where: {
         id: { in: ids },
-        OR: [{ handle: { contains: soulQuery.toLowerCase() } }, { displayName: { contains: soulQuery } }],
+        OR: [
+          ...containsAny("handle", soulTerms),
+          ...containsAny("displayName", soulTerms),
+        ],
       },
       take: LIMIT_PER_TYPE,
     });
@@ -255,7 +295,7 @@ export async function search(
   // 4; Places: Circles are place-aware; a city surfaces its initiatives.
   if (want(filters, "places")) {
     const circles = await db.circle.findMany({
-      where: { placeTag: { contains: q } },
+      where: { OR: containsAny("placeTag", terms) },
       include: { members: { where: { leftAt: null }, select: { id: true } } },
       take: LIMIT_PER_TYPE,
     });
@@ -278,24 +318,24 @@ export async function search(
       db.pillar.findMany({
         where: {
           OR: [
-            { name: { contains: q } },
-            { classicalName: { contains: q } },
-            { loreName: { contains: q } },
+            ...containsAny("name", terms),
+            ...containsAny("classicalName", terms),
+            ...containsAny("loreName", terms),
           ],
         },
       }),
       db.question.findMany({
-        where: { text: { contains: q } },
+        where: { OR: containsAny("text", terms) },
         include: { pillar: true, discussion: { select: { id: true } } },
         take: LIMIT_PER_TYPE,
       }),
       db.domain.findMany({
         where: {
           OR: [
-            { title: { contains: q } },
-            { openingQuestion: { contains: q } },
-            { reality: { contains: q } },
-            { impactPoint: { contains: q } },
+            ...containsAny("title", terms),
+            ...containsAny("openingQuestion", terms),
+            ...containsAny("reality", terms),
+            ...containsAny("impactPoint", terms),
           ],
           ...(filters.pillarSlug ? { pillar: { slug: filters.pillarSlug } } : {}),
         },
@@ -341,17 +381,23 @@ export async function search(
         where: {
           isGovernance: true,
           status: "closed",
-          OR: [{ title: { contains: q } }, { description: { contains: q } }],
+          OR: [...containsAny("title", terms), ...containsAny("description", terms)],
         },
         include: { pillar: true },
         take: LIMIT_PER_TYPE,
       }),
       db.rule.findMany({
-        where: { OR: [{ title: { contains: q } }, { summary: { contains: q } }, { id: { contains: q } }] },
+        where: {
+          OR: [
+            ...containsAny("title", terms),
+            ...containsAny("summary", terms),
+            ...containsAny("id", terms),
+          ],
+        },
         take: LIMIT_PER_TYPE,
       }),
       /^\d{4}(-\d{2}){0,2}$/.test(q)
-        ? db.treasurySnapshot.findMany({ where: { day: { contains: q } }, take: 5 })
+        ? db.treasurySnapshot.findMany({ where: { OR: containsAny("day", terms) }, take: 5 })
         : Promise.resolve([]),
     ]);
     for (const p of govPolls) {
@@ -389,7 +435,7 @@ export async function search(
     const polls = await db.poll.findMany({
       where: {
         visibilityScope: "public",
-        OR: [{ title: { contains: q } }, { description: { contains: q } }],
+        OR: [...containsAny("title", terms), ...containsAny("description", terms)],
         ...(filters.pollStatus ? { status: filters.pollStatus } : {}),
         ...(filters.pillarSlug ? { pillar: { slug: filters.pillarSlug } } : {}),
         ...(created ? { createdAt: created } : {}),
@@ -412,7 +458,7 @@ export async function search(
   // the research capability.
   if (want(filters, "sources")) {
     const sources = await db.sourceObject.findMany({
-      where: { url: { contains: q } },
+      where: { OR: containsAny("url", terms) },
       include: {
         usages: {
           include: { post: { include: { discussion: { include: { pillar: true } } } } },
@@ -440,26 +486,26 @@ export async function search(
   // 9; Help & platform docs: how things work, fees, rules; the rails
   // ARE the honest documentation of every number.
   if (want(filters, "help")) {
-    const needle = q.toLowerCase();
     for (const article of helpArticlesForViewer(Boolean(viewerProfileId))) {
-      const titleMatch = article.title.toLowerCase().includes(needle);
+      const titleMatch = terms.some((term) => article.title.toLowerCase().includes(term.toLowerCase()));
       const text = [
         article.summary,
         article.body.join(" "),
         (article.keywords ?? []).join(" "),
       ].join(" ");
-      if (!titleMatch && !text.toLowerCase().includes(needle)) continue;
+      const searchable = text.toLowerCase();
+      if (!titleMatch && !terms.some((term) => searchable.includes(term.toLowerCase()))) continue;
       hits.push({
         type: "help",
         title: article.title,
         href: `/support/${article.slug}`,
         snippet: article.summary,
         badge: `${article.category} · approved help article`,
-        score: titleMatch ? 4 : 2,
+        score: titleMatch ? 4 : terms.filter((term) => searchable.includes(term.toLowerCase())).length + 1,
       });
     }
     const rails = viewerProfileId ? await db.rail.findMany({
-      where: { OR: [{ key: { contains: q } }, { description: { contains: q } }] },
+      where: { OR: [...containsAny("key", terms), ...containsAny("description", terms)] },
       take: LIMIT_PER_TYPE,
     }) : [];
     for (const r of rails) {
