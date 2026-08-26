@@ -57,8 +57,8 @@ Pending does not mean failure. Cardano confirmation can take a little time. Do n
 
 When the post is confirmed, eligible fake dGRA and dPOLL rewards are queued to the linked wallet. Reward delivery may appear after the post because it is processed separately and verified on the chain.
 
-Some AgoraNet actions are not wallet-ready yet, including workshop posts that require two token types, tips, permanence upgrades, and mission releases. AgoraNet will tell you when that happens. Switch this identity to Credits mode in Settings if you need one of those actions now. The platform will not silently use internal Credits while the identity remains in Wallet mode.
+Some actions may still use the internal PC/G ledger while their external wallet settlement rail is being implemented. Wallet mode does not create a second application balance.
 
-Chamber and workshop posts are currently in that not-yet-wallet-ready group. They use a two-token action, so Wallet mode will show **“This action is not available in Wallet mode yet.”** Switch the current identity to **Credits mode** in Settings, save the participation mode, and then post in the Chamber. This does not change another identity’s mode.
+Chambers and workshop posts use the same PC/G balances as Credits mode. External wallet settlement for those two-token actions can be added later without changing the balances or fees.
 
 If Lace shows the wrong account, decline the request, switch accounts in Lace, and try again. If the transaction was already submitted and the post still does not appear, open Help and Support and include the public transaction hash and the exact non-secret message shown. Never include an access key, seed phrase, spending password, signing key, or private key.

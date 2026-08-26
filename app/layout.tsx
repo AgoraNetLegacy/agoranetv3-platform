@@ -36,6 +36,10 @@ async function FaceBar() {
   }
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
   const walletMode = economyMode === "wallet" || economyMode === "mixed";
+  // PC/G are one application asset. In Wallet mode, show internal ledger
+  // custody plus observed testnet custody as one balance.
+  const pcTotal = balances.PC + Number(walletBalances.PC);
+  const gTotal = balances.G + Number(walletBalances.G);
   return (
     <div className="face-bar">
       <span className={`face-chip ${chipClass}`}>
@@ -44,10 +48,10 @@ async function FaceBar() {
       </span>
       <span className="balance-chip">
         <span className="currency-tooltip" aria-hidden="true">
-          {walletMode ? "Wallet balance · Cardano testnet" : "AgoraNet Credits"}
+          {walletMode ? "PC/G balance · internal + Cardano testnet custody" : "PC/G balance · internal custody"}
         </span>
         <span className="currency-amount">
-          <span className="currency-symbol" tabIndex={0} aria-label={walletMode ? "PollCoin Demo wallet balance" : "PollCoin Credits"}>
+          <span className="currency-symbol" tabIndex={0} aria-label="PollCoin balance">
             <img
               className="currency-mark pollcoin-mark"
               src="/brand/pollcoin/pollcoin-token-v1.webp"
@@ -56,11 +60,11 @@ async function FaceBar() {
             />
             <span className="currency-tooltip" aria-hidden="true">PollCoin</span>
           </span>
-          {walletMode ? walletBalances.PC : balances.PC.toFixed(2)} {walletMode ? "dPOLL" : "PC Credits"}
+          {pcTotal.toFixed(2)} PC
         </span>
         <span className="balance-divider" aria-hidden="true" />
         <span className="currency-amount">
-          <span className="currency-symbol" tabIndex={0} aria-label={walletMode ? "Gratium Demo wallet balance" : "Gratium Credits"}>
+          <span className="currency-symbol" tabIndex={0} aria-label="Gratium balance">
             <img
               className="currency-mark"
               src="/brand/gratium/concepts/gratium-single-rail.svg"
@@ -69,7 +73,7 @@ async function FaceBar() {
             />
             <span className="currency-tooltip" aria-hidden="true">Gratium</span>
           </span>
-          {walletMode ? walletBalances.G : balances.G.toFixed(2)} {walletMode ? "dGRA" : "G Credits"}
+          {gTotal.toFixed(2)} G
         </span>
       </span>
       <LightScoreMenu key={face.handle} />

@@ -28,8 +28,12 @@ delete or repurpose hosted resources until their role is recorded here.
 - [x] Run PostgreSQL migrations (`0_init`, reply-fee update, and
   `20260817_chamber_cover_metadata`).
 - [x] Seed the staging database.
-- [ ] Re-provision and verify the operations service; the 2026-08-18 Railway
-  inventory contains only the three PostgreSQL services.
+- [x] Re-provision and verify the private `agoranet-operations` scheduler.
+  The 2026-08-25 deployment is built from `Dockerfile.operations`, has no
+  public domain, mounts its persistent backup volume at `/data`, and starts
+  the UTC scheduler loop successfully.
+- [ ] Observe the first scheduled backup and monthly restore drill, then
+  confirm Railway failure notifications for this service.
 
 ## Vercel; application hosting
 
@@ -71,6 +75,9 @@ recorded roles are:
 - `Postgres`; application database.
 - `Postgres-TSjx`; scratch/restore-drill database.
 - `Postgres-43aM`; unassigned; do not change until its role is confirmed.
+- `agoranet-operations`; private scheduler with the
+  `agoranet-operations-volume` volume mounted at `/data`. It uses `Postgres`
+  for routine work and `Postgres-TSjx` only for restore drills.
 
 ## Working staging result
 
@@ -80,9 +87,11 @@ recorded roles are:
 - Main database: `Postgres` with TCP public access enabled on port 5432.
 - Scratch database: `Postgres-TSjx` reserved for restore drills.
 - Verification: Postgres invariant suite passed and all public smoke surfaces
-  returned HTTP 200 with their expected landmarks. The repository contains the
-  scheduled commands, but the Railway operations service is absent from the
-  live 2026-08-18 inventory and must be re-provisioned before relying on cron.
+  returned HTTP 200 with their expected landmarks. The private Railway
+  operations service is online; its corrected Docker build, mounted volume,
+  PostgreSQL Prisma client, and scheduler startup were verified on 2026-08-25.
+  The remaining evidence is the first scheduled backup, restore drill, and
+  configured failure notifications.
 - Anti-bot gate: Cloudflare Turnstile is enabled in Production; `/verify`
   successfully renders and validates the challenge.
 - Public image lane: Vercel Blob store `agoranet-chamber-covers`; Chamber

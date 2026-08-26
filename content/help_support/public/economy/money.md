@@ -46,13 +46,13 @@ You do not need a crypto wallet to use AgoraNet. New profiles begin in Credits m
 
 If you already understand wallets, open Settings, connect a supported Cardano testnet wallet, and choose Wallet mode. Wallet mode displays fake dPOLL and dGRA held by that wallet. These test assets have no real value. Your wallet remains under your control; AgoraNet never asks for its seed phrase or private key.
 
-Wallet mode is not just a different balance display. For an action marked wallet-ready, Lace opens and shows the fake-token payment for you to approve. AgoraNet publishes the action only after the test network confirms the expected payment from the wallet linked to that identity. Supported rewards are queued to that same wallet. If an action is not wallet-ready, AgoraNet tells you to switch that identity to Credits mode; it does not quietly take internal Credits.
+Wallet mode is an alternate custody and settlement rail for the same PC/G assets. Actions that are not yet wallet-settled use the canonical internal ledger, so Wallet mode does not remove product functionality. Wallet-ready actions may ask Lace to approve the corresponding testnet token movement.
 
 The first wallet-ready action is an ordinary Discussion post or reply. Lace asks for the displayed dPOLL fee. After you approve it, the page may say **pending** while Cardano Preprod confirms the payment. Do not pay a second time. If the browser closes, AgoraNet keeps the public transaction hash and can finish the pending post automatically.
 
 Settings shows **Your recent testnet wallet activity** for the current AgoraNet identity. It translates the technical steps into plain statuses such as waiting for Lace, being sent, waiting for testnet confirmation, confirmed, or support review needed. Confirmed and submitted items link to the public testnet transaction when a hash exists. Wallet addresses are not repeated in this timeline.
 
-When testnet Credit claims are enabled, a Credits user may explicitly claim eligible Credits as fake wallet assets. This is never automatic: AgoraNet shows the amount, destination, pending state, and confirmation separately. Credits and wallet balances are never silently combined.
+When testnet custody transfers are enabled, an internal PC/G balance may be moved to the linked wallet through an explicit, auditable settlement action. This is never automatic; the amount, destination, pending state, and confirmation are shown separately.
 
 Small fees and refundable deposits discourage automated spam and repeated disruptive actions. A fee is not vote weight, reputation, or permission to break a rule. Current amounts and limits are published on Transparency and may change through the platform's approved voting process.
 

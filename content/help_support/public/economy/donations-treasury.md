@@ -40,7 +40,7 @@ links:
     label: Treasury
 ---
 
-Open Transparency for published fees and system activity. Open Treasury for public treasury balances and transactions. AgoraNet labels Credits separately from fake dPOLL and dGRA held in a Cardano testnet wallet. A pending Credit claim is also shown separately until the chain confirms delivery.
+Open Transparency for published fees and system activity. Open Treasury for public treasury balances and transactions. AgoraNet uses PC and G as the canonical assets; internal ledger custody and fake dPOLL/dGRA testnet custody are shown as settlement details. A pending custody transfer is shown separately until the chain confirms delivery.
 
 If a donation or treasury transaction looks missing, first check whether your wallet shows it as pending, failed, or confirmed. Save the transaction hash, which is the public reference shown by the wallet, and note the approximate time.
 

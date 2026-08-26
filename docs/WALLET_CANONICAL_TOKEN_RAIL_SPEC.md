@@ -8,13 +8,19 @@
 **Test network:** Cardano Preprod, using fake/demo assets
 **Production network:** To be selected only after legal, economic, and security approval
 
+> **Current implementation decision (2026-08-26):** PC and G are the canonical
+> application assets in both modes. Internal ledger custody and Cardano testnet
+> custody are settlement rails for the same assets, not separate currencies.
+
 ## 1. Executive decision
 
 AgoraNet's long-term model has two user paths:
 
 - New users can participate immediately with AgoraNet Credits; no wallet or crypto knowledge is required.
 - Advanced users can connect a wallet and claim fake/testnet PC/G into their own wallet.
-- Wallet-held PC/G is the source of truth for on-chain ownership.
+- Wallet-held PC/G is the source of truth for on-chain ownership when a wallet
+  settlement has occurred; the internal ledger is the source of truth for
+  platform actions not yet settled externally.
 - AgoraNet displays wallet balances through an indexer and displays Credits through its internal ledger.
 - Users approve wallet value-moving transactions themselves.
 - AgoraNet never receives seed phrases, private keys, signing keys, or wallet spending authority.

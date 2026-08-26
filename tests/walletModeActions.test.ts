@@ -228,7 +228,7 @@ describe("wallet-paid discussion posts", () => {
     expect(await balanceOf(db, creditsProfileId, "PC")).toBe(before - 1);
   });
 
-  it("refuses silent internal charges in Wallet mode", async () => {
+  it("uses the same internal ledger in Wallet mode until an external rail exists", async () => {
     const before = await balanceOf(db, profileId, "G");
     const result = await db.$transaction((tx) =>
       chargeToTreasury(tx, {
@@ -238,8 +238,8 @@ describe("wallet-paid discussion posts", () => {
         kind: "fee.unsupported-test",
       })
     );
-    expect(result.ok).toBe(false);
-    expect(await balanceOf(db, profileId, "G")).toBe(before);
+    expect(result.ok).toBe(true);
+    expect(await balanceOf(db, profileId, "G")).toBe(before - 1);
   });
 });
 

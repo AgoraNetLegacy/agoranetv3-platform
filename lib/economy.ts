@@ -42,17 +42,12 @@ export async function creditsModeAvailable(
   db: DbOrTx,
   profileId: string
 ): Promise<EconomyResult> {
-  const profile = await db.profile.findUnique({
-    where: { id: profileId },
-    select: { economyMode: true },
-  });
-  if (profile?.economyMode === "wallet") {
-    return {
-      ok: false,
-      reason:
-        "This action is not wallet-ready yet. Wallet mode will never charge or reward Credits silently; use a wallet-ready action or switch this profile to Credits mode in Settings.",
-    };
-  }
+  // PC/G are the canonical application balances in both modes. Wallet mode
+  // is an external settlement rail, not a second set of currencies; until a
+  // wallet rail is available for a given action, its ledger entry remains in
+  // the same internal balance used by Credits mode.
+  void db;
+  void profileId;
   return { ok: true };
 }
 
@@ -93,10 +88,6 @@ export async function chargeToTreasury(
   }
 ): Promise<EconomyResult> {
   if (input.amount <= 0) return { ok: true };
-  if (input.kind !== "claim.reserve") {
-    const mode = await creditsModeAvailable(tx, input.profileId);
-    if (!mode.ok) return mode;
-  }
   if (!(await debitBalance(tx, input.profileId, input.currency, input.amount))) {
     const balance = await balanceOf(tx, input.profileId, input.currency);
     return {
