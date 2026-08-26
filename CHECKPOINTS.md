@@ -1976,3 +1976,25 @@ gates pass. The live PostgreSQL verifier still reports four pre-existing DM
 ciphertext-authentication failures in legacy social-message rows; no message
 data was altered, and wallet deployment/activation does not silently waive
 that separate integrity issue. All wallet and claim flags remain false.
+
+## 2026-08-25; Railway operations scheduler restored
+
+The missing scheduled-operations host was re-provisioned as the private
+Railway service `agoranet-operations`. It is built from the committed
+`Dockerfile.operations` (PostgreSQL client tools plus the PostgreSQL Prisma
+client), runs `npm run ops:scheduler`, has no public domain, and checks the
+UTC timetable every 15 seconds. Its persistent Railway volume is mounted at
+`/data`; backup archives write to `/data/backups`.
+
+Routine work references the live `Postgres` database. Restore drills reference
+only the separate `Postgres-TSjx` scratch database. The testnet ledger-anchor
+credentials are scoped to this operations service; no application, helpdesk,
+or wallet-user credentials were copied there. A first generic Railpack
+deployment was detected and stopped by its SQLite client before any scheduled
+backup; the build was corrected by setting `RAILWAY_DOCKERFILE_PATH` to
+`Dockerfile.operations` and redeployed. The corrected service is online and
+its startup log confirms both the mounted volume and the scheduler loop.
+
+Remaining operational evidence: observe the first nightly backup and the
+first monthly restore drill, and confirm Railway failure notifications for
+this service.

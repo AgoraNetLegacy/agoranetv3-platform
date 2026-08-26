@@ -3,9 +3,9 @@
 Phase 8 deliverable. The app is deployed to staging and verified from
 the public internet. The Postgres track, runtime guard, backup/drill
 machinery, and scheduled ops commands are built and tested. A live inventory
-on 2026-08-18 found only the three PostgreSQL services in Railway; the
-operations service must be re-provisioned before scheduled execution can be
-considered active.
+on 2026-08-18 found only the three PostgreSQL services in Railway. That gap
+was closed on 2026-08-25: the private `agoranet-operations` service is now
+online and running the UTC schedule in `docs/RUNBOOK.md`.
 
 **Current staging URL:** https://agoranet-staging.vercel.app
 
@@ -100,6 +100,13 @@ The staging application is live. The deployed resources are:
 - Railway service `Postgres-TSjx`: reserved scratch/restore-drill database.
 - Railway service `Postgres-43aM`: existing unassigned service; do not
   delete or repurpose until its role is confirmed.
+- Railway service `agoranet-operations`: private scheduler; `1 vCPU`, `500
+  MB`, `Dockerfile.operations`, no public domain. Its `agoranet-operations-
+  volume` volume is mounted at `/data`, with backups written to
+  `/data/backups`. It references `Postgres` for routine operations and
+  `Postgres-TSjx` only for restore drills. The daily testnet anchor credentials
+  are scoped to this service; unrelated application and helpdesk secrets are
+  not copied here.
 
 The deployment used `vercel.json` with build command
 `npm run build:postgres`. Hosted secrets were generated and stored in
@@ -159,9 +166,8 @@ existed.
 ### Remaining staging operations
 
 - Complete the throwaway-soul cohort walkthrough.
-- Re-provision the Railway operations service, schedule
-  `npm run platform:maintain`, and verify its existing backup, drill, crush,
-  prune, and anchor jobs plus failure notifications.
+- Verify the first scheduled backup, then the first monthly restore drill;
+  ensure Railway failure notifications are enabled for the operations service.
 
 ### Grounded helpdesk model runtime
 
