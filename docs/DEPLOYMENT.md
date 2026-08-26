@@ -46,7 +46,7 @@ than Render and needs no new signups.
 |---|---|---|
 | Node 20+, `npm run build:postgres` + `npm start` | The app | package.json |
 | Managed PostgreSQL, TLS, pooled + direct URLs | DATABASE_SETUP.md | runtime guard refuses anything else |
-| Scheduled jobs (4 jobs) | Backups, drill, crush, prune | docs/RUNBOOK.md §1 |
+| Private operations service | Six scheduled maintenance, backup, retention, drill, and testnet-anchor jobs | docs/RUNBOOK.md §1 |
 | Storage for backup files | BACKUP_DR §3 (owner-ratified posture) | backup script writes there |
 | A scratch Postgres database | The monthly restore drill | drill refuses to run against production |
 | Secret manager for the three platform secrets + DB URLs + (since Phase 8.6) the testnet chain secrets, if that rail deploys too | Custody discipline | runtime guard checks strength |
@@ -72,13 +72,11 @@ the way he already thinks about infrastructure):
   small monthly minimum; check the current rate on the dashboard) is
   the backend: managed Postgres (pooled + direct connection strings,
   matching DATABASE_SETUP.md's dual-URL expectation) plus a second
-  free database for the restore drill, AND a small always-on service
-  running the four ops jobs (backup, drill, crush, prune) on
-  schedule. Railway containers are real, persistent, and have a real
-  filesystem; unlike Vercel's serverless functions, they can run
-  `pg_dump`/`pg_restore` as genuine long-lived processes and hold
-  backup files on an attached volume with no third service needed for
-  storage.
+  free database for the restore drill, AND a small private operations
+  service running the six jobs in docs/RUNBOOK.md on schedule. Its
+  Railway-only Docker image includes `pg_dump`/`pg_restore`; an attached
+  volume holds backup archives. Unlike Vercel's serverless functions,
+  it can run those genuine long-lived processes and retain the archives.
 
 Superseded by this: the Render recommendation (cost) and a briefly-
 considered Vercel+Neon+GitHub-Actions+Cloudflare-R2 stitch (unneeded

@@ -20,15 +20,13 @@ or off-platform copy**; §4's quarterly drill exists partly to answer
 
 ## 1. What runs on a schedule (cron, explained)
 
-`cron` is the host's job scheduler: a daemon that reads a table
-(`crontab`) of "at these times, run this command" lines. Each line is
-five time fields (minute, hour, day-of-month, month, day-of-week)
-followed by the command. `crontab -e` edits your user's table;
-`crontab -l` lists it. Railway (the decided host; see
-docs/DEPLOYMENT.md, owner-ratified 2026-07-13) offers the same thing
-as "cron jobs" in its dashboard, which is what we'll actually use: you
-paste the command and pick the schedule in a UI, and the host runs it
-in the app's environment (env vars already present).
+`cron` is the host's job scheduler: a daemon that reads a table of
+"at these times, run this command" lines. AgoraNet uses one private
+Railway operations service instead of relying on web requests or six
+separate services. Its `npm run ops:scheduler` process checks the UTC
+timetable below and runs the existing one-shot commands. The service
+has no public domain; Railway restarts it if a job fails, making the
+failure visible rather than silently skipping it.
 
 The platform's schedule (all times UTC):
 
