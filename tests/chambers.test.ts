@@ -283,6 +283,14 @@ describe("public storefront covers", () => {
   });
 
   it("rejects unsupported or inaccessible image input", async () => {
+    const onePixelPng = await sharp({
+      create: {
+        width: 2,
+        height: 2,
+        channels: 3,
+        background: { r: 24, g: 135, b: 157 },
+      },
+    }).png().toBuffer();
     const rejected = await prepareChamberCover({
       bytes: Buffer.from("<svg><script>alert(1)</script></svg>"),
       declaredMime: "image/svg+xml",
@@ -291,13 +299,13 @@ describe("public storefront covers", () => {
     expect(rejected.ok).toBe(false);
     if (!rejected.ok) expect(rejected.reason).toContain("JPEG, PNG, or WebP");
 
-    const noAlt = await prepareChamberCover({
-      bytes: Buffer.from("not an image"),
+    const blankAlt = await prepareChamberCover({
+      bytes: onePixelPng,
       declaredMime: "image/png",
       altText: " ",
     });
-    expect(noAlt.ok).toBe(false);
-    if (!noAlt.ok) expect(noAlt.reason).toContain("description");
+    expect(blankAlt.ok).toBe(true);
+    if (blankAlt.ok) expect(blankAlt.cover.altText).toBe("");
   });
 });
 

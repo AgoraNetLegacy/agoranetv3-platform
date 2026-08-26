@@ -115,7 +115,7 @@ export default async function StorefrontPage({
         <figure className="chamber-cover">
           <img
             src={chamber.coverImageUrl}
-            alt={chamber.coverImageAlt ?? "Chamber storefront cover"}
+            alt={chamber.coverImageAlt ?? ""}
           />
           {chamber.coverImageAlt && <figcaption>{chamber.coverImageAlt}</figcaption>}
         </figure>
@@ -145,7 +145,6 @@ export default async function StorefrontPage({
                 type="text"
                 maxLength={160}
                 defaultValue={chamber.coverImageAlt ?? ""}
-                required
               />
             </label>
             <button type="submit">

@@ -1742,7 +1742,8 @@ Proof of Humanity specification.
 Optional public Chamber covers now use the `agoranet-chamber-covers` Vercel
 Blob store. JPEG, PNG, and WebP inputs are limited to 5 MB, decoded under a
 pixel ceiling, auto-oriented, cropped to 16:9, stripped of metadata, and stored
-as content-hashed WebP. Alt text is required. Only the Chamber creator may add
+as content-hashed WebP. Creator-provided image descriptions are optional; a
+blank description marks a decorative image. Only the Chamber creator may add
 or replace a cover, and every change produces an append-only public ledger
 event without exposing the creator's internal profile ID. Private workshop
 content has no image path.

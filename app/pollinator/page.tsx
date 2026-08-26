@@ -275,8 +275,8 @@ export default async function PollinatorPage({
                     placeholder="People rebuilding something together"
                   />
                   <span className="field-help">
-                    Required when an image is selected; describe what the
-                    image communicates.
+                    Optional; describe what the image communicates, or leave
+                    blank if it is decorative.
                   </span>
                 </label>
               </fieldset>

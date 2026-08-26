@@ -37,9 +37,6 @@ export async function prepareChamberCover(input: {
   altText: string;
 }): Promise<ChamberCoverResult<{ cover: PreparedChamberCover }>> {
   const altText = input.altText.trim();
-  if (!altText) {
-    return { ok: false, reason: "Add a short description for the cover image." };
-  }
   if (altText.length > CHAMBER_COVER_ALT_MAX) {
     return {
       ok: false,
