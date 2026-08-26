@@ -1,0 +1,29 @@
+# Keep local state and credentials out of Railway Docker build contexts.
+.git
+.github
+.next
+node_modules
+coverage
+test-results
+backups
+
+# Local databases and runtime artifacts.
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.log
+*.tsbuildinfo
+.DS_Store
+
+# Local and deployment credentials. The operations service receives only the
+# explicit Railway variables it needs.
+.env
+.env.*
+!.env.example
+.vercel
+
+# Unrelated generated Midnight artifacts.
+infra/midnight/contract/build
+infra/midnight/node_modules
+infra/midnight/midnight-level-db
