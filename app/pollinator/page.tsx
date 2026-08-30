@@ -45,13 +45,17 @@ export default async function PollinatorPage({
   const canCreate = unifiedBalance
     ? canAffordUnifiedCost(unifiedBalance, creationCost)
     : false;
-  // Old failures were placed in the query string. Do not replay a stale
-  // PollCoin-only rejection after the canonical PC/G check says the user can
-  // create; otherwise an old bookmarked URL makes the repaired page look broken.
-  const stalePollCoinNotice = Boolean(
-    m && (m.includes("Insufficient PollCoin") || m.includes("earnable path covers committed souls"))
+  // Failures are placed in the query string. Do not replay any stale balance
+  // rejection after the canonical PC/G check says the user can create;
+  // otherwise an earlier failed submission makes the repaired page look broken.
+  const staleBalanceNotice = Boolean(
+    m &&
+      (m.includes("Insufficient PollCoin") ||
+        m.includes("Insufficient combined PC/G balance") ||
+        m.includes("Insufficient platform-held PC/G") ||
+        m.includes("earnable path covers committed souls"))
   );
-  const noticeMessage = stalePollCoinNotice
+  const noticeMessage = staleBalanceNotice
     ? canCreate
       ? null
       : unifiedBalance
