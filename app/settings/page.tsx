@@ -229,10 +229,9 @@ export default async function SettingsPage({
 
       <h4>Choose how this profile participates</h4>
       <p className="lore">
-        Credits mode is the beginner path and needs no wallet. Wallet mode is
-        the advanced testnet path for people ready to approve fake-asset
-        transactions in Lace. It stays unavailable until the platform actions
-        that use it have passed their activation checkpoint. This choice
+        Platform custody needs no wallet. Wallet custody is the advanced
+        testnet path for people ready to approve token transactions in Lace.
+        PC and G remain the same two currencies in either location. This choice
         belongs only to {face.displayName} @{face.handle}; your other profile
         keeps its own choice.
       </p>
@@ -244,7 +243,7 @@ export default async function SettingsPage({
             value="credits"
             defaultChecked={face.economyMode === "credits"}
           />{" "}
-          Credits mode; participate without learning wallet tools
+          Platform custody; AgoraNet holds this profile&apos;s PC and G
         </label>
         <label style={{ display: "block", margin: "0.3rem 0" }}>
           <input
@@ -254,16 +253,16 @@ export default async function SettingsPage({
             defaultChecked={face.economyMode === "wallet"}
             disabled={!walletLink || !walletModeActivationReady()}
           />{" "}
-          Wallet mode; approve fake dPOLL and dGRA actions in Lace on Cardano {network}
+          Wallet custody; approve test dPOLL and dGRA actions in Lace on Cardano {network}
         </label>
         {!walletModeActivationReady() && (
           <p className="lore">
-            Wallet mode is installed but remains safely off until a normal
+            Wallet custody is installed but remains safely off until a normal
             AgoraNet fee and reward work end to end with fake wallet assets.
           </p>
         )}
-        {!walletLink && <p className="lore">Connect a testnet wallet before selecting Wallet mode.</p>}
-        <button type="submit">Save participation mode</button>
+        {!walletLink && <p className="lore">Connect a testnet wallet before selecting wallet custody.</p>}
+        <button type="submit">Save custody preference</button>
       </form>
 
       {walletLink && demoAssets && (
@@ -276,7 +275,7 @@ export default async function SettingsPage({
           <br />
           <span className="lore">
             Read from Cardano {network}; observed {demoAssets.observedAt?.toLocaleString() ?? "not yet"}.
-            Credits remain separate unless you explicitly claim them later.
+            These are wallet-held PC and G. Any platform-held PC/G remains under platform custody until you explicitly move it.
           </span>
         </div>
       )}
@@ -315,33 +314,33 @@ export default async function SettingsPage({
 
       {walletLink && creditClaimsTestnetEnabled() && (
         <>
-          <h4>Claim fake wallet assets from Credits</h4>
+          <h4>Move platform-held PC/G to your testnet wallet</h4>
           <p className="lore">
-            This optional test converts eligible AgoraNet Credits into fake
-            dPOLL or dGRA at your linked {network} wallet. The Credits are
-            reserved now and consumed only when delivery is confirmed. These
+            This optional test moves eligible platform-held PC or G into fake
+            dPOLL or dGRA at your linked {network} wallet. The tokens are
+            reserved now and deducted from platform custody only when delivery is confirmed. These
             test assets have no real value.
           </p>
           <form action={submitCreditClaim}>
             <input type="hidden" name="idempotencyKey" value={`settings:${face.id}:${randomUUID()}`} />
             <label>
-              Credit type{" "}
+              Token{" "}
               <select name="currency" defaultValue="PC">
-                <option value="PC">PollCoin Credits ({(creditAmount.get("PC") ?? 0).toFixed(2)} available)</option>
-                <option value="G">Gratium Credits ({(creditAmount.get("G") ?? 0).toFixed(2)} available)</option>
+                <option value="PC">PC ({(creditAmount.get("PC") ?? 0).toFixed(2)} platform-held)</option>
+                <option value="G">G ({(creditAmount.get("G") ?? 0).toFixed(2)} platform-held)</option>
               </select>
             </label>{" "}
             <label>
               Amount{" "}
               <input type="number" name="creditAmount" min={1} max={claimMaximum} step={1} defaultValue={1} required />
             </label>{" "}
-            <button type="submit">Claim fake wallet assets</button>
+            <button type="submit">Move tokens to wallet</button>
           </form>
           {creditClaims.length > 0 && (
             <ul className="lore">
               {creditClaims.map((claim) => (
                 <li key={claim.id}>
-                  {claim.creditAmount} {claim.currency} Credits → {claim.assetAmount}{" "}
+                  {claim.creditAmount} platform-held {claim.currency} → {claim.assetAmount}{" "}
                   {claim.currency === "PC" ? "dPOLL" : "dGRA"}: {claim.status}
                 </li>
               ))}

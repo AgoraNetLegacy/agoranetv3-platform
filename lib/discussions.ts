@@ -369,13 +369,12 @@ export async function createPost(
       if (gate.outcome !== "CLEARED") {
         return { ok: false as const, reason: `Gate: ${gate.outcome}` };
       }
-    // The participation fee: workshop posts carry the dual-token
-    // signature (POLLINATOR §3; both currencies, rails chamber.postFee*);
-    // everywhere else, the standard reply micro-fee.
+    // Workshop posts use the unified PC/G participation cost; everywhere
+    // else uses the standard reply micro-fee.
     if (discussion.chamberId) {
       if (input.walletFee) {
         throw new InsufficientFunds(
-          "Wallet-mode workshop posting is not available yet. Switch this identity to Credits mode for this action."
+          "Wallet settlement is not available for workshop posts yet. Select platform custody to pay with platform-held PC/G."
         );
       }
       const { chargeWorkshopPostFee, touchChamberActivity } = await import("./chambers");

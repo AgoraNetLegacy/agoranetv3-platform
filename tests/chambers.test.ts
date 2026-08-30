@@ -1,9 +1,7 @@
 // Phase 7.5; Chambers (Pollinator v1). The invariants under test:
-// the dual-token signature (creation and workshop posts charge BOTH
-// currencies; both halves or neither), the ratified creation
-// requirements (scaffold + "why should people care"), the entry
-// prerequisites (gate + carrying both tokens; the complete definition,
-// owner-resolved OQ5), private chambers as creator-invite-only, and the
+// unified PC/G participation model (both currencies count 1:1 toward one
+// cost), the ratified creation requirements (scaffold + "why should people
+// care"), free gate-cleared entry, private chambers as creator-invite-only, and the
 // enclosure: workshop content never reaches the ledger, Light Score,
 // the open lens, or public search; and db:verify FAILS LOUDLY when it
 // does.
@@ -25,14 +23,13 @@ import {
   inviteToChamber,
   chamberMembership,
   workshopAccess,
-  carriesBothTokens,
   pendingInvitesFor,
 } from "../lib/chambers";
 import { createPost, upgradePostPermanence } from "../lib/discussions";
 import { createPoll, castVote, closeDuePolls } from "../lib/polls";
 import { fileReleaseFlag } from "../lib/flags";
 import { resolveCase, caseFileFor, appealCase } from "../lib/moderation";
-import { balanceOf, tip } from "../lib/economy";
+import { balanceOf, chargeToTreasury, tip, unifiedBalanceOf } from "../lib/economy";
 import {
   chamberBalanceOf,
   creditMissionBalance,
@@ -60,7 +57,9 @@ const db = new PrismaClient({ datasources: { db: { url } } });
 let creatorId: string;
 let workerId: string;
 let strangerId: string;
-let paupergId: string; // a soul drained of Gratium; fails "carrying both"
+let paupergId: string;
+let mixedFundsId: string;
+let insufficientFundsId: string;
 let publicChamberId: string;
 let privateChamberId: string;
 let workshopId: string;
@@ -99,17 +98,51 @@ beforeAll(async () => {
   const s2 = await makeOnboardedSoul(db, { trueSelf: "chamber-worker", alias: "cw-shade" });
   const s3 = await makeOnboardedSoul(db, { trueSelf: "chamber-stranger", alias: "cs-shade" });
   const s4 = await makeOnboardedSoul(db, { trueSelf: "chamber-pauper", alias: "cp-shade" });
+  const s5 = await makeOnboardedSoul(db, { trueSelf: "chamber-mixed", alias: "cm-shade" });
+  const s6 = await makeOnboardedSoul(db, { trueSelf: "chamber-low", alias: "cl-shade" });
   creatorId = s1.trueSelfId;
   workerId = s2.trueSelfId;
   strangerId = s3.trueSelfId;
   paupergId = s4.trueSelfId;
+  mixedFundsId = s5.trueSelfId;
+  insufficientFundsId = s6.trueSelfId;
+
+  // Screenshot regression fixtures: 5 PC + 15 G meets the 20-unit cost;
+  // 5 PC + 14 G does not. Use accounted treasury charges to shape the
+  // balances so db:verify conservation still holds.
+  await db.$transaction(async (tx) => {
+    await chargeToTreasury(tx, {
+      profileId: mixedFundsId,
+      currency: "PC",
+      amount: 20,
+      kind: "fee.discussion",
+    });
+    await chargeToTreasury(tx, {
+      profileId: mixedFundsId,
+      currency: "G",
+      amount: 10,
+      kind: "fee.permanence",
+    });
+    await chargeToTreasury(tx, {
+      profileId: insufficientFundsId,
+      currency: "PC",
+      amount: 20,
+      kind: "fee.discussion",
+    });
+    await chargeToTreasury(tx, {
+      profileId: insufficientFundsId,
+      currency: "G",
+      amount: 11,
+      kind: "fee.permanence",
+    });
+  });
 }, 120_000);
 
 afterAll(async () => {
   await db.$disconnect();
 });
 
-describe("creation; the dual-token signature", () => {
+describe("creation; one canonical PC/G participation cost", () => {
   it("refuses a chamber without the scaffold or the why-care answer", async () => {
     const noWhy = await createChamber(db, {
       profileId: creatorId,
@@ -137,31 +170,38 @@ describe("creation; the dual-token signature", () => {
     expect(await db.chamber.count()).toBe(0);
   });
 
-  it("refuses creation when EITHER token is short; both halves or neither", async () => {
-    // Drain the pauper's Gratium below the 20u fee via a real tip
-    // (accounted flow; conservation holds). Verified grant = 25 G.
-    const seedPost = await db.post.findFirst({ where: { authorProfileId: { not: paupergId } } });
-    // No posts exist yet; make one to tip, from the stranger.
-    const canon = await db.discussion.findFirstOrThrow({ where: { questionId: { not: null } } });
-    const posted = await createPost(db, {
-      discussionId: canon.id,
-      profileId: strangerId,
-      body: "A substantive first voice, so a tip has a destination.",
-    });
-    expect(posted.ok).toBe(true);
-    if (!posted.ok) return;
-    expect(seedPost).toBeNull();
-    const tipped = await tip(db, { postId: posted.postId, tipperProfileId: paupergId, amount: 15 });
-    expect(tipped.ok).toBe(true);
-
-    const gBefore = await balanceOf(db, paupergId, "G");
-    expect(gBefore).toBeLessThan(20);
-    const pcBefore = await balanceOf(db, paupergId, "PC");
-    expect(pcBefore).toBeGreaterThanOrEqual(20);
+  it("accepts the screenshot case when mixed PC/G funds total 20 units", async () => {
+    const before = await unifiedBalanceOf(db, mixedFundsId);
+    expect(before.total).toBe(20);
+    expect(before.components.PC.balance).toBe(5);
+    expect(before.components.G.balance).toBe(15);
 
     const result = await createChamber(db, {
-      profileId: paupergId,
-      title: "Underfunded",
+      profileId: mixedFundsId,
+      title: "Mixed Funds",
+      subject: "An idea",
+      pitch: "A pitch",
+      whyCare: "It matters",
+      isPublic: true,
+      scaffold: SCAFFOLD,
+    });
+    expect(result.ok).toBe(true);
+    const fees = await db.economyEntry.findMany({
+      where: { kind: "fee.chamber", fromProfileId: mixedFundsId },
+      orderBy: { currency: "asc" },
+    });
+    expect(fees.map((entry) => [entry.currency, entry.amount])).toEqual([
+      ["G", 15],
+      ["PC", 5],
+    ]);
+  });
+
+  it("rejects a combined balance below 20 with an accurate unified message", async () => {
+    const before = await unifiedBalanceOf(db, insufficientFundsId);
+    expect(before.total).toBe(19);
+    const result = await createChamber(db, {
+      profileId: insufficientFundsId,
+      title: "Still Underfunded",
       subject: "An idea",
       pitch: "A pitch",
       whyCare: "It matters",
@@ -169,15 +209,19 @@ describe("creation; the dual-token signature", () => {
       scaffold: SCAFFOLD,
     });
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.reason).toContain("Gratium");
-    // The transaction rolled back whole: no chamber, and the PC half
-    // was not kept.
-    expect(await db.chamber.count()).toBe(0);
-    expect(await balanceOf(db, paupergId, "PC")).toBe(pcBefore);
-    expect(await db.economyEntry.count({ where: { kind: "fee.chamber" } })).toBe(0);
+    if (!result.ok) {
+      expect(result.reason).toContain("Insufficient combined PC/G balance");
+      expect(result.reason).toContain("19.00 of 20.00");
+    }
+    expect((await unifiedBalanceOf(db, insufficientFundsId)).total).toBe(19);
+    expect(
+      await db.economyEntry.count({
+        where: { kind: "fee.chamber", fromProfileId: insufficientFundsId },
+      })
+    ).toBe(0);
   });
 
-  it("creates a public chamber: dual fee to the treasury, workshop born deletable, creator inside, civic record", async () => {
+  it("creates a public chamber: unified fee to the treasury, workshop born deletable, creator inside, civic record", async () => {
     const treasuryPcBefore = (await db.treasuryBalance.findUnique({ where: { currency: "PC" } }))?.amount ?? 0;
     const treasuryGBefore = (await db.treasuryBalance.findUnique({ where: { currency: "G" } }))?.amount ?? 0;
 
@@ -194,14 +238,16 @@ describe("creation; the dual-token signature", () => {
     if (!result.ok) return;
     publicChamberId = result.chamberId;
 
-    // Both halves reached the treasury (creation is the only fee so far).
+    // The creator has enough PC, so the deterministic unified charge uses
+    // 20 PC and does not require a separate G half.
     const treasuryPc = (await db.treasuryBalance.findUnique({ where: { currency: "PC" } }))!.amount;
     const treasuryG = (await db.treasuryBalance.findUnique({ where: { currency: "G" } }))!.amount;
     expect(treasuryPc - treasuryPcBefore).toBeCloseTo(20);
-    // 15-G tip above paid a 5% cut (0.75) into the treasury before this.
-    expect(treasuryG - treasuryGBefore).toBeCloseTo(20);
-    const feeEntries = await db.economyEntry.findMany({ where: { kind: "fee.chamber" } });
-    expect(feeEntries.map((e) => e.currency).sort()).toEqual(["G", "PC"]);
+    expect(treasuryG - treasuryGBefore).toBeCloseTo(0);
+    const feeEntries = await db.economyEntry.findMany({
+      where: { kind: "fee.chamber", fromProfileId: creatorId },
+    });
+    expect(feeEntries.map((e) => [e.currency, e.amount])).toEqual([["PC", 20]]);
 
     // The workshop: exactly one, chamber-scoped, deletable, meta-homed.
     const workshop = await db.discussion.findFirstOrThrow({
@@ -214,7 +260,9 @@ describe("creation; the dual-token signature", () => {
 
     // Creator is member #1; creating is a public civic act.
     expect(await chamberMembership(db, publicChamberId, creatorId)).not.toBeNull();
-    const created = await db.ledgerEvent.findFirst({ where: { eventType: "chamber.created" } });
+    const created = await db.ledgerEvent.findFirst({
+      where: { eventType: "chamber.created", payload: { contains: publicChamberId } },
+    });
     expect(created).not.toBeNull();
     expect(created!.payload).toContain("Surplus to Pantry");
   });
@@ -309,23 +357,8 @@ describe("public storefront covers", () => {
   });
 });
 
-describe("entry; gate + carrying both tokens, and nothing else", () => {
-  it("refuses a soul carrying only one token, and admits them once they carry both", async () => {
-    // The pauper spent Gratium down but still holds some (15 tipped of
-    // 25); drain to zero with one more tip, then assert refusal.
-    const post = await db.post.findFirstOrThrow({ where: { authorProfileId: strangerId } });
-    const g = await balanceOf(db, paupergId, "G");
-    if (g > 0) {
-      const drained = await tip(db, { postId: post.id, tipperProfileId: paupergId, amount: g });
-      expect(drained.ok).toBe(true);
-    }
-    expect(await carriesBothTokens(db, paupergId)).toBe(false);
-
-    const refused = await enterChamber(db, { chamberId: publicChamberId, profileId: paupergId });
-    expect(refused.ok).toBe(false);
-    if (!refused.ok) expect(refused.reason).toContain("both tokens");
-
-    await topUpForTests(db, paupergId, { g: 5 });
+describe("entry; free gate clearance, and nothing else", () => {
+  it("admits a verified soul regardless of how their PC/G balance is distributed", async () => {
     const admitted = await enterChamber(db, { chamberId: publicChamberId, profileId: paupergId });
     expect(admitted.ok).toBe(true);
   });
@@ -375,7 +408,7 @@ describe("entry; gate + carrying both tokens, and nothing else", () => {
   });
 });
 
-describe("the workshop; dual-token participation inside the enclosure", () => {
+describe("the workshop; unified PC/G participation inside the enclosure", () => {
   it("refuses a non-member's post: enter to see, enter to speak", async () => {
     const result = await createPost(db, {
       discussionId: workshopId,
@@ -386,7 +419,7 @@ describe("the workshop; dual-token participation inside the enclosure", () => {
     if (!result.ok) expect(result.reason).toContain("Enter the chamber");
   });
 
-  it("charges a member BOTH tokens per post and leaves no public trace", async () => {
+  it("charges one canonical 2-unit cost and leaves no public trace", async () => {
     const pcBefore = await balanceOf(db, workerId, "PC");
     const gBefore = await balanceOf(db, workerId, "G");
     const eventsBefore = await db.ledgerEvent.count();
@@ -398,9 +431,8 @@ describe("the workshop; dual-token participation inside the enclosure", () => {
     });
     expect(result.ok).toBe(true);
 
-    // −1 PC fee +1 PC accrual = net 0; −1 G, +5 G first-action grant
-    // already spent elsewhere? No: worker's first fee-bearing action IS
-    // this post → +5 G. Assert the fee entries, not the noisy balances.
+    // PC covers the unified cost first. Assert the fee receipt rather than
+    // noisy balances because first-action and participation grants also run.
     const feePc = await db.economyEntry.findMany({
       where: { kind: "fee.chamber-post", currency: "PC" },
     });
@@ -408,12 +440,10 @@ describe("the workshop; dual-token participation inside the enclosure", () => {
       where: { kind: "fee.chamber-post", currency: "G" },
     });
     expect(feePc.length).toBe(1);
-    expect(feeG.length).toBe(1);
-    expect(feePc[0].amount).toBe(1);
-    expect(feeG[0].amount).toBe(1);
-    // Sanity: the soul actually paid (fee > accrual leaves PC ≤ before + 0).
+    expect(feeG.length).toBe(0);
+    expect(feePc[0].amount).toBe(2);
     expect(await balanceOf(db, workerId, "PC")).toBeLessThanOrEqual(pcBefore);
-    expect(await balanceOf(db, workerId, "G")).toBeGreaterThanOrEqual(gBefore - 1);
+    expect(await balanceOf(db, workerId, "G")).toBeGreaterThanOrEqual(gBefore);
 
     // No public ledger growth from a workshop post: no post.recorded,
     // no gate.cleared (private recording), nothing.
@@ -464,7 +494,7 @@ describe("the workshop; dual-token participation inside the enclosure", () => {
 
 describe("private chambers; the creator selects who gets in", () => {
   it("creates a private chamber and refuses the uninvited", async () => {
-    // The first chamber spent the creator down below a second dual fee;
+    // The first chamber reduced the creator's unified balance;
     // the accounted test faucet stands in for earned balance.
     await topUpForTests(db, creatorId, { pc: 40, g: 40 });
     const result = await createChamber(db, {
@@ -604,15 +634,15 @@ describe("db:verify; the enclosure fails loudly", () => {
     await db.chamberMember.delete({ where: { id: smuggled.id } });
   }, 60_000);
 
-  it("fails loudly when a chamber kept only one half of the dual fee", async () => {
-    const half = await db.economyEntry.findFirstOrThrow({
-      where: { kind: "fee.chamber", currency: "G" },
+  it("fails loudly when a chamber's unified fee receipt is undercounted", async () => {
+    const fee = await db.economyEntry.findFirstOrThrow({
+      where: { kind: "fee.chamber" },
     });
-    await db.economyEntry.update({ where: { id: half.id }, data: { kind: "fee.chamber-halved" } });
+    await db.economyEntry.update({ where: { id: fee.id }, data: { amount: { decrement: 1 } } });
     const result = runVerify();
     expect(result.status).not.toBe(0);
-    expect(result.stdout + result.stderr).toContain("HALF-PAID CHAMBER");
-    await db.economyEntry.update({ where: { id: half.id }, data: { kind: "fee.chamber" } });
+    expect(result.stdout + result.stderr).toContain("CHAMBER COST MISMATCH");
+    await db.economyEntry.update({ where: { id: fee.id }, data: { amount: { increment: 1 } } });
   }, 60_000);
 
   it("passes again once the tampering is reverted", () => {

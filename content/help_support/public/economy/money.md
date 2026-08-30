@@ -1,8 +1,8 @@
 ---
 id: help.economy.money
 slug: money
-title: Credits, wallet balances, PollCoin, and Gratium
-summary: Start with simple AgoraNet Credits, or connect a testnet wallet when you are ready to use fake dPOLL and dGRA directly.
+title: PC, G, and where your tokens are held
+summary: AgoraNet has two currencies, PC and G; they may be held by the platform or in your connected testnet wallet.
 category: economy
 document_type: concept
 audience: public
@@ -21,9 +21,9 @@ keywords:
   - PC
   - fee
   - balance
-  - Credits mode
-  - Wallet mode
-  - claim
+  - platform custody
+  - wallet custody
+  - transfer
   - cost
 error_codes: []
 onboarding_stages: []
@@ -37,16 +37,16 @@ escalate_when: null
 supersedes: null
 links:
   - href: /settings
-    label: Choose Credits or Wallet mode
+    label: Choose platform or wallet custody
   - href: /transparency
     label: View current fees and balances
 ---
 
-You do not need a crypto wallet to use AgoraNet. New profiles begin in Credits mode. PollCoin Credits, shown as PC Credits, pay ordinary participation fees and deposits. Gratium Credits, shown as G Credits, record appreciation. They are internal AgoraNet units, not coins already held in a wallet.
+AgoraNet has two currencies: PollCoin (PC) and Gratium (G). There is no separate Credits currency. You do not need a crypto wallet: new profiles begin with platform custody, where AgoraNet holds that profile's PC and G.
 
-If you already understand wallets, open Settings, connect a supported Cardano testnet wallet, and choose Wallet mode. Wallet mode displays fake dPOLL and dGRA held by that wallet. These test assets have no real value. Your wallet remains under your control; AgoraNet never asks for its seed phrase or private key.
+If you already understand wallets, open Settings, connect a supported Cardano testnet wallet, and choose wallet custody. The header identifies wallet-held dPOLL and dGRA alongside any platform-held PC/G. These test assets have no real value. Your wallet remains under your control; AgoraNet never asks for its seed phrase or private key.
 
-Wallet mode is an alternate custody and settlement rail for the same PC/G assets. Actions that are not yet wallet-settled use the canonical internal ledger, so Wallet mode does not remove product functionality. Wallet-ready actions may ask Lace to approve the corresponding testnet token movement.
+Wallet custody is an alternate location and settlement rail for the same PC/G assets, not another currency. Wallet-ready actions may ask Lace to approve the corresponding testnet token movement. Platform-held tokens can be used without a wallet signature.
 
 The first wallet-ready action is an ordinary Discussion post or reply. Lace asks for the displayed dPOLL fee. After you approve it, the page may say **pending** while Cardano Preprod confirms the payment. Do not pay a second time. If the browser closes, AgoraNet keeps the public transaction hash and can finish the pending post automatically.
 

@@ -81,7 +81,7 @@ export async function setEconomyMode(
   env: Environment = process.env
 ): Promise<EconomyModeResult> {
   if (!ECONOMY_MODES.includes(input.mode as EconomyMode)) {
-    return { ok: false, reason: "Choose Credits mode or Wallet mode." };
+    return { ok: false, reason: "Choose platform custody or wallet custody." };
   }
   const mode = input.mode as EconomyMode;
   if (mode === "mixed" && env.WALLET_MIXED_MODE_ENABLED !== "true") {
@@ -91,7 +91,7 @@ export async function setEconomyMode(
     if (!walletModeActivationReady(env)) {
       return {
         ok: false,
-        reason: "Testnet Wallet mode is not ready until its first fee and reward are both enabled.",
+        reason: "Testnet wallet custody is not ready until its first fee and reward are both enabled.",
       };
     }
     const link = await walletLinkFor(db, input.profileId);
@@ -117,8 +117,8 @@ export async function setEconomyMode(
         ok: false,
         reason:
           pendingWalletAction.status === "awaiting_wallet_approval"
-            ? "Finish or let the open Lace request expire before switching to Credits mode."
-            : "A wallet-paid action is still being confirmed or reviewed. Do not switch modes or pay again; check its status first.",
+            ? "Finish or let the open Lace request expire before switching to platform custody."
+            : "A wallet-paid action is still being confirmed or reviewed. Do not switch custody methods or pay again; check its status first.",
       };
     }
   }
@@ -266,7 +266,7 @@ function walletActivityKindLabel(kind: string) {
   if (kind === "reward.first-action") return "First-action reward";
   if (kind === "reward.accrual") return "Participation reward";
   if (kind === "reward.accrual.streak") return "Participation streak reward";
-  if (kind === "claim.credit") return "Credits-to-wallet claim";
+  if (kind === "claim.credit") return "Platform-to-wallet PC/G transfer";
   return "Testnet wallet action";
 }
 

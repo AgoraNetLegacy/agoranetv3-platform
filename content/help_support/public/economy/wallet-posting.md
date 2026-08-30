@@ -2,7 +2,7 @@
 id: help.economy.wallet-posting
 slug: wallet-posting
 title: Post or reply with your testnet wallet
-summary: In Wallet mode, Lace asks you to approve the displayed fake dPOLL fee before AgoraNet publishes a Discussion post.
+summary: With wallet custody selected, Lace asks you to approve the displayed test dPOLL fee before AgoraNet publishes a Discussion post.
 category: economy
 document_type: procedure
 audience: public
@@ -41,11 +41,11 @@ links:
     label: Open Help and Support
 ---
 
-You can use AgoraNet without a wallet. This page applies only after you deliberately choose **Wallet mode** in Settings.
+You can use AgoraNet without a wallet. This page applies only after you deliberately choose **wallet custody** in Settings.
 
 Before an identity can make its first post, that identity must complete the two onboarding consent steps. This is separate for each True Self and Alias; completing them for one identity does not complete them for another. If the post button says **“The permanence and Constitution acknowledgments come first,”** open [`/verify/consents`](/verify/consents) while signed in as the identity that is trying to post. Complete the two buttons in order—**I understand what permanence means here**, then **I acknowledge the Constitution**—and return to the discussion. The discussion composer does not show these buttons itself.
 
-To make an ordinary Discussion post or reply in Wallet mode:
+To make an ordinary Discussion post or reply with wallet custody:
 
 1. Write the post and select the posting button.
 2. AgoraNet checks the post before asking for payment.
@@ -57,8 +57,8 @@ Pending does not mean failure. Cardano confirmation can take a little time. Do n
 
 When the post is confirmed, eligible fake dGRA and dPOLL rewards are queued to the linked wallet. Reward delivery may appear after the post because it is processed separately and verified on the chain.
 
-Some actions may still use the internal PC/G ledger while their external wallet settlement rail is being implemented. Wallet mode does not create a second application balance.
+Some actions may still use platform-held PC/G while their wallet settlement rail is being implemented. Wallet custody does not create another currency.
 
-Chambers and workshop posts use the same PC/G balances as Credits mode. External wallet settlement for those two-token actions can be added later without changing the balances or fees.
+Chambers and workshop posts use the same PC and G. Their current instant payment path uses the platform-held portion; external wallet settlement can be added without creating another currency.
 
 If Lace shows the wrong account, decline the request, switch accounts in Lace, and try again. If the transaction was already submitted and the post still does not appear, open Help and Support and include the public transaction hash and the exact non-secret message shown. Never include an access key, seed phrase, spending password, signing key, or private key.

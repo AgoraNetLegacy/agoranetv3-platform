@@ -15,6 +15,21 @@ import { getRail } from "./rails";
 
 export type Currency = "PC" | "G";
 
+/**
+ * PC and G are interchangeable for unified participation costs. Keep the
+ * conversion in one exported table so eligibility, charging, tests, and UI
+ * displays cannot quietly invent different arithmetic.
+ */
+export const UNIFIED_CURRENCY_RATES: Readonly<Record<Currency, number>> = {
+  PC: 1,
+  G: 1,
+};
+
+export interface UnifiedBalance {
+  total: number;
+  components: Record<Currency, { balance: number; rate: number; units: number }>;
+}
+
 async function ensureBalance(tx: Tx, profileId: string, currency: Currency) {
   await tx.balance.upsert({
     where: { profileId_currency: { profileId, currency } },
@@ -32,6 +47,43 @@ export async function balanceOf(
     where: { profileId_currency: { profileId, currency } },
   });
   return row?.amount ?? 0;
+}
+
+/** Canonical converted balance used by every unified participation check. */
+export async function unifiedBalanceOf(
+  db: DbOrTx,
+  profileId: string
+): Promise<UnifiedBalance> {
+  const rows = await db.balance.findMany({
+    where: { profileId, currency: { in: ["PC", "G"] } },
+    select: { currency: true, amount: true },
+  });
+  const balances = new Map(rows.map((row) => [row.currency, row.amount]));
+  const pc = balances.get("PC") ?? 0;
+  const g = balances.get("G") ?? 0;
+  const components = {
+    PC: { balance: pc, rate: UNIFIED_CURRENCY_RATES.PC, units: pc * UNIFIED_CURRENCY_RATES.PC },
+    G: { balance: g, rate: UNIFIED_CURRENCY_RATES.G, units: g * UNIFIED_CURRENCY_RATES.G },
+  };
+  return { total: components.PC.units + components.G.units, components };
+}
+
+export function unifiedInsufficientFundsReason(
+  balance: UnifiedBalance,
+  required: number
+): string {
+  return (
+    `Insufficient combined PC/G balance: ${balance.total.toFixed(2)} of ` +
+    `${required.toFixed(2)} available ` +
+    `(PC ${balance.components.PC.balance.toFixed(2)} + G ${balance.components.G.balance.toFixed(2)}).`
+  );
+}
+
+export function canAffordUnifiedCost(
+  balance: UnifiedBalance,
+  required: number
+): boolean {
+  return balance.total + Number.EPSILON >= required;
 }
 
 export type EconomyResult =
@@ -92,7 +144,7 @@ export async function chargeToTreasury(
     const balance = await balanceOf(tx, input.profileId, input.currency);
     return {
       ok: false,
-      reason: `Insufficient ${input.currency === "PC" ? "PollCoin" : "Gratium"} (${balance.toFixed(2)}u of ${input.amount}u); participation costs; the earnable path covers committed souls.`,
+      reason: `Insufficient ${input.currency} balance: ${balance.toFixed(2)} of ${input.amount.toFixed(2)} units available.`,
     };
   }
   await tx.treasuryBalance.upsert({
@@ -112,6 +164,90 @@ export async function chargeToTreasury(
     },
   });
   return { ok: true, entryId: entry.id };
+}
+
+/**
+ * Charge one participation cost from the canonical converted PC/G balance.
+ * PC is consumed first and G covers the remainder; that deterministic order
+ * keeps receipts reproducible while both currencies remain equally valuable.
+ * The caller normally owns an outer transaction. If a concurrent debit wins
+ * between planning and settlement, any partial debit is restored before the
+ * accurate insufficient-funds result is returned.
+ */
+export async function chargeUnifiedToTreasury(
+  tx: Tx,
+  input: {
+    profileId: string;
+    amount: number;
+    kind: string;
+    refType?: string;
+    refId?: string;
+  }
+): Promise<EconomyResult> {
+  if (input.amount <= 0) return { ok: true };
+  const available = await unifiedBalanceOf(tx, input.profileId);
+  if (!canAffordUnifiedCost(available, input.amount)) {
+    return { ok: false, reason: unifiedInsufficientFundsReason(available, input.amount) };
+  }
+
+  let remaining = input.amount;
+  const debits: { currency: Currency; amount: number }[] = [];
+  for (const currency of ["PC", "G"] as const) {
+    if (remaining <= Number.EPSILON) break;
+    const component = available.components[currency];
+    const unifiedUnits = Math.min(component.units, remaining);
+    const currencyAmount = unifiedUnits / component.rate;
+    if (currencyAmount <= Number.EPSILON) continue;
+    if (!(await debitBalance(tx, input.profileId, currency, currencyAmount))) {
+      for (const debit of debits) {
+        await tx.balance.update({
+          where: {
+            profileId_currency: { profileId: input.profileId, currency: debit.currency },
+          },
+          data: { amount: { increment: debit.amount } },
+        });
+      }
+      const current = await unifiedBalanceOf(tx, input.profileId);
+      return { ok: false, reason: unifiedInsufficientFundsReason(current, input.amount) };
+    }
+    debits.push({ currency, amount: currencyAmount });
+    remaining -= unifiedUnits;
+  }
+
+  if (remaining > Number.EPSILON) {
+    for (const debit of debits) {
+      await tx.balance.update({
+        where: {
+          profileId_currency: { profileId: input.profileId, currency: debit.currency },
+        },
+        data: { amount: { increment: debit.amount } },
+      });
+    }
+    const current = await unifiedBalanceOf(tx, input.profileId);
+    return { ok: false, reason: unifiedInsufficientFundsReason(current, input.amount) };
+  }
+
+  let firstEntryId: string | undefined;
+  for (const debit of debits) {
+    await tx.treasuryBalance.upsert({
+      where: { currency: debit.currency },
+      create: { currency: debit.currency, amount: debit.amount },
+      update: { amount: { increment: debit.amount } },
+    });
+    const entry = await tx.economyEntry.create({
+      data: {
+        kind: input.kind,
+        currency: debit.currency,
+        amount: debit.amount,
+        fromProfileId: input.profileId,
+        toTreasury: true,
+        refType: input.refType,
+        refId: input.refId,
+      },
+    });
+    firstEntryId ??= entry.id;
+  }
+  return { ok: true, entryId: firstEntryId };
 }
 
 /**

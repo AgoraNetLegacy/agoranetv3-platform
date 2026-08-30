@@ -87,14 +87,14 @@
 //     feed/search event type exists on the public ledger and no such
 //     row id appears anywhere in it; every feed source is a known kind.
 // Phase 7.5:
-// 23. Chamber integrity: every chamber paid BOTH halves of the
-//     dual-token creation fee and has its chamber.created event;
+// 23. Chamber integrity: every chamber paid its unified PC/G creation
+//     cost and has its chamber.created event;
 //     exactly one workshop Discussion per chamber, deletable class
 //     (never permanent; the drafts are not the record); the scaffold
 //     and the "why should people care" field are non-empty (the
 //     ratified creation requirements); every workshop post's author
-//     entered the chamber, and every workshop post paid the dual-token
-//     participation fee (PC and G entries pair 1:1 with posts); every
+//     entered the chamber, and every workshop post paid its unified PC/G
+//     participation cost; every
 //     private-chamber member is the creator or was invited.
 // 24. Workshop enclosure: no workshop post ever hash-commits to the
 //     public ledger or upgrades to permanence; no chamber member,
@@ -123,6 +123,7 @@ import { createHash } from "crypto";
 import { PrismaClient } from "@prisma/client";
 import { verifyChain, findForbiddenId } from "../lib/ledger";
 import { PILLARS, LENSES } from "../lib/canon";
+import { getRail } from "../lib/rails";
 
 const db = new PrismaClient();
 
@@ -1573,12 +1574,13 @@ async function main() {
       /* chain check covers bytes */
     }
   }
-  const chamberFeesPc = economyEntries.filter((e) => e.kind === "fee.chamber" && e.currency === "PC");
-  const chamberFeesG = economyEntries.filter((e) => e.kind === "fee.chamber" && e.currency === "G");
-  if (chamberFeesPc.length < chambers.length || chamberFeesG.length < chambers.length) {
+  const chamberFees = economyEntries.filter((e) => e.kind === "fee.chamber");
+  const chamberFeeUnits = chamberFees.reduce((sum, entry) => sum + entry.amount, 0);
+  const expectedChamberFeeUnits = chambers.length * (await getRail(db, "chamber.creationCost"));
+  if (Math.abs(chamberFeeUnits - expectedChamberFeeUnits) > 0.000001) {
     chamberProblems++;
     console.error(
-      `✗ HALF-PAID CHAMBER: ${chambers.length} chamber(s) but ${chamberFeesPc.length} PC / ${chamberFeesG.length} G creation fee entries; the dual-token signature is both halves or neither`
+      `✗ CHAMBER COST MISMATCH: ${chambers.length} chamber(s) require ${expectedChamberFeeUnits} unified units but the ledger records ${chamberFeeUnits}`
     );
   }
   const workshopDiscussionIds = new Set<string>();
@@ -1619,7 +1621,7 @@ async function main() {
       }
     }
   }
-  // Workshop posts: authors entered; the dual-token micro-fee paired 1:1.
+  // Workshop posts: authors entered and each paid the unified cost.
   const workshopPosts = await db.post.findMany({
     where: { discussion: { chamberId: { not: null } } },
     include: { discussion: { select: { chamberId: true } } },
@@ -1633,17 +1635,18 @@ async function main() {
       console.error(`✗ INTRUDER DRAFT: workshop post ${post.id} by a soul who never entered`);
     }
   }
-  const postFeesPc = economyEntries.filter((e) => e.kind === "fee.chamber-post" && e.currency === "PC");
-  const postFeesG = economyEntries.filter((e) => e.kind === "fee.chamber-post" && e.currency === "G");
-  if (postFeesPc.length !== workshopPosts.length || postFeesG.length !== workshopPosts.length) {
+  const postFees = economyEntries.filter((e) => e.kind === "fee.chamber-post");
+  const postFeeUnits = postFees.reduce((sum, entry) => sum + entry.amount, 0);
+  const expectedPostFeeUnits = workshopPosts.length * (await getRail(db, "chamber.postCost"));
+  if (Math.abs(postFeeUnits - expectedPostFeeUnits) > 0.000001) {
     chamberProblems++;
     console.error(
-      `✗ FEE MISMATCH: ${workshopPosts.length} workshop post(s) but ${postFeesPc.length} PC / ${postFeesG.length} G participation fee entries`
+      `✗ WORKSHOP COST MISMATCH: ${workshopPosts.length} workshop post(s) require ${expectedPostFeeUnits} unified units but the ledger records ${postFeeUnits}`
     );
   }
   if (chamberProblems === 0) {
     console.log(
-      `✓ Chamber integrity (${chambers.length} chamber(s), ${workshopPosts.length} workshop post(s); dual-token fees both halves, scaffolds complete, private entry invite-backed)`
+      `✓ Chamber integrity (${chambers.length} chamber(s), ${workshopPosts.length} workshop post(s); unified PC/G costs paid, scaffolds complete, private entry invite-backed)`
     );
   } else {
     failures += chamberProblems;

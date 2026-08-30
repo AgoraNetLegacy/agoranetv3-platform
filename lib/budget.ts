@@ -65,7 +65,7 @@ export const SHIPPED_BUDGET_CATEGORIES = [
   {
     name: BUDGET_CREDIT_CLAIM_REFUNDS,
     description:
-      "Mechanical return of Credits reserved for a testnet asset claim that reached a terminal failure. This cannot fund discretionary spending; it only unwinds the identity's own claim reservation.",
+      "Mechanical return of platform-held PC/G reserved for a testnet wallet transfer that reached a terminal failure. This cannot fund discretionary spending; it only unwinds the identity's own transfer reservation.",
     cap: null,
   },
 ] as const;

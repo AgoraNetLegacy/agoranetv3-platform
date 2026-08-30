@@ -38,7 +38,7 @@ export async function queueWalletReward(
     tx.testnetWalletLink.findUnique({ where: { profileId: input.profileId } }),
   ]);
   if (!profile || profile.economyMode !== "wallet") {
-    throw new Error("Wallet rewards require Wallet mode on this profile.");
+    throw new Error("Wallet rewards require wallet custody on this profile.");
   }
   if (!link || link.network !== cardanoNetwork(env)) {
     throw new Error("Wallet rewards require this profile's linked wallet on the active testnet.");

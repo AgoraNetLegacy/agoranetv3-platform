@@ -381,7 +381,7 @@ export async function castVote(
   if ((await balanceOf(db, profile.id, "PC")) < voteFee) {
     return {
       ok: false,
-      reason: "Insufficient PollCoin for the vote micro-fee; the earnable path covers committed souls.",
+      reason: "Insufficient PC balance for the vote micro-fee.",
     };
   }
 

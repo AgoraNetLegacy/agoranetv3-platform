@@ -28,10 +28,10 @@ export async function requestCreditClaim(
   env: Environment = process.env
 ): Promise<CreditClaimResult> {
   if (!creditClaimsTestnetEnabled(env)) {
-    return { ok: false, reason: "Testnet Credit claims are not enabled yet." };
+    return { ok: false, reason: "Platform-to-wallet token transfers are not enabled yet." };
   }
   if (!Number.isInteger(input.creditAmount)) {
-    return { ok: false, reason: "Choose a whole number of Credits to claim." };
+    return { ok: false, reason: "Choose a whole number of PC or G to move." };
   }
   const [minimum, maximum, conversion, expiryHours] = await Promise.all([
     getRail(db, "onchain.claimMinCredits"),
@@ -42,7 +42,7 @@ export async function requestCreditClaim(
   if (input.creditAmount < minimum || input.creditAmount > maximum) {
     return {
       ok: false,
-      reason: `Choose between ${minimum} and ${maximum} Credits for one testnet claim.`,
+      reason: `Choose between ${minimum} and ${maximum} tokens for one testnet transfer.`,
     };
   }
   const link = await walletLinkFor(db, input.profileId);

@@ -154,7 +154,7 @@ describe("fees flow to the treasury", () => {
     expect((await mk()).ok).toBe(true);
     const third = await mk();
     expect(third.ok).toBe(false);
-    if (!third.ok) expect(third.reason).toContain("Insufficient PollCoin");
+    if (!third.ok) expect(third.reason).toContain("Insufficient PC balance");
   });
 
   it("votes cost the micro-fee, and the fee entry never names the poll", async () => {

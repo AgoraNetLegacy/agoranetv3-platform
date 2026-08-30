@@ -178,7 +178,7 @@ links.
 **G. The rest of the estate (5 min, skim).** **/circles** (form one;
 watch the 25 PC fee; log an action; it needs a second soul to attest,
 which is the point), **/pollinator** (open a chamber through the
-scaffold; the dual-token fee, both balances drop), a **governance
+scaffold; the 20-unit unified PC/G cost draws from either balance), a **governance
 room** inside any pillar (open a poll; votes are sealed until a
 randomized "candle" close that was hash-committed before the first
 vote existed), **/feed** (the formula is published at /feed/formula;

@@ -36,10 +36,21 @@ async function FaceBar() {
   }
   const chipClass = face.face === "TRUE_SELF" ? "true-self" : "alias";
   const walletMode = economyMode === "wallet" || economyMode === "mixed";
-  // PC/G are one application asset. In Wallet mode, show internal ledger
-  // custody plus observed testnet custody as one balance.
-  const pcTotal = balances.PC + Number(walletBalances.PC);
-  const gTotal = balances.G + Number(walletBalances.G);
+  // PC and G are the only currencies. A connected wallet changes custody,
+  // not the identity of the asset. Keep the total in the persistent header,
+  // and state its custody sources instead of inventing a "Credits" balance.
+  const walletPc = Number(walletBalances.PC);
+  const walletG = Number(walletBalances.G);
+  const pcTotal = balances.PC + walletPc;
+  const gTotal = balances.G + walletG;
+  const custodyLabel = walletMode
+    ? balances.PC > 0 || balances.G > 0
+      ? "Wallet + Platform"
+      : "Wallet"
+    : "Platform";
+  const custodyDetail = walletMode
+    ? `PC: ${walletPc.toFixed(2)} wallet + ${balances.PC.toFixed(2)} platform; G: ${walletG.toFixed(2)} wallet + ${balances.G.toFixed(2)} platform`
+    : `Platform-held balance: ${balances.PC.toFixed(2)} PC and ${balances.G.toFixed(2)} G`;
   return (
     <div className="face-bar">
       <span className={`face-chip ${chipClass}`}>
@@ -48,8 +59,9 @@ async function FaceBar() {
       </span>
       <span className="balance-chip">
         <span className="currency-tooltip" aria-hidden="true">
-          {walletMode ? "PC/G balance · internal + Cardano testnet custody" : "PC/G balance · internal custody"}
+          {custodyDetail}
         </span>
+        <span className="balance-custody">{custodyLabel}</span>
         <span className="currency-amount">
           <span className="currency-symbol" tabIndex={0} aria-label="PollCoin balance">
             <img

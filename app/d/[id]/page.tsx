@@ -307,8 +307,8 @@ function PostNode({
               />
             ) : walletMode ? (
               <p className="notice">
-                This action is not available in Wallet mode yet. Switch this identity to
-                Credits mode to use it; AgoraNet will not silently charge internal Credits.
+                This action does not support wallet settlement yet. Select platform custody
+                in Settings to use platform-held PC/G for it.
               </p>
             ) : (
               <Composer
@@ -460,12 +460,13 @@ export default async function DiscussionPage({
     }
   }
 
-  const [posts, rules, viewer, graceMinutes, replyFee] = await Promise.all([
+  const [posts, rules, viewer, graceMinutes, replyFee, workshopPostCost] = await Promise.all([
     loadPosts(discussion.id),
     db.rule.findMany({ orderBy: { id: "asc" } }),
     activeFace(),
     getRail(db, "discussion.graceWindowMinutes"),
     getRail(db, "discussion.replyFee"),
+    getRail(db, "chamber.postCost"),
   ]);
 
   // The save (BEACON §4): private to this identity. Reading a saved thread
@@ -491,10 +492,8 @@ export default async function DiscussionPage({
   const interactive = viewer && (!discussion.circle || roomWrite);
   const walletMode = Boolean(viewer && viewer.economyMode === "wallet");
   const walletPostReady = walletMode && walletModeActivationReady() && !discussion.chamber;
-  // The dual-token signature at micro scale (POLLINATOR §3): workshop
-  // posts price in both currencies; the composer says so up front.
   const feeLabel = discussion.chamber
-    ? "1 PC + 1 G"
+    ? `${workshopPostCost} unified PC/G units`
     : walletMode
       ? `${replyFee} dPOLL`
       : `${replyFee} PC`;
@@ -552,8 +551,7 @@ export default async function DiscussionPage({
           <Icon name="hive" /> <strong>The workshop.</strong> Enter-to-see and deletable-class
 ; half-formed thinking gets worked out here without the open
           internet watching the drafts. Standard moderation applies as
-          everywhere. Posting charges both tokens (the Pollinator&apos;s
-          dual-token signature).
+          everywhere. Posting uses the Pollinator&apos;s unified PC/G balance.
         </div>
       ) : permanent ? (
         <div className="door-banner">
@@ -607,8 +605,8 @@ export default async function DiscussionPage({
             />
           ) : walletMode ? (
             <div className="notice">
-              This action is not available in Wallet mode yet. Switch this identity to
-              Credits mode to post here; AgoraNet will not silently use an internal balance.
+              This action does not support wallet settlement yet. Select platform custody
+              in Settings to use platform-held PC/G for it.
             </div>
           ) : (
             <Composer

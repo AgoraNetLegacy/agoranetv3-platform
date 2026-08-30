@@ -105,7 +105,7 @@ export async function prepareWalletPost(
   env: Environment = process.env
 ): Promise<WalletActionResult> {
   if (!walletModeActivationReady(env)) {
-    return { ok: false, reason: "Testnet Wallet mode is not enabled yet." };
+    return { ok: false, reason: "Testnet wallet custody is not enabled yet." };
   }
   const idempotencyKey = input.idempotencyKey.trim();
   if (!idempotencyKey || idempotencyKey.length > 120) {
@@ -121,11 +121,11 @@ export async function prepareWalletPost(
     return {
       ok: false,
       reason:
-        "Wallet mode does not support workshop posts yet because that action charges two tokens. Switch this identity to Credits mode for the workshop.",
+        "Wallet settlement does not support workshop posts yet. Select platform custody to pay with platform-held PC/G.",
     };
   }
   if (validation.profile.economyMode !== "wallet") {
-    return { ok: false, reason: "This identity is using Credits mode, so no wallet approval is needed." };
+    return { ok: false, reason: "This identity uses platform custody, so no wallet approval is needed." };
   }
   const link = await walletLinkFor(db, input.profileId);
   const network = cardanoNetwork(env);

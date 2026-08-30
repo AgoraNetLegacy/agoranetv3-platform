@@ -195,7 +195,7 @@ export async function mintDemoAssetToAddress(
     recipient,
   });
   tx.setMetadata(674, {
-    msg: ["AgoraNet Credit claim (testnet; no real value)"],
+    msg: ["AgoraNet PC/G custody transfer (testnet; no real value)"],
   });
   const unsigned = await tx.build();
   const signed = await wallet.signTx(unsigned);

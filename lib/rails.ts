@@ -16,6 +16,7 @@ export interface RailDefault {
   unit:
     | "uPC"
     | "uG"
+    | "u"
     | "minutes"
     | "hours"
     | "days"
@@ -309,7 +310,7 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     boundMin: 1,
     boundMax: 10,
     description:
-      "Progressive token rail: minimum Credits in one explicit fake-asset claim. Testnet only; no real-value meaning.",
+      "Progressive token rail: minimum platform-held PC/G in one explicit test-wallet transfer. Testnet only; no real-value meaning.",
   },
   {
     key: "onchain.claimMaxCredits",
@@ -318,7 +319,7 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     boundMin: 1,
     boundMax: 100,
     description:
-      "Progressive token rail: maximum Credits reserved by one fake-asset claim. Limits mistakes and testnet spam.",
+      "Progressive token rail: maximum platform-held PC/G reserved by one test-wallet transfer. Limits mistakes and testnet spam.",
   },
   {
     key: "onchain.claimAssetPerCredit",
@@ -336,7 +337,7 @@ export const RAIL_DEFAULTS: RailDefault[] = [
     boundMin: 1,
     boundMax: 168,
     description:
-      "Progressive token rail: time a reserved Credit claim may wait for testnet distribution before reconciliation review.",
+      "Progressive token rail: time a reserved platform-to-wallet PC/G transfer may wait for testnet distribution before reconciliation review.",
   },
   {
     key: "onchain.walletActionExpiryMinutes",
@@ -548,38 +549,22 @@ export const RAIL_DEFAULTS: RailDefault[] = [
       "Open-lens recency decay half-life; activity's weight halves every this many hours.",
   },
   // --- Chamber rails (Phase 7.5; NEURAL_POLLINATOR §3, the ratified
-  // dual-token signature: the Pollinator is the first surface whose
-  // fees are paid in BOTH tokens, deliberately, so active Pollinator
-  // souls carry a working stock of both. Amounts are the ratified v0
-  // test schedule: Chamber = 2× Discussion, in both tokens; workshop
-  // posts at the anchor unit in both.)
+  // unified participation pricing. PC and G convert 1:1 into the same
+  // spendable participation units; one cost is checked and settled by
+  // the canonical economy helper.
   {
-    key: "chamber.creationFeePc",
+    key: "chamber.creationCost",
     value: 20,
-    unit: "uPC",
+    unit: "u",
     description:
-      "Chamber creation fee, PollCoin half; owner: double a Discussion, and in both tokens (ECONOMIC_STARTING_DEFAULTS §1).",
+      "Chamber creation participation cost; PC and G count 1:1 toward one unified balance.",
   },
   {
-    key: "chamber.creationFeeG",
-    value: 20,
-    unit: "uG",
+    key: "chamber.postCost",
+    value: 2,
+    unit: "u",
     description:
-      "Chamber creation fee, Gratium half; the dual-token signature (NEURAL_POLLINATOR §3).",
-  },
-  {
-    key: "chamber.postFeePc",
-    value: 1,
-    unit: "uPC",
-    description:
-      "Workshop participation micro-fee, PollCoin half; the dual-token signature at micro scale (ECONOMIC_STARTING_DEFAULTS §1).",
-  },
-  {
-    key: "chamber.postFeeG",
-    value: 1,
-    unit: "uG",
-    description:
-      "Workshop participation micro-fee, Gratium half.",
+      "Workshop participation cost; PC and G count 1:1 toward one unified balance.",
   },
   // --- Mission funding (NEURAL_POLLINATOR §9.1; PHASE_8_7_SPEC Slices
   // 2-5). "Both numbers are rails, adjustable per chamber within bounds."
@@ -867,10 +852,26 @@ export const RAIL_DEFAULTS: RailDefault[] = [
   },
 ];
 
-/** Read one rail's current value. Throws if the rail was never seeded;
- *  a missing rail is a build error, not a case to default silently. */
+const LEGACY_COMBINED_RAILS: Readonly<Record<string, readonly [string, string]>> = {
+  "chamber.creationCost": ["chamber.creationFeePc", "chamber.creationFeeG"],
+  "chamber.postCost": ["chamber.postFeePc", "chamber.postFeeG"],
+};
+
+/** Read one rail's current value. The two chamber costs have an explicit
+ * deployment bridge: before their data migration lands, derive the combined
+ * amount from the two old rails. This keeps old and new database states valid
+ * during rollout without restoring the old two-balance eligibility rule. */
 export async function getRail(db: DbOrTx, key: string): Promise<number> {
   const rail = await db.rail.findUnique({ where: { key } });
-  if (!rail) throw new Error(`Rail not seeded: ${key}`);
-  return rail.value;
+  if (rail) return rail.value;
+  const legacyKeys = LEGACY_COMBINED_RAILS[key];
+  if (legacyKeys) {
+    const legacyRails = await Promise.all(
+      legacyKeys.map((legacyKey) => db.rail.findUnique({ where: { key: legacyKey } }))
+    );
+    if (legacyRails.every((legacyRail) => legacyRail !== null)) {
+      return legacyRails.reduce((total, legacyRail) => total + (legacyRail?.value ?? 0), 0);
+    }
+  }
+  throw new Error(`Rail not seeded: ${key}`);
 }

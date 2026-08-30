@@ -10,10 +10,9 @@
 // Discussion; threading reuses the Discussions conventions, nothing
 // bespoke); the Arena is post-launch. ⚠ v2's "chambers" ≠ these.
 //
-// The dual-token signature (§3): the Pollinator is the first surface
-// whose fees are paid in BOTH PollCoin and Gratium; deliberately, so
-// active Pollinator souls carry a working stock of both. Creation and
-// workshop posts each charge both currencies (rails).
+// Pollinator participation uses one canonical converted PC/G balance.
+// Creation and workshop posts each charge one unified cost (rails),
+// while ledger receipts preserve which underlying currency funded it.
 //
 // Enclosure is structural, not cosmetic: membership and invites never
 // touch the public ledger (entry clears the gate in PRIVATE recording;
@@ -30,7 +29,7 @@ import { clearGateTx, gateDuplicateConfirmed } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
-import { balanceOf, chargeToTreasury, maybeFirstActionGrant } from "./economy";
+import { chargeUnifiedToTreasury, maybeFirstActionGrant } from "./economy";
 import { accrueForAction } from "./accrual";
 import { notify } from "./notifications";
 
@@ -125,8 +124,8 @@ async function notifyChamberActivity(
 // ------------------------------------------------------------- creation
 
 /**
- * Creation (§4.1): gate-cleared + the dual-token creation micro-fee
- * (both halves must clear; a chamber is never half-paid). The creator
+ * Creation (§4.1): gate-cleared + the unified PC/G participation cost
+ * (the full cost must clear atomically). The creator
  * sets subject, title, the storefront pitch with its required "why
  * should people care" answer (what problem, for whom, why now), the
  * public/private setting (FIXED at creation), and completes the
@@ -193,7 +192,7 @@ export async function createChamber(
   // pillar surfaces everywhere; it never appears on pillar pages.
   const metaPillar = await db.pillar.findFirstOrThrow({ where: { isMeta: true } });
 
-  // Gate spend + dual fee + chamber creation share one transaction (#25).
+  // Gate spend + unified fee + chamber creation share one transaction (#25).
   try {
     return await db.$transaction(async (tx) => {
       const gate = await clearGateTx(tx, {
@@ -202,23 +201,13 @@ export async function createChamber(
         scopeKind: "per-profile",
       });
       if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
-      // The dual-token signature: BOTH halves, or neither.
-      const feePc = await chargeToTreasury(tx, {
+      const fee = await chargeUnifiedToTreasury(tx, {
         profileId: profile.id,
-        currency: "PC",
-        amount: await getRail(tx, "chamber.creationFeePc"),
+        amount: await getRail(tx, "chamber.creationCost"),
         kind: "fee.chamber",
         refType: "chamber",
       });
-      if (!feePc.ok) throw new InsufficientFunds(feePc.reason);
-      const feeG = await chargeToTreasury(tx, {
-        profileId: profile.id,
-        currency: "G",
-        amount: await getRail(tx, "chamber.creationFeeG"),
-        kind: "fee.chamber",
-        refType: "chamber",
-      });
-      if (!feeG.ok) throw new InsufficientFunds(feeG.reason);
+      if (!fee.ok) throw new InsufficientFunds(fee.reason);
       await maybeFirstActionGrant(tx, profile.id);
       await accrueForAction(tx, profile.id);
 
@@ -330,25 +319,6 @@ export async function editScaffold(
 // ---------------------------------------------------------------- entry
 
 /**
- * The complete public-chamber prerequisites (owner-resolved OQ5,
- * 2026-07-09): the identity gate + carrying both tokens; no Light
- * Score floor, no extra hurdles. Transparency instead of gatekeeping:
- * the creator's standing is public on the storefront; souls judge with
- * their own eyes. "Carrying both tokens" is read as a nonzero balance
- * in each (participation charges both); a derived reading, flagged.
- */
-export async function carriesBothTokens(
-  db: DbOrTx,
-  profileId: string
-): Promise<boolean> {
-  const [pc, g] = await Promise.all([
-    balanceOf(db, profileId, "PC"),
-    balanceOf(db, profileId, "G"),
-  ]);
-  return pc > 0 && g > 0;
-}
-
-/**
  * Entering (§4.2–4.3): free; there is no entry fee, no unlock, no
  * membership wall; acting (posting) costs, per platform law. Public
  * chambers: anyone meeting the prerequisites. Private chambers:
@@ -380,14 +350,6 @@ export async function enterChamber(
       };
     }
   }
-  if (!(await carriesBothTokens(db, profile.id))) {
-    return {
-      ok: false,
-      reason:
-        "Chambers run on both tokens; participation inside charges PollCoin and Gratium together. Carry a working stock of both to enter (the earnable paths cover committed souls).",
-    };
-  }
-
   // One entry per profile per chamber: the fixed scope IS the once.
   // PRIVATE recording; entry must not be observable from outside.
   // Gate spend + membership share one transaction (#25): a rollback no
@@ -497,33 +459,21 @@ export async function pendingInvitesFor(db: DbOrTx, profileId: string) {
 // ---------------------------------------------------- workshop plumbing
 
 /**
- * The dual-token workshop participation fee (§3: micro-transactions in
- * both tokens); called by createPost inside its transaction when the
- * Discussion is chamber-scoped, INSTEAD of the standard reply fee.
- * Both halves clear or the post doesn't happen.
+ * The unified workshop participation cost. PC and G count 1:1 toward
+ * the same amount; the ledger still records the currencies consumed.
  */
 export async function chargeWorkshopPostFee(
   tx: Tx,
   input: { profileId: string; discussionId: string }
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
-  const feePc = await chargeToTreasury(tx, {
+  const fee = await chargeUnifiedToTreasury(tx, {
     profileId: input.profileId,
-    currency: "PC",
-    amount: await getRail(tx, "chamber.postFeePc"),
+    amount: await getRail(tx, "chamber.postCost"),
     kind: "fee.chamber-post",
     refType: "discussion",
     refId: input.discussionId,
   });
-  if (!feePc.ok) return feePc;
-  const feeG = await chargeToTreasury(tx, {
-    profileId: input.profileId,
-    currency: "G",
-    amount: await getRail(tx, "chamber.postFeeG"),
-    kind: "fee.chamber-post",
-    refType: "discussion",
-    refId: input.discussionId,
-  });
-  if (!feeG.ok) return feeG;
+  if (!fee.ok) return fee;
   return { ok: true };
 }
 

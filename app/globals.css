@@ -1126,6 +1126,16 @@ header.site .brand:hover { text-decoration: none; }
   height: 16px;
   background: var(--line);
 }
+.balance-custody {
+  padding: 0.08rem 0.35rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
 .currency-amount {
   display: inline-flex;
   align-items: center;
@@ -1800,6 +1810,7 @@ table.books tr:last-child td { border-bottom: 0; }
   .nav-toggle .pi { font-size: 1.3rem; }
   .face-bar { margin-left: auto; }
   .balance-chip { gap: 0.35rem; padding: 0.28rem 0.45rem; font-size: 0.72rem; }
+  .balance-custody { display: none; }
   .balance-divider { height: 13px; }
   .face-bar > a:not(.icon-link), .face-bar > form, .switch-control { display: none; }
   .face-bar > a.mobile-login-link { display: inline-block; }

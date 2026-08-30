@@ -308,7 +308,7 @@ export function WalletPostComposer({
           : `Author-deletable space; you have ${graceMinutes} minutes to edit.`}
       </span>
       <p className="interim-note">
-        Wallet mode: Lace will ask you to approve the fake testnet dPOLL posting fee. AgoraNet
+        Wallet custody: Lace will ask you to approve the testnet dPOLL posting fee. AgoraNet
         never receives your wallet key and will not publish until the chain confirms payment.
         Cardano also requires a small amount of test tADA for the transaction and script output;
         Lace shows the complete testnet transaction before you approve it.

@@ -1326,8 +1326,8 @@ export async function submitWalletLink(formData: FormData) {
   );
 }
 
-/** Progressive token rail: choose the active identity's economy path.
- * Credits remain the default; Wallet mode is testnet-only, feature-gated,
+/** Progressive token rail: choose the active identity's custody path.
+ * Platform custody remains the default; wallet custody is testnet-only, feature-gated,
  * and requires this exact identity to have linked a wallet first. */
 export async function updateEconomyMode(formData: FormData) {
   const face = await requireFace("settings");
@@ -1342,13 +1342,13 @@ export async function updateEconomyMode(formData: FormData) {
     "/settings",
     result.ok
       ? result.mode === "credits"
-        ? "Credits mode selected. No wallet is required for ordinary participation."
-        : "Testnet Wallet mode selected for this profile. Wallet actions use fake assets only."
+        ? "Platform custody selected. No wallet is required for ordinary participation."
+        : "Testnet wallet custody selected for this profile. Wallet actions use test assets only."
       : result.reason
   );
 }
 
-/** Reserve beginner Credits for an explicit fake-asset claim. The web app
+/** Reserve platform-held PC/G for an explicit test-wallet transfer. The web app
  * records only the request; the isolated testnet distributor submits and
  * verifies the chain transaction. */
 export async function submitCreditClaim(formData: FormData) {
@@ -1356,7 +1356,7 @@ export async function submitCreditClaim(formData: FormData) {
   const { requestCreditClaim } = await import("@/lib/creditClaims");
   const currency = String(formData.get("currency") ?? "PC");
   if (currency !== "PC" && currency !== "G") {
-    backTo("/settings", "Choose PollCoin Credits or Gratium Credits.");
+    backTo("/settings", "Choose PC or G.");
   }
   const result = await requestCreditClaim(db, {
     profileId: face.id,
@@ -1369,7 +1369,7 @@ export async function submitCreditClaim(formData: FormData) {
   backTo(
     "/settings",
     result.ok
-      ? "Credit claim reserved. The testnet distributor will publish its transaction; do not submit it again."
+      ? "Token transfer reserved. The testnet distributor will publish its transaction; do not submit it again."
       : result.reason
   );
 }

@@ -299,7 +299,7 @@ export async function donateToMission(
       const balance = await balanceOf(tx, profile.id, "PC");
       return {
         ok: false as const,
-        reason: `Insufficient PollCoin (${balance.toFixed(2)}u of ${input.amount}u); a donation is a real transfer, not a gesture.`,
+        reason: `Insufficient PC balance: ${balance.toFixed(2)} of ${input.amount.toFixed(2)} units available; a donation is a real transfer, not a gesture.`,
       };
     }
     await creditMissionBalance(tx, {
@@ -476,7 +476,7 @@ async function payRelease(
   });
   if (recipientMode?.economyMode === "wallet") {
     throw new Error(
-      "Mission releases are not wallet-ready yet. Switch the recipient identity to Credits mode before authorizing this release."
+      "Mission releases are not wallet-settled yet. Select platform custody for the recipient before authorizing this release."
     );
   }
   // Atomically CLAIM the release: only the first transaction to flip it

@@ -37,7 +37,7 @@ export const KIND_CATEGORIES: Record<string, KindInfo> = {
   "fee.discussion": { category: "Creation fees", direction: "inflow" },
   "fee.poll": { category: "Creation fees", direction: "inflow" },
   "fee.circle": { category: "Creation fees", direction: "inflow" },
-  // The Pollinator's dual-token fees (Phase 7.5; the first surface
+  // The Pollinator's unified PC/G fees (Phase 7.5; the first surface
   // charging both currencies; the {PC, G} columns tell that story).
   "fee.chamber": { category: "Creation fees", direction: "inflow" },
   "fee.reply": { category: "Reply & vote micro-fees", direction: "inflow" },

@@ -2,7 +2,7 @@
 id: help.economy.donations-treasury
 slug: donations-treasury
 title: Donations and the treasury
-summary: Check published treasury activity and distinguish AgoraNet Credits from test-network wallet assets and transactions.
+summary: Check published treasury activity and distinguish platform-held PC/G from test-wallet custody and transactions.
 category: economy
 document_type: concept
 audience: public

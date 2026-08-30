@@ -7,6 +7,12 @@ import { submitChamber } from "@/app/actions";
 import { Icon } from "@/components/Icon";
 import { LearnMore } from "@/components/LearnMore";
 import { chamberCoversEnabled } from "@/lib/chamberCovers";
+import {
+  canAffordUnifiedCost,
+  unifiedBalanceOf,
+  unifiedInsufficientFundsReason,
+} from "@/lib/economy";
+import { synchronizedWalletBalanceView } from "@/lib/synchronizedWalletBalance";
 
 export const dynamic = "force-dynamic";
 
@@ -24,13 +30,34 @@ export default async function PollinatorPage({
 }) {
   const { m, q } = await searchParams;
   const coversEnabled = chamberCoversEnabled();
-  const [viewer, feePc, feeG, postPc, postG] = await Promise.all([
+  const [viewer, creationCost, postCost] = await Promise.all([
     activeFace(),
-    getRail(db, "chamber.creationFeePc"),
-    getRail(db, "chamber.creationFeeG"),
-    getRail(db, "chamber.postFeePc"),
-    getRail(db, "chamber.postFeeG"),
+    getRail(db, "chamber.creationCost"),
+    getRail(db, "chamber.postCost"),
   ]);
+  const unifiedBalance = viewer ? await unifiedBalanceOf(db, viewer.id) : null;
+  const walletMode = viewer?.economyMode === "wallet" || viewer?.economyMode === "mixed";
+  const walletBalance = viewer && walletMode
+    ? (await synchronizedWalletBalanceView(viewer.id)).balances
+    : { PC: "0", G: "0" };
+  const displayedPc = (unifiedBalance?.components.PC.balance ?? 0) + Number(walletBalance.PC);
+  const displayedG = (unifiedBalance?.components.G.balance ?? 0) + Number(walletBalance.G);
+  const canCreate = unifiedBalance
+    ? canAffordUnifiedCost(unifiedBalance, creationCost)
+    : false;
+  // Old failures were placed in the query string. Do not replay a stale
+  // PollCoin-only rejection after the canonical PC/G check says the user can
+  // create; otherwise an old bookmarked URL makes the repaired page look broken.
+  const stalePollCoinNotice = Boolean(
+    m && (m.includes("Insufficient PollCoin") || m.includes("earnable path covers committed souls"))
+  );
+  const noticeMessage = stalePollCoinNotice
+    ? canCreate
+      ? null
+      : unifiedBalance
+        ? unifiedInsufficientFundsReason(unifiedBalance, creationCost)
+        : null
+    : m;
 
   const [chambers, enteredRows, invites] = await Promise.all([
     db.chamber.findMany({
@@ -93,9 +120,8 @@ export default async function PollinatorPage({
             makes in public is what enters the record.
           </p>
           <p>
-            Browsing is free; acting costs in <strong>both tokens</strong>{" "}
-; the Pollinator is the first surface priced in PollCoin and
-            Gratium together, so its souls carry a working stock of both.
+            Browsing is free; acting uses <strong>PC and G</strong>. Either
+            currency can cover a participation cost, including a mixture of both.
             After launch, the Leaderboard and the Tournament of Ideas
             arrive: the best public chambers compete to become the
             community&rsquo;s main mission.
@@ -107,7 +133,7 @@ export default async function PollinatorPage({
         public chambers compete to become the community&apos;s main
         mission; arrive after launch, once chambers have real usage.
       </p>
-      {m && <div className="notice">{m}</div>}
+      {noticeMessage && <div className="notice">{noticeMessage}</div>}
 
       {invites.length > 0 && (
         <>
@@ -214,7 +240,7 @@ export default async function PollinatorPage({
             <span>
               <strong>Start creating a chamber</strong>
               <span className="chamber-create-hint">
-                Fill out the idea brief; {feePc} PC + {feeG} G, live immediately
+                Fill out the idea brief; {creationCost} PC/G total, live immediately
               </span>
             </span>
           </summary>
@@ -312,7 +338,7 @@ export default async function PollinatorPage({
               Visibility; fixed at creation{" "}
               <select name="visibility" defaultValue="public">
                 <option value="public">
-                  Public; anyone verified carrying both tokens may enter; tournament-eligible later
+                  Public; anyone verified may enter; tournament-eligible later
                 </option>
                 <option value="private">
                   Private; you select who gets invited; never competes
@@ -322,13 +348,26 @@ export default async function PollinatorPage({
             <p className="interim-note">
               Workshop contents are deletable-class with due process;
               enclosed, not the permanent record. Participation inside
-              costs {postPc} PC + {postG} G per post. Your Light Score is
+              costs {postCost} PC/G total per post. Your Light Score is
               public on a public chamber&apos;s storefront: you can build
               in any standing, but never behind a curtain.
             </p>
-            <button type="submit">
-              Open the chamber · {feePc} PC + {feeG} G
+            <p className="interim-note">
+              Balance shown at the top: {displayedPc.toFixed(2)} PC and {displayedG.toFixed(2)} G.
+              This chamber costs {creationCost.toFixed(2)} PC/G total and can use either currency.
+              {walletMode && (
+                <> The platform-held portion is used first; wallet-held PC/G remains identified as wallet custody.</>
+              )}
+            </p>
+            <button type="submit" disabled={!canCreate}>
+              Open the chamber · {creationCost} PC/G total
             </button>
+            {!canCreate && (
+              <p className="interim-note">
+                Insufficient platform-held PC/G for this action: {(unifiedBalance?.total ?? 0).toFixed(2)} of {creationCost.toFixed(2)} available.
+                {walletMode && " Wallet-held funds require wallet approval before they can be spent."}
+              </p>
+            )}
           </form>
         </details>
       ) : (

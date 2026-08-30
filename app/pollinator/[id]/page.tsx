@@ -5,7 +5,6 @@ import { activeFace } from "@/lib/webSession";
 import {
   chamberActivityLevel,
   chamberMembership,
-  carriesBothTokens,
 } from "@/lib/chambers";
 import { faceConstellation } from "@/lib/lightScore";
 import { submitChamberCover, submitEnterChamber } from "@/app/actions";
@@ -86,9 +85,6 @@ export default async function StorefrontPage({
   const constellation = chamber.isPublic
     ? await faceConstellation(db, chamber.creatorProfileId)
     : null;
-  const canEnter =
-    viewer && !isMember ? await carriesBothTokens(db, viewer.id) : false;
-
   return (
     <>
       <p>
@@ -210,21 +206,12 @@ export default async function StorefrontPage({
             🚪 Enter the workshop →
           </Link>
         ) : viewer ? (
-          canEnter ? (
-            <form action={submitEnterChamber} className="inline">
-              <input type="hidden" name="chamberId" value={chamber.id} />
-              <button type="submit">
-                Enter; free; posting inside costs both tokens
-              </button>
-            </form>
-          ) : (
-            <span className="interim-note">
-              Entering asks only that you carry both tokens; participation
-              inside charges PollCoin and Gratium together, and the
-              earnable paths cover committed souls. Top up by
-              participating, then come back.
-            </span>
-          )
+          <form action={submitEnterChamber} className="inline">
+            <input type="hidden" name="chamberId" value={chamber.id} />
+            <button type="submit">
+              Enter free; workshop posts use the unified PC/G balance
+            </button>
+          </form>
         ) : (
           <Link
             href={`/verify?returnTo=${encodeURIComponent(`/pollinator/${chamber.id}`)}`}

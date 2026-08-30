@@ -158,7 +158,7 @@ Full runbooks for the two owner-facing chain demos ("come try" and
   domains as data, per-identity per-pillar standing (never a sum), the
   Picture repair loop, the published feed formula, nine-entity search.
 - **Chambers** (`lib/chambers.ts`, `/pollinator`); the idea
-  incubator: public storefronts, enclosed workshops, dual-token fees.
+  incubator: public storefronts, enclosed workshops, unified PC/G participation costs.
 - **Deployment hardening**; the Postgres track + parity discipline,
   backups with a self-proving restore drill, the consolidated
   rate-limit schedule (walls at machine speed; fees remain the real

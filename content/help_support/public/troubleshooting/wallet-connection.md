@@ -41,11 +41,11 @@ links:
     label: Open wallet and participation settings
 ---
 
-You can keep using Credits mode without a wallet. Connect one only if you want to test wallet-owned fake assets.
+You can keep using platform-held PC/G without a wallet. Connect one only if you want to test wallet custody.
 
 AgoraNet's current wallet features use a Cardano test network, not Cardano mainnet. Confirm that the Lace browser wallet is installed and unlocked. In Lace, select the same test network named on the AgoraNet Settings page.
 
-Return to Settings, reload the page once, select Connect Lace, and approve the request in the Lace window. After it connects, choose Wallet mode if you want to use the wallet directly, or keep Credits mode. If no wallet window appears, check whether the browser blocked a pop-up or whether the Lace window opened behind another window.
+Return to Settings, reload the page once, select Connect Lace, and approve the request in the Lace window. After it connects, choose wallet custody if you want to use the wallet directly, or keep platform custody. If no wallet window appears, check whether the browser blocked a pop-up or whether the Lace window opened behind another window.
 
 Wallet connection does not finish every onboarding requirement. If posting later says **“The permanence and Constitution acknowledgments come first,”** the current identity still needs its own consent steps. Open [`/verify/consents`](/verify/consents), complete both buttons in order, and return to the post. True Self and Alias consent records are separate.
 
@@ -55,4 +55,4 @@ If a post says its payment was submitted or pending, **do not click again and do
 
 If it still does not connect, open Help and Support and include the browser name, selected network, and non-secret error message. A public wallet address or transaction hash may be included when needed. Never include a seed phrase, spending password, signing key, private key, or access key.
 
-If a Chamber or workshop says the action is unavailable in Wallet mode, the wallet is not necessarily broken. Those actions currently require two token types and must be completed in Credits mode. Switch the current identity to Credits mode in Settings, save, and try again.
+If a Chamber or workshop says wallet settlement is unavailable, the wallet is not necessarily broken. Select platform custody in Settings to use platform-held PC/G for that action.
