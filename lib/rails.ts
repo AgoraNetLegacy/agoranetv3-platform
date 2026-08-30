@@ -852,9 +852,21 @@ export const RAIL_DEFAULTS: RailDefault[] = [
   },
 ];
 
-const LEGACY_COMBINED_RAILS: Readonly<Record<string, readonly [string, string]>> = {
-  "chamber.creationCost": ["chamber.creationFeePc", "chamber.creationFeeG"],
-  "chamber.postCost": ["chamber.postFeePc", "chamber.postFeeG"],
+const LEGACY_COMBINED_RAILS: Readonly<
+  Record<string, { keys: readonly [string, string]; combine: "max" | "sum" }>
+> = {
+  // The screenshot and product decision establish 20 as the whole creation
+  // cost, not 20 PC plus 20 G. The old equal rails represented alternative
+  // requirements, so retain their larger configured value during rollout.
+  "chamber.creationCost": {
+    keys: ["chamber.creationFeePc", "chamber.creationFeeG"],
+    combine: "max",
+  },
+  // The old workshop fee was 1 PC + 1 G, so its combined total remains 2.
+  "chamber.postCost": {
+    keys: ["chamber.postFeePc", "chamber.postFeeG"],
+    combine: "sum",
+  },
 };
 
 /** Read one rail's current value. The two chamber costs have an explicit
@@ -864,13 +876,16 @@ const LEGACY_COMBINED_RAILS: Readonly<Record<string, readonly [string, string]>>
 export async function getRail(db: DbOrTx, key: string): Promise<number> {
   const rail = await db.rail.findUnique({ where: { key } });
   if (rail) return rail.value;
-  const legacyKeys = LEGACY_COMBINED_RAILS[key];
-  if (legacyKeys) {
+  const legacy = LEGACY_COMBINED_RAILS[key];
+  if (legacy) {
     const legacyRails = await Promise.all(
-      legacyKeys.map((legacyKey) => db.rail.findUnique({ where: { key: legacyKey } }))
+      legacy.keys.map((legacyKey) => db.rail.findUnique({ where: { key: legacyKey } }))
     );
     if (legacyRails.every((legacyRail) => legacyRail !== null)) {
-      return legacyRails.reduce((total, legacyRail) => total + (legacyRail?.value ?? 0), 0);
+      const values = legacyRails.map((legacyRail) => legacyRail?.value ?? 0);
+      return legacy.combine === "max"
+        ? Math.max(...values)
+        : values.reduce((total, value) => total + value, 0);
     }
   }
   throw new Error(`Rail not seeded: ${key}`);
