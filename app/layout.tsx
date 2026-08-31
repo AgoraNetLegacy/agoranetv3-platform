@@ -254,7 +254,7 @@ async function SideNav() {
         href="/souls"
         title="Browse the Platform Souls Directory, connections, and messages."
       >
-        <span className="nav-icon"><Icon name="souls" /></span><span>Platform Souls</span>
+        <span className="nav-icon"><Icon name="souls" /></span><span>Platform/Fellow Souls</span>
       </Link>
       <Link
         className="navlink"

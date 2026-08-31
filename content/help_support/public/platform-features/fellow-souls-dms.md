@@ -34,10 +34,10 @@ escalate_when: null
 supersedes: null
 links:
   - href: /souls
-    label: Platform Souls
+    label: Platform/Fellow Souls
 ---
 
-Open **Platform Souls** from the main navigation to access the **Platform Souls Directory** and browse every registered, activated profile by name, @handle, place, or public bio. The directory is available without signing in and links to each soul's public profile window. True Self and Alias profiles use the same card and the directory does not reveal identity type. Login state, online/offline presence, and Spirit Mode do not change directory membership because this is a profile roster, not an online-users list.
+Open **Platform/Fellow Souls** from the main navigation to access the **Platform Souls Directory** and browse every registered, activated profile by name, @handle, place, or public bio. The directory is available without signing in and links to each soul's public profile window. True Self and Alias profiles use the same card and the directory does not reveal identity type. Login state, online/offline presence, and Spirit Mode do not change directory membership because this is a profile roster, not an online-users list.
 
 AgoraNet calls profile connections “fellow souls.” After signing in, the same page also shows your requests, accepted connections, blocked profiles, and private message threads.
 
