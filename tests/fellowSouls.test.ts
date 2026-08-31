@@ -77,16 +77,25 @@ afterAll(async () => {
 });
 
 describe("the public souls directory", () => {
-  it("lists active discoverable profiles without exposing private social state", async () => {
+  it("lists active True Self and Alias profiles even when offline, without private social state", async () => {
     await db.profile.update({ where: { id: benId }, data: { spiritActive: true } });
+    await db.profile.update({ where: { handle: "ada-shade" }, data: { spiritActive: true } });
     await db.profile.update({ where: { id: cyrusId }, data: { status: "inactive" } });
-    const directory = await publicSoulDirectory(db, { query: "ada", pageSize: 10 });
-    expect(directory.profiles.map((profile) => profile.handle)).toEqual([adaHandle]);
-    expect(Object.keys(directory.profiles[0]).sort()).toEqual(
+    await db.profile.update({ where: { handle: "cyrus-shade" }, data: { status: "inactive" } });
+    const directory = await publicSoulDirectory(db, { pageSize: 20 });
+    const profiles = new Map(directory.profiles.map((profile) => [profile.handle, profile]));
+    expect(profiles.get(adaHandle)?.face).toBe("TRUE_SELF");
+    expect(profiles.get("ada-shade")?.face).toBe("ALIAS");
+    expect(profiles.get(benHandle)?.face).toBe("TRUE_SELF");
+    expect(profiles.get("ben-shade")?.face).toBe("ALIAS");
+    expect(profiles.has(cyrusHandle)).toBe(false);
+    expect(profiles.has("cyrus-shade")).toBe(false);
+    expect(Object.keys(profiles.get(adaHandle)!).sort()).toEqual(
       ["bio", "bioPlace", "displayName", "face", "handle", "id", "joinedPeriod"].sort()
     );
     await db.profile.update({ where: { id: benId }, data: { spiritActive: false } });
     await db.profile.update({ where: { id: cyrusId }, data: { status: "active" } });
+    await db.profile.update({ where: { handle: "cyrus-shade" }, data: { status: "active" } });
   });
 });
 

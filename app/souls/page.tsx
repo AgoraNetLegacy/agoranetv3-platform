@@ -247,8 +247,8 @@ function SoulDirectory({ directory }: { directory: DirectoryData }) {
     <section>
       <h1>Platform Souls Directory</h1>
       <p className="lore">
-        Discover active AgoraNet profiles by name, @handle, location, or public
-        bio. Private connections and messages never appear here.
+        Discover registered True Self and Alias profiles by name, @handle, location,
+        or public bio. Presence, private connections, and messages never appear here.
       </p>
       <form method="get" className="inline" style={{ marginBottom: "1rem" }}>
         <input

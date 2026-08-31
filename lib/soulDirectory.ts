@@ -11,9 +11,9 @@ export async function publicSoulDirectory(
   const requestedPage = Math.max(Math.floor(input.page ?? 1), 1);
   const where = {
     status: "active",
-    // Spirit Mode is the profile owner's explicit discovery veil. A profile
-    // remains reachable by a known direct URL, but is not advertised here.
-    spiritActive: false,
+    // The platform directory is the roster of registered public profile windows,
+    // not a presence indicator. Offline/Spirit state must never erase a True
+    // Self or Alias from the directory.
     ...(query
       ? {
           OR: [

@@ -196,8 +196,9 @@ export async function registerAlias(
           accessKeyHash: sha256(accessKey),
           status: "active",
           joinedPeriod: monthOf(new Date()),
-          // An Alias is available immediately but begins privately. The
-          // owner can make it visible from the profile visibility control.
+          // An Alias is available immediately but begins offline with inbound
+          // protections. Its public profile window still appears in Platform
+          // Souls like every other active profile.
           spiritActive: true,
           spiritLevel: "ghost",
           spiritOnLogin: true,
