@@ -247,8 +247,9 @@ function SoulDirectory({ directory }: { directory: DirectoryData }) {
     <section>
       <h1>Platform Souls Directory</h1>
       <p className="lore">
-        Discover registered True Self and Alias profiles by name, @handle, location,
-        or public bio. Presence, private connections, and messages never appear here.
+        Discover registered AgoraNet profiles by name, @handle, location, or
+        public bio. Identity type, presence, private connections, and messages
+        never appear here.
       </p>
       <form method="get" className="inline" style={{ marginBottom: "1rem" }}>
         <input
@@ -262,7 +263,7 @@ function SoulDirectory({ directory }: { directory: DirectoryData }) {
         <button type="submit">Search souls</button>
       </form>
       <p className="meta">
-        {directory.total} discoverable profile{directory.total === 1 ? "" : "s"}
+        {directory.total} registered profile{directory.total === 1 ? "" : "s"}
         {directory.query ? ` matching “${directory.query}”` : ""}
       </p>
       <ul className="souls-list soul-directory-grid">
@@ -274,10 +275,7 @@ function SoulDirectory({ directory }: { directory: DirectoryData }) {
                 {soul.displayName}
               </Link>{" "}
               <span className="lore">@{soul.handle}</span>
-              <div className="meta">
-                {soul.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"}
-                {soul.bioPlace ? ` · 📍 ${soul.bioPlace}` : ""}
-              </div>
+              {soul.bioPlace && <div className="meta">📍 {soul.bioPlace}</div>}
               {soul.bio && (
                 <div className="meta soul-directory-bio">
                   {soul.bio.length > 150 ? `${soul.bio.slice(0, 150)}…` : soul.bio}
@@ -287,7 +285,7 @@ function SoulDirectory({ directory }: { directory: DirectoryData }) {
           </li>
         ))}
         {directory.profiles.length === 0 && (
-          <li className="lore">No discoverable profiles match that search.</li>
+          <li className="lore">No registered profiles match that search.</li>
         )}
       </ul>
       {directory.pageCount > 1 && (

@@ -34,7 +34,6 @@ export async function publicSoulDirectory(
       id: true,
       handle: true,
       displayName: true,
-      face: true,
       bio: true,
       bioPlace: true,
       joinedPeriod: true,
