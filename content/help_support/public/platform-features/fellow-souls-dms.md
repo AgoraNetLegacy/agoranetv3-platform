@@ -2,7 +2,7 @@
 id: help.platform-features.fellow-souls-dms
 slug: fellow-souls-dms
 title: Find souls, connect, and send private messages
-summary: Browse the public souls directory, then connect or message without exposing anyone's private social graph.
+summary: Browse the public Platform Souls Directory, then connect or message without exposing anyone's private social graph.
 category: platform-features
 document_type: concept
 audience: public
@@ -34,10 +34,10 @@ escalate_when: null
 supersedes: null
 links:
   - href: /souls
-    label: Souls Directory & Messages
+    label: Platform Souls
 ---
 
-Open Souls Directory & Messages to browse active, discoverable profiles by name, @handle, place, or public bio. The directory is available without signing in and links to each soul's public profile window. A profile using its discovery veil does not appear in the directory.
+Open **Platform Souls** from the main navigation to access the **Platform Souls Directory** and browse active, discoverable profiles by name, @handle, place, or public bio. The directory is available without signing in and links to each soul's public profile window. A profile using its discovery veil does not appear in the directory.
 
 AgoraNet calls profile connections “fellow souls.” After signing in, the same page also shows your requests, accepted connections, blocked profiles, and private message threads.
 

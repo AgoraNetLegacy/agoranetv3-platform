@@ -245,7 +245,7 @@ function SoulDirectory({ directory }: { directory: DirectoryData }) {
   };
   return (
     <section>
-      <h1>Souls directory</h1>
+      <h1>Platform Souls Directory</h1>
       <p className="lore">
         Discover active AgoraNet profiles by name, @handle, location, or public
         bio. Private connections and messages never appear here.
@@ -256,7 +256,7 @@ function SoulDirectory({ directory }: { directory: DirectoryData }) {
           name="q"
           defaultValue={directory.query}
           placeholder="Find a soul by name, @handle, place, or interest"
-          aria-label="Search the souls directory"
+          aria-label="Search the Platform Souls Directory"
           style={{ width: "min(32rem, 100%)" }}
         />{" "}
         <button type="submit">Search souls</button>
@@ -291,7 +291,7 @@ function SoulDirectory({ directory }: { directory: DirectoryData }) {
         )}
       </ul>
       {directory.pageCount > 1 && (
-        <nav className="sort-menu" aria-label="Souls directory pages">
+        <nav className="sort-menu" aria-label="Platform Souls Directory pages">
           {directory.page > 1 && <Link href={pageHref(directory.page - 1)}>← Previous</Link>}
           <span>
             Page {directory.page} of {directory.pageCount}
