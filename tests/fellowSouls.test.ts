@@ -31,6 +31,7 @@ import {
 import { equipBadge, submitRuling, runModerationSweeps, caseFileFor } from "../lib/moderation";
 import { balanceOf } from "../lib/economy";
 import { makeOnboardedSoul, topUpForTests } from "./helpers/souls";
+import { publicSoulDirectory } from "../lib/soulDirectory";
 
 const db = new PrismaClient({ datasources: { db: { url } } });
 
@@ -73,6 +74,20 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.$disconnect();
+});
+
+describe("the public souls directory", () => {
+  it("lists active discoverable profiles without exposing private social state", async () => {
+    await db.profile.update({ where: { id: benId }, data: { spiritActive: true } });
+    await db.profile.update({ where: { id: cyrusId }, data: { status: "inactive" } });
+    const directory = await publicSoulDirectory(db, { query: "ada", pageSize: 10 });
+    expect(directory.profiles.map((profile) => profile.handle)).toEqual([adaHandle]);
+    expect(Object.keys(directory.profiles[0]).sort()).toEqual(
+      ["bio", "bioPlace", "displayName", "face", "handle", "id", "joinedPeriod"].sort()
+    );
+    await db.profile.update({ where: { id: benId }, data: { spiritActive: false } });
+    await db.profile.update({ where: { id: cyrusId }, data: { status: "active" } });
+  });
 });
 
 describe("fellow-soul requests (§2)", () => {

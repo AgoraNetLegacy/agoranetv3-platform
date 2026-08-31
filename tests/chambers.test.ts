@@ -114,25 +114,25 @@ beforeAll(async () => {
     await chargeToTreasury(tx, {
       profileId: mixedFundsId,
       currency: "PC",
-      amount: 20,
+      amount: 95,
       kind: "fee.discussion",
     });
     await chargeToTreasury(tx, {
       profileId: mixedFundsId,
       currency: "G",
-      amount: 10,
+      amount: 85,
       kind: "fee.permanence",
     });
     await chargeToTreasury(tx, {
       profileId: insufficientFundsId,
       currency: "PC",
-      amount: 20,
+      amount: 95,
       kind: "fee.discussion",
     });
     await chargeToTreasury(tx, {
       profileId: insufficientFundsId,
       currency: "G",
-      amount: 11,
+      amount: 86,
       kind: "fee.permanence",
     });
   });

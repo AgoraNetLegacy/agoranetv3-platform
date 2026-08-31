@@ -167,13 +167,13 @@ export const RAIL_DEFAULTS: RailDefault[] = [
   },
   {
     key: "grant.verification.pc",
-    value: 25,
+    value: 100,
     unit: "uPC",
     description: "Welcome Grant at humanity verification; PollCoin half (one per human, cryptographically).",
   },
   {
     key: "grant.verification.g",
-    value: 25,
+    value: 100,
     unit: "uG",
     description: "Welcome Grant at humanity verification; Gratium half.",
   },
@@ -197,13 +197,13 @@ export const RAIL_DEFAULTS: RailDefault[] = [
   },
   {
     key: "grant.hatch.pc",
-    value: 10,
+    value: 50,
     unit: "uPC",
     description: "Hatching grant to a new Alias; PollCoin half (so an Alias isn't born traceable-by-poverty).",
   },
   {
     key: "grant.hatch.g",
-    value: 10,
+    value: 50,
     unit: "uG",
     description: "Hatching grant to a new Alias; Gratium half.",
   },

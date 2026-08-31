@@ -612,6 +612,16 @@ ul.discussions .meta { font-size: 0.78rem; color: var(--muted); margin-top: 0.2r
   background: var(--surface);
 }
 .souls-list.compact .soul-card { padding-block: 0.65rem; }
+.soul-directory-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+.soul-directory-card {
+  align-items: flex-start;
+}
+.soul-directory-bio {
+  margin-top: 0.25rem;
+  white-space: pre-wrap;
+}
 .soul-card form.inline { margin-left: auto; }
 
 .post.dm-message {

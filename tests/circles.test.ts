@@ -136,26 +136,27 @@ describe("formation (§3)", () => {
     expect(fee?.amount).toBe(25);
   });
 
-  it("the Welcome Grant covers exactly one Circle; the second needs earned PollCoin", async () => {
-    // Verification grants 25 PC; a fresh soul can form their first
-    // Circle at hour zero ("hours, not days"); the next one must be
-    // earned. The fee is real: an insufficient balance refuses.
+  it("the expanded Welcome Grant provides real exploration runway without removing limits", async () => {
+    // Verification grants 100 PC. A fresh soul can form several Circles
+    // while learning the platform, but the finite grant still runs out.
     const fresh = await makeOnboardedSoul(db, { trueSelf: "fresh-founder", alias: "ff-shade" });
-    const first = await formCircle(db, {
+    for (let index = 1; index <= 4; index += 1) {
+      const formed = await formCircle(db, {
+        profileId: fresh.trueSelfId,
+        name: `Welcome Circle ${index}`,
+        purpose: "Explore collaboration with the Welcome Grant.",
+        problem: `new-user experiment ${index}`,
+      });
+      expect(formed.ok).toBe(true);
+    }
+    const fifth = await formCircle(db, {
       profileId: fresh.trueSelfId,
-      name: "First Wind",
-      purpose: "Founded on the Welcome Grant alone.",
-      problem: "cold starts",
-    });
-    expect(first.ok).toBe(true);
-    const second = await formCircle(db, {
-      profileId: fresh.trueSelfId,
-      name: "Second Wind",
-      purpose: "There is no grant left for this one.",
+      name: "Beyond the Welcome Runway",
+      purpose: "The finite grant still preserves a participation cost.",
       problem: "overreach",
     });
-    expect(second.ok).toBe(false);
-    if (!second.ok) expect(second.reason).toContain("Insufficient");
+    expect(fifth.ok).toBe(false);
+    if (!fifth.ok) expect(fifth.reason).toContain("Insufficient");
   });
 });
 

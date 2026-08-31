@@ -25,6 +25,12 @@ export const UNIFIED_CURRENCY_RATES: Readonly<Record<Currency, number>> = {
   G: 1,
 };
 
+// Existing Float balances can contain sub-cent binary residue after repeated
+// percentage splits (for example a displayed 17.80 may be infinitesimally
+// below 17.8 in PostgreSQL). Currency decisions are made to two decimals, so
+// tolerate only sub-cent machine residue at the exact-empty boundary.
+const CURRENCY_FLOAT_EPSILON = 1e-9;
+
 export interface UnifiedBalance {
   total: number;
   components: Record<Currency, { balance: number; rate: number; units: number }>;
@@ -83,7 +89,7 @@ export function canAffordUnifiedCost(
   balance: UnifiedBalance,
   required: number
 ): boolean {
-  return balance.total + Number.EPSILON >= required;
+  return balance.total + CURRENCY_FLOAT_EPSILON >= required;
 }
 
 export type EconomyResult =
@@ -125,7 +131,26 @@ export async function debitBalance(
     where: { profileId, currency, amount: { gte: amount } },
     data: { amount: { decrement: amount } },
   });
-  return result.count === 1;
+  if (result.count === 1) return true;
+
+  // A full-balance debit can miss the exact guard when a historical Float
+  // contains invisible binary residue. Restrict the fallback to a microscopic
+  // window around the requested amount and set the balance to zero atomically.
+  // The upper bound prevents this from becoming a generic stale-read update;
+  // concurrent material balance changes fail the guard and are retried by the
+  // caller instead of being overwritten.
+  const residueResult = await tx.balance.updateMany({
+    where: {
+      profileId,
+      currency,
+      amount: {
+        gte: amount - CURRENCY_FLOAT_EPSILON,
+        lte: amount + CURRENCY_FLOAT_EPSILON,
+      },
+    },
+    data: { amount: 0 },
+  });
+  return residueResult.count === 1;
 }
 
 export async function chargeToTreasury(

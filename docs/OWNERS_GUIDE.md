@@ -141,7 +141,8 @@ outlive your account*. Then orientation, then the values seed (answer
 a couple honestly; they feed Circle matchmaking someday, and are
 never public).
 
-**Notice the header:** your balances appeared; 30.00 PC · 25.00 G.
+**Notice the header:** after orientation and the values seed, your balances
+show 115.00 PC · 100.00 G.
 Nobody gave you crypto; the Welcome Grant funded your journey as you
 took each step. That's the economy working.
 

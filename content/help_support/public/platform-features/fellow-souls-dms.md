@@ -1,8 +1,8 @@
 ---
 id: help.platform-features.fellow-souls-dms
 slug: fellow-souls-dms
-title: Connections and private messages
-summary: “Fellow souls” are profile connections; requests and direct messages stay with the profile that sent or received them.
+title: Find souls, connect, and send private messages
+summary: Browse the public souls directory, then connect or message without exposing anyone's private social graph.
 category: platform-features
 document_type: concept
 audience: public
@@ -22,6 +22,8 @@ keywords:
   - message
   - connection request
   - inbox
+  - directory
+  - find people
 error_codes: []
 onboarding_stages: []
 source_refs:
@@ -32,10 +34,12 @@ escalate_when: null
 supersedes: null
 links:
   - href: /souls
-    label: Fellow Souls & Messages
+    label: Souls Directory & Messages
 ---
 
-AgoraNet calls profile connections “fellow souls.” Open Fellow souls & messages to view requests, accepted connections, blocked profiles, and private message threads.
+Open Souls Directory & Messages to browse active, discoverable profiles by name, @handle, place, or public bio. The directory is available without signing in and links to each soul's public profile window. A profile using its discovery veil does not appear in the directory.
+
+AgoraNet calls profile connections “fellow souls.” After signing in, the same page also shows your requests, accepted connections, blocked profiles, and private message threads.
 
 Connections and messages belong only to the profile currently in use. A connection or message on your True Self does not appear on your Alias, and private messages do not appear in public search.
 

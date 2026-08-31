@@ -42,7 +42,7 @@ links:
     label: View current fees and balances
 ---
 
-AgoraNet has two currencies: PollCoin (PC) and Gratium (G). There is no separate Credits currency. You do not need a crypto wallet: new profiles begin with platform custody, where AgoraNet holds that profile's PC and G.
+AgoraNet has two currencies: PollCoin (PC) and Gratium (G). There is no separate Credits currency. You do not need a crypto wallet: a new True Self begins with 100 PC and 100 G under platform custody. A newly hatched Alias begins with 50 PC and 50 G. These one-time grants provide enough runway to explore multiple platform features before participation earnings become necessary.
 
 If you already understand wallets, open Settings, connect a supported Cardano testnet wallet, and choose wallet custody. The header identifies wallet-held dPOLL and dGRA alongside any platform-held PC/G. These test assets have no real value. Your wallet remains under your control; AgoraNet never asks for its seed phrase or private key.
 

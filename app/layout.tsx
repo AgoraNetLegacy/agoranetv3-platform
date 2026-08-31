@@ -254,7 +254,7 @@ async function SideNav() {
         href="/souls"
         title="Find your people; nobody watches you do it."
       >
-        <span className="nav-icon"><Icon name="souls" /></span><span>Fellow Souls &amp; Messages</span>
+        <span className="nav-icon"><Icon name="souls" /></span><span>Souls Directory &amp; Messages</span>
       </Link>
       <Link
         className="navlink"

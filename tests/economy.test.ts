@@ -7,7 +7,15 @@ process.env.DATABASE_URL = url;
 process.env.GATE_OPERATOR_SECRET = "test-secret-for-economy-tests";
 
 import { Prisma, PrismaClient } from "@prisma/client";
-import { balanceOf, tip, tipStats, payFromTreasury, grantOnce } from "../lib/economy";
+import {
+  balanceOf,
+  chargeToTreasury,
+  debitBalance,
+  tip,
+  tipStats,
+  payFromTreasury,
+  grantOnce,
+} from "../lib/economy";
 import { createPost, upgradePostPermanence, createPollDiscussion } from "../lib/discussions";
 import { createPoll, castVote } from "../lib/polls";
 import { saveSeedAnswer, seedQuestions } from "../lib/valuesSeed";
@@ -49,10 +57,10 @@ afterAll(async () => {
 
 describe("the Welcome Grant", () => {
   it("funds a new True Self at verification and an Alias at hatch", async () => {
-    expect(await balanceOf(db, trueSelfId, "PC")).toBe(25);
-    expect(await balanceOf(db, trueSelfId, "G")).toBe(25);
-    expect(await balanceOf(db, aliasId, "PC")).toBe(10);
-    expect(await balanceOf(db, aliasId, "G")).toBe(10);
+    expect(await balanceOf(db, trueSelfId, "PC")).toBe(100);
+    expect(await balanceOf(db, trueSelfId, "G")).toBe(100);
+    expect(await balanceOf(db, aliasId, "PC")).toBe(50);
+    expect(await balanceOf(db, aliasId, "G")).toBe(50);
   });
 
   it("pays the values-seed milestone once, at seven answers", async () => {
@@ -60,10 +68,10 @@ describe("the Welcome Grant", () => {
     for (const q of questions) {
       await saveSeedAnswer(db, { profileId: trueSelfId, questionId: q.id, body: "An answer." });
     }
-    expect(await balanceOf(db, trueSelfId, "PC")).toBe(35);
+    expect(await balanceOf(db, trueSelfId, "PC")).toBe(110);
     // Re-answering never re-grants.
     await saveSeedAnswer(db, { profileId: trueSelfId, questionId: questions[0].id, body: "Edited." });
-    expect(await balanceOf(db, trueSelfId, "PC")).toBe(35);
+    expect(await balanceOf(db, trueSelfId, "PC")).toBe(110);
   });
 
   it("mints a one-time grant atomically; the second claim collides, no double-mint", async () => {
@@ -111,6 +119,23 @@ describe("the Welcome Grant", () => {
 });
 
 describe("fees flow to the treasury", () => {
+  it("clears invisible Float residue when spending a displayed full balance", async () => {
+    const before = await balanceOf(db, aliasId, "PC");
+    await db.balance.update({
+      where: { profileId_currency: { profileId: aliasId, currency: "PC" } },
+      data: { amount: 17.8 - 5e-10 },
+    });
+    const debited = await db.$transaction((tx) =>
+      debitBalance(tx, aliasId, "PC", 17.8)
+    );
+    expect(debited).toBe(true);
+    expect(await balanceOf(db, aliasId, "PC")).toBe(0);
+    await db.balance.update({
+      where: { profileId_currency: { profileId: aliasId, currency: "PC" } },
+      data: { amount: before },
+    });
+  });
+
   it("charges the reply fee, pays the first-action bonus, and accrues", async () => {
     const before = await balanceOf(db, trueSelfId, "PC");
     const gBefore = await balanceOf(db, trueSelfId, "G");
@@ -138,7 +163,15 @@ describe("fees flow to the treasury", () => {
     const { recordAck } = await import("../lib/consent");
     await recordAck(db, { profileId: broke.profileId, kind: "permanence" });
     await recordAck(db, { profileId: broke.profileId, kind: "constitution" });
-    // Drain: 25 PC grant − two poll creations (10 each) = 5 left; a third fails.
+    // Drain enough of the larger Welcome Grant that only two poll fees remain.
+    await db.$transaction((tx) =>
+      chargeToTreasury(tx, {
+        profileId: broke.profileId,
+        currency: "PC",
+        amount: 75,
+        kind: "fee.discussion",
+      })
+    );
     const pillarId = (await db.pillar.findFirstOrThrow()).id;
     const mk = () =>
       createPoll(db, {

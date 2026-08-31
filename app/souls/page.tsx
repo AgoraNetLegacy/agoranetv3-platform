@@ -8,6 +8,7 @@ import {
 } from "@/lib/fellowSouls";
 import { threadsFor } from "@/lib/dm";
 import { getRail } from "@/lib/rails";
+import { publicSoulDirectory } from "@/lib/soulDirectory";
 import {
   submitFellowRequest,
   submitRequestResponse,
@@ -20,24 +21,27 @@ import {
 
 export const dynamic = "force-dynamic";
 
-// The souls page (FELLOW_SOULS_AND_DM_SPEC); per-persona, and PRIVATE:
-// this list renders for its owner alone. No counts leave this page, no
-// other soul's list exists anywhere, and there is no "people you may
-// know"; ever. A permanent product commitment, not a missing feature.
+// Public profile discovery and private social state share one front door.
+// The directory exposes only fields already published on each soul window.
+// Bonds, requests, blocks, and message threads remain per-persona and private.
 
 export default async function SoulsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ m?: string }>;
+  searchParams: Promise<{ m?: string; q?: string; page?: string }>;
 }) {
-  const { m } = await searchParams;
+  const { m, q, page: pageRaw } = await searchParams;
+  const directory = await publicSoulDirectory(db, {
+    query: q,
+    page: Number(pageRaw) || 1,
+  });
   const viewer = await activeFace();
   if (!viewer) {
     return (
       <>
-        <h1>Fellow souls</h1>
+        <SoulDirectory directory={directory} />
         <p className="interim-note">
-          The social layer is private to each identity.{" "}
+          The directory is public. Sign in to connect or send a private message.{" "}
           <Link href={`/verify?returnTo=${encodeURIComponent("/souls")}`}>
             Verify once to act →
           </Link>{" "}
@@ -65,14 +69,16 @@ export default async function SoulsPage({
 
   return (
     <>
+      <SoulDirectory directory={directory} />
+      <hr style={{ margin: "2rem 0" }} />
       <h1>Fellow souls & messages</h1>
       <p>
         <em>Find your people; nobody watches you do it.</em>
       </p>
       <p className="lore">
-        Good people find each other. Bonds are mutual consent between two
-        identities; your graph is yours alone; no public lists, no counts, no
-        suggestions, ever.
+        Profiles are discoverable in the public directory above. Bonds are
+        mutual consent between two identities; your connection graph, requests,
+        blocks, and messages remain yours alone.
       </p>
       {m && <div className="notice">{m}</div>}
 
@@ -224,5 +230,77 @@ export default async function SoulsPage({
         </form>
       </details>
     </>
+  );
+}
+
+type DirectoryData = Awaited<ReturnType<typeof publicSoulDirectory>>;
+
+function SoulDirectory({ directory }: { directory: DirectoryData }) {
+  const pageHref = (page: number) => {
+    const params = new URLSearchParams();
+    if (directory.query) params.set("q", directory.query);
+    if (page > 1) params.set("page", String(page));
+    const suffix = params.toString();
+    return `/souls${suffix ? `?${suffix}` : ""}`;
+  };
+  return (
+    <section>
+      <h1>Souls directory</h1>
+      <p className="lore">
+        Discover active AgoraNet profiles by name, @handle, location, or public
+        bio. Private connections and messages never appear here.
+      </p>
+      <form method="get" className="inline" style={{ marginBottom: "1rem" }}>
+        <input
+          type="search"
+          name="q"
+          defaultValue={directory.query}
+          placeholder="Find a soul by name, @handle, place, or interest"
+          aria-label="Search the souls directory"
+          style={{ width: "min(32rem, 100%)" }}
+        />{" "}
+        <button type="submit">Search souls</button>
+      </form>
+      <p className="meta">
+        {directory.total} discoverable profile{directory.total === 1 ? "" : "s"}
+        {directory.query ? ` matching “${directory.query}”` : ""}
+      </p>
+      <ul className="souls-list soul-directory-grid">
+        {directory.profiles.map((soul) => (
+          <li key={soul.id} className="soul-card soul-directory-card">
+            <img className="avatar-sm" src={`/img/${soul.handle}/avatar`} alt="" />
+            <div>
+              <Link href={`/souls/${soul.handle}`} className="pseudonym">
+                {soul.displayName}
+              </Link>{" "}
+              <span className="lore">@{soul.handle}</span>
+              <div className="meta">
+                {soul.face === "TRUE_SELF" ? "◆ True Self" : "◇ Alias"}
+                {soul.bioPlace ? ` · 📍 ${soul.bioPlace}` : ""}
+              </div>
+              {soul.bio && (
+                <div className="meta soul-directory-bio">
+                  {soul.bio.length > 150 ? `${soul.bio.slice(0, 150)}…` : soul.bio}
+                </div>
+              )}
+            </div>
+          </li>
+        ))}
+        {directory.profiles.length === 0 && (
+          <li className="lore">No discoverable profiles match that search.</li>
+        )}
+      </ul>
+      {directory.pageCount > 1 && (
+        <nav className="sort-menu" aria-label="Souls directory pages">
+          {directory.page > 1 && <Link href={pageHref(directory.page - 1)}>← Previous</Link>}
+          <span>
+            Page {directory.page} of {directory.pageCount}
+          </span>
+          {directory.page < directory.pageCount && (
+            <Link href={pageHref(directory.page + 1)}>Next →</Link>
+          )}
+        </nav>
+      )}
+    </section>
   );
 }
