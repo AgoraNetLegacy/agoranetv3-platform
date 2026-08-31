@@ -7,9 +7,9 @@ category: platform-features
 document_type: concept
 audience: public
 status: approved
-version: 1.1.0
-effective_at: 2026-08-22
-review_by: 2027-02-23
+version: 1.2.0
+effective_at: 2026-08-31
+review_by: 2027-02-28
 owner: support-content
 reviewers:
   - product

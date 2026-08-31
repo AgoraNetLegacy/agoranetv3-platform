@@ -171,10 +171,14 @@ platform honesty note (small crowd = thin anonymity; the platform
 refuses to oversell privacy) and the seven disclosures; this screen
 is the heart of the dual-identity promise. Hatch with your credential:
 *different* name, *different* handle. It is available immediately, but
-starts private. Sign in with the Alias key, then deliberately make it
-visible when you are ready. Notice: separate balances, separate
-standing, separate everything. Two identities, one human, zero stored
-links.
+starts offline with its inbound protections active. Its registered profile
+still appears in the public **Platform Souls Directory** using the same card
+as every other soul; the directory neither selects nor displays identity
+type. Sign in with the Alias key when you are ready. Notice: separate
+balances, separate standing, separate everything. Two identities, one human,
+zero stored links. The existing full profile About window still identifies
+the face as True Self or Alias; changing that broader disclosure requires a
+separate owner decision.
 
 **G. The rest of the estate (5 min, skim).** **/circles** (form one;
 watch the 25 PC fee; log an action; it needs a second soul to attest,
@@ -184,7 +188,10 @@ room** inside any pillar (open a poll; votes are sealed until a
 randomized "candle" close that was hash-committed before the first
 vote existed), **/feed** (the formula is published at /feed/formula;
 no hidden algorithm exists to accuse), **/profile** (your standing
-per pillar; never one number, by constitutional law).
+per pillar; never one number, by constitutional law), and
+**Platform/Fellow Souls** in the left navigation (the public registered-profile
+directory above the signed-in identity's private Fellow Souls, requests,
+blocks, and messages).
 
 **H. Prove it's honest (2 min).** Back in the terminal:
 

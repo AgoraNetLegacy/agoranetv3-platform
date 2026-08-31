@@ -7,9 +7,9 @@ category: economy
 document_type: concept
 audience: public
 status: approved
-version: 1.3.0
-effective_at: 2026-08-23
-review_by: 2027-02-23
+version: 1.4.0
+effective_at: 2026-08-31
+review_by: 2027-02-28
 owner: support-content
 reviewers:
   - product

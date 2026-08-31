@@ -14,6 +14,10 @@ delete or repurpose hosted resources until their role is recorded here.
   application release.
 - [x] Commit and push the migration-first Chamber-cover release through
   `629571e`.
+- [x] On 2026-08-31, create and validate a PostgreSQL 18 production backup,
+  then apply `20260829_unified_pollinator_currency` and
+  `20260831_expand_welcome_grants` before verifying the corresponding live
+  application releases.
 
 ## Railway; staging infrastructure
 
@@ -48,6 +52,10 @@ delete or repurpose hosted resources until their role is recorded here.
   store without committing its token.
 - [x] Deploy Chamber-cover code with uploads disabled, smoke-test, then enable
   `CHAMBER_COVERS_ENABLED` and redeploy.
+- [x] Permit the public Vercel Blob host in the production image CSP and verify
+  the policy on the canonical domain.
+- [x] Deploy and verify the public Platform Souls Directory and the
+  **Platform/Fellow Souls** navigation entry.
 
 ## Verification
 
@@ -57,6 +65,13 @@ delete or repurpose hosted resources until their role is recorded here.
   `/verify` flow on `agoranet.ai`.
 - [ ] Complete one throwaway-soul walkthrough.
 - [x] Record final URLs and resource names here.
+- [x] Verify on 2026-08-31 that `/souls` is readable without signing in, lists
+  all seven registered production profiles regardless of presence, gives
+  True Self and Alias profiles identical directory cards, and keeps the
+  directory payload free of identity type and private social state.
+- [x] Verify on 2026-08-31 that the live header shows the canonical combined
+  wallet + platform balances and that Pollinator chamber creation is enabled
+  when the unified PC/G balance covers the 20-unit cost.
 
 ## Rules
 

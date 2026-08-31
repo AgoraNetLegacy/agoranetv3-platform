@@ -16,7 +16,7 @@ https://www.agoranet.ai, with https://agoranet.ai redirecting to the
 canonical `www` hostname. The Vercel deployment URL
 https://agoranet-staging.vercel.app remains available for controlled
 deployment checks, backed by Railway PostgreSQL. Migrations, seed,
-invariant verification, and public smoke tests all passed on 2026-08-15.
+invariant verification, and public smoke tests have passed through 2026-08-31.
 The remaining work is the Phase 8 cohort
 checkpoint (a small real cohort onboarding unaided on staging), and
 Phase 9's real-money and legal-gated rails. Construction began
@@ -35,8 +35,8 @@ deployed contract address, and both owner demo runbooks live there);
   testnet, all disclosed as such; see `/transparency`) · real-money
   mechanics stay behind Phase 9's legal gate, untouched.
 - Hosting: Vercel (the app and custom domains) + Railway (staging
-  PostgreSQL; operations commands are built, while the live operations
-  service must be re-provisioned and verified) + Vercel Blob (sanitized public
+  PostgreSQL and the verified private operations scheduler with persistent
+  backup storage) + Vercel Blob (sanitized public
   Chamber storefront covers). Cover metadata migrations are deployed and
   verified before cover-reading application code is released.
 - Operations: `docs/DEPLOYMENT.md` (staging setup),
@@ -47,6 +47,8 @@ deployed contract address, and both owner demo runbooks live there);
   `docs/PROOF_OF_HUMANITY_SPEC.md` and
   `docs/PROOF_OF_HUMANITY_IMPLEMENTATION_PLAN.md` (the independent
   humanity-verification design and rollout plan),
+  `docs/MATCHING_FOUNDATION_PROGRESS.md` (the completed people, privacy,
+  currency, and coordination foundations for the future matching system),
   `docs/OWNERS_GUIDE.md` (running, understanding, and explaining the
   platform to someone else; start here if that's your goal).
 
@@ -146,19 +148,24 @@ Full runbooks for the two owner-facing chain demos ("come try" and
   formation, members' rooms (never the public record), resource
   boards, binding stewardship polls, and the attested action log on
   the civic ledger.
-- **Fellow Souls & DMs** (`lib/fellowSouls.ts`, `lib/dm.ts`, `/souls`)
-; mutual-consent bonds, structurally private graphs, encrypted
+- **Platform/Fellow Souls** (`lib/soulDirectory.ts`, `lib/fellowSouls.ts`,
+  `lib/dm.ts`, `/souls`); a public directory of every registered, activated
+  profile plus mutual-consent bonds, structurally private graphs, encrypted
   threads (Phase A escrow, disclosed verbatim), recipient-side
   reporting into the unchanged moderation path. Cross-device request,
   acceptance, first message, and reply have been verified live in
-  production. Registered identities remain searchable while their
-  presence is shown separately as online or offline.
+  production. Directory membership never depends on login, presence, or
+  Spirit Mode. True Self and Alias cards are identical, and identity type is
+  not selected or returned by the directory query. Private requests, bonds,
+  blocks, and messages remain visible only to the current signed-in identity.
 - **Light Score & the dashboards** (`lib/lightScore.ts`, the hub,
   pillar and domain pages, `/transparency`, `/feed`, `/search`); 56
   domains as data, per-identity per-pillar standing (never a sum), the
   Picture repair loop, the published feed formula, nine-entity search.
-- **Chambers** (`lib/chambers.ts`, `/pollinator`); the idea
-  incubator: public storefronts, enclosed workshops, unified PC/G participation costs.
+- **Chambers** (`lib/chambers.ts`, `/pollinator`); the idea incubator:
+  public storefronts with sanitized Blob-hosted covers, enclosed workshops,
+  and one canonical PC/G participation-cost calculation shared by eligibility,
+  charging, and display.
 - **Deployment hardening**; the Postgres track + parity discipline,
   backups with a self-proving restore drill, the consolidated
   rate-limit schedule (walls at machine speed; fees remain the real
@@ -196,9 +203,11 @@ Full runbooks for the two owner-facing chain demos ("come try" and
   accrual returned, votes 0.25 PC (ordinary
   = governance, per law), polls and Discussions 10 PC, paid permanence
   15 G, flag deposits 5 PC (never blocking at zero balance). The
-  **Welcome Grant** funds the journey: 25+25 at verification, +10 at
+  **Welcome Grant** funds the journey: 100 PC + 100 G at verification, +10 PC at
   the values seed, +5 at orientation, +5 G at first action; a new
-  Alias hatches with 10+10; born funded, not traceable-by-poverty.
+  Alias hatches with 50 PC + 50 G; born with enough runway to explore and
+  participate, not traceable-by-poverty. These amounts apply to future
+  one-time grants and do not rewrite existing balances.
 - **Tips replace likes**; Gratium, 5% treasury cut; totals +
   unique-tipper breadth public, tipper identities never displayed. The
   sort menu gains **Most unique tippers** and **Most sourced**.
