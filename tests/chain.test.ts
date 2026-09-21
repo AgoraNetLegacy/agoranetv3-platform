@@ -204,6 +204,8 @@ describe("the testnet wallet rail", () => {
 
   it("verifies a claim from the transaction output, not a browser callback", async () => {
     const priorFetch = global.fetch;
+    const priorProjectId = process.env.BLOCKFROST_PROJECT_ID;
+    process.env.BLOCKFROST_PROJECT_ID = "test-project";
     const address = "addr_test1qzdelivery000000000000000000000000000000000000000000000";
     global.fetch = async () =>
       new Response(
@@ -223,6 +225,8 @@ describe("the testnet wallet rail", () => {
       expect(await verifyDemoAssetDelivery("c".repeat(64), address, "G", "1")).toBe(false);
     } finally {
       global.fetch = priorFetch;
+      if (priorProjectId === undefined) delete process.env.BLOCKFROST_PROJECT_ID;
+      else process.env.BLOCKFROST_PROJECT_ID = priorProjectId;
     }
   });
 });
