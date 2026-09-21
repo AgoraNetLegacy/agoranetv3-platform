@@ -5,7 +5,16 @@
     "node": ">=20.9.0"
   },
   "private": true,
+  "license": "AGPL-3.0-only",
   "description": "AgoraNet v3; a purpose-built civic commons. Phase 8: deployment hardening.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/projectpollify/agoranetv3-platform.git"
+  },
+  "bugs": {
+    "url": "https://github.com/projectpollify/agoranetv3-platform/issues"
+  },
+  "homepage": "https://github.com/projectpollify/agoranetv3-platform#readme",
   "scripts": {
     "dev": "next dev",
     "build": "npm run corpus:check && npm run db:generate && next build",
