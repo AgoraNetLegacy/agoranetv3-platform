@@ -18,3 +18,4 @@ infra/midnight/midnight-level-db/
 infra/midnight/*.log
 .vercel
 .env.local
+.claude/

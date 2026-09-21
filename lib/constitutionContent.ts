@@ -1,14 +1,12 @@
-// The AgoraNet Constitution, VERBATIM from the ratified corpus document
-// (/Users/shawn/Desktop/Agoranetv3/Platform Constitution/PLATFORM_CONSTITUTION.md).
+// The AgoraNet Constitution, maintained verbatim in this public repository.
 // Owner walkthrough finding, 2026-07-15: souls acknowledge the Constitution
 // at onboarding, so the full text must be readable ON the platform; a
 // summary with nowhere to click is a trust gap. This constant renders at
 // /constitution (public, signed-out readable; reading is free).
 //
-// Provenance rule: the corpus document is the source of truth. If the
-// owner amends it there, copy it here verbatim (frontmatter stripped) in
-// the same change; CHECK 2 of scripts/verify.ts-style honesty applies:
-// the platform must never render a stale constitution.
+// Provenance rule: the committed Constitution is the public source of truth.
+// Any amendment must update this text and its related verification in the
+// same change; the platform must never render a stale constitution.
 
 export const CONSTITUTION_MARKDOWN = `
 

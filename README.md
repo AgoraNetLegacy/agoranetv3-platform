@@ -25,7 +25,15 @@ the authoritative per-phase record (Phase 8.6's tx hashes, the
 deployed contract address, and both owner demo runbooks live there);
 `DECISIONS_PENDING.md` is the owner's queue.
 
-- Specifications: see `CLAUDE.md` for the corpus location and build law.
+## Open source
+
+AgoraNet is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance,
+[GOVERNANCE.md](GOVERNANCE.md) for the founding-maintainer model, and
+[SECURITY.md](SECURITY.md) for private vulnerability reporting.
+
+- Project record and implementation context: see `CHECKPOINTS.md`,
+  `DECISIONS_PENDING.md`, and `docs/`.
 - Construction sequence: BUILD_ORDER phases 0–9.
 - Stack: Next.js · Prisma (SQLite dev · Postgres staging/production;
   dual schemas kept byte-identical by `db:validate:postgres`) ·

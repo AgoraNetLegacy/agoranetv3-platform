@@ -1,23 +1,20 @@
 # AgoraNet v3; Build Law
 
-This repository builds AgoraNet v3. **The specification corpus is law;
-this file tells every session where the law lives and how to build
-under it.**
+This repository builds AgoraNet v3. **The committed repository documents are
+the public source of truth for work contributed here.** This file tells each
+session how to work under them.
 
 ## The Corpus (read before building anything)
 
-- **Spec corpus:** `/Users/shawn/Desktop/Agoranetv3/`; 22+ ratified
-  documents. Start with `AGORANET_V3_MODULE_INVENTORY.md` (the master
-  index) and `BUILD_ORDER.md` (the construction sequence, phases 0–9
-  plus 6.5/7.5).
-- **Deferred items registry:** `OPEN_ITEMS_CHECKLIST.md` (Desktop
-  corpus); Tracks 5/6 are build-time and post-launch items with named
-  homes. Consult before inventing.
-- **v2 reuse source:** `/Users/shawn/Documents/Claude/Projects/Agoranet/platform`
-; three declared reuses: the Light Score engine,
-  `lib/canon.ts` (7 pillars + 49 questions as data), and the
-  `db:verify` hash-chain ledger check pattern. Port deliberately;
-  never import blindly.
+- **Public project record:** start with `README.md`, `CHECKPOINTS.md`,
+  `DECISIONS_PENDING.md`, `docs/`, and the Constitution rendered from
+  `lib/constitutionContent.ts`.
+- **Historical authoring material:** earlier private planning material is not
+  required to build or review this repository. If a change depends on an
+  uncommitted decision, document that decision in the repository before
+  implementation.
+- **Prior-art reuse:** reuse from earlier work must be explicitly documented,
+  reviewed, and licensed for inclusion. Never import code blindly.
 
 ## The Methodology (owner-ratified; non-negotiable)
 
@@ -47,12 +44,9 @@ under it.**
    `docs/WALLET_CANONICAL_TOKEN_RAIL_SPEC.md`.)
 6. **Honest disclosures ship with their features** (Phase A
    operator-trust language, permanence badges, correlation warnings).
-7. **When a phase checkpoint passes owner review, update the phase
-   pointers before starting the next phase:** the "Current Phase"
-   section at the bottom of this file AND the CURRENT PHASE block in
-   `/Users/shawn/Desktop/Agoranetv3/BUILD_KICKOFF_PROMPT.md` (+ regen
-   its PDF). Every new session must land on the true current phase;
-   a stale pointer is a build hazard.
+7. **When a phase checkpoint passes review, update the committed phase
+   pointers before starting the next phase.** Every new session must land on
+   the true current phase; a stale pointer is a build hazard.
 
 ## Vocabulary & Conventions
 

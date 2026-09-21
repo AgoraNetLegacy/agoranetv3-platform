@@ -1157,7 +1157,7 @@ accusation." Numbers are build-time defaults, flagged (#19).
 **One command, ten steps, ~15 seconds. Run it from your own terminal.**
 
 ```
-cd /Users/shawn/Documents/Claude/Projects/Agoranetv3/platform
+cd /path/to/agoranetv3-platform
 npm run db:seed        # only if the rails are stale; it's idempotent
 npm run demo:phase8.7
 ```
