@@ -9,12 +9,12 @@
   "description": "AgoraNet v3; a purpose-built civic commons. Phase 8: deployment hardening.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/projectpollify/agoranetv3-platform.git"
+    "url": "git+https://github.com/AgoraNetLegacy/agoranetv3-platform.git"
   },
   "bugs": {
-    "url": "https://github.com/projectpollify/agoranetv3-platform/issues"
+    "url": "https://github.com/AgoraNetLegacy/agoranetv3-platform/issues"
   },
-  "homepage": "https://github.com/projectpollify/agoranetv3-platform#readme",
+  "homepage": "https://github.com/AgoraNetLegacy/agoranetv3-platform#readme",
   "scripts": {
     "dev": "next dev",
     "build": "npm run corpus:check && npm run db:generate && next build",

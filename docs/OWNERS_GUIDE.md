@@ -287,7 +287,7 @@ npm run demo:phase8    # the walls, the counters, the crush, the guard
 
 | Thing | Place |
 |---|---|
-| The code | `~/Documents/Claude/Projects/Agoranetv3/platform` (GitHub: projectpollify/agoranetv3-platform) |
+| The code | `~/Documents/Claude/Projects/Agoranetv3/platform` (GitHub: AgoraNetLegacy/agoranetv3-platform) |
 | The specs (LAW) | `~/Desktop/Agoranetv3/` |
 | What shipped, phase by phase | `CHECKPOINTS.md` in the repo; the receipts |
 | Your queue | `DECISIONS_PENDING.md`; section A is the only "now" |

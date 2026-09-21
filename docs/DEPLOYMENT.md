@@ -90,7 +90,7 @@ host's name. Moving providers later costs an afternoon.
 The staging application is live. The deployed resources are:
 
 - Vercel project: `agoranet-staging`, linked to
-  `projectpollify/agoranetv3-platform`.
+  `AgoraNetLegacy/agoranetv3-platform`.
 - Vercel Blob store: `agoranet-chamber-covers`, public, connected to
   Production and Preview credentials. Upload UI is controlled separately by
   `CHAMBER_COVERS_ENABLED`.

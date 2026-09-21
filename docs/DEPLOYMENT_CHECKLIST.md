@@ -41,7 +41,7 @@ delete or repurpose hosted resources until their role is recorded here.
 
 ## Vercel; application hosting
 
-- [x] Confirm the Vercel project is linked to `projectpollify/agoranetv3-platform`.
+- [x] Confirm the Vercel project is linked to `AgoraNetLegacy/agoranetv3-platform`.
 - [x] Configure staging environment variables.
 - [x] Set build command to `npm run build:postgres`.
 - [x] Deploy the committed application.
