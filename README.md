@@ -30,7 +30,9 @@ deployed contract address, and both owner demo runbooks live there);
 AgoraNet is licensed under the [GNU Affero General Public License v3.0](LICENSE).
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance,
 [GOVERNANCE.md](GOVERNANCE.md) for the founding-maintainer model, and
-[SECURITY.md](SECURITY.md) for private vulnerability reporting.
+[SECURITY.md](SECURITY.md) for private vulnerability reporting. The
+[AgoraNet Name and Mark Policy](TRADEMARKS.md) explains how the project name
+and visual identity may be used.
 
 - Project record and implementation context: see `CHECKPOINTS.md`,
   `DECISIONS_PENDING.md`, and `docs/`.

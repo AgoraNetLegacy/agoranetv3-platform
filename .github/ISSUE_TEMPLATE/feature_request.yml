@@ -1,0 +1,32 @@
+name: Feature or improvement
+description: Propose a user-facing improvement, design, or new capability.
+title: "proposal: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem should this solve?
+      description: Describe the people affected and the current limitation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed direction
+      description: Explain the smallest useful outcome. Mockups or links are welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: implications
+    attributes:
+      label: Privacy, security, and governance implications
+      description: Consider identity separation, permanence, moderation, wallets, economics, and accessibility.
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution interest
+      options:
+        - label: I may be able to help implement or test this.
