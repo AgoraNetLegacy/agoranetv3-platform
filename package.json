@@ -1,6 +1,9 @@
 {
   "name": "agoranetv3-platform",
   "version": "0.1.0",
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "private": true,
   "description": "AgoraNet v3; a purpose-built civic commons. Phase 8: deployment hardening.",
   "scripts": {
@@ -68,7 +71,7 @@
     "next": "15.5.25",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "sharp": "^0.34.5",
+    "sharp": "0.35.4",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
