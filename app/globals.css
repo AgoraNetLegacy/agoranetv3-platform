@@ -1686,21 +1686,120 @@ textarea { padding: 0.8rem !important; }
   mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='none' stroke='white'><polygon points='50,20 24.02,35 24.02,65 50,80 75.98,65 75.98,35' stroke-width='0.8'/><polygon points='50,13.5 18.39,31.75 18.39,68.25 50,86.5 81.61,68.25 81.61,31.75' stroke-width='9' stroke-opacity='.29'/><polygon points='50,5 11.03,27.5 11.03,72.5 50,95 88.97,72.5 88.97,27.5' stroke-width='8' stroke-opacity='.21'/></g></svg>") center / contain no-repeat;
 }
 .why-banner .why-text { max-width: 750px; font-size: 1rem; line-height: 1.75; }
-/* The Agora dashboard's own hero; a starfield backdrop instead of the
-   pillar's flat tint, so its text needs light-on-dark colors instead of
-   the shared .why-banner dark-on-light defaults. Card-scoped (image
-   cropped to fit just this card) for Reader and Alias. */
+/* The Agora dashboard hero uses the reader room's flat aqua background.
+   The message is the focal point; it does not need a competing illustration. */
 .why-banner.agora-hero {
-  background: #05070d url("/brand/agora/agora-hero-starfield-v1.webp") center / cover no-repeat;
-  color: #eef2f7;
+  background: var(--bg);
+  color: var(--ink);
 }
 .why-banner.agora-hero::after { display: none; }
-.why-banner.agora-hero a { color: #9fd3ff; }
-.why-banner.agora-hero .why-text { color: #d7dde6; }
-/* Owner ruling: no panel between the text and the artwork in the
-   Alias/Reader rooms; the text sits straight on the starfield, with
-   only a soft shadow keeping the busy center legible. */
-.why-banner.agora-hero { text-shadow: 0 1px 8px rgba(0, 0, 0, .55); }
+.why-banner.agora-hero a { color: var(--accent); }
+.why-banner.agora-hero .why-text { color: var(--muted); }
+.why-banner.agora-hero { text-shadow: none; }
+
+/* The first arrival's hero (logged-out only). Problem first, in a
+   stranger's own words, before any of this project's vocabulary is
+   spent on them. Signed-in souls never see it; they get the room. */
+.agora-hero .arrival-headline {
+  font-size: clamp(2rem, 5vw, 3.35rem);
+  line-height: 1.05;
+  margin: 0;
+  max-width: 18ch;
+  text-wrap: balance;
+}
+.agora-hero .arrival-eyebrow {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+  margin: 0 0 0.7rem;
+  text-transform: uppercase;
+}
+.agora-hero .arrival-sub {
+  font-size: clamp(1rem, 2vw, 1.18rem);
+  font-weight: 510;
+  line-height: 1.62;
+  margin: 1rem 0 0;
+  color: var(--muted);
+  max-width: 54ch;
+}
+.agora-hero .arrival-proof {
+  border-left: 3px solid var(--accent);
+  margin: 1.8rem 0 0;
+  max-width: 56ch;
+  padding: 0.15rem 0 0.15rem 1rem;
+}
+.agora-hero .arrival-proof p { margin: 0; }
+.agora-hero .arrival-proof-title {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 650;
+  margin-bottom: 0.2rem !important;
+}
+.agora-hero .arrival-proof p:not(.arrival-proof-title) {
+  color: var(--muted);
+  line-height: 1.62;
+}
+.agora-hero .arrival-invitation {
+  font-size: 1.08rem;
+  font-weight: 620;
+  margin: 1.6rem 0 0;
+  max-width: 48ch;
+}
+.agora-hero .arrival-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin: 1.15rem 0 0;
+}
+.agora-hero .arrival-cta-link {
+  display: inline-block;
+  padding: 0.72rem 1.15rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 58%, transparent);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: 620;
+  font-size: 0.98rem;
+  text-decoration: none;
+}
+.agora-hero .arrival-cta-link:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.why-banner.agora-hero .arrival-cta-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.why-banner.agora-hero .arrival-cta-primary:hover {
+  background: var(--aqua-deep);
+  border-color: var(--aqua-deep);
+  color: #fff;
+}
+.agora-hero .arrival-principles {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  font-weight: 650;
+  gap: 0.55rem;
+  letter-spacing: 0.025em;
+  margin: 1.45rem 0 0;
+}
+.agora-hero .arrival-principles span + span::before {
+  color: var(--line);
+  content: "•";
+  margin-right: 0.55rem;
+}
+@media (max-width: 520px) {
+  .agora-hero .arrival-actions { align-items: stretch; flex-direction: column; }
+  .agora-hero .arrival-cta-link { text-align: center; }
+}
 
 /* True Self ONLY (owner directive: scoped to this room, not Alias/
    Reader): the starfield becomes the page's own backdrop instead of

@@ -6,6 +6,7 @@ import { activeFace } from "@/lib/webSession";
 import { ChosenSourcesFeed, LensSection, PollinatorStrip, SavedAndStirring, CommonsNow, BeaconWellbeingMount, BeaconCards, PillarPulse, SourcesRadar, StoicWisdom } from "@/app/feed/FeedSections";
 import { PillarAnatomy, asSortKey } from "@/app/pillars/PillarAnatomy";
 import { PillarMark } from "@/components/Icon";
+import { LearnMore } from "@/components/LearnMore";
 
 export const dynamic = "force-dynamic";
 
@@ -56,20 +57,88 @@ export default async function AgoraDashboard({
         className="why-banner agora-hero"
         style={{ borderLeft: `5px solid ${agora.colorPrimary}` }}
       >
-        <h1 style={{ marginBottom: "0.1rem" }}>
-          <PillarMark slug={agora.slug} /> {agora.name}
-        </h1>
-        <p className="lore" style={{ marginTop: 0 }}>
-          {agora.classicalName}; {agora.loreName}
-        </p>
-        <p className="why-text">
-          A purpose-built civic commons. Six pillars examine the forces that
-          hold us back; The Agora; this room; holds the tools to address them
-          together: permanent public discussion, sealed collective
-          decisions, provable action. Reading is free, forever. Acting
-          requires proving you're one real human, once.
-        </p>
-        <p className="lore">{editorial.whyBanner}</p>
+        {face ? (
+          <>
+            <h1 style={{ marginBottom: "0.1rem" }}>
+              <PillarMark slug={agora.slug} /> {agora.name}
+            </h1>
+            <p className="lore" style={{ marginTop: 0 }}>
+              {agora.classicalName}; {agora.loreName}
+            </p>
+            <p className="lore">{editorial.whyBanner}</p>
+          </>
+        ) : (
+          <>
+            <div className="arrival-copy">
+              <p className="arrival-eyebrow">A civic social platform</p>
+              <h1 className="arrival-headline">
+                The civic record belongs to all of us.
+              </h1>
+              <p className="arrival-sub">
+                AgoraNet is a decentralized social media platform anchored to
+                blockchain. Our community governance model offers all users a
+                voice in platform decisions and full custody of their own data.
+              </p>
+            </div>
+
+            <div className="arrival-proof">
+              <p className="arrival-proof-title">No rewriting history.</p>
+              <p>
+                Our permanent spaces are designed to preserve important data,
+                so no one, including us, can rewrite history.
+              </p>
+            </div>
+
+            <p className="arrival-invitation">
+              Join us in creating the next generation of governance
+              institutions.
+            </p>
+
+            <div className="arrival-actions">
+              <Link href="/verify" className="arrival-cta-link arrival-cta-primary">
+                Join AgoraNet
+              </Link>
+              <Link href={`/pillars/${agora.slug}`} className="arrival-cta-link">
+                Explore the platform
+              </Link>
+            </div>
+
+            <p className="arrival-principles" aria-label="AgoraNet principles">
+              <span>True Self</span>
+              <span>Private Alias</span>
+              <span>Permanent Record</span>
+            </p>
+            <LearnMore label="About AgoraNet; how the record and the evidence work">
+              <h4>What gets kept, and what does not</h4>
+              <p>
+                Permanent rooms hold the record: what was said, and what was
+                decided. Other spaces are working room you can delete, so
+                half-formed thinking has somewhere to go. Every space shows
+                its permanence before you write in it; the choice is never
+                made for you after the fact.
+              </p>
+              <p>
+                The permanent record is hash-chained and anchored daily to a
+                public blockchain, so anyone can check the past was not
+                rewritten. We cannot certify what is true. We can prove a
+                real person said it, when they said it, and that it has not
+                been touched since.
+              </p>
+              <h4>Bring evidence, and say how sure you are</h4>
+              <p>
+                Attach studies, primary documents, news, or firsthand
+                experience. Put your name behind a source, or share it
+                openly labeled unverified. Both are honest; being unsure out
+                loud is treated as legitimate, not punished.
+              </p>
+              <h4>This is new</h4>
+              <p>
+                Forty-nine questions are open. None of them have answers
+                yet. The record starts with whoever shows up first.
+              </p>
+            </LearnMore>
+          </>
+        )}
       </div>
 
       {m && <div className="notice">{m}</div>}
