@@ -453,7 +453,7 @@ The following are known gaps between the repository and this target:
 1. Existing `Balance` rows correctly remain spendable Credits in Credits mode; most product actions still need their Wallet-mode equivalent.
 2. `TestnetWalletLink` remains testnet-specific rather than a final network-neutral wallet-link model.
 3. Indexed snapshots are implemented, but a production-grade indexer and reorganization policy remain pending.
-4. Ordinary Discussion posting now has a wallet-signed `dPOLL` fee; tips, polls, workshop unified PC/G fees, permanence, mission funding/releases, and peer transfers remain unsupported in Wallet mode.
+4. Ordinary Discussion posting has a wallet-signed `dPOLL` fee, and **chamber creation now has wallet-signed dual-token settlement**: one transaction the soul signs in Lace carries BOTH `dPOLL` and `dGRA` to the compiled treasury script, so a self-custody soul can open a chamber without first moving value into platform custody. The chamber exists only after the chain confirms both legs. Tips, polls, **workshop posts** (the in-chamber micro-fee), permanence, mission funding/releases, and peer transfers remain unsupported in Wallet mode; the workshop composer says so and points to platform custody.
 5. First-action `dGRA` and participation `dPOLL` rewards now use durable intents and an isolated distributor; other reward and settlement authorities remain pending.
 6. The testnet fee vault uses the compiled mission-treasury script and a dedicated datum tag; its state initialization, governance signers, release, and recovery drill must pass before activation.
 7. The transaction lifecycle, idempotency, restart recovery, and exact confirmation primitives exist but are not yet generalized to every value-moving action.

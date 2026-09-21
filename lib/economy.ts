@@ -15,14 +15,9 @@ import { getRail } from "./rails";
 
 export type Currency = "PC" | "G";
 
-/**
- * PC and G are interchangeable for unified participation costs. Keep the
- * conversion in one exported table so eligibility, charging, tests, and UI
- * displays cannot quietly invent different arithmetic.
- */
-export const UNIFIED_CURRENCY_RATES: Readonly<Record<Currency, number>> = {
-  PC: 1,
-  G: 1,
+export const CURRENCY_NAMES: Readonly<Record<Currency, string>> = {
+  PC: "PollCoin",
+  G: "Gratium",
 };
 
 // Existing Float balances can contain sub-cent binary residue after repeated
@@ -31,10 +26,9 @@ export const UNIFIED_CURRENCY_RATES: Readonly<Record<Currency, number>> = {
 // tolerate only sub-cent machine residue at the exact-empty boundary.
 const CURRENCY_FLOAT_EPSILON = 1e-9;
 
-export interface UnifiedBalance {
-  total: number;
-  components: Record<Currency, { balance: number; rate: number; units: number }>;
-}
+/** What a soul holds of each token. The Pollinator's dual-token costs read
+ * both; neither figure substitutes for the other. */
+export type DualTokenHoldings = Record<Currency, number>;
 
 async function ensureBalance(tx: Tx, profileId: string, currency: Currency) {
   await tx.balance.upsert({
@@ -55,41 +49,50 @@ export async function balanceOf(
   return row?.amount ?? 0;
 }
 
-/** Canonical converted balance used by every unified participation check. */
-export async function unifiedBalanceOf(
+/** Both token balances, for the dual-token costs of the Pollinator. */
+export async function dualBalanceOf(
   db: DbOrTx,
   profileId: string
-): Promise<UnifiedBalance> {
+): Promise<DualTokenHoldings> {
   const rows = await db.balance.findMany({
     where: { profileId, currency: { in: ["PC", "G"] } },
     select: { currency: true, amount: true },
   });
   const balances = new Map(rows.map((row) => [row.currency, row.amount]));
-  const pc = balances.get("PC") ?? 0;
-  const g = balances.get("G") ?? 0;
-  const components = {
-    PC: { balance: pc, rate: UNIFIED_CURRENCY_RATES.PC, units: pc * UNIFIED_CURRENCY_RATES.PC },
-    G: { balance: g, rate: UNIFIED_CURRENCY_RATES.G, units: g * UNIFIED_CURRENCY_RATES.G },
-  };
-  return { total: components.PC.units + components.G.units, components };
+  return { PC: balances.get("PC") ?? 0, G: balances.get("G") ?? 0 };
 }
 
-export function unifiedInsufficientFundsReason(
-  balance: UnifiedBalance,
-  required: number
-): string {
-  return (
-    `Insufficient combined PC/G balance: ${balance.total.toFixed(2)} of ` +
-    `${required.toFixed(2)} available ` +
-    `(PC ${balance.components.PC.balance.toFixed(2)} + G ${balance.components.G.balance.toFixed(2)}).`
+/** Which legs of a dual-token cost the holdings cannot cover. */
+export function shortDualTokens(
+  holdings: DualTokenHoldings,
+  cost: DualTokenHoldings
+): Currency[] {
+  return (["PC", "G"] as const).filter(
+    (currency) => holdings[currency] + CURRENCY_FLOAT_EPSILON < cost[currency]
   );
 }
 
-export function canAffordUnifiedCost(
-  balance: UnifiedBalance,
-  required: number
+export function canAffordDualCost(
+  holdings: DualTokenHoldings,
+  cost: DualTokenHoldings
 ): boolean {
-  return balance.total + CURRENCY_FLOAT_EPSILON >= required;
+  return shortDualTokens(holdings, cost).length === 0;
+}
+
+export function dualInsufficientFundsReason(
+  holdings: DualTokenHoldings,
+  cost: DualTokenHoldings
+): string {
+  const short = shortDualTokens(holdings, cost)
+    .map(
+      (currency) =>
+        `${CURRENCY_NAMES[currency]} is short ${(cost[currency] - holdings[currency]).toFixed(2)}`
+    )
+    .join(" and ");
+  return (
+    `This costs ${cost.PC.toFixed(2)} PC and ${cost.G.toFixed(2)} G; both are required. ` +
+    `You hold ${holdings.PC.toFixed(2)} PC and ${holdings.G.toFixed(2)} G; ${short}.`
+  );
 }
 
 export type EconomyResult =
@@ -192,78 +195,66 @@ export async function chargeToTreasury(
 }
 
 /**
- * Charge one participation cost from the canonical converted PC/G balance.
- * PC is consumed first and G covers the remainder; that deterministic order
- * keeps receipts reproducible while both currencies remain equally valuable.
- * The caller normally owns an outer transaction. If a concurrent debit wins
- * between planning and settlement, any partial debit is restored before the
- * accurate insufficient-funds result is returned.
+ * Charge a dual-token participation cost: the stated amount in BOTH PollCoin
+ * and Gratium (NEURAL_POLLINATOR §3, owner-ratified 2026-07-07). Neither
+ * token substitutes for the other; the point of the signature is that active
+ * Pollinator souls carry a working stock of both. A soul short of either leg
+ * pays nothing and is told which token fell short.
+ *
+ * Each leg debits atomically (see debitBalance). If the second leg loses a
+ * concurrent race the first is restored, so a partial charge never survives
+ * even when the caller owns no outer transaction.
  */
-export async function chargeUnifiedToTreasury(
+export async function chargeDualToTreasury(
   tx: Tx,
   input: {
     profileId: string;
-    amount: number;
+    cost: DualTokenHoldings;
     kind: string;
     refType?: string;
     refId?: string;
   }
 ): Promise<EconomyResult> {
-  if (input.amount <= 0) return { ok: true };
-  const available = await unifiedBalanceOf(tx, input.profileId);
-  if (!canAffordUnifiedCost(available, input.amount)) {
-    return { ok: false, reason: unifiedInsufficientFundsReason(available, input.amount) };
-  }
+  const legs = (["PC", "G"] as const)
+    .map((currency) => ({ currency, amount: input.cost[currency] }))
+    .filter((leg) => leg.amount > 0);
+  if (legs.length === 0) return { ok: true };
 
-  let remaining = input.amount;
-  const debits: { currency: Currency; amount: number }[] = [];
-  for (const currency of ["PC", "G"] as const) {
-    if (remaining <= Number.EPSILON) break;
-    const component = available.components[currency];
-    const unifiedUnits = Math.min(component.units, remaining);
-    const currencyAmount = unifiedUnits / component.rate;
-    if (currencyAmount <= Number.EPSILON) continue;
-    if (!(await debitBalance(tx, input.profileId, currency, currencyAmount))) {
-      for (const debit of debits) {
-        await tx.balance.update({
-          where: {
-            profileId_currency: { profileId: input.profileId, currency: debit.currency },
-          },
-          data: { amount: { increment: debit.amount } },
-        });
-      }
-      const current = await unifiedBalanceOf(tx, input.profileId);
-      return { ok: false, reason: unifiedInsufficientFundsReason(current, input.amount) };
+  const debited: { currency: Currency; amount: number }[] = [];
+  for (const leg of legs) {
+    if (await debitBalance(tx, input.profileId, leg.currency, leg.amount)) {
+      debited.push(leg);
+      continue;
     }
-    debits.push({ currency, amount: currencyAmount });
-    remaining -= unifiedUnits;
-  }
-
-  if (remaining > Number.EPSILON) {
-    for (const debit of debits) {
+    for (const done of debited) {
       await tx.balance.update({
         where: {
-          profileId_currency: { profileId: input.profileId, currency: debit.currency },
+          profileId_currency: { profileId: input.profileId, currency: done.currency },
         },
-        data: { amount: { increment: debit.amount } },
+        data: { amount: { increment: done.amount } },
       });
     }
-    const current = await unifiedBalanceOf(tx, input.profileId);
-    return { ok: false, reason: unifiedInsufficientFundsReason(current, input.amount) };
+    return {
+      ok: false,
+      reason: dualInsufficientFundsReason(
+        await dualBalanceOf(tx, input.profileId),
+        input.cost
+      ),
+    };
   }
 
   let firstEntryId: string | undefined;
-  for (const debit of debits) {
+  for (const leg of debited) {
     await tx.treasuryBalance.upsert({
-      where: { currency: debit.currency },
-      create: { currency: debit.currency, amount: debit.amount },
-      update: { amount: { increment: debit.amount } },
+      where: { currency: leg.currency },
+      create: { currency: leg.currency, amount: leg.amount },
+      update: { amount: { increment: leg.amount } },
     });
     const entry = await tx.economyEntry.create({
       data: {
         kind: input.kind,
-        currency: debit.currency,
-        amount: debit.amount,
+        currency: leg.currency,
+        amount: leg.amount,
         fromProfileId: input.profileId,
         toTreasury: true,
         refType: input.refType,

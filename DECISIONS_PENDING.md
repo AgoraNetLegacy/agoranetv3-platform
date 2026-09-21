@@ -17,8 +17,35 @@ need from you.)
 
 ## A. Needs you now
 
-*(Nothing. #23 parked by owner 2026-07-15; kept below for the
-record.)*
+28. ~~**Wallet-custody souls cannot open a Chamber**~~; **BUILT
+    2026-09-06 on the owner's direction** ("make this work. Create it and
+    have it function as i envision"). He chose the custody-honest fork:
+    on-chain dual-asset settlement, NOT a wallet → platform deposit path,
+    because the deposit path would make self-custody souls park value with
+    the platform, which is the thing the vision avoids.
+
+    **What it does.** A soul who holds their own keys opens a chamber by
+    approving ONE Lace transaction carrying 20 dPOLL AND 20 dGRA to the
+    compiled treasury script. Both tokens ride one output, so the
+    dual-token signature (§3) holds on chain exactly as it does in platform
+    custody: a chamber can never be half-paid, and one payment opens
+    exactly one chamber. Nothing is created until the chain confirms both
+    legs. See CHECKPOINTS 2026-09-06.
+
+    **What remains, and why it was not built.** Workshop posts inside a
+    chamber (1 PC + 1 G each) still settle from platform custody. Per-post
+    on-chain settlement would mean a Lace approval for every draft, which
+    is the wrong shape for a micro-fee; it needs its own mechanism (a
+    funded session, a small platform float, or batched settlement) and
+    that is a design decision, not an implementation detail. Until then a
+    pure-wallet soul can open a chamber and invite others but cannot post
+    in its workshop, and the composer says so plainly before they pay.
+
+    **The open question for you:** which mechanism should carry in-chamber
+    micro-fees for self-custody souls? That is the last piece of the
+    custody story.
+
+*(#23 parked by owner 2026-07-15; kept below for the record.)*
 
 23. ~~**Legacy identity vocabulary rename**~~; **PARKED by owner
     (2026-07-15): "it doesn't fix anything and for now we focus on

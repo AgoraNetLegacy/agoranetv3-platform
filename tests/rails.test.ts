@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { DbOrTx } from "../lib/db";
 import { getRail } from "../lib/rails";
 
-function legacyRailDb(values: Record<string, number>): DbOrTx {
+function railDb(values: Record<string, number>): DbOrTx {
   return {
     rail: {
       findUnique: async ({ where }: { where: { key: string } }) =>
@@ -11,20 +11,33 @@ function legacyRailDb(values: Record<string, number>): DbOrTx {
   } as unknown as DbOrTx;
 }
 
-describe("chamber rail rollout bridge", () => {
-  it("keeps the legacy 20 PC and 20 G creation rails at one 20-total cost", async () => {
-    const db = legacyRailDb({
+describe("chamber rails", () => {
+  // The dual-token signature is two rails, read as two amounts. A combined
+  // "unified cost" rail once collapsed them, made the tokens substitutable,
+  // and halved a chamber's real price; getRail must never synthesize one.
+  it("reads each half of the dual-token creation fee on its own", async () => {
+    const db = railDb({
       "chamber.creationFeePc": 20,
       "chamber.creationFeeG": 20,
     });
-    await expect(getRail(db, "chamber.creationCost")).resolves.toBe(20);
+    await expect(getRail(db, "chamber.creationFeePc")).resolves.toBe(20);
+    await expect(getRail(db, "chamber.creationFeeG")).resolves.toBe(20);
   });
 
-  it("keeps the legacy 1 PC plus 1 G workshop fee at a 2-total cost", async () => {
-    const db = legacyRailDb({
+  it("reads each half of the dual-token workshop micro-fee on its own", async () => {
+    const db = railDb({ "chamber.postFeePc": 1, "chamber.postFeeG": 1 });
+    await expect(getRail(db, "chamber.postFeePc")).resolves.toBe(1);
+    await expect(getRail(db, "chamber.postFeeG")).resolves.toBe(1);
+  });
+
+  it("refuses to derive a retired combined cost from the two halves", async () => {
+    const db = railDb({
+      "chamber.creationFeePc": 20,
+      "chamber.creationFeeG": 20,
       "chamber.postFeePc": 1,
       "chamber.postFeeG": 1,
     });
-    await expect(getRail(db, "chamber.postCost")).resolves.toBe(2);
+    await expect(getRail(db, "chamber.creationCost")).rejects.toThrow("Rail not seeded");
+    await expect(getRail(db, "chamber.postCost")).rejects.toThrow("Rail not seeded");
   });
 });

@@ -102,6 +102,13 @@ import {
   rejectWalletPost,
   type WalletPostPayload,
 } from "@/lib/walletActions";
+import {
+  finalizeWalletChamber,
+  prepareWalletChamber,
+  recordWalletChamberSubmission,
+  rejectWalletChamber,
+  type WalletChamberPayload,
+} from "@/lib/walletChamber";
 
 function backTo(path: string, message?: string): never {
   const suffix = message ? `?m=${encodeURIComponent(message)}` : "";
@@ -216,6 +223,52 @@ export async function finalizeWalletPostAction(input: {
 export async function rejectWalletPostAction(input: { intentId: string }) {
   const face = await requireFace();
   return rejectWalletPost(db, { profileId: face.id, intentId: input.intentId });
+}
+
+// --- Wallet-mode chamber creation; the self-custody path into the
+// Pollinator. One signed transaction carries BOTH tokens (§3).
+
+export async function prepareWalletChamberAction(input: {
+  idempotencyKey: string;
+  payload: WalletChamberPayload;
+}) {
+  const face = await requireFace("creation");
+  return prepareWalletChamber(db, {
+    profileId: face.id,
+    idempotencyKey: input.idempotencyKey,
+    payload: input.payload,
+  });
+}
+
+export async function recordWalletChamberSubmissionAction(input: {
+  intentId: string;
+  txHash: string;
+}) {
+  const face = await requireFace();
+  return recordWalletChamberSubmission(db, {
+    profileId: face.id,
+    intentId: input.intentId,
+    txHash: input.txHash,
+  });
+}
+
+export async function finalizeWalletChamberAction(input: { intentId: string }) {
+  const face = await requireFace();
+  const result = await finalizeWalletChamber(db, {
+    profileId: face.id,
+    intentId: input.intentId,
+  });
+  if (result.ok) {
+    revalidatePath("/pollinator");
+    revalidatePath(`/pollinator/${result.chamberId}`);
+    revalidatePath("/feed");
+  }
+  return result;
+}
+
+export async function rejectWalletChamberAction(input: { intentId: string }) {
+  const face = await requireFace();
+  return rejectWalletChamber(db, { profileId: face.id, intentId: input.intentId });
 }
 
 export async function submitTip(formData: FormData) {

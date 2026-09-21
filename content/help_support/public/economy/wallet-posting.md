@@ -43,7 +43,7 @@ links:
 
 You can use AgoraNet without a wallet. This page applies only after you deliberately choose **wallet custody** in Settings.
 
-Before an identity can make its first post, that identity must complete the two onboarding consent steps. This is separate for each True Self and Alias; completing them for one identity does not complete them for another. If the post button says **“The permanence and Constitution acknowledgments come first,”** open [`/verify/consents`](/verify/consents) while signed in as the identity that is trying to post. Complete the two buttons in order—**I understand what permanence means here**, then **I acknowledge the Constitution**—and return to the discussion. The discussion composer does not show these buttons itself.
+Before an identity can make its first post, that identity must complete the two onboarding consent steps. This is separate for each True Self and Alias; completing them for one identity does not complete them for another. If the post button says **“The permanence and Constitution acknowledgments come first,”** open [`/verify/consents`](/verify/consents) while signed in as the identity that is trying to post. Complete the two buttons in order: **I understand what permanence means here**, then **I acknowledge the Constitution**. Then return to the discussion. The discussion composer does not show these buttons itself.
 
 To make an ordinary Discussion post or reply with wallet custody:
 
@@ -59,6 +59,10 @@ When the post is confirmed, eligible fake dGRA and dPOLL rewards are queued to t
 
 Some actions may still use platform-held PC/G while their wallet settlement rail is being implemented. Wallet custody does not create another currency.
 
-Chambers and workshop posts use the same PC and G. Their current instant payment path uses the platform-held portion; external wallet settlement can be added without creating another currency.
+Chambers and workshop posts use the same PC and G, but they are the one place that charges in BOTH tokens at once: opening a chamber costs PollCoin and Gratium together, and neither covers the other's half. That is deliberate, so people building in the Pollinator carry a working stock of each.
+
+You can pay either way. If AgoraNet holds your tokens, the chamber form spends your platform balance. If you hold your own keys, the Pollinator offers a self-custody option: Lace asks you to approve one transaction carrying both tokens at once, and the chamber opens only after the testnet confirms it. Choosing self-custody never costs you the ability to build here, and you are never asked to hand your tokens over first.
+
+Workshop posts inside a chamber are still paid from platform-held balances; wallet settlement for the in-chamber micro-fee is not built yet, and the composer says so rather than failing quietly.
 
 If Lace shows the wrong account, decline the request, switch accounts in Lace, and try again. If the transaction was already submitted and the post still does not appear, open Help and Support and include the public transaction hash and the exact non-secret message shown. Never include an access key, seed phrase, spending password, signing key, or private key.

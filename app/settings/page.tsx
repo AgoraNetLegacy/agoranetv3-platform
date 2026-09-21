@@ -292,7 +292,7 @@ export default async function SettingsPage({
             {walletActivity.map((activity) => (
               <li key={activity.id}>
                 <strong>{activity.kindLabel}</strong>: {activity.amount} {activity.currency}
-                {" — "}{activity.statusLabel}.{" "}
+                {"; "}{activity.statusLabel}.{" "}
                 {activity.resultHref ? (
                   <Link href={activity.resultHref}>
                     View published result

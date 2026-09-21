@@ -60,12 +60,15 @@ relationship state is not shown while using an Alias, and vice versa.
 This removes an avoidable early dead end: a new soul can explore several
 features before ordinary participation earnings become necessary.
 
-### 4. Pollinator uses one canonical participation balance
+### 4. Pollinator charges the dual-token signature
 
-- PC and G count 1:1 toward one unified chamber participation cost.
+- A chamber costs 20 PC AND 20 G; a workshop post 1 PC AND 1 G. Neither
+  token substitutes for the other (NEURAL_POLLINATOR §3).
 - Eligibility, charging, displayed availability, and the insufficient-funds
-  message use the same canonical calculation.
-- The 20-unit chamber creation cost may be covered by PC, G, or a mixture.
+  message all read the same dual cost.
+- Platform custody requires both 20 PC and 20 G. Self-custody chamber
+  creation sends both testnet assets in one wallet-signed transaction; the
+  two custody paths never silently mix.
 - Wallet-held and platform-held amounts are represented in the header's
   canonical balances; a crypto wallet is not required to use platform-held
   tokens.
@@ -91,7 +94,8 @@ The implementation is pinned by tests and production checks:
   inactive fixtures do not, and neither identity type nor private social state
   is returned;
 - economy tests cover mixed PC/G affordability and invisible Float residue;
-- chamber tests cover unified charging and insufficient-funds behavior;
+- chamber tests cover dual-token charging, refusing a soul who holds one
+  token but not the other, and insufficient-funds behavior;
 - the Help corpus and production build pass;
 - production `/souls` returned seven registered profiles during the 2026-08-31
   audit, including the owner's offline profile and both existing Aliases;

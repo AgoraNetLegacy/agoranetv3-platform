@@ -1,18 +1,31 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { activeFace } from "@/lib/webSession";
-import { chamberActivityLevel, pendingInvitesFor } from "@/lib/chambers";
-import { getRail } from "@/lib/rails";
+import {
+  chamberActivityLevel,
+  chamberCreationCost,
+  pendingInvitesFor,
+  workshopPostCost,
+} from "@/lib/chambers";
 import { submitChamber } from "@/app/actions";
 import { Icon } from "@/components/Icon";
 import { LearnMore } from "@/components/LearnMore";
 import { chamberCoversEnabled } from "@/lib/chamberCovers";
 import {
-  canAffordUnifiedCost,
-  unifiedBalanceOf,
-  unifiedInsufficientFundsReason,
+  canAffordDualCost,
+  dualBalanceOf,
+  dualInsufficientFundsReason,
 } from "@/lib/economy";
 import { synchronizedWalletBalanceView } from "@/lib/synchronizedWalletBalance";
+import { walletLinkFor, cardanoNetwork } from "@/lib/chain";
+import { walletModeActivationReady } from "@/lib/progressiveEconomy";
+import { WalletChamberComposer } from "@/components/WalletChamberComposer";
+import {
+  prepareWalletChamberAction,
+  recordWalletChamberSubmissionAction,
+  finalizeWalletChamberAction,
+  rejectWalletChamberAction,
+} from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -32,34 +45,44 @@ export default async function PollinatorPage({
   const coversEnabled = chamberCoversEnabled();
   const [viewer, creationCost, postCost] = await Promise.all([
     activeFace(),
-    getRail(db, "chamber.creationCost"),
-    getRail(db, "chamber.postCost"),
+    chamberCreationCost(db),
+    workshopPostCost(db),
   ]);
-  const unifiedBalance = viewer ? await unifiedBalanceOf(db, viewer.id) : null;
+  // Pollinator fees settle from platform-held tokens. Wallet-held dPOLL/dGRA
+  // cannot pay them yet (WALLET_CANONICAL_TOKEN_RAIL_SPEC §17), so wallet
+  // holdings are reported separately and never folded into the figure the
+  // create button is gated on.
+  const platformHeld = viewer ? await dualBalanceOf(db, viewer.id) : null;
   const walletMode = viewer?.economyMode === "wallet" || viewer?.economyMode === "mixed";
   const walletBalance = viewer && walletMode
     ? (await synchronizedWalletBalanceView(viewer.id)).balances
     : { PC: "0", G: "0" };
-  const displayedPc = (unifiedBalance?.components.PC.balance ?? 0) + Number(walletBalance.PC);
-  const displayedG = (unifiedBalance?.components.G.balance ?? 0) + Number(walletBalance.G);
-  const canCreate = unifiedBalance
-    ? canAffordUnifiedCost(unifiedBalance, creationCost)
-    : false;
+  const walletHeldPc = Number(walletBalance.PC);
+  const walletHeldG = Number(walletBalance.G);
+  const canCreate = platformHeld ? canAffordDualCost(platformHeld, creationCost) : false;
+  // Self-custody settlement: both tokens in one signed transaction. Offered
+  // whenever this identity holds its own keys, so choosing self-custody never
+  // costs a soul the ability to build here (DECISIONS_PENDING #28).
+  const walletLink = viewer && walletMode ? await walletLinkFor(db, viewer.id) : null;
+  const walletSettlementReady = Boolean(
+    walletMode && walletModeActivationReady() && walletLink && walletLink.network === cardanoNetwork()
+  );
+  const walletCostLabel = `${creationCost.PC} dPOLL + ${creationCost.G} dGRA`;
   // Failures are placed in the query string. Do not replay any stale balance
   // rejection after the canonical PC/G check says the user can create;
   // otherwise an earlier failed submission makes the repaired page look broken.
   const staleBalanceNotice = Boolean(
     m &&
       (m.includes("Insufficient PollCoin") ||
-        m.includes("Insufficient combined PC/G balance") ||
-        m.includes("Insufficient platform-held PC/G") ||
+        m.includes("both are required") ||
+        m.includes("Insufficient platform-held") ||
         m.includes("earnable path covers committed souls"))
   );
   const noticeMessage = staleBalanceNotice
     ? canCreate
       ? null
-      : unifiedBalance
-        ? unifiedInsufficientFundsReason(unifiedBalance, creationCost)
+      : platformHeld
+        ? dualInsufficientFundsReason(platformHeld, creationCost)
         : null
     : m;
 
@@ -124,8 +147,10 @@ export default async function PollinatorPage({
             makes in public is what enters the record.
           </p>
           <p>
-            Browsing is free; acting uses <strong>PC and G</strong>. Either
-            currency can cover a participation cost, including a mixture of both.
+            Browsing is free; acting costs <strong>both PollCoin and
+            Gratium</strong>. The Pollinator is the one surface that charges in
+            both tokens, deliberately: building here means carrying a working
+            stock of each, and neither substitutes for the other.
             After launch, the Leaderboard and the Tournament of Ideas
             arrive: the best public chambers compete to become the
             community&rsquo;s main mission.
@@ -244,7 +269,7 @@ export default async function PollinatorPage({
             <span>
               <strong>Start creating a chamber</strong>
               <span className="chamber-create-hint">
-                Fill out the idea brief; {creationCost} PC/G total, live immediately
+                Fill out the idea brief; {creationCost.PC} PC and {creationCost.G} G, live immediately
               </span>
             </span>
           </summary>
@@ -352,29 +377,62 @@ export default async function PollinatorPage({
             <p className="interim-note">
               Workshop contents are deletable-class with due process;
               enclosed, not the permanent record. Participation inside
-              costs {postCost} PC/G total per post. Your Light Score is
+              costs {postCost.PC} PC and {postCost.G} G per post; both
+              tokens, every time. Your Light Score is
               public on a public chamber&apos;s storefront: you can build
               in any standing, but never behind a curtain.
             </p>
             <p className="interim-note">
-              Balance shown at the top: {displayedPc.toFixed(2)} PC and {displayedG.toFixed(2)} G.
-              This chamber costs {creationCost.toFixed(2)} PC/G total and can use either currency.
+              This chamber costs {creationCost.PC.toFixed(2)} PC <em>and</em>{" "}
+              {creationCost.G.toFixed(2)} G. The Pollinator is the one surface
+              that charges in both tokens, so building here means carrying a
+              working stock of each; neither substitutes for the other.
+              You hold {(platformHeld?.PC ?? 0).toFixed(2)} PC and{" "}
+              {(platformHeld?.G ?? 0).toFixed(2)} G in platform custody.
               {walletMode && (
-                <> The platform-held portion is used first; wallet-held PC/G remains identified as wallet custody.</>
+                <>
+                  {" "}Your linked wallet holds {walletHeldPc.toFixed(2)} PC and{" "}
+                  {walletHeldG.toFixed(2)} G.{" "}
+                  {walletSettlementReady
+                    ? "This form spends platform-held tokens; to pay from the wallet you control, use the self-custody option below."
+                    : "Wallet-held tokens cannot pay from here; connect this identity's Lace wallet to open a chamber from your own custody."}
+                </>
               )}
             </p>
             <button type="submit" disabled={!canCreate}>
-              Open the chamber · {creationCost} PC/G total
+              Open the chamber · {creationCost.PC} PC + {creationCost.G} G
             </button>
-            {!canCreate && (
+            {!canCreate && platformHeld && (
               <p className="interim-note">
-                Insufficient platform-held PC/G for this action: {(unifiedBalance?.total ?? 0).toFixed(2)} of {creationCost.toFixed(2)} available.
-                {walletMode && " Wallet-held funds require wallet approval before they can be spent."}
+                {dualInsufficientFundsReason(platformHeld, creationCost)}
+                {walletSettlementReady
+                  ? " Your own wallet can pay this instead; see below."
+                  : ""}
               </p>
             )}
           </form>
         </details>
-      ) : (
+      ) : null}
+      {viewer && walletSettlementReady ? (
+        <details className="chamber-create">
+          <summary className="chamber-create-summary">
+            <span>
+              <strong>Open a chamber from your own wallet</strong>
+              <span className="chamber-create-hint">
+                Self-custody; {walletCostLabel}, approved once in Lace
+              </span>
+            </span>
+          </summary>
+          <WalletChamberComposer
+            costLabel={walletCostLabel}
+            prepare={prepareWalletChamberAction}
+            recordSubmission={recordWalletChamberSubmissionAction}
+            finalize={finalizeWalletChamberAction}
+            reject={rejectWalletChamberAction}
+          />
+        </details>
+      ) : null}
+      {viewer ? null : (
         <p className="interim-note">
           Reading is free.{" "}
           <Link href={`/verify?returnTo=${encodeURIComponent("/pollinator")}`}>

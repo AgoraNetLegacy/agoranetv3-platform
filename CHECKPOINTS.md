@@ -1998,3 +1998,149 @@ its startup log confirms both the mounted volume and the scheduler loop.
 Remaining operational evidence: observe the first nightly backup and the
 first monthly restore drill, and confirm Railway failure notifications for
 this service.
+
+## 2026-09-06; The dual-token signature restored (spec-conformance repair)
+
+A codebase review found `db:verify` failing on check 23: nine chambers
+"require 180 unified units but the ledger records 360." The mismatch was real,
+but the ledger was not the thing at fault.
+
+**What had happened.** Commit `a09155b` (2026-08-29, "Fix Pollinator unified PC
+and G balance") set out to solve a genuine problem the owner reported: chamber
+creation costs were denominated so that a wallet-holding soul could not create
+a chamber. The fix it chose collapsed the **asset** dimension; it declared
+PollCoin and Gratium mutually substitutable at 1:1 (`UNIFIED_CURRENCY_RATES`)
+and charged one combined cost from whichever token had a balance. That
+contradicts ratified law twice over:
+
+- **NEURAL_POLLINATOR §3** (owner-ratified 2026-07-07) prices a chamber as a
+  "Micro-fee paid in BOTH PollCoin and Gratium", and states the reason
+  plainly; the dual-token signature exists "deliberately, so active Pollinator
+  souls carry a working stock of both."
+- **ECONOMIC_STARTING_DEFAULTS §1** sets the amount at **20u PC + 20u G**
+  ("Owner: double a Discussion; and in both tokens"), and the workshop post at
+  1u PC + 1u G.
+
+The `"max"` combine rule in the retired rollout bridge also silently **halved**
+a chamber's real cost, 40 units to 20. The code comment introduced alongside it
+cited "NEURAL_POLLINATOR §3, the ratified unified participation pricing"; §3 is
+in fact the dual-token signature, the opposite of what was built.
+
+**The owner's ruling (2026-09-06):** "I want users to have to hold both
+pollcoin and gratium in order for them to create a chamber. So paying with one
+token outright is wrong." This matches the ratified corpus exactly; the repair
+restores law rather than amending it.
+
+**What was rebuilt.** `chargeUnifiedToTreasury` is replaced by
+`chargeDualToTreasury`: both legs debit atomically, and if the second loses a
+concurrent race the first is restored, so a partial charge never survives. The
+four dual rails (`chamber.creationFeePc`/`FeeG`, `chamber.postFeePc`/`FeeG`)
+are restored and the combined `creationCost`/`postCost` rails and their
+`getRail` bridge are gone. `chamberCreationCost()` and `workshopPostCost()` are
+now the single place a chamber's price is assembled, so the storefront, the
+composer, and the charge cannot quote different arithmetic again. Check 23
+verifies **each half on its own**, so a chamber paid entirely in one token
+fails even when the combined figure looks right.
+
+**A second defect, found in the same review and fixed here.** The Pollinator
+storefront displayed a balance that *added wallet holdings in* (`displayedPc =
+platform + wallet`) while gating the create button on platform custody alone.
+A wallet soul saw a total they could afford and was then refused. The page now
+reports the two custodies separately and says plainly: "Wallet-held tokens
+cannot pay Pollinator fees yet; these costs settle from platform custody only."
+
+**No data migration was needed, and none was written.** Every historical
+`fee.chamber` row recorded 20 PC + 20 G, correctly, under the original rule.
+Restoring the law made the existing ledger verify as-is; the rows were right
+the whole time. `20260906_restore_dual_token_chamber_fees` moves only the rail
+definitions on PostgreSQL, reversing the rail half of `20260829`.
+
+**Verification.** 401/401 tests pass, including two new guards that refuse a
+soul holding 20 combined units but neither full half, and a soul with PollCoin
+to spare but too little Gratium (charging neither token in both cases); a new
+verify tamper test parks one half of a paid fee and confirms check 23 fails
+loudly. `npm run check` passes end to end (corpus, Postgres schema validation,
+tsc, production build). `npm run db:verify` reports **ALL CHECKS PASSED**;
+chamber integrity now reads "dual-token costs paid in both halves."
+`npm run demo:phase7.5` runs green. Browser walkthrough on a live session
+confirmed the create form reads "20.00 PC and 20.00 G", the button gates on
+platform custody, and a wallet-mode soul's 2999 PC / 3005 G is reported as
+wallet-held with the honest disclosure.
+
+**Flagged, not built (DECISIONS_PENDING #28).** A pure-wallet-custody soul
+still cannot open a chamber. `WALLET_CANONICAL_TOKEN_RAIL_SPEC §17` lists the
+Pollinator's fees among the actions unsupported in Wallet mode, so wallet
+settlement for chamber creation is a scheduled slice, not an invention for this
+session. The owner's custody vision (platform-held or self-held, same assets)
+needs that slice to be complete.
+
+## 2026-09-06; Self-custody chamber creation (DECISIONS_PENDING #28 closed)
+
+The owner directed the second half of the same day's work: "make this work.
+Create it and have it function as i envision." The gap was the one flagged
+hours earlier; a soul holding 2999 dPOLL and 3005 dGRA in their own Lace
+wallet could not open a chamber, because chamber fees debited a platform
+balance and a self-custody soul has none. The storefront refused them while
+their wallet sat full.
+
+**The fork, and why this side of it.** Two ways to close it: a wallet →
+platform deposit path (cheap; every internal fee stays synchronous) or true
+on-chain settlement (a real slice; creation becomes draft → sign → confirm).
+The deposit path was rejected on the owner's own stated vision: it would make
+self-custody souls park value with the platform to participate, which is
+precisely what "users could connect an approved wallet and hold them
+themselves" exists to avoid. Custody has to be a real choice, not a toll gate.
+
+**What was built.** `lib/walletChamber.ts` mirrors the proven wallet-post
+state machine (prepare → record submission → finalize, plus reject and
+crash recovery) for chamber creation. The difference is the payment: the
+Pollinator charges in BOTH tokens, so wallet settlement moves both. Cardano
+carries many assets in one output, so this is **one transaction the soul
+signs once**, carrying 20 dPOLL AND 20 dGRA to the compiled mission-treasury
+script under the existing `agoranet-platform-fees-v1` datum tag. The
+dual-token signature therefore holds on chain exactly as it does in platform
+custody; a chamber cannot be half-paid, and because
+`TokenTransactionIntent.txHash` is unique, one payment opens exactly one
+chamber.
+
+Supporting work: `verifyWalletDualFeePayment` checks both assets against the
+SAME transaction (one Blockfrost read, shared with the single-asset verifier
+via a new `treasuryPaymentsIn` helper), so a soul cannot satisfy a chamber by
+paying one token twice. `TokenTransactionIntent` gained
+`secondaryCurrency`/`secondaryAmount` (null on every single-asset intent) so a
+dual payment stays one intent with one txHash rather than weakening that
+guard. `createChamber` gained an optional `walletFee`, and its validation was
+extracted to `validateChamberRequest` so Lace never opens for a chamber that
+would be refused after the money moved.
+
+**Two settlement paths, two proofs, in db:verify.** Platform custody debits
+internal balances and leaves a PC receipt and a G receipt. Self-custody moves
+value on chain and leaves NO internal receipt; inventing one would be a lie.
+Its proof is a confirmed dual-leg intent carrying a real transaction hash.
+Check 23 now partitions chambers and demands the right evidence from each, so
+neither path can hide behind the other; a wallet chamber whose intent is not
+confirmed fails as `UNSETTLED WALLET CHAMBER`.
+
+**Verification.** 413/413 tests pass, including a new `walletChamber` suite
+whose central case is the whole point: a soul whose platform balance is
+genuinely zero (spent down through accounted charges, so conservation still
+re-derives) opens a chamber, ends still holding zero, and has no
+`fee.chamber` EconomyEntry; the confirmed intent is the receipt. Also covered:
+idempotent prepare, no chamber before confirmation, one payment opening
+exactly one chamber, rejection of a platform-custody identity, validation
+before Lace opens, cancellation, and a dual-verifier suite proving that
+paying 4000 dPOLL and no dGRA is refused. `npm run check` passes end to end;
+`db:verify` reports ALL CHECKS PASSED. Browser walkthrough confirmed both
+paths render for a wallet-mode soul.
+
+**Not verified here, and it needs the owner's hands:** the actual Lace
+signing of a two-asset preprod transaction. That requires his wallet, his
+keys, and testnet funds; every layer beneath it is tested, but the end-to-end
+signature is his to run.
+
+**Honestly disclosed, not hidden.** Workshop posts inside a chamber (1 PC +
+1 G) still settle from platform custody. Per-post on-chain settlement would
+mean a Lace approval for every draft, the wrong shape for a micro-fee; it
+needs its own mechanism and that is the owner's design call, now the only
+open item in DECISIONS_PENDING #28. The wallet composer states this before a
+soul pays, so nobody discovers it after opening a chamber they cannot post in.

@@ -3,6 +3,7 @@ import { beginVerification } from "@/app/actions";
 import { db } from "@/lib/db";
 import { recordEvent } from "@/lib/analytics";
 import { JourneySteps } from "@/components/JourneySteps";
+import { LearnMore } from "@/components/LearnMore";
 import { TurnstileField } from "@/components/TurnstileField";
 
 export const dynamic = "force-dynamic";
@@ -23,8 +24,19 @@ export default async function VerifyIntro({
       <JourneySteps current="gate" />
       <h2>The gate</h2>
       <p>{GATE_INTRO.substance}</p>
-      <p className="notice">{GATE_INTRO.phaseA}</p>
-      <p className="notice">{GATE_INTRO.interimIssuer}</p>
+      {/* Phase A honesty is AMBIENT at this stage (ONBOARDING §Stage 1;
+          it is acknowledged at Stage 2, not here). Said plainly on the
+          page, with the full disclosure one click away rather than three
+          walls of it before the button. Nothing is hidden; it is ordered. */}
+      <p className="notice">
+        {GATE_INTRO.trustSummary}{" "}
+        <LearnMore label="The full honesty notice; what you are trusting us with, and what replaces it">
+          <h4>What unlinkability rests on today</h4>
+          <p>{GATE_INTRO.phaseA}</p>
+          <h4>Who issues your credential right now</h4>
+          <p>{GATE_INTRO.interimIssuer}</p>
+        </LearnMore>
+      </p>
       <form action={beginVerification}>
         <input type="hidden" name="returnTo" value={returnTo ?? ""} />
         <TurnstileField siteKey={process.env.TURNSTILE_SITE_KEY} />

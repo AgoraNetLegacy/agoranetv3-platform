@@ -69,9 +69,18 @@ delete or repurpose hosted resources until their role is recorded here.
   all seven registered production profiles regardless of presence, gives
   True Self and Alias profiles identical directory cards, and keeps the
   directory payload free of identity type and private social state.
-- [x] Verify on 2026-08-31 that the live header shows the canonical combined
-  wallet + platform balances and that Pollinator chamber creation is enabled
-  when the unified PC/G balance covers the 20-unit cost.
+- [x] Historical: on 2026-08-31 the live header showed the then-current
+  combined wallet + platform balances and unified 20-unit Chamber cost. This
+  implementation was superseded by the restored dual-token requirement below.
+- [ ] Apply `20260906_restore_dual_token_chamber_fees`, which restores the
+  ratified dual-token pricing (20u PC + 20u G) that
+  `20260829_unified_pollinator_currency` had collapsed into one substitutable
+  20-unit cost. Then confirm chamber creation requires BOTH tokens and that
+  `db:verify:postgres` reports chamber integrity green.
+- [ ] Apply `20260906_wallet_dual_fee_settlement` (adds the nullable
+  `secondaryCurrency`/`secondaryAmount` columns to `TokenTransactionIntent`),
+  then confirm a wallet-mode identity is offered the self-custody chamber
+  option and that `db:verify:postgres` still reports chamber integrity green.
 
 ## Rules
 

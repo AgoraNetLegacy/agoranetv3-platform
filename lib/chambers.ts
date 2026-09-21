@@ -10,9 +10,9 @@
 // Discussion; threading reuses the Discussions conventions, nothing
 // bespoke); the Arena is post-launch. ⚠ v2's "chambers" ≠ these.
 //
-// Pollinator participation uses one canonical converted PC/G balance.
-// Creation and workshop posts each charge one unified cost (rails),
-// while ledger receipts preserve which underlying currency funded it.
+// Pollinator participation carries the dual-token signature (§3):
+// creation and workshop posts each charge BOTH PollCoin and Gratium
+// (rails), deliberately, so building here means holding a stock of both.
 //
 // Enclosure is structural, not cosmetic: membership and invites never
 // touch the public ledger (entry clears the gate in PRIVATE recording;
@@ -29,11 +29,34 @@ import { clearGateTx, gateDuplicateConfirmed } from "./gate";
 import { appendEvent } from "./ledger";
 import { getRail } from "./rails";
 import { hasPostingConsents } from "./consent";
-import { chargeUnifiedToTreasury, maybeFirstActionGrant } from "./economy";
+import {
+  chargeDualToTreasury,
+  maybeFirstActionGrant,
+  type DualTokenHoldings,
+} from "./economy";
 import { accrueForAction } from "./accrual";
+import { transitionTokenIntent } from "./tokenIntents";
 import { notify } from "./notifications";
 
 class InsufficientFunds extends Error {}
+
+/** The dual-token cost of opening a Chamber: both halves, both required
+ * (NEURAL_POLLINATOR §3). Read here so the storefront, the composer, and
+ * the charge can never quote different arithmetic. */
+export async function chamberCreationCost(db: DbOrTx): Promise<DualTokenHoldings> {
+  return {
+    PC: await getRail(db, "chamber.creationFeePc"),
+    G: await getRail(db, "chamber.creationFeeG"),
+  };
+}
+
+/** The dual-token cost of one workshop contribution. */
+export async function workshopPostCost(db: DbOrTx): Promise<DualTokenHoldings> {
+  return {
+    PC: await getRail(db, "chamber.postFeePc"),
+    G: await getRail(db, "chamber.postFeeG"),
+  };
+}
 
 export type ChamberResult<T = object> =
   | ({ ok: true } & T)
@@ -124,8 +147,8 @@ async function notifyChamberActivity(
 // ------------------------------------------------------------- creation
 
 /**
- * Creation (§4.1): gate-cleared + the unified PC/G participation cost
- * (the full cost must clear atomically). The creator
+ * Creation (§4.1): gate-cleared + the dual-token participation cost
+ * (both halves must clear atomically, or neither does). The creator
  * sets subject, title, the storefront pitch with its required "why
  * should people care" answer (what problem, for whom, why now), the
  * public/private setting (FIXED at creation), and completes the
@@ -137,18 +160,72 @@ async function notifyChamberActivity(
  * public civic record; creating a public space is a public act; what
  * happens INSIDE stays enclosed.
  */
-export async function createChamber(
-  db: PrismaClient,
-  input: {
-    profileId: string;
-    title: string;
-    subject: string;
-    pitch: string;
-    whyCare: string;
-    isPublic: boolean;
-    scaffold: { solving: string; needToKnow: string; success: string };
+/** Bind a confirmed on-chain dual payment to this chamber creation.
+ *
+ * The wallet path never touches a platform balance, so the guard that a
+ * platform charge gives for free (you cannot spend what you do not hold)
+ * has to be made explicit here: the intent must belong to this soul, name
+ * this draft, carry BOTH legs at the ratified rail amounts, and still be
+ * unspent. TokenTransactionIntent.txHash is unique, so one testnet payment
+ * can open exactly one chamber. */
+async function settleChamberWalletFee(
+  tx: Tx,
+  profileId: string,
+  cost: DualTokenHoldings,
+  walletFee: { intentId: string; draftId: string; txHash: string }
+) {
+  const [intent, draft] = await Promise.all([
+    tx.tokenTransactionIntent.findUnique({ where: { id: walletFee.intentId } }),
+    tx.walletActionDraft.findUnique({ where: { id: walletFee.draftId } }),
+  ]);
+  const validIntent =
+    intent?.profileId === profileId &&
+    intent.kind === "fee.chamber" &&
+    intent.status === "submitted" &&
+    intent.txHash === walletFee.txHash &&
+    intent.refType === "wallet-action-draft" &&
+    intent.refId === walletFee.draftId &&
+    intent.currency === "PC" &&
+    intent.amount === String(cost.PC) &&
+    intent.secondaryCurrency === "G" &&
+    intent.secondaryAmount === String(cost.G);
+  const validDraft =
+    draft?.profileId === profileId &&
+    draft.kind === "chamber.create" &&
+    draft.status === "submitted" &&
+    draft.transactionIntentId === walletFee.intentId;
+  if (!validIntent || !validDraft) {
+    throw new InsufficientFunds(
+      "That wallet payment is not attached to this pending chamber. Reload and check its status."
+    );
   }
-): Promise<ChamberResult<{ chamberId: string }>> {
+  const confirmed = await transitionTokenIntent(tx, {
+    id: intent.id,
+    to: "confirmed",
+    txHash: walletFee.txHash,
+  });
+  if (!confirmed.ok) throw new InsufficientFunds(confirmed.reason);
+}
+
+export type CreateChamberInput = {
+  profileId: string;
+  title: string;
+  subject: string;
+  pitch: string;
+  whyCare: string;
+  isPublic: boolean;
+  scaffold: { solving: string; needToKnow: string; success: string };
+  /** Set only when an on-chain dual-token payment already settled the fee. */
+  walletFee?: { intentId: string; draftId: string; txHash: string };
+};
+
+/** Every requirement a chamber must meet BEFORE anyone is asked to pay.
+ * Wallet settlement calls this first so Lace never opens for a request
+ * that would be refused after the money moved. */
+export async function validateChamberRequest(
+  db: PrismaClient,
+  input: Omit<CreateChamberInput, "walletFee">
+) {
   const title = input.title.trim();
   const subject = input.subject.trim();
   const pitch = input.pitch.trim();
@@ -157,23 +234,23 @@ export async function createChamber(
   const needToKnow = input.scaffold.needToKnow.trim();
   const success = input.scaffold.success.trim();
 
-  if (!title) return { ok: false, reason: "A chamber needs a title." };
+  if (!title) return { ok: false as const, reason: "A chamber needs a title." };
   if (!subject) {
-    return { ok: false, reason: "Name the idea; one chamber, one subject." };
+    return { ok: false as const, reason: "Name the idea; one chamber, one subject." };
   }
   if (!pitch) {
-    return { ok: false, reason: "The storefront pitch is the chamber's public profile; it can't be empty." };
+    return { ok: false as const, reason: "The storefront pitch is the chamber's public profile; it can't be empty." };
   }
   if (!whyCare) {
     return {
-      ok: false,
+      ok: false as const,
       reason:
         "Why should people care; what problem, for whom, why now? A chamber that cannot answer it isn't ready to ask for attention.",
     };
   }
   if (!solving || !needToKnow || !success) {
     return {
-      ok: false,
+      ok: false as const,
       reason:
         "The scaffold comes first: what are we solving, what do we need to know, and what does success look like. Work starts oriented, not adrift.",
     };
@@ -181,18 +258,33 @@ export async function createChamber(
 
   const profile = await db.profile.findUnique({ where: { id: input.profileId } });
   if (!profile || profile.status !== "active") {
-    return { ok: false, reason: "No active identity." };
+    return { ok: false as const, reason: "No active identity." };
   }
   if (!(await hasPostingConsents(db, profile.id))) {
-    return { ok: false, reason: "The permanence and Constitution acknowledgments come first." };
+    return { ok: false as const, reason: "The permanence and Constitution acknowledgments come first." };
   }
+  return {
+    ok: true as const,
+    profile,
+    fields: { title, subject, pitch, whyCare, solving, needToKnow, success },
+  };
+}
+
+export async function createChamber(
+  db: PrismaClient,
+  input: CreateChamberInput
+): Promise<ChamberResult<{ chamberId: string }>> {
+  const validated = await validateChamberRequest(db, input);
+  if (!validated.ok) return { ok: false, reason: validated.reason };
+  const { profile } = validated;
+  const { title, subject, pitch, whyCare, solving, needToKnow, success } = validated.fields;
 
   // The workshop Discussion needs a pillar row; chambers aren't pillar
   // surfaces, so it homes in the meta pillar. Chamber scoping overrides
   // pillar surfaces everywhere; it never appears on pillar pages.
   const metaPillar = await db.pillar.findFirstOrThrow({ where: { isMeta: true } });
 
-  // Gate spend + unified fee + chamber creation share one transaction (#25).
+  // Gate spend + dual-token fee + chamber creation share one transaction (#25).
   try {
     return await db.$transaction(async (tx) => {
       const gate = await clearGateTx(tx, {
@@ -201,13 +293,21 @@ export async function createChamber(
         scopeKind: "per-profile",
       });
       if (gate.outcome !== "CLEARED") return { ok: false as const, reason: `Gate: ${gate.outcome}` };
-      const fee = await chargeUnifiedToTreasury(tx, {
-        profileId: profile.id,
-        amount: await getRail(tx, "chamber.creationCost"),
-        kind: "fee.chamber",
-        refType: "chamber",
-      });
-      if (!fee.ok) throw new InsufficientFunds(fee.reason);
+      const cost = await chamberCreationCost(tx);
+      if (input.walletFee) {
+        // Self-custody: both tokens already moved on chain, in one
+        // transaction the soul signed. Nothing debits a platform balance,
+        // so no EconomyEntry is written; the confirmed intent IS the receipt.
+        await settleChamberWalletFee(tx, profile.id, cost, input.walletFee);
+      } else {
+        const fee = await chargeDualToTreasury(tx, {
+          profileId: profile.id,
+          cost,
+          kind: "fee.chamber",
+          refType: "chamber",
+        });
+        if (!fee.ok) throw new InsufficientFunds(fee.reason);
+      }
       await maybeFirstActionGrant(tx, profile.id);
       await accrueForAction(tx, profile.id);
 
@@ -254,6 +354,22 @@ export async function createChamber(
           handle: profile.handle,
         },
       });
+      if (input.walletFee) {
+        const completed = await tx.walletActionDraft.updateMany({
+          where: {
+            id: input.walletFee.draftId,
+            profileId: profile.id,
+            transactionIntentId: input.walletFee.intentId,
+            status: "submitted",
+          },
+          data: { status: "completed", resultRefId: created.id, completedAt: new Date() },
+        });
+        if (completed.count !== 1) {
+          throw new InsufficientFunds(
+            "This wallet request changed while the chamber was being opened. Reload its status."
+          );
+        }
+      }
       return { ok: true as const, chamberId: created.id };
     });
   } catch (err) {
@@ -459,16 +575,16 @@ export async function pendingInvitesFor(db: DbOrTx, profileId: string) {
 // ---------------------------------------------------- workshop plumbing
 
 /**
- * The unified workshop participation cost. PC and G count 1:1 toward
- * the same amount; the ledger still records the currencies consumed.
+ * The dual-token workshop participation micro-fee: both halves, both
+ * required (NEURAL_POLLINATOR §3, the signature at micro scale).
  */
 export async function chargeWorkshopPostFee(
   tx: Tx,
   input: { profileId: string; discussionId: string }
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
-  const fee = await chargeUnifiedToTreasury(tx, {
+  const fee = await chargeDualToTreasury(tx, {
     profileId: input.profileId,
-    amount: await getRail(tx, "chamber.postCost"),
+    cost: await workshopPostCost(tx),
     kind: "fee.chamber-post",
     refType: "discussion",
     refId: input.discussionId,

@@ -87,14 +87,14 @@
 //     feed/search event type exists on the public ledger and no such
 //     row id appears anywhere in it; every feed source is a known kind.
 // Phase 7.5:
-// 23. Chamber integrity: every chamber paid its unified PC/G creation
-//     cost and has its chamber.created event;
+// 23. Chamber integrity: every chamber paid BOTH halves of the
+//     dual-token creation fee and has its chamber.created event;
 //     exactly one workshop Discussion per chamber, deletable class
 //     (never permanent; the drafts are not the record); the scaffold
 //     and the "why should people care" field are non-empty (the
 //     ratified creation requirements); every workshop post's author
-//     entered the chamber, and every workshop post paid its unified PC/G
-//     participation cost; every
+//     entered the chamber, and every workshop post paid the dual-token
+//     participation fee (PC and G entries pair 1:1 with posts); every
 //     private-chamber member is the creator or was invited.
 // 24. Workshop enclosure: no workshop post ever hash-commits to the
 //     public ledger or upgrades to permanence; no chamber member,
@@ -1574,14 +1574,57 @@ async function main() {
       /* chain check covers bytes */
     }
   }
-  const chamberFees = economyEntries.filter((e) => e.kind === "fee.chamber");
-  const chamberFeeUnits = chamberFees.reduce((sum, entry) => sum + entry.amount, 0);
-  const expectedChamberFeeUnits = chambers.length * (await getRail(db, "chamber.creationCost"));
-  if (Math.abs(chamberFeeUnits - expectedChamberFeeUnits) > 0.000001) {
-    chamberProblems++;
-    console.error(
-      `✗ CHAMBER COST MISMATCH: ${chambers.length} chamber(s) require ${expectedChamberFeeUnits} unified units but the ledger records ${chamberFeeUnits}`
+  // The dual-token signature (NEURAL_POLLINATOR §3): each half is checked
+  // on its own, so a chamber paid entirely in one token fails here even
+  // when the combined figure looks right.
+  //
+  // Two settlement paths, two proofs. Platform custody debits internal
+  // balances and leaves a PC receipt and a G receipt. Self-custody moves
+  // both tokens on chain instead, so it leaves NO internal receipt; its
+  // proof is a confirmed dual-leg intent carrying a real transaction hash.
+  // Counting them together would let either path hide behind the other.
+  const chamberCost: Record<string, number> = {
+    PC: await getRail(db, "chamber.creationFeePc"),
+    G: await getRail(db, "chamber.creationFeeG"),
+  };
+  const chamberIds = new Set(chambers.map((c) => c.id));
+  const walletChamberDrafts = await db.walletActionDraft.findMany({
+    where: { kind: "chamber.create", status: "completed" },
+  });
+  const walletSettled = new Map<string, string>();
+  for (const draft of walletChamberDrafts) {
+    if (draft.resultRefId && chamberIds.has(draft.resultRefId)) {
+      walletSettled.set(draft.resultRefId, draft.transactionIntentId);
+    }
+  }
+  const platformChamberCount = chambers.length - walletSettled.size;
+  for (const currency of ["PC", "G"] as const) {
+    const half = economyEntries.filter(
+      (e) => e.kind === "fee.chamber" && e.currency === currency
     );
+    const paid = half.reduce((sum, entry) => sum + entry.amount, 0);
+    const expected = platformChamberCount * chamberCost[currency];
+    if (half.length !== platformChamberCount || Math.abs(paid - expected) > 0.000001) {
+      chamberProblems++;
+      console.error(
+        `✗ HALF-PAID CHAMBER: ${platformChamberCount} platform-settled chamber(s) require ${expected}u ${currency} across ${platformChamberCount} entries; the ledger records ${paid}u across ${half.length}. The signature is both halves or neither.`
+      );
+    }
+  }
+  for (const [chamberId, intentId] of walletSettled) {
+    const intent = await db.tokenTransactionIntent.findUnique({ where: { id: intentId } });
+    const bothLegsRatified =
+      intent?.kind === "fee.chamber" &&
+      intent.currency === "PC" &&
+      intent.amount === String(chamberCost.PC) &&
+      intent.secondaryCurrency === "G" &&
+      intent.secondaryAmount === String(chamberCost.G);
+    if (!intent || intent.status !== "confirmed" || !intent.txHash || !bothLegsRatified) {
+      chamberProblems++;
+      console.error(
+        `✗ UNSETTLED WALLET CHAMBER: ${chamberId} claims self-custody settlement, but its intent is not a confirmed on-chain payment of ${chamberCost.PC} PC + ${chamberCost.G} G`
+      );
+    }
   }
   const workshopDiscussionIds = new Set<string>();
   for (const chamber of chambers) {
@@ -1635,18 +1678,26 @@ async function main() {
       console.error(`✗ INTRUDER DRAFT: workshop post ${post.id} by a soul who never entered`);
     }
   }
-  const postFees = economyEntries.filter((e) => e.kind === "fee.chamber-post");
-  const postFeeUnits = postFees.reduce((sum, entry) => sum + entry.amount, 0);
-  const expectedPostFeeUnits = workshopPosts.length * (await getRail(db, "chamber.postCost"));
-  if (Math.abs(postFeeUnits - expectedPostFeeUnits) > 0.000001) {
-    chamberProblems++;
-    console.error(
-      `✗ WORKSHOP COST MISMATCH: ${workshopPosts.length} workshop post(s) require ${expectedPostFeeUnits} unified units but the ledger records ${postFeeUnits}`
+  const postCost: Record<string, number> = {
+    PC: await getRail(db, "chamber.postFeePc"),
+    G: await getRail(db, "chamber.postFeeG"),
+  };
+  for (const currency of ["PC", "G"] as const) {
+    const half = economyEntries.filter(
+      (e) => e.kind === "fee.chamber-post" && e.currency === currency
     );
+    const paid = half.reduce((sum, entry) => sum + entry.amount, 0);
+    const expected = workshopPosts.length * postCost[currency];
+    if (half.length !== workshopPosts.length || Math.abs(paid - expected) > 0.000001) {
+      chamberProblems++;
+      console.error(
+        `✗ HALF-PAID WORKSHOP POST: ${workshopPosts.length} post(s) require ${expected}u ${currency} across ${workshopPosts.length} entries; the ledger records ${paid}u across ${half.length}. The signature is both halves or neither.`
+      );
+    }
   }
   if (chamberProblems === 0) {
     console.log(
-      `✓ Chamber integrity (${chambers.length} chamber(s), ${workshopPosts.length} workshop post(s); unified PC/G costs paid, scaffolds complete, private entry invite-backed)`
+      `✓ Chamber integrity (${chambers.length} chamber(s), ${workshopPosts.length} workshop post(s); dual-token costs paid in both halves, scaffolds complete, private entry invite-backed)`
     );
   } else {
     failures += chamberProblems;

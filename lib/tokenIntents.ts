@@ -57,6 +57,9 @@ export async function createTokenIntent(
     kind: string;
     currency: "PC" | "G";
     amount: string;
+    /** The second leg of a dual-token payment; one transaction, two assets. */
+    secondaryCurrency?: "PC" | "G";
+    secondaryAmount?: string;
     idempotencyKey: string;
     sourceWalletScope?: string;
     destinationWalletScope?: string;
@@ -65,6 +68,14 @@ export async function createTokenIntent(
   }
 ) {
   if (!positiveQuantity(input.amount)) throw new Error("Token amount must be a positive integer.");
+  if (input.secondaryCurrency || input.secondaryAmount) {
+    if (!input.secondaryCurrency || !positiveQuantity(input.secondaryAmount ?? "")) {
+      throw new Error("A dual-token intent needs both a second currency and a positive amount.");
+    }
+    if (input.secondaryCurrency === input.currency) {
+      throw new Error("A dual-token intent must name two different tokens.");
+    }
+  }
   const idempotencyKey = input.idempotencyKey.trim();
   if (!idempotencyKey || idempotencyKey.length > 160) {
     throw new Error("A bounded idempotency key is required.");

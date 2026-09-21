@@ -215,6 +215,11 @@ model TokenTransactionIntent {
   kind                   String
   currency               String
   amount                 String
+  // A dual-token payment (the Pollinator's PC+G signature) moves two
+  // assets in ONE transaction, so it stays one intent with one txHash.
+  // Null on every single-asset intent.
+  secondaryCurrency      String?
+  secondaryAmount        String?
   sourceWalletScope      String?
   destinationWalletScope String?
   status                 String    @default("requested")

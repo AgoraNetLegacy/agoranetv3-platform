@@ -1,6 +1,6 @@
 // Phase 7.5; Chambers (Pollinator v1). The invariants under test:
-// unified PC/G participation model (both currencies count 1:1 toward one
-// cost), the ratified creation requirements (scaffold + "why should people
+// the dual-token participation model (a cost is paid in BOTH PollCoin and
+// Gratium; neither substitutes), the ratified creation requirements (scaffold + "why should people
 // care"), free gate-cleared entry, private chambers as creator-invite-only, and the
 // enclosure: workshop content never reaches the ledger, Light Score,
 // the open lens, or public search; and db:verify FAILS LOUDLY when it
@@ -29,7 +29,7 @@ import { createPost, upgradePostPermanence } from "../lib/discussions";
 import { createPoll, castVote, closeDuePolls } from "../lib/polls";
 import { fileReleaseFlag } from "../lib/flags";
 import { resolveCase, caseFileFor, appealCase } from "../lib/moderation";
-import { balanceOf, chargeToTreasury, tip, unifiedBalanceOf } from "../lib/economy";
+import { balanceOf, chargeToTreasury, dualBalanceOf, tip } from "../lib/economy";
 import {
   chamberBalanceOf,
   creditMissionBalance,
@@ -107,9 +107,11 @@ beforeAll(async () => {
   mixedFundsId = s5.trueSelfId;
   insufficientFundsId = s6.trueSelfId;
 
-  // Screenshot regression fixtures: 5 PC + 15 G meets the 20-unit cost;
-  // 5 PC + 14 G does not. Use accounted treasury charges to shape the
-  // balances so db:verify conservation still holds.
+  // Dual-token fixtures, both starting from the 100/100 welcome grant.
+  // mixedFunds ends at 5 PC + 15 G: 20 combined units, but neither half.
+  // oneTokenShort ends at 30 PC + 14 G: PollCoin to spare, Gratium short.
+  // Both must be refused; a chamber costs 20 PC AND 20 G. Shape balances
+  // with accounted treasury charges so db:verify conservation still holds.
   await db.$transaction(async (tx) => {
     await chargeToTreasury(tx, {
       profileId: mixedFundsId,
@@ -126,7 +128,7 @@ beforeAll(async () => {
     await chargeToTreasury(tx, {
       profileId: insufficientFundsId,
       currency: "PC",
-      amount: 95,
+      amount: 70,
       kind: "fee.discussion",
     });
     await chargeToTreasury(tx, {
@@ -142,7 +144,7 @@ afterAll(async () => {
   await db.$disconnect();
 });
 
-describe("creation; one canonical PC/G participation cost", () => {
+describe("creation; the dual-token participation cost", () => {
   it("refuses a chamber without the scaffold or the why-care answer", async () => {
     const noWhy = await createChamber(db, {
       profileId: creatorId,
@@ -170,11 +172,12 @@ describe("creation; one canonical PC/G participation cost", () => {
     expect(await db.chamber.count()).toBe(0);
   });
 
-  it("accepts the screenshot case when mixed PC/G funds total 20 units", async () => {
-    const before = await unifiedBalanceOf(db, mixedFundsId);
-    expect(before.total).toBe(20);
-    expect(before.components.PC.balance).toBe(5);
-    expect(before.components.G.balance).toBe(15);
+  // The dual-token signature (NEURAL_POLLINATOR §3): a chamber costs 20 PC
+  // AND 20 G, deliberately, so active Pollinator souls carry a working stock
+  // of both. These two guard against the tokens ever becoming substitutable.
+  it("refuses a soul holding 20 combined units but neither full half", async () => {
+    const before = await dualBalanceOf(db, mixedFundsId);
+    expect(before).toEqual({ PC: 5, G: 15 });
 
     const result = await createChamber(db, {
       profileId: mixedFundsId,
@@ -185,20 +188,22 @@ describe("creation; one canonical PC/G participation cost", () => {
       isPublic: true,
       scaffold: SCAFFOLD,
     });
-    expect(result.ok).toBe(true);
-    const fees = await db.economyEntry.findMany({
-      where: { kind: "fee.chamber", fromProfileId: mixedFundsId },
-      orderBy: { currency: "asc" },
-    });
-    expect(fees.map((entry) => [entry.currency, entry.amount])).toEqual([
-      ["G", 15],
-      ["PC", 5],
-    ]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toContain("both are required");
+      expect(result.reason).toContain("PollCoin is short 15.00");
+      expect(result.reason).toContain("Gratium is short 5.00");
+    }
+    expect(await dualBalanceOf(db, mixedFundsId)).toEqual({ PC: 5, G: 15 });
+    expect(
+      await db.economyEntry.count({
+        where: { kind: "fee.chamber", fromProfileId: mixedFundsId },
+      })
+    ).toBe(0);
   });
 
-  it("rejects a combined balance below 20 with an accurate unified message", async () => {
-    const before = await unifiedBalanceOf(db, insufficientFundsId);
-    expect(before.total).toBe(19);
+  it("refuses a soul with PollCoin to spare but too little Gratium, charging neither", async () => {
+    expect(await dualBalanceOf(db, insufficientFundsId)).toEqual({ PC: 30, G: 14 });
     const result = await createChamber(db, {
       profileId: insufficientFundsId,
       title: "Still Underfunded",
@@ -210,10 +215,11 @@ describe("creation; one canonical PC/G participation cost", () => {
     });
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.reason).toContain("Insufficient combined PC/G balance");
-      expect(result.reason).toContain("19.00 of 20.00");
+      expect(result.reason).toContain("Gratium is short 6.00");
+      expect(result.reason).not.toContain("PollCoin is short");
     }
-    expect((await unifiedBalanceOf(db, insufficientFundsId)).total).toBe(19);
+    // The PollCoin half is restored; a refused chamber costs nothing.
+    expect(await dualBalanceOf(db, insufficientFundsId)).toEqual({ PC: 30, G: 14 });
     expect(
       await db.economyEntry.count({
         where: { kind: "fee.chamber", fromProfileId: insufficientFundsId },
@@ -221,7 +227,7 @@ describe("creation; one canonical PC/G participation cost", () => {
     ).toBe(0);
   });
 
-  it("creates a public chamber: unified fee to the treasury, workshop born deletable, creator inside, civic record", async () => {
+  it("creates a public chamber: both fee halves to the treasury, workshop born deletable, creator inside, civic record", async () => {
     const treasuryPcBefore = (await db.treasuryBalance.findUnique({ where: { currency: "PC" } }))?.amount ?? 0;
     const treasuryGBefore = (await db.treasuryBalance.findUnique({ where: { currency: "G" } }))?.amount ?? 0;
 
@@ -238,16 +244,19 @@ describe("creation; one canonical PC/G participation cost", () => {
     if (!result.ok) return;
     publicChamberId = result.chamberId;
 
-    // The creator has enough PC, so the deterministic unified charge uses
-    // 20 PC and does not require a separate G half.
+    // Both halves reach the treasury; the dual-token signature is the cost.
     const treasuryPc = (await db.treasuryBalance.findUnique({ where: { currency: "PC" } }))!.amount;
     const treasuryG = (await db.treasuryBalance.findUnique({ where: { currency: "G" } }))!.amount;
     expect(treasuryPc - treasuryPcBefore).toBeCloseTo(20);
-    expect(treasuryG - treasuryGBefore).toBeCloseTo(0);
+    expect(treasuryG - treasuryGBefore).toBeCloseTo(20);
     const feeEntries = await db.economyEntry.findMany({
       where: { kind: "fee.chamber", fromProfileId: creatorId },
+      orderBy: { currency: "asc" },
     });
-    expect(feeEntries.map((e) => [e.currency, e.amount])).toEqual([["PC", 20]]);
+    expect(feeEntries.map((e) => [e.currency, e.amount])).toEqual([
+      ["G", 20],
+      ["PC", 20],
+    ]);
 
     // The workshop: exactly one, chamber-scoped, deletable, meta-homed.
     const workshop = await db.discussion.findFirstOrThrow({
@@ -408,7 +417,7 @@ describe("entry; free gate clearance, and nothing else", () => {
   });
 });
 
-describe("the workshop; unified PC/G participation inside the enclosure", () => {
+describe("the workshop; dual-token participation inside the enclosure", () => {
   it("refuses a non-member's post: enter to see, enter to speak", async () => {
     const result = await createPost(db, {
       discussionId: workshopId,
@@ -419,9 +428,7 @@ describe("the workshop; unified PC/G participation inside the enclosure", () => 
     if (!result.ok) expect(result.reason).toContain("Enter the chamber");
   });
 
-  it("charges one canonical 2-unit cost and leaves no public trace", async () => {
-    const pcBefore = await balanceOf(db, workerId, "PC");
-    const gBefore = await balanceOf(db, workerId, "G");
+  it("charges the dual-token micro-fee in both halves and leaves no public trace", async () => {
     const eventsBefore = await db.ledgerEvent.count();
 
     const result = await createPost(db, {
@@ -431,8 +438,8 @@ describe("the workshop; unified PC/G participation inside the enclosure", () => 
     });
     expect(result.ok).toBe(true);
 
-    // PC covers the unified cost first. Assert the fee receipt rather than
-    // noisy balances because first-action and participation grants also run.
+    // Assert the fee receipts rather than noisy balances, because
+    // first-action and participation grants also run on this path.
     const feePc = await db.economyEntry.findMany({
       where: { kind: "fee.chamber-post", currency: "PC" },
     });
@@ -440,10 +447,9 @@ describe("the workshop; unified PC/G participation inside the enclosure", () => 
       where: { kind: "fee.chamber-post", currency: "G" },
     });
     expect(feePc.length).toBe(1);
-    expect(feeG.length).toBe(0);
-    expect(feePc[0].amount).toBe(2);
-    expect(await balanceOf(db, workerId, "PC")).toBeLessThanOrEqual(pcBefore);
-    expect(await balanceOf(db, workerId, "G")).toBeGreaterThanOrEqual(gBefore);
+    expect(feeG.length).toBe(1);
+    expect(feePc[0].amount).toBe(1);
+    expect(feeG[0].amount).toBe(1);
 
     // No public ledger growth from a workshop post: no post.recorded,
     // no gate.cleared (private recording), nothing.
@@ -494,7 +500,7 @@ describe("the workshop; unified PC/G participation inside the enclosure", () => 
 
 describe("private chambers; the creator selects who gets in", () => {
   it("creates a private chamber and refuses the uninvited", async () => {
-    // The first chamber reduced the creator's unified balance;
+    // The first chamber drew down both of the creator's balances;
     // the accounted test faucet stands in for earned balance.
     await topUpForTests(db, creatorId, { pc: 40, g: 40 });
     const result = await createChamber(db, {
@@ -634,15 +640,31 @@ describe("db:verify; the enclosure fails loudly", () => {
     await db.chamberMember.delete({ where: { id: smuggled.id } });
   }, 60_000);
 
-  it("fails loudly when a chamber's unified fee receipt is undercounted", async () => {
+  it("fails loudly when a chamber's dual-token fee receipt is undercounted", async () => {
     const fee = await db.economyEntry.findFirstOrThrow({
       where: { kind: "fee.chamber" },
     });
     await db.economyEntry.update({ where: { id: fee.id }, data: { amount: { decrement: 1 } } });
     const result = runVerify();
     expect(result.status).not.toBe(0);
-    expect(result.stdout + result.stderr).toContain("CHAMBER COST MISMATCH");
+    expect(result.stdout + result.stderr).toContain("HALF-PAID CHAMBER");
     await db.economyEntry.update({ where: { id: fee.id }, data: { amount: { increment: 1 } } });
+  }, 60_000);
+
+  it("fails loudly when a chamber pays only one of the two halves", async () => {
+    const gHalf = await db.economyEntry.findFirstOrThrow({
+      where: { kind: "fee.chamber", currency: "G" },
+    });
+    // Park the Gratium half out of the fee's kind, leaving the PollCoin half
+    // alone: the combined figure still looks paid, the signature does not.
+    await db.economyEntry.update({
+      where: { id: gHalf.id },
+      data: { kind: "fee.chamber-parked" },
+    });
+    const result = runVerify();
+    expect(result.status).not.toBe(0);
+    expect(result.stdout + result.stderr).toContain("HALF-PAID CHAMBER");
+    await db.economyEntry.update({ where: { id: gHalf.id }, data: { kind: "fee.chamber" } });
   }, 60_000);
 
   it("passes again once the tampering is reverted", () => {

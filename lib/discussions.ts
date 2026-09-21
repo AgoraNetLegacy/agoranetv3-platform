@@ -369,7 +369,7 @@ export async function createPost(
       if (gate.outcome !== "CLEARED") {
         return { ok: false as const, reason: `Gate: ${gate.outcome}` };
       }
-    // Workshop posts use the unified PC/G participation cost; everywhere
+    // Workshop posts pay the dual-token participation cost; everywhere
     // else uses the standard reply micro-fee.
     if (discussion.chamberId) {
       if (input.walletFee) {

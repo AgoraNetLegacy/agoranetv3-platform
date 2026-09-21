@@ -209,7 +209,7 @@ export default async function StorefrontPage({
           <form action={submitEnterChamber} className="inline">
             <input type="hidden" name="chamberId" value={chamber.id} />
             <button type="submit">
-              Enter free; workshop posts use the unified PC/G balance
+              Enter free; workshop posts cost both PollCoin and Gratium
             </button>
           </form>
         ) : (

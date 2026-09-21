@@ -20,6 +20,7 @@ import {
   rejectWalletPostAction,
 } from "@/app/actions";
 import { isSaved, touchSavedWatermark } from "@/lib/saved";
+import { workshopPostCost } from "@/lib/chambers";
 import { Icon, PillarMark } from "@/components/Icon";
 import { WalletPostComposer } from "@/components/WalletPostComposer";
 import { walletModeActivationReady } from "@/lib/progressiveEconomy";
@@ -460,13 +461,13 @@ export default async function DiscussionPage({
     }
   }
 
-  const [posts, rules, viewer, graceMinutes, replyFee, workshopPostCost] = await Promise.all([
+  const [posts, rules, viewer, graceMinutes, replyFee, workshopCost] = await Promise.all([
     loadPosts(discussion.id),
     db.rule.findMany({ orderBy: { id: "asc" } }),
     activeFace(),
     getRail(db, "discussion.graceWindowMinutes"),
     getRail(db, "discussion.replyFee"),
-    getRail(db, "chamber.postCost"),
+    workshopPostCost(db),
   ]);
 
   // The save (BEACON §4): private to this identity. Reading a saved thread
@@ -493,7 +494,7 @@ export default async function DiscussionPage({
   const walletMode = Boolean(viewer && viewer.economyMode === "wallet");
   const walletPostReady = walletMode && walletModeActivationReady() && !discussion.chamber;
   const feeLabel = discussion.chamber
-    ? `${workshopPostCost} unified PC/G units`
+    ? `${workshopCost.PC} PC + ${workshopCost.G} G`
     : walletMode
       ? `${replyFee} dPOLL`
       : `${replyFee} PC`;
@@ -551,7 +552,7 @@ export default async function DiscussionPage({
           <Icon name="hive" /> <strong>The workshop.</strong> Enter-to-see and deletable-class
 ; half-formed thinking gets worked out here without the open
           internet watching the drafts. Standard moderation applies as
-          everywhere. Posting uses the Pollinator&apos;s unified PC/G balance.
+          everywhere. Posting costs both PollCoin and Gratium.
         </div>
       ) : permanent ? (
         <div className="door-banner">

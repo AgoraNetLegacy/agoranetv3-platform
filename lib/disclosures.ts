@@ -13,14 +13,14 @@ export const CONSENT_VERSIONS = {
   // v2 (owner walkthrough, 2026-07-15): plain-language pass; the
   // consent a person signs must be readable by a person who just
   // arrived. Version bumps re-present the screens, by design.
-  permanence: "v2",
+  permanence: "v3",
   constitution: "founding-draft-2026-07-07-plain-v2",
   // v3 (owner walkthrough, 2026-08-15): separate the current guarantee
   // from the future testnet migration in plain language.
-  "alias-disclosures": "phase-a-v3",
+  "alias-disclosures": "phase-a-v4",
   // Profile imagery (PROFILE_PAGE_SPEC §4.5, owner-ruled 2026-07-22):
   // the Alias imagery warning; pixels out-fingerprint prose.
-  "alias-imagery": "v1",
+  "alias-imagery": "v2",
 } as const;
 
 /** The Alias imagery warning (PROFILE_PAGE_SPEC §4.5); blocking
@@ -30,23 +30,38 @@ export const CONSENT_VERSIONS = {
  *  warning IS the protection. */
 export const ALIAS_IMAGERY_WARNING = {
   items: [
-    "A photograph is a stronger fingerprint than writing style. Reverse image search exists, and it is free.",
-    "We strip hidden location and camera data from every upload; but nothing can strip what the photo shows: your appearance, your room, your street, your cat.",
-    "For this identity, use artwork or abstraction. Never a photo of yourself or your surroundings; and never an image related, even loosely, to anything your other identity has ever used anywhere.",
+    "A photograph identifies you far more reliably than your writing style does. Anyone who wants to can run it through a reverse image search in a few seconds, for free.",
+    "We strip the hidden location and camera data out of every upload. What we cannot strip is whatever the picture actually shows, which may include your face, your home, the street outside it, or a pet somebody recognizes.",
+    "For this identity, use artwork or something abstract. Do not use a photo of yourself or your surroundings, and do not reuse an image your other identity has posted anywhere, including a cropped or edited version of one.",
   ],
 } as const;
 
 export type ConsentKind = keyof typeof CONSENT_VERSIONS;
 
-/** Stage 1; the gate introduces itself (ambient, not blocking). */
+/** Stage 1; the gate introduces itself (ambient, not blocking).
+ *
+ * ONBOARDING §Stage 1 calls this "the platform's single most important
+ * screen" and requires both halves: what you get AND what it costs. An
+ * earlier draft carried only the cost, opening on a hedge and never
+ * naming the payoff; a stranger read 280 words of qualification before
+ * reaching a button. The Phase A honesty is specified as AMBIENT here
+ * (acknowledged later, at Stage 2), so it is stated plainly in one line
+ * and the full technical text sits one click away. Nothing is withheld;
+ * the wall is. */
 export const GATE_INTRO = {
   substance:
-    "Participation starts with an interim humanity check. For now, " +
-    "AgoraNet operates the issuer and stores only a scrambled fingerprint " +
-    "of the credential; we do not collect identity documents. This phase " +
-    "reduces automated abuse and prevents one credential from being reused, " +
-    "but it is not yet independent proof that one real human gets one voice. " +
-    "What it costs: a few minutes, and a wallet.",
+    "Acting here means proving once that you're a real human. What you " +
+    "get: a voice that counts exactly once, in a place where nobody is " +
+    "arguing with bots. What it costs: a few minutes, and a wallet. We " +
+    "never ask for identity documents.",
+  /** The Phase A operator-trust honesty, in one sentence a newcomer can
+   *  actually read. The spec's own framing: trust us for now, verify it
+   *  yourself later. The full disclosure follows it, on the same screen. */
+  trustSummary:
+    "One thing said plainly before you start: today, keeping your two " +
+    "identities apart is our policy, enforced by our servers. It is not " +
+    "yet cryptography you could check yourself. Trust us for now; verify " +
+    "it yourself later. The details are worth reading.",
   phaseA: PHASE_A_DISCLOSURE,
   interimIssuer:
     "INTERIM (Phase A): AgoraNet itself still plays the issuer's role " +
@@ -77,16 +92,16 @@ export const VERIFICATION_FRESHNESS =
 export const PERMANENCE_CONSENT = {
   version: CONSENT_VERSIONS.permanence,
   text:
-    "Some spaces on AgoraNet are permanent record. What you post in a " +
-    "permanent space; the platform's founding question threads, every " +
-    "Governance room; cannot be deleted, by you or by us. A short " +
-    "grace window lets you repair typos, with the edit history visible; " +
-    "then your words lock into the record. Your account can be deleted; " +
-    "your words in permanent spaces cannot. If moderation removes " +
-    "rule-breaking content, a marker naming the broken rule stays in " +
-    "its place; removal is visible, never silent. Every permanent " +
-    "space is labeled at the door and in the composer, so you always " +
-    "know which kind of room you're standing in.",
+    "Some spaces on AgoraNet are permanent record: the platform's " +
+    "founding question threads, and every Governance room. What you " +
+    "post in one of those cannot be deleted afterwards, by you or by " +
+    "us. There is a short grace window for fixing typos, with the edit " +
+    "history left visible, and then your words lock. Deleting your " +
+    "account will not remove them. If moderation takes down something " +
+    "that broke a rule, a marker naming that rule stays where the " +
+    "content was, so a removal is something you can see rather than " +
+    "something that quietly happened. Permanent spaces are labeled at " +
+    "the door and again in the composer, before you write in them.",
 };
 
 /** Stage 4.2; Constitution acknowledgment (BLOCKING).
@@ -128,23 +143,25 @@ export const ALIAS_DISCLOSURES = {
       "current server rules; a separate Midnight testnet contract shows " +
       "the future cryptographic version, but it is not part of this live " +
       "ceremony yet.",
-    "What we cannot protect you from: your own writing style " +
-      "(stylometry is a mature research field), your own timing " +
-      "patterns, and self-disclosure. If you say something as your " +
-      "Alias that only your True Self would know, no system can help.",
+    "What we cannot protect you from is anything you give away " +
+      "yourself. Writing style is the big one; stylometry is a mature " +
+      "research field and it works. Posting at the same hours is " +
+      "another. And if you mention something as your Alias that only " +
+      "your True Self would know, nothing on our side can undo that.",
     "Your identities use separate rooms. Each pillar allows only one of " +
-      "your identities at a time. If you enter as your True Self, your Alias " +
-      "must wait until you leave; the two can never appear there together. " +
-      "A blocked-entry message is the privacy protection working, not an " +
-      "error.",
+      "your identities at a time, so if you enter as your True Self, your " +
+      "Alias has to wait until you leave. When you see a message saying " +
+      "you cannot enter somewhere, that is the separation doing its job, " +
+      "not something going wrong.",
     "Your True Self and Alias each have separate PollCoin and Gratium " +
       "balances. Alias activity uses the Alias balance; it never draws " +
       "from your True Self balance, and the balances are never merged.",
-    "Recovery is asymmetric, on purpose: a recovery path through your " +
-      "identity would be a linkage channel. Guard your Alias access key " +
-      "; if it's lost or stolen, the remedy is hatching a successor " +
-      "(fee-gated, Light Score carries over in both directions, lineage " +
-      "visible).",
+    "There is deliberately no recovery path for an Alias. Any such path " +
+      "would have to run through your real identity, which would create " +
+      "exactly the link this is built to prevent. So guard your Alias " +
+      "access key. If it is lost or stolen, the remedy is hatching a " +
+      "successor: that costs a fee, your Light Score carries over in " +
+      "both directions, and the lineage stays visible.",
     // Naming amendment, verbatim (ONBOARDING Stage 3.4, 2026-07-10):
     "Choose an Alias handle AND display name with no relation to your " +
       "True Self's; name similarity is self-deanonymization no " +

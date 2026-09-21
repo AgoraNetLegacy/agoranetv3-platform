@@ -1,6 +1,6 @@
 // demo:phase7.5; the Phase 7.5 checkpoint, end to end (BUILD_ORDER):
 // a soul creates a PUBLIC chamber through the full scaffold, pays the
-// unified PC/G cost, other souls enter and work the
+// dual-token PC+G cost, other souls enter and work the
 // idea in the workshop, the storefront reads right (pitch, why-care,
 // creator standing, count + activity; never the list), and the
 // workshop stays enclosed: nothing inside reaches the ledger, the open
@@ -17,7 +17,7 @@ import {
   chamberActivityLevel,
 } from "../lib/chambers";
 import { createPost, upgradePostPermanence } from "../lib/discussions";
-import { balanceOf, unifiedBalanceOf } from "../lib/economy";
+import { balanceOf } from "../lib/economy";
 import { faceConstellation } from "../lib/lightScore";
 import { openLens, chamberStorefrontCards } from "../lib/feed";
 import { search } from "../lib/search";
@@ -46,7 +46,7 @@ async function main() {
   });
   await topUpForTests(db, creator.trueSelfId, { pc: 30, g: 30 });
 
-  step(2, "A public chamber opens through the FULL scaffold; one unified PC/G cost");
+  step(2, "A public chamber opens through the FULL scaffold; the dual-token cost, both halves");
   const pcBefore = await balanceOf(db, creator.trueSelfId, "PC");
   const gBefore = await balanceOf(db, creator.trueSelfId, "G");
   const created = await createChamber(db, {
@@ -66,7 +66,7 @@ async function main() {
   });
   if (!created.ok) throw new Error(created.reason);
   console.log(
-    `   PC: ${pcBefore.toFixed(2)} → ${(await balanceOf(db, creator.trueSelfId, "PC")).toFixed(2)} · G: ${gBefore.toFixed(2)} → ${(await balanceOf(db, creator.trueSelfId, "G")).toFixed(2)} · unified now ${(await unifiedBalanceOf(db, creator.trueSelfId)).total.toFixed(2)} units`
+    `   PC: ${pcBefore.toFixed(2)} → ${(await balanceOf(db, creator.trueSelfId, "PC")).toFixed(2)} · G: ${gBefore.toFixed(2)} → ${(await balanceOf(db, creator.trueSelfId, "G")).toFixed(2)} · both halves paid, neither substitutable`
   );
   const chamberId = created.chamberId;
   const ledgered = await db.ledgerEvent.findFirst({
@@ -99,7 +99,7 @@ async function main() {
     `   entered; free; clearance recorded ${enterClearance?.ledgerRecording?.toUpperCase()} (who is inside is enclosed-space information)`
   );
 
-  step(5, "The idea gets worked in the workshop; unified PC/G costs, threading reused");
+  step(5, "The idea gets worked in the workshop; dual-token costs, threading reused");
   const workshop = await db.discussion.findFirstOrThrow({ where: { chamberId } });
   const eventsBefore = await db.ledgerEvent.count();
   const draft1 = await createPost(db, {
@@ -119,7 +119,7 @@ async function main() {
     where: { kind: "fee.chamber-post", refId: workshop.id },
   });
   console.log(
-    `   2 drafts posted · ${postFees.reduce((sum, fee) => sum + fee.amount, 0)} unified units recorded across ${postFees.length} currency receipt(s)`
+    `   2 drafts posted · ${postFees.reduce((sum, fee) => sum + fee.amount, 0)} units across ${postFees.length} receipt(s); every post paid BOTH tokens`
   );
   const sharpened = await editScaffold(db, {
     chamberId,
@@ -189,7 +189,7 @@ async function main() {
   console.log(`   invited, then entered: ${nowEntered.ok}`);
 
   console.log(
-    "\nCHECKPOINT COMPLETE: scaffold → unified PC/G fee → storefront reads right (standing public, count not list) → idea worked in the workshop → enclosure holds everywhere.\nRun `npm run db:verify` to watch the chamber invariants re-derive."
+    "\nCHECKPOINT COMPLETE: scaffold → dual-token PC+G fee → storefront reads right (standing public, count not list) → idea worked in the workshop → enclosure holds everywhere.\nRun `npm run db:verify` to watch the chamber invariants re-derive."
   );
 }
 

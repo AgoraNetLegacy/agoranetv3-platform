@@ -549,22 +549,38 @@ export const RAIL_DEFAULTS: RailDefault[] = [
       "Open-lens recency decay half-life; activity's weight halves every this many hours.",
   },
   // --- Chamber rails (Phase 7.5; NEURAL_POLLINATOR §3, the ratified
-  // unified participation pricing. PC and G convert 1:1 into the same
-  // spendable participation units; one cost is checked and settled by
-  // the canonical economy helper.
+  // dual-token signature: the Pollinator is the first surface whose
+  // fees are paid in BOTH tokens, deliberately, so active Pollinator
+  // souls carry a working stock of both. Amounts are the ratified v0
+  // test schedule: Chamber = 2× Discussion, in both tokens; workshop
+  // posts at the anchor unit in both.)
   {
-    key: "chamber.creationCost",
+    key: "chamber.creationFeePc",
     value: 20,
-    unit: "u",
+    unit: "uPC",
     description:
-      "Chamber creation participation cost; PC and G count 1:1 toward one unified balance.",
+      "Chamber creation fee, PollCoin half; owner: double a Discussion, and in both tokens (ECONOMIC_STARTING_DEFAULTS §1).",
   },
   {
-    key: "chamber.postCost",
-    value: 2,
-    unit: "u",
+    key: "chamber.creationFeeG",
+    value: 20,
+    unit: "uG",
     description:
-      "Workshop participation cost; PC and G count 1:1 toward one unified balance.",
+      "Chamber creation fee, Gratium half; the dual-token signature (NEURAL_POLLINATOR §3).",
+  },
+  {
+    key: "chamber.postFeePc",
+    value: 1,
+    unit: "uPC",
+    description:
+      "Workshop participation micro-fee, PollCoin half; the dual-token signature at micro scale (ECONOMIC_STARTING_DEFAULTS §1).",
+  },
+  {
+    key: "chamber.postFeeG",
+    value: 1,
+    unit: "uG",
+    description:
+      "Workshop participation micro-fee, Gratium half.",
   },
   // --- Mission funding (NEURAL_POLLINATOR §9.1; PHASE_8_7_SPEC Slices
   // 2-5). "Both numbers are rails, adjustable per chamber within bounds."
@@ -852,41 +868,9 @@ export const RAIL_DEFAULTS: RailDefault[] = [
   },
 ];
 
-const LEGACY_COMBINED_RAILS: Readonly<
-  Record<string, { keys: readonly [string, string]; combine: "max" | "sum" }>
-> = {
-  // The screenshot and product decision establish 20 as the whole creation
-  // cost, not 20 PC plus 20 G. The old equal rails represented alternative
-  // requirements, so retain their larger configured value during rollout.
-  "chamber.creationCost": {
-    keys: ["chamber.creationFeePc", "chamber.creationFeeG"],
-    combine: "max",
-  },
-  // The old workshop fee was 1 PC + 1 G, so its combined total remains 2.
-  "chamber.postCost": {
-    keys: ["chamber.postFeePc", "chamber.postFeeG"],
-    combine: "sum",
-  },
-};
-
-/** Read one rail's current value. The two chamber costs have an explicit
- * deployment bridge: before their data migration lands, derive the combined
- * amount from the two old rails. This keeps old and new database states valid
- * during rollout without restoring the old two-balance eligibility rule. */
+/** Read one rail's current value. */
 export async function getRail(db: DbOrTx, key: string): Promise<number> {
   const rail = await db.rail.findUnique({ where: { key } });
   if (rail) return rail.value;
-  const legacy = LEGACY_COMBINED_RAILS[key];
-  if (legacy) {
-    const legacyRails = await Promise.all(
-      legacy.keys.map((legacyKey) => db.rail.findUnique({ where: { key: legacyKey } }))
-    );
-    if (legacyRails.every((legacyRail) => legacyRail !== null)) {
-      const values = legacyRails.map((legacyRail) => legacyRail?.value ?? 0);
-      return legacy.combine === "max"
-        ? Math.max(...values)
-        : values.reduce((total, value) => total + value, 0);
-    }
-  }
   throw new Error(`Rail not seeded: ${key}`);
 }

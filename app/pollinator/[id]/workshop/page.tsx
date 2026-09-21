@@ -125,7 +125,7 @@ export default async function WorkshopPage({
       <h3>The working conversation</h3>
       <p className="lore">
         Threading follows the Discussions conventions; nothing bespoke.
-        Deletable-class, enclosed; posting costs 2 unified PC/G units.
+        Deletable-class, enclosed; posting costs 1 PC and 1 G.
         Standard moderation applies as everywhere:
         flag deposits, badge holders, the tribunal.
       </p>
